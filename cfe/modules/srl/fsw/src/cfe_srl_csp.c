@@ -25,7 +25,7 @@ int CFE_SRL_RouteInitCSP(void) {
     int Status;
 
     csp_iface_t *InterfaceCAN = NULL;
-    csp_iface_t *InterfaceI2C = NULL;
+    // csp_iface_t *InterfaceI2C = NULL;
 
     Status = csp_route_start_task(CSP_TASK_STACK_SIZE(1), GS_THREAD_PRIORITY_HIGH);
     if (Status != CSP_ERR_NONE) {
@@ -45,27 +45,27 @@ int CFE_SRL_RouteInitCSP(void) {
     /**
      * CSP I2C Initialization
      */
-    Status = gs_csp_i2c_init2(0, 0, "p31u", false, &InterfaceI2C);
-    if (Status != GS_OK) return CFE_SRL_CSP_I2C_INIT_ERR;
+    // Status = gs_csp_i2c_init2(0, 0, "p31u", false, &InterfaceI2C);
+    // if (Status != GS_OK) return CFE_SRL_CSP_I2C_INIT_ERR;
 
     /**
      * CSP Routing Table Set
      */
     /* CAN */
-    Status = csp_rtable_set(CSP_NODE_UTRX, CSP_NODE_FIX_MASK, InterfaceCAN, CSP_NO_VIA_ADDRESS);
+    Status = csp_rtable_set(CSP_NODE_UTRX, CSP_ID_HOST_SIZE, InterfaceCAN, CSP_NO_VIA_ADDRESS);
     if (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;
 
-    Status = csp_rtable_set(CSP_NODE_STRX, CSP_NODE_FIX_MASK, InterfaceCAN, CSP_NO_VIA_ADDRESS);
+    Status = csp_rtable_set(CSP_NODE_STRX, CSP_ID_HOST_SIZE, InterfaceCAN, CSP_NO_VIA_ADDRESS);
     if (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;
 
-    Status = csp_rtable_set(CSP_NODE_GS_KISS, CSP_NODE_FIX_MASK, InterfaceCAN, CSP_NODE_UTRX);
+    Status = csp_rtable_set(CSP_NODE_GS_KISS, CSP_ID_HOST_SIZE, InterfaceCAN, CSP_NODE_UTRX);
     if (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;
 
-    Status = csp_rtable_set(CSP_NODE_GSTRX, CSP_NODE_FIX_MASK, InterfaceCAN, CSP_NODE_UTRX);
+    Status = csp_rtable_set(CSP_NODE_GSTRX, CSP_ID_HOST_SIZE, InterfaceCAN, CSP_NODE_UTRX);
     if (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;
     /* I2C */
-    Status = csp_rtable_set(CSP_NODE_EPS, CSP_NODE_FIX_MASK, InterfaceI2C, CSP_NO_VIA_ADDRESS);
-    if (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;
+    // Status = csp_rtable_set(CSP_NODE_EPS, CSP_ID_HOST_SIZE, InterfaceI2C, CSP_NO_VIA_ADDRESS);
+    // if (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;
     
     return CFE_SUCCESS;
 }

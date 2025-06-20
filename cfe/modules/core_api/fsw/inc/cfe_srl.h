@@ -18,11 +18,16 @@
 #include "cfe_srl_mission_cfg.h"
 
 
-/// @brief Get IO Handle pointer. **Use this handle pointer to other API function**
+/// @brief Get IO Handle pointer. **Use returned handle pointer to other API function**
 /// @param Index Index of Handle table (Refer enum `CFE_SRL_Handle_Indexer_t`)
 /// @return Pointer of `CFE_SRL_IO_Handle_t` object
 CFE_SRL_IO_Handle_t *CFE_SRL_ApiGetHandle(CFE_SRL_Handle_Indexer_t Index);
 
+
+/// @brief Get GPIO Handle pointer. **Use returned handle pointer to other API function**
+/// @param Index Index of GPIO Handle table (Refer enum `CFE_SRL_GPIO_Indexer_t`)
+/// @return Pointer of `CFE_SRL_GPIO_Handle_t` object
+CFE_SRL_GPIO_Handle_t *CFE_SRL_ApiGetGpioHandle(CFE_SRL_GPIO_Indexer_t Index);
 
 /// @brief Write data to external device via various serial comm. protocol
 /// @param Handle A Pointer of SRL Handle. Distinguish character device file

@@ -5,7 +5,7 @@
 
 #include <fcntl.h>
 
-CFE_SRL_Global_Handle_t GlobalHandle[CFE_SRL_GLOBAL_HANDLE_NUM] = {0};
+static CFE_SRL_Global_Handle_t GlobalHandle[CFE_SRL_GLOBAL_HANDLE_NUM] = {0};
 
 
 int CFE_SRL_PriorInit(void) {
@@ -23,6 +23,7 @@ int CFE_SRL_GetOpenOption(CFE_SRL_DevType_t Devtype) {
     switch (Devtype) {
         case SRL_DEVTYPE_I2C:
         case SRL_DEVTYPE_SPI:
+        case SRL_DEVTYPE_CAN: // Meaningless
             return O_RDWR;
         case SRL_DEVTYPE_UART:
         case SRL_DEVTYPE_RS422:

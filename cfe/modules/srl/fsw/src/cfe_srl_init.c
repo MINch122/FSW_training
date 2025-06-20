@@ -32,12 +32,22 @@ int32 CFE_SRL_EarlyInit(void) {
 	 * Serial Comm. Init
  	 * Only `ready == true` interface is initialized
 	 **************************************************/
+	/* GPIO ADCS_EN Init */
+	Status = CFE_SRL_GpioInit(GPIO[CFE_SRL_ADCS_EN_GPIO_INDEXER], "/dev/gpiochip0", 28, "ADCS_EN", 0);
+	if (Status != CFE_SUCCESS) {
+		CFE_ES_WriteToSysLog("%s: GPIO ADCS_EN Initialization failed! RC=%d\n", __func__, Status);
+		return CFE_SRL_ADCS_EN_INIT_ERR;
+	}
+
 	/* socat Init */
 	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_SOCAT_HANDLE_INDEXER], "socat", "/dev/pts/4", SRL_DEVTYPE_UART, CFE_SRL_SOCAT_HANDLE_INDEXER, 115200, 0);
+	Handles[CFE_SRL_SOCAT_HANDLE_INDEXER]->Func.TxFunc = CFE_SRL_WriteGenericUART;
+	Handles[CFE_SRL_SOCAT_HANDLE_INDEXER]->Func.RxFunc = CFE_SRL_ReadGenericUART;
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: socat Initialization failed! RC=%d\n", __func__, Status);
 		return CFE_SRL_SOCAT_INIT_ERR;
 	}
+	CFE_ES_WriteToSysLog("%s: socat Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_SOCAT_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_SOCAT_HANDLE_INDEXER])->DevName);
 
 return CFE_SUCCESS;
 }

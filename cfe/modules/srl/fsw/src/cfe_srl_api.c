@@ -35,6 +35,11 @@ CFE_SRL_IO_Handle_t *CFE_SRL_ApiGetHandle(CFE_SRL_Handle_Indexer_t Index) {
     return CFE_SRL_GetHandle(Index);
 }
 
+CFE_SRL_GPIO_Handle_t *CFE_SRL_ApiGetGpioHandle(CFE_SRL_GPIO_Indexer_t Index) {
+    return CFE_SRL_GetGpioHandle(Index);
+}
+
+
 /*----------------------------------------------------------------
  *
  * Serial Write API

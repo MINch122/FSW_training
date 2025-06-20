@@ -10,8 +10,6 @@
 
 #define CSP_CAN_DEV_NAME            "can0"
 
-#define CSP_NODE_FIX_MASK           5
-
 #define CSP_TIMEOUT(x)              (x)*1000
 
 /**

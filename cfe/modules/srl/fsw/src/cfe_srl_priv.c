@@ -13,12 +13,12 @@
 
 /**
  * Global data
- * 
- * Serial Handle for each srl comm.
  */
+/* Serial Handle for each srl comm. */
 extern CFE_SRL_IO_Handle_t *Handles[CFE_SRL_GNRL_DEVICE_NUM];
 
-
+/* GPIO Handle for each gpio */
+extern CFE_SRL_GPIO_Handle_t GPIO[CFE_SRL_TOT_GPIO_NUM];
 /**
  * Private Get Handle function
  */
@@ -30,6 +30,10 @@ extern CFE_SRL_IO_Handle_t *Handles[CFE_SRL_GNRL_DEVICE_NUM];
  *-----------------------------------------------------------------*/
 CFE_SRL_IO_Handle_t *CFE_SRL_GetHandle(CFE_SRL_Handle_Indexer_t Index) {
     return Handles[Index];
+}
+
+CFE_SRL_GPIO_Handle_t *CFE_SRL_GetGpioHandle(CFE_SRL_GPIO_Indexer_t Index) {
+    return &GPIO[Index];
 }
 
 /**
@@ -128,21 +132,29 @@ int32 CFE_SRL_WriteCAN(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Siz
     DevType = CFE_SRL_GetHandleDevType(Handle);
     if (DevType != SRL_DEVTYPE_CAN) return CFE_SRL_INVALID_TYPE;
 
-    if (Addr > 128) return -1; // Revise to `CAN_ADDR_ERR`, 128 to 29 bits max num
+    // if (Addr > 128) return -1; // Revise to `CAN_ADDR_ERR`, 128 to 29 bits max num
 
 
     // Mutex Lock
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    // Configure Frame
-    Frame.can_id = Addr | CAN_EFF_FLAG; // Check if Frame use `29 bit addr` or not
-    Frame.can_dlc = Size;
-    memcpy(Frame.data, Data, Size);
+    size_t TotBytes = 0; // Total Tx bytes till now
+    size_t WrBytes; // Write bytes at this very time
+    while (TotBytes < Size) {
 
-    // Write
-    Status = CFE_SRL_Write(Handle, &Frame, sizeof(Frame));
-    if (Status != CFE_SUCCESS) return Status;
+        // Configure Frame
+        WrBytes = (Size - TotBytes >= CAN_MAX_DLEN) ? CAN_MAX_DLEN : (Size - TotBytes);
+        Frame.can_id = Addr | CAN_EFF_FLAG;
+        Frame.can_dlc = WrBytes;
+        memcpy(Frame.data, ((uint8_t *)Data) + TotBytes, WrBytes);
+
+        // Write
+        Status = CFE_SRL_Write(Handle, &Frame, sizeof(Frame));
+        if (Status != CFE_SUCCESS) return Status;
+
+        TotBytes += WrBytes;
+    }
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
@@ -256,9 +268,6 @@ int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t T
     // Write
     Status = CFE_SRL_Write(Handle, TxData, TxSize);
     if (Status != CFE_SUCCESS) return Status;
-
-    // Need Some delay?
-    //  OS_TaskDelay(100);
     
     // Poll Read
     Status = CFE_SRL_Read(Handle, RxData, RxSize, Timeout);
@@ -284,26 +293,40 @@ int32 CFE_SRL_ReadGenericUART(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *P
 int32 CFE_SRL_ReadCAN(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Timeout, uint32_t Addr) {
     int32 Status;
     CFE_SRL_DevType_t DevType;
+    struct can_frame Frame = {0,};
 
     if (Handle == NULL || TxData == NULL || RxData == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     DevType = CFE_SRL_GetHandleDevType(Handle);
     if(DevType != SRL_DEVTYPE_CAN) return CFE_SRL_INVALID_TYPE;
 
+    // Write
+    Status = CFE_SRL_WriteCAN(Handle, TxData, TxSize, Addr);
+    if (Status != CFE_SUCCESS) return Status;
+
     // Mutex Lock
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    // Write
-    Status = CFE_SRL_Write(Handle, TxData, TxSize);
-    if (Status != CFE_SUCCESS) return Status;
+    size_t TotBytes = 0; // Total Rx bytes till now
+    size_t RdBytes; // Read bytes at this very time
+    while (TotBytes < RxSize) {
+        RdBytes = (RxSize - TotBytes >= CAN_MAX_DLEN) ? CAN_MAX_DLEN : (RxSize - TotBytes);
+        // Poll Read
+        Status = CFE_SRL_Read(Handle, &Frame, sizeof(struct can_frame), Timeout);
+        if (Status != CFE_SUCCESS) return Status;
 
-    // Need Some delay?
-    // OS_TaskDelay(100);
+        uint32_t RxID = 0;
+        if (Frame.can_id & CAN_EFF_FLAG) RxID = Frame.can_id & CAN_EFF_MASK;
+        else RxID = Frame.can_id & CAN_SFF_MASK;
+        OS_printf("InComing CAN Frame ID: %u\n", RxID);
 
-    // Poll Read
-    Status = CFE_SRL_Read(Handle, RxData, RxSize, Timeout);
-    if (Status != CFE_SUCCESS) return Status;
+        if (RdBytes != Frame.can_dlc) {
+            OS_printf("%s: CAN read length NOT matched!\n", __func__);
+        }
+        memcpy((uint8_t *)RxData + TotBytes, Frame.data, RdBytes);
+        TotBytes += RdBytes;
+    }
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);

@@ -1,4 +1,4 @@
-/* Auto-Generated file */
+/* Auto-Generated file. Never change this code! */
 #ifndef CFE_SRL_MISSION_CFG_H
 #define CFE_SRL_MISSION_CFG_H
 

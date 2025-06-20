@@ -16,8 +16,11 @@ with open('../../cfe/modules/srl/config/default_cfe_srl_mission_cfg.h', 'w') as 
     f.write('#include "cfe_srl_interface_cfg.h"\n\n')
     if namearr:
         f.write("typedef enum {\n")
-        for name in namearr:
-            f.write(f"\tCFE_SRL_{name}_HANDLE_INDEXER,\n")
+        if namearr:
+            for name in namearr:
+                f.write(f"\tCFE_SRL_{name}_HANDLE_INDEXER,\n")
+        else:
+            f.write("\tNOTHING\n")
         f.write("} CFE_SRL_Handle_Indexer_t;\n\n")
 
         f.write("/* \# of General serial device */\n")
@@ -35,6 +38,12 @@ with open('../../cfe/modules/srl/config/default_cfe_srl_mission_cfg.h', 'w') as 
         for iface in interfaces:
             if iface['type'] == 'gpio' and iface['ready']:
                 f.write(f"\tCFE_SRL_{iface['name'].upper()}_GPIO_INDEXER,\n")
+        f.write("} CFE_SRL_GPIO_Indexer_t;\n\n")
+    else :
+        f.write("/* \# of used gpio pin */\n")
+        f.write(f"#define CFE_SRL_TOT_GPIO_NUM\t\t{gpio_num}\n\n")
+        f.write("typedef enum {\n")
+        f.write("\tNOTHING\n")
         f.write("} CFE_SRL_GPIO_Indexer_t;\n\n")
     f.write("#endif /* CFE_SRL_MISSION_CFG_H */")
 
@@ -114,7 +123,8 @@ with open('../../cfe/modules/srl/fsw/src/cfe_srl_init.c', 'w') as f:
             f.write("\tif (Status != CFE_SUCCESS) {\n")
             f.write(f"\t\tCFE_ES_WriteToSysLog(\"%s: {iface['name']} Initialization failed! RC=%d\\n\", __func__, Status);\n")
             f.write(f"\t\treturn CFE_SRL_{iface['name'].upper()}_INIT_ERR;\n")
-            f.write("\t}\n\n")
+            f.write("\t}\n")
+            f.write(f"\tCFE_ES_WriteToSysLog(\"%s: {iface['name']} Initialized. FD=%d || DevName=%s\\n\", __func__, Handles[CFE_SRL_{iface['name'].upper()}_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_{iface['name'].upper()}_HANDLE_INDEXER])->DevName);\n\n")
 
     f.write("return CFE_SUCCESS;\n")
     f.write("}\n")
