@@ -44,7 +44,7 @@ def Write_socat_handle_init(f, iface:dict):
 
 def Write_gpio_init(f, iface:dict):
     f.write(f"\t/* GPIO {iface['name']} Init */\n")
-    f.write(f"\tStatus = CFE_SRL_GpioInit(GPIO[CFE_SRL_{iface['name'].upper()}_GPIO_INDEXER], \"{iface['DevName']}\", {iface['line']}, \"{iface['name']}\", {iface['default']});\n")
+    f.write(f"\tStatus = CFE_SRL_GpioInit(&GPIO[CFE_SRL_{iface['name'].upper()}_GPIO_INDEXER], \"{iface['DevName']}\", {iface['line']}, \"{iface['name']}\", {iface['default']});\n")
     return
 
 def Write_spi_handle_init(f, iface:dict):

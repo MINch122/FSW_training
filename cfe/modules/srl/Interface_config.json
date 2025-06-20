@@ -39,7 +39,7 @@
         },
         {
             "type": "gpio", 
-            "ready": true, 
+            "ready": false, 
             "name":"ADCS_EN",
             "DevName": "/dev/gpiochip0",
             "line": 28,

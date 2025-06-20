@@ -79,8 +79,7 @@ with open('../../cfe/modules/srl/fsw/src/cfe_srl_init.c', 'w') as f:
         f.write(f" * 0 : Not initializaed padding Handle\n")
     f.write(" **************************************************/\n\n")
     gpio_num = Get_gpio_num(config['interfaces'])
-    if gpio_num:
-        f.write("CFE_SRL_GPIO_Handle_t *GPIO[CFE_SRL_TOT_GPIO_NUM];\n\n\n")
+    f.write("CFE_SRL_GPIO_Handle_t GPIO[CFE_SRL_TOT_GPIO_NUM];\n\n\n")
 
     f.write("/************************************************************************\n")
     f.write(" * Early Initialization function executed at cFE ES\n")

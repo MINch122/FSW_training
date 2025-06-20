@@ -126,6 +126,7 @@ install:
 
 
 prep $(O)/.prep:
+	cd tools/serial-configtool && python3 genfunction.py
 	cd tools/serial-configtool && python3 generator.py
 	mkdir -p "$(O)"
 	(cd "$(O)" && cmake $(PREP_OPTS) "$(CURDIR)/cfe")

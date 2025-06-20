@@ -13,7 +13,7 @@ CFE_SRL_IO_Handle_t *Handles[CFE_SRL_GNRL_DEVICE_NUM];
  * 0 : SOCAT Handle
  **************************************************/
 
-CFE_SRL_GPIO_Handle_t *GPIO[CFE_SRL_TOT_GPIO_NUM];
+CFE_SRL_GPIO_Handle_t GPIO[CFE_SRL_TOT_GPIO_NUM];
 
 
 /************************************************************************
@@ -32,13 +32,6 @@ int32 CFE_SRL_EarlyInit(void) {
 	 * Serial Comm. Init
  	 * Only `ready == true` interface is initialized
 	 **************************************************/
-	/* GPIO ADCS_EN Init */
-	Status = CFE_SRL_GpioInit(GPIO[CFE_SRL_ADCS_EN_GPIO_INDEXER], "/dev/gpiochip0", 28, "ADCS_EN", 0);
-	if (Status != CFE_SUCCESS) {
-		CFE_ES_WriteToSysLog("%s: GPIO ADCS_EN Initialization failed! RC=%d\n", __func__, Status);
-		return CFE_SRL_ADCS_EN_INIT_ERR;
-	}
-
 	/* socat Init */
 	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_SOCAT_HANDLE_INDEXER], "socat", "/dev/pts/4", SRL_DEVTYPE_UART, CFE_SRL_SOCAT_HANDLE_INDEXER, 115200, 0);
 	Handles[CFE_SRL_SOCAT_HANDLE_INDEXER]->Func.TxFunc = CFE_SRL_WriteGenericUART;
