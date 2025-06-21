@@ -65,18 +65,23 @@ int32 CFE_SRL_WriteI2C(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Siz
     Status = CFE_SRL_BasicIOCTL(Handle->FD, I2C_SLAVE, &Addr);
     if (Status < 0) {
         Handle->__errno = errno;
-        return CFE_SRL_IOCTL_ERR;
+        Status = CFE_SRL_IOCTL_ERR;
+        goto error;
     }
 
     // Write
     Status = CFE_SRL_Write(Handle, Data, Size);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
 
     return CFE_SUCCESS;
+
+error:
+    CFE_SRL_MutexUnlock(Handle);
+    return Status;
 }
 
 int32 CFE_SRL_WriteGenericI2C(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
@@ -103,13 +108,17 @@ int32 CFE_SRL_WriteUART(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Si
 
     // Write
     Status = CFE_SRL_Write(Handle, Data, Size);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
 
     return CFE_SUCCESS;
+
+error:
+    CFE_SRL_MutexUnlock(Handle);
+    return Status;
 }
 
 int32 CFE_SRL_WriteGenericUART(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
@@ -151,16 +160,20 @@ int32 CFE_SRL_WriteCAN(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Siz
 
         // Write
         Status = CFE_SRL_Write(Handle, &Frame, sizeof(Frame));
-        if (Status != CFE_SUCCESS) return Status;
+        if (Status != CFE_SUCCESS) goto error;
 
         TotBytes += WrBytes;
     }
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
 
     return CFE_SUCCESS;
+
+error:
+    CFE_SRL_MutexUnlock(Handle);
+    return Status;
 }
 
 int32 CFE_SRL_WriteGenericCAN(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
@@ -194,14 +207,19 @@ int32 CFE_SRL_WriteSPI(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Siz
     Status = ioctl(Handle->FD, SPI_IOC_MESSAGE(1), Xfer);
     if (Status < 0) {
         Handle->__errno = errno;
-        return CFE_SRL_IOCTL_ERR;
+        Status = CFE_SRL_IOCTL_ERR;
+        goto error;
     }
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
 
     return CFE_SUCCESS;
+
+error:
+    CFE_SRL_MutexUnlock(Handle);
+    return Status;
 }
 int32 CFE_SRL_WriteGenericSPI(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
     return CFE_SRL_WriteSPI(Handle, Params->TxData, Params->TxSize);
@@ -233,13 +251,17 @@ int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
 
     // Transaction
     Status = CFE_SRL_TransactionI2C(Handle, TxData, TxSize, RxData, RxSize, Addr);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
 
     return CFE_SUCCESS;
+
+error:
+    CFE_SRL_MutexUnlock(Handle);
+    return Status;
 }
 
 int32 CFE_SRL_ReadGenericI2C(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
@@ -267,17 +289,21 @@ int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t T
 
     // Write
     Status = CFE_SRL_Write(Handle, TxData, TxSize);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
     
     // Poll Read
     Status = CFE_SRL_Read(Handle, RxData, RxSize, Timeout);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
 
     return CFE_SUCCESS;
+
+error:
+    CFE_SRL_MutexUnlock(Handle);
+    return Status;
 }
 
 int32 CFE_SRL_ReadGenericUART(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
@@ -314,7 +340,7 @@ int32 CFE_SRL_ReadCAN(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
         RdBytes = (RxSize - TotBytes >= CAN_MAX_DLEN) ? CAN_MAX_DLEN : (RxSize - TotBytes);
         // Poll Read
         Status = CFE_SRL_Read(Handle, &Frame, sizeof(struct can_frame), Timeout);
-        if (Status != CFE_SUCCESS) return Status;
+        if (Status != CFE_SUCCESS) goto error;
 
         uint32_t RxID = 0;
         if (Frame.can_id & CAN_EFF_FLAG) RxID = Frame.can_id & CAN_EFF_MASK;
@@ -330,9 +356,13 @@ int32 CFE_SRL_ReadCAN(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
 
     return CFE_SUCCESS;
+
+error:
+    CFE_SRL_MutexUnlock(Handle);
+    return Status;
 }
 
 int32 CFE_SRL_ReadGenericCAN(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
@@ -368,13 +398,18 @@ int32 CFE_SRL_ReadSPI(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
     Status = ioctl(Handle->FD, SPI_IOC_MESSAGE(2), Xfer);
     if (Status < 0) {
         Handle->__errno = errno;
-        return CFE_SRL_IOCTL_ERR;
+        Status = CFE_SRL_IOCTL_ERR;
+        goto error;
     }
 
     Status = CFE_SRL_MutexUnlock(Handle);
-    if (Status != CFE_SUCCESS) return Status;
+    if (Status != CFE_SUCCESS) goto error;
 
     return CFE_SUCCESS;
+
+error:
+    CFE_SRL_MutexUnlock(Handle);
+    return Status;
 }
 
 int32 CFE_SRL_ReadGenericSPI(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
