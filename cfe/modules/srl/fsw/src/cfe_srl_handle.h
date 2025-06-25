@@ -18,7 +18,6 @@
 /**
  * Declaration of Struct & Values are located in `cfe_srl_basic.h`
 */
-
 int CFE_SRL_PriorInit(void);
 
 int CFE_SRL_GetOpenOption(CFE_SRL_DevType_t Devtype);

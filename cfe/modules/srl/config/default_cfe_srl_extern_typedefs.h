@@ -30,6 +30,9 @@ struct CFE_SRL_IO_Handle_s {
     uint32_t RxCount;
     uint32_t TxErrCnt;
     uint32_t RxErrCnt;
+    /**
+     * I/O function for each handle
+     */
     CFE_SRL_Function_t Func;
 };
 

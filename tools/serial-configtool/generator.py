@@ -117,8 +117,8 @@ with open('../../cfe/modules/srl/fsw/src/cfe_srl_init.c', 'w') as f:
             f.write(f"\t\treturn CFE_SRL_{iface['name'].upper()}_INIT_ERR;\n")
             f.write("\t}\n\n")
         else:
-            f.write(f"\tHandles[CFE_SRL_{iface['name'].upper()}_HANDLE_INDEXER]->Func.TxFunc = CFE_SRL_WriteGeneric{iface['type'].upper()};\n")
-            f.write(f"\tHandles[CFE_SRL_{iface['name'].upper()}_HANDLE_INDEXER]->Func.RxFunc = CFE_SRL_ReadGeneric{iface['type'].upper()};\n")
+            # f.write(f"\tHandles[CFE_SRL_{iface['name'].upper()}_HANDLE_INDEXER]->Func.TxFunc = CFE_SRL_WriteGeneric{iface['type'].upper()};\n")
+            # f.write(f"\tHandles[CFE_SRL_{iface['name'].upper()}_HANDLE_INDEXER]->Func.RxFunc = CFE_SRL_ReadGeneric{iface['type'].upper()};\n")
             f.write("\tif (Status != CFE_SUCCESS) {\n")
             f.write(f"\t\tCFE_ES_WriteToSysLog(\"%s: {iface['name']} Initialization failed! RC=%d\\n\", __func__, Status);\n")
             f.write(f"\t\treturn CFE_SRL_{iface['name'].upper()}_INIT_ERR;\n")

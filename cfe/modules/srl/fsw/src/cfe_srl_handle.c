@@ -5,6 +5,7 @@
 
 #include <fcntl.h>
 
+#include "cfe_srl_priv.h"
 static CFE_SRL_Global_Handle_t GlobalHandle[CFE_SRL_GLOBAL_HANDLE_NUM] = {0};
 
 
@@ -74,6 +75,37 @@ int CFE_SRL_GlobalHandleInit(CFE_SRL_IO_Handle_t **Handle, const char *Name, con
 }
 
 
+void CFE_SRL_SetTRxFunction(CFE_SRL_IO_Handle_t *Handle) {
+    const CFE_SRL_Global_Handle_t *Entry = (CFE_SRL_Global_Handle_t *)Handle;
+
+    switch (Entry->DevType)
+    {
+    case SRL_DEVTYPE_I2C:
+        Handle->Func.TxFunc = CFE_SRL_WriteGenericI2C;
+        Handle->Func.RxFunc = CFE_SRL_ReadGenericI2C;
+        break;
+    case SRL_DEVTYPE_SPI:
+        Handle->Func.TxFunc = CFE_SRL_WriteGenericSPI;
+        Handle->Func.RxFunc = CFE_SRL_ReadGenericSPI;
+        break;
+    case SRL_DEVTYPE_CAN:
+        Handle->Func.TxFunc = CFE_SRL_WriteGenericCAN;
+        Handle->Func.RxFunc = CFE_SRL_ReadGenericCAN;
+        break;
+    case SRL_DEVTYPE_UART:
+    case SRL_DEVTYPE_RS422:
+        Handle->Func.TxFunc = CFE_SRL_WriteGenericUART;
+        Handle->Func.RxFunc = CFE_SRL_ReadGenericUART;
+        break;
+    default:
+        Handle->Func.TxFunc = NULL;
+        Handle->Func.RxFunc = NULL;
+        break;
+    }
+    
+    return;
+}
+
 
 int CFE_SRL_HandleInit(CFE_SRL_IO_Handle_t **Handle, const char *Name, const char *Devname, uint8_t DevType, uint8_t MutexID, uint32_t BaudRate, uint8_t SPIMode) {
     int Status;
@@ -126,6 +158,9 @@ int CFE_SRL_HandleInit(CFE_SRL_IO_Handle_t **Handle, const char *Name, const cha
     if (DevType == SRL_DEVTYPE_SPI) {
         Status = CFE_SRL_SetSPI(*Handle, SPIMode, BaudRate, 8);
     }
+
+    CFE_SRL_SetTRxFunction(*Handle);
+
     return CFE_SUCCESS;
 }
 
