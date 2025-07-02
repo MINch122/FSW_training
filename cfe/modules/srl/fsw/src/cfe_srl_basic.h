@@ -11,11 +11,12 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <stdbool.h>
 #include <errno.h>
-#include <termios.h>
 #include <sys/ioctl.h>
+#include <asm/termbits.h>
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
 #include "cfe.h"
@@ -70,15 +71,13 @@ bool CFE_SRL_QueryStatus(const CFE_SRL_Global_Handle_t *Entry, CFE_SRL_Handle_St
 
 int CFE_SRL_SetHandleStatus(CFE_SRL_IO_Handle_t *Handle, uint8_t Label, bool Set);
 
+
 /*************************************************************
  *  Basic UART/RS422 Function
  *************************************************************/
-speed_t CFE_SRL_GetBaudFromInt(uint32_t BaudRate);
-
-int CFE_SRL_GetTermiosAttr(CFE_SRL_IO_Handle_t *Handle, struct termios *Termios);
-int CFE_SRL_SetTermiosAttr(CFE_SRL_IO_Handle_t *Handle, struct termios *Termios);
-
 int CFE_SRL_BasicSetUART(CFE_SRL_IO_Handle_t *Handle, uint32_t BaudRate);
+int CFE_SRL_ChangeBaudUART(CFE_SRL_IO_Handle_t *Handle, uint32_t BaudRate);
+
 
 /*************************************************************
  *  Basic GPIO Function
