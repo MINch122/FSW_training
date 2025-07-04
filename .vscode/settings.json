@@ -13,7 +13,26 @@
         "cfe_srl_basic.h": "c",
         "csp_interface.h": "c",
         "conn.h": "c",
-        "csp_autoconfig.h": "c"
+        "csp_autoconfig.h": "c",
+        "sample_app_fcncodes.h": "c",
+        "sample_app.h": "c",
+        "payuzuc_task.h": "c",
+        "payuzuc_msg.h": "c",
+        "payuzuc_cmds.h": "c",
+        "payuzuc_dispatch.h": "c",
+        "sample_app_dispatch.h": "c",
+        "cfe.h": "c",
+        "sample_app_msg.h": "c",
+        "sample_app_mission_cfg.h": "c",
+        "sample_app_cmds.h": "c",
+        "sample_app_msgids.h": "c",
+        "sample_app_eventids.h": "c",
+        "cfe_config.h": "c",
+        "sample_app_platform_cfg.h": "c",
+        "payuzuc_fcncodes.h": "c",
+        "payuzuc_msgids.h": "c",
+        "cfe_msg.h": "c",
+        "cfe_srl.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

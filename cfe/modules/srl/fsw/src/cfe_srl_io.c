@@ -34,7 +34,7 @@ int CFE_SRL_Write(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Size) {
     if(!CFE_SRL_QueryStatus((const CFE_SRL_Global_Handle_t *)Handle, CFE_SRL_HANDLE_STATUS_FD_INIT)) {
         return CFE_SRL_NOT_OPEN_ERR;
     }
-    OS_printf("FD = %d || Data = %p || Size = %u\n", Handle->FD, Data, (uint32_t)Size);
+        
     WriteBytes = CFE_SRL_BasicWrite(Handle->FD, Data, Size);
     if (WriteBytes < 0) {
         Handle->TxErrCnt++;

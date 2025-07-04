@@ -47,6 +47,8 @@
 #include "cfe_time.h" /* Define Time Service API */
 #include "cfe_tbl.h"  /* Define Table Service API */
 
+#include "cfe_srl.h"  /* Define Serial comm. Service API */
+
 #include "cfe_msg.h"        /* Define Message API */
 #include "cfe_resourceid.h" /* Define ResourceID API */
 
