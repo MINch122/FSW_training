@@ -132,3 +132,7 @@ int32 CFE_SRL_ApiGetRparamCSP(uint8_t Type, uint8_t Node, uint8_t TableId, uint1
 int32 CFE_SRL_ApiSetRparamCSP(uint8_t Type, uint8_t Node, uint8_t TableId, uint16_t Addr, void *Param) {
     return CFE_SRL_SetRparamCSP(Type, Node, TableId, Addr, Param);
 }
+
+int32 CFE_SRL_ApiPingCSP(uint8 Node, uint32 Timeout, unsigned int Size, uint8 Options) {
+    return CFE_SRL_PingCSP(Node, Timeout, Size, Options);
+}

@@ -26,6 +26,7 @@ typedef enum {
     CSP_NODE_GS_KISS = 8,
     CSP_NODE_GSTRX = 20,
     // CSP_NODE_ADCS = 24
+    CSP_NODE_SOBC = 32
 } CFE_SRL_CSP_Node_t;
 
 typedef struct {
@@ -46,6 +47,8 @@ int CFE_SRL_GetNodeConfigCSP(uint8_t Node, CFE_SRL_CSP_Node_Config_t **Config);
 int CFE_SRL_InitCSP(void);
 
 int CFE_SRL_TransactionCSP(uint8_t Node, uint8_t Port, void *TxData, int TxSize, void *RxData, int RxSize);
-int CFE_SRL_GetRparamCSP(gs_param_type_t Type, uint8_t Node, gs_param_table_id_t TableId, uint16_t Addr, void *Param);
-int CFE_SRL_SetRparamCSP(gs_param_type_t Type, uint8_t Node, gs_param_table_id_t TableId, uint16_t Addr, void *Param);
+int CFE_SRL_GetRparamCSP(uint8_t Type, uint8_t Node, gs_param_table_id_t TableId, uint16_t Addr, void *Param);
+int CFE_SRL_SetRparamCSP(uint8_t Type, uint8_t Node, gs_param_table_id_t TableId, uint16_t Addr, void *Param);
+int CFE_SRL_PingCSP(uint8 Node, uint32 Timeout, unsigned int Size, uint8 Options);
+
 #endif /* CFE_SRL_CSP_H */

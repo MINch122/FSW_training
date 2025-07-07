@@ -90,4 +90,6 @@ int32 CFE_SRL_ApiGetRparamCSP(uint8_t Type, uint8_t Node, uint8_t TableId, uint1
 /// @return Only `CFE_SUCCESS`(which is `0`) is success
 int32 CFE_SRL_ApiSetRparamCSP(uint8_t Type, uint8_t Node, uint8_t TableId, uint16_t Addr, void *Param);
 
+int32 CFE_SRL_ApiPingCSP(uint8 Node, uint32 Timeout, unsigned int Size, uint8 Options);
+
 #endif /* CFE_SRL_H */
