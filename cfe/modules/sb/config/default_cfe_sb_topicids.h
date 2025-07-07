@@ -32,9 +32,9 @@
 **  \par Limits
 **      Not Applicable
 */
-#define CFE_MISSION_SB_CMD_TOPICID          3
-#define CFE_MISSION_SB_SEND_HK_TOPICID      11
-#define CFE_MISSION_SB_SUB_RPT_CTRL_TOPICID 14
+#define CFE_MISSION_SB_CMD_TOPICID          4 // 3
+#define CFE_MISSION_SB_SEND_HK_TOPICID      5 // 11
+#define CFE_MISSION_SB_SUB_RPT_CTRL_TOPICID 6 // 14
 
 /**
 **  \cfemissioncfg cFE Portable Message Numbers for Telemetry
@@ -45,9 +45,9 @@
 **  \par Limits
 **      Not Applicable
 */
-#define CFE_MISSION_SB_HK_TLM_TOPICID      3
-#define CFE_MISSION_SB_STATS_TLM_TOPICID   10
-#define CFE_MISSION_SB_ALLSUBS_TLM_TOPICID 13
-#define CFE_MISSION_SB_ONESUB_TLM_TOPICID  14
+#define CFE_MISSION_SB_HK_TLM_TOPICID      6 // 3
+#define CFE_MISSION_SB_STATS_TLM_TOPICID   7 // 10
+#define CFE_MISSION_SB_ALLSUBS_TLM_TOPICID 8 // 13
+#define CFE_MISSION_SB_ONESUB_TLM_TOPICID  9 // 14
 
 #endif

@@ -8,13 +8,13 @@
 /**
  * cFE Portable Message Numbers for Commands
  */
-#define CFE_MISSION_SRL_CMD_TOPICID     114
-#define CFE_MISSION_SRL_SEND_HK_TOPICID 136
+#define CFE_MISSION_SRL_CMD_TOPICID     0x0D
+#define CFE_MISSION_SRL_SEND_HK_TOPICID 0x0E
 
 /**
  * cFE Portable Message Numbers for Telemetry
  */
-#define CFE_MISSION_SRL_HK_TLM_TOPICID  138
+#define CFE_MISSION_SRL_HK_TLM_TOPICID  0x0E
 
 
 #endif /* CFE_SRL_TOPICIDS_H */

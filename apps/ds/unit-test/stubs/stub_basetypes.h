@@ -1,6 +1,6 @@
 /************************************************************************
- * NASA Docket No. GSC-18,921-1, and identified as “CFS Limit Checker
- * Application version 2.2.1”
+ * NASA Docket No. GSC-18,917-1, and identified as “CFS Data Storage
+ * (DS) application version 2.6.1”
  *
  * Copyright (c) 2021 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
@@ -18,30 +18,25 @@
  ************************************************************************/
 
 /**
- * @file
- *   CFS Limit Checker (LC) Application Message IDs
- */
-#ifndef LC_MSGIDS_H
-#define LC_MSGIDS_H
-
-/**
- * \defgroup cfslccmdmid CFS Limit Checker Command Message IDs
- * \{
+ * \file
+ *   Coverage stub basic data types
  */
 
-#define LC_CMD_MID       0x181D /**< \brief Msg ID for cmds to LC                */
-#define LC_SEND_HK_MID   0x181E /**< \brief Msg ID to request LC housekeeping    */
-#define LC_SAMPLE_AP_MID 0x181F /**< \brief Msg ID to request actionpoint sample */
+#ifndef STUB_BASETYPES_H
+#define STUB_BASETYPES_H
 
-/**\}*/
-
-/**
- * \defgroup cfslctlmmid CFS Limit Checker Telemetry Message IDs
- * \{
+/*
+ * NOTE: These header files are intentionally _not_ overridden
+ * in the replacement/override header directory, so this should
+ * pull in the actual (native system) version of these files.
+ *
+ * It is important to pull in these definitions first before any
+ * potential re-mapping (#define) statements are done.
  */
 
-#define LC_HK_TLM_MID 0x081F /**< \brief LC Housekeeping Telemetry */
-
-/**\}*/
+#include <stddef.h>  /* for correct size_t and ptrdiff_t types */
+#include <stdint.h>  /* for correct fixed-width integer types */
+#include <limits.h>  /* for correct INT_MAX, etc. */
+#include <stdbool.h> /* for correct boolean semantics */
 
 #endif

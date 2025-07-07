@@ -1,6 +1,6 @@
 /************************************************************************
- * NASA Docket No. GSC-18,921-1, and identified as “CFS Limit Checker
- * Application version 2.2.1”
+ * NASA Docket No. GSC-18,917-1, and identified as “CFS Data Storage
+ * (DS) application version 2.6.1”
  *
  * Copyright (c) 2021 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
@@ -19,28 +19,20 @@
 
 /**
  * @file
- *   CFS Limit Checker (LC) Application Message IDs
+ *  The CFS Data Storage (DS) Application header file containing version number
  */
-#ifndef LC_MSGIDS_H
-#define LC_MSGIDS_H
+#ifndef DS_VERSION_H
+#define DS_VERSION_H
 
 /**
- * \defgroup cfslccmdmid CFS Limit Checker Command Message IDs
+ * \defgroup cfsdsversion CFS Data Storage Version
+ * \ref cfsversions
  * \{
  */
 
-#define LC_CMD_MID       0x181D /**< \brief Msg ID for cmds to LC                */
-#define LC_SEND_HK_MID   0x181E /**< \brief Msg ID to request LC housekeeping    */
-#define LC_SAMPLE_AP_MID 0x181F /**< \brief Msg ID to request actionpoint sample */
-
-/**\}*/
-
-/**
- * \defgroup cfslctlmmid CFS Limit Checker Telemetry Message IDs
- * \{
- */
-
-#define LC_HK_TLM_MID 0x081F /**< \brief LC Housekeeping Telemetry */
+#define DS_MAJOR_VERSION 2  /**< \brief Major version number */
+#define DS_MINOR_VERSION 6  /**< \brief Minor version number */
+#define DS_REVISION      99 /**< \brief Revision number */
 
 /**\}*/
 

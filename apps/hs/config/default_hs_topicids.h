@@ -24,9 +24,10 @@
 #ifndef HS_TOPICIDS_H
 #define HS_TOPICIDS_H
 
-#define CFE_MISSION_HS_CMD_TOPICID     0xAE /**< \brief Msg ID for cmds to HS                */
-#define CFE_MISSION_HS_SEND_HK_TOPICID 0xAF /**< \brief Msg ID to request HS housekeeping    */
-#define CFE_MISSION_HS_WAKEUP_TOPICID  0xB0 /**< \brief Msg ID to wake up HS                 */
-#define CFE_MISSION_HS_HK_TLM_TOPICID  0xAD /**< \brief HS Housekeeping Telemetry            */
+#define CFE_MISSION_HS_CMD_TOPICID     0x1A /**< \brief Msg ID for cmds to HS                */
+#define CFE_MISSION_HS_SEND_HK_TOPICID 0x1B /**< \brief Msg ID to request HS housekeeping    */
+#define CFE_MISSION_HS_WAKEUP_TOPICID  0x1C /**< \brief Msg ID to wake up HS                 */
+
+#define CFE_MISSION_HS_HK_TLM_TOPICID  0x1E /**< \brief HS Housekeeping Telemetry            */
 
 #endif

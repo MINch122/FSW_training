@@ -29,10 +29,10 @@
  * \{
  */
 
-#define HK_CMD_MID     0x189A /**< \brief HK Ground Commands Message ID */
-#define HK_SEND_HK_MID 0x189B /**< \brief HK Send Housekeeping Data Cmd Message ID */
+#define HK_CMD_MID     0x1817 /**< \brief HK Ground Commands Message ID */
+#define HK_SEND_HK_MID 0x1818 /**< \brief HK Send Housekeeping Data Cmd Message ID */
 
-#define HK_SEND_COMBINED_PKT_MID 0x189C /**< \brief HK Send Combined Pkt Cmd Message ID */
+#define HK_SEND_COMBINED_PKT_MID 0x1819 /**< \brief HK Send Combined Pkt Cmd Message ID */
 
 /**\}*/
 
@@ -41,12 +41,12 @@
  * \{
  */
 
-#define HK_HK_TLM_MID 0x089B /**< \brief HK Housekeeping Telemetry Message ID */
+#define HK_HK_TLM_MID 0x0819 /**< \brief HK Housekeeping Telemetry Message ID */
 
-#define HK_COMBINED_PKT1_MID 0x089C /**< \brief HK Combined Packet 1 Message ID */
-#define HK_COMBINED_PKT2_MID 0x089D /**< \brief HK Combined Packet 2 Message ID */
-#define HK_COMBINED_PKT3_MID 0x089E /**< \brief HK Combined Packet 3 Message ID */
-#define HK_COMBINED_PKT4_MID 0x089F /**< \brief HK Combined Packet 4 Message ID */
+#define HK_COMBINED_PKT1_MID 0x081A /**< \brief HK Combined Packet 1 Message ID */
+#define HK_COMBINED_PKT2_MID 0x081B /**< \brief HK Combined Packet 2 Message ID */
+#define HK_COMBINED_PKT3_MID 0x081C /**< \brief HK Combined Packet 3 Message ID */
+#define HK_COMBINED_PKT4_MID 0x081D /**< \brief HK Combined Packet 4 Message ID */
 
 /**\}*/
 

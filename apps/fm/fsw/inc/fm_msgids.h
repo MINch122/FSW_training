@@ -30,8 +30,8 @@
  * \{
  */
 
-#define FM_CMD_MID     0x188C /** < \brief FM ground commands */
-#define FM_SEND_HK_MID 0x188D /** < \brief FM send housekeeping */
+#define FM_CMD_MID     0x1815 /** < \brief FM ground commands */
+#define FM_SEND_HK_MID 0x1816 /** < \brief FM send housekeeping */
 
 /**\}*/
 
@@ -40,11 +40,11 @@
  * \{
  */
 
-#define FM_HK_TLM_MID         0x088A /** < \brief FM housekeeping */
-#define FM_FILE_INFO_TLM_MID  0x088B /** < \brief FM get file info */
-#define FM_DIR_LIST_TLM_MID   0x088C /** < \brief FM get dir list */
-#define FM_OPEN_FILES_TLM_MID 0x088D /** < \brief FM get open files */
-#define FM_FREE_SPACE_TLM_MID 0x088E /** < \brief FM get free space */
+#define FM_HK_TLM_MID         0x0814 /** < \brief FM housekeeping */
+#define FM_FILE_INFO_TLM_MID  0x0815 /** < \brief FM get file info */
+#define FM_DIR_LIST_TLM_MID   0x0816 /** < \brief FM get dir list */
+#define FM_OPEN_FILES_TLM_MID 0x0817 /** < \brief FM get open files */
+#define FM_FREE_SPACE_TLM_MID 0x0818 /** < \brief FM get free space */
 
 /**\}*/
 

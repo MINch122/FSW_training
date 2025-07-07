@@ -29,9 +29,9 @@
  * \{
  */
 
-#define SC_CMD_MID          (0x18A9) /**< \brief Msg ID for cmds to SC   */
-#define SC_SEND_HK_MID      (0x18AA) /**< \brief Msg ID to request SC HK */
-#define SC_WAKEUP_MID       (0x18AB) /**< \brief Msg ID to receive the wakeup command */
+#define SC_CMD_MID          (0x1820) /**< \brief Msg ID for cmds to SC   */
+#define SC_SEND_HK_MID      (0x1821) /**< \brief Msg ID to request SC HK */
+#define SC_WAKEUP_MID       (0x1822) /**< \brief Msg ID to receive the wakeup command */
 
 /**\}*/
 
@@ -40,7 +40,7 @@
  * \{
  */
 
-#define SC_HK_TLM_MID (0x08AA) /**< \brief Msg ID to send telemtry down on */
+#define SC_HK_TLM_MID (0x0820) /**< \brief Msg ID to send telemtry down on */
 
 /**\}*/
 
