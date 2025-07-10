@@ -16,19 +16,19 @@ with open('../../cfe/modules/srl/config/default_cfe_srl_mission_cfg.h', 'w') as 
     f.write('#include "cfe_srl_interface_cfg.h"\n\n')
     if namearr:
         f.write("typedef enum {\n")
-        if namearr:
-            for name in namearr:
-                f.write(f"\tCFE_SRL_{name}_HANDLE_INDEXER,\n")
-        else:
-            f.write("\tNOTHING\n")
+        for name in namearr:
+            f.write(f"\tCFE_SRL_{name}_HANDLE_INDEXER,\n")
         f.write("} CFE_SRL_Handle_Indexer_t;\n\n")
 
         f.write("/* \# of General serial device */\n")
         f.write("#define CFE_SRL_GNRL_DEVICE_NUM\t\t")
         f.write(f"(CFE_SRL_{namearr[-1]}_HANDLE_INDEXER + 1)\n\n")
     else:
+        f.write("typedef enum {\n")
+        f.write("\tNOTHING1\n")
+        f.write("} CFE_SRL_Handle_Indexer_t;\n\n")
         f.write("/* Every interfaces are not ready yet */\n")
-        f.write("#define CFE_SRL_GNRL_DEVICE_NUM\t\t1")
+        f.write("#define CFE_SRL_GNRL_DEVICE_NUM\t\t0\n\n")
     
     gpio_num = Get_gpio_num(config['interfaces'])
     if (gpio_num) :
