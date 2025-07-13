@@ -64,4 +64,15 @@ typedef struct {
     struct gpiod_line *Line;
 } CFE_SRL_GPIO_Handle_t;
 
+
+/**
+ * Module internal CSP node configuration sturcture
+ */
+typedef struct {
+    uint8_t Priority;
+    uint32_t Timeout;
+    uint32_t Options;
+} CFE_SRL_CSP_Node_Config_t;
+
+
 #endif /* CFE_SRL_EXTERN_TYPEDEF_H */

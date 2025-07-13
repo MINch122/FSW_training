@@ -17,8 +17,11 @@ if (ENABLE_UT)
         fsw/src/cfe_srl_handle.c
         fsw/src/cfe_srl_priv.c
         fsw/src/cfe_srl_csp.c
+        fsw/src/cfe_srl_csp_config.c
         fsw/src/cfe_srl_api.c
         fsw/src/cfe_srl_init.c
+        fsw/src/cfe_srl_task.c
+        fsw/src/cfe_srl_dispatch.c
     )
 else()
     set(srl_SOURCES
@@ -28,8 +31,11 @@ else()
     fsw/src/cfe_srl_handle.c
     fsw/src/cfe_srl_priv.c
     fsw/src/cfe_srl_csp.c
+    fsw/src/cfe_srl_csp_config.c
     fsw/src/cfe_srl_api.c
     fsw/src/cfe_srl_init.c
+    fsw/src/cfe_srl_task.c
+    fsw/src/cfe_srl_dispatch.c
     )   
 endif()
 

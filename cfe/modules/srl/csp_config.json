@@ -1,0 +1,69 @@
+{
+    "host" :
+    {
+        "address": 3,
+        "hostname": "POBC",
+        "model": "COSMIC",
+        "revision": "mozart",
+        "conn_max": 10,
+        "conn_queue_length": 10,
+        "fifo_length": 25,
+        "port_max_bind":32,
+        "rdp_max_window": 20,
+        "buffers": 10,
+        "buffer_data_size": 256,
+        "conn_dfl_so": "CSP_O_NONE"
+    },
+    "external" : [
+        {
+            "name": "EPS",
+            "node": 2,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_CRC32"
+        },
+        {
+            "name": "UTRX",
+            "node": 5,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_CRC32"
+        },
+        {
+            "name": "STRX",
+            "node": 6,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_CRC32"
+        },
+        {
+            "name": "GS_KISS",
+            "node": 8,
+            "interface": "CAN",
+            "via": "UTRX",
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_CRC32"
+        },
+        {
+            "name": "GSTRX",
+            "node": 20,
+            "interface": "CAN",
+            "via": "UTRX",
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_CRC32"
+        }
+    ]
+}

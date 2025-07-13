@@ -18,4 +18,15 @@ typedef enum {
 	NOTHING
 } CFE_SRL_GPIO_Indexer_t;
 
+
+/* CSP Node  Configuration */
+typedef enum {
+	CSP_NODE_POBC = 3,
+	CSP_NODE_EPS = 2,
+	CSP_NODE_UTRX = 5,
+	CSP_NODE_STRX = 6,
+	CSP_NODE_GS_KISS = 8,
+	CSP_NODE_GSTRX = 20,
+} CFE_SRL_CSP_Node_t;
+
 #endif /* CFE_SRL_MISSION_CFG_H */

@@ -2,6 +2,12 @@
 - Author: Kweon HyeokJin
 
 # Notes
+- Move serial config file (`Interface_config.json` & `csp_config.json`) to `sample_defs`
+- Add CSP configuration tool - refer `csp_config.json`
+- Revise SRL module
+  - Add SRL Task for TCTM
+- Add LC, HS, FM apps
+
 - Unlink several cFS submodule (e.g. cfe, ci_lab, sch_lab)
 > That means these modules managed as same repository
 - Add some submodules. **CSP**, **toolchain**, **libgpiod**

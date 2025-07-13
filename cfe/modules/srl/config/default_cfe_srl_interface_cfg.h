@@ -16,8 +16,18 @@
 
 
 /******************* Macro Definitions ***********************/
+
+/**
+ * The Maximum number of general (i.e. Native, non CSP) Device
+ * Can be enlarged. If the general device is too many.
+ */
 #define CFE_SRL_GLOBAL_HANDLE_NUM   20
-#define CFE_SRL_DEVICE_TABLE_NUM    20
+
+/**
+ * The maximum number of CSP Device
+ * Can **NOT** be enlarged, because of the libgscsp architecture
+ */
+#define CFE_SRL_CSP_MAX_DEVICE_NUM  32
 
 /* Max Handle name length */
 #define CFE_SRL_HANDLE_NAME_LENGTH  16

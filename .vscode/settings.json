@@ -32,7 +32,9 @@
         "payuzuc_fcncodes.h": "c",
         "payuzuc_msgids.h": "c",
         "cfe_msg.h": "c",
-        "cfe_srl.h": "c"
+        "cfe_srl.h": "c",
+        "cfe_srl_task.h": "c",
+        "cfe_perfids.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

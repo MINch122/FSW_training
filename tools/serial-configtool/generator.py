@@ -2,10 +2,24 @@ import sys
 import json
 from genfunction import *
 
-with open('../../cfe/modules/srl/Interface_config.json') as fp:
+
+cfg = Get_Serial_module_cfg("../../cfe/modules/srl/config/default_cfe_srl_interface_cfg.h")
+max_handle = int(cfg["CFE_SRL_GLOBAL_HANDLE_NUM"])
+max_csp = int(cfg["CFE_SRL_CSP_MAX_DEVICE_NUM"])
+
+with open('../../sample_defs/Interface_config.json') as fp:
     config = json.load(fp)
 interfaces = config['interfaces']    
 namearr = Get_general_srl_namearr(interfaces)
+if (len(namearr) > max_handle):
+    raise Exception(f"General Device is too many. Max: {max_handle} || Input: {len(namearr)}.\nEnlarge the Maximum number in the srl interface config header.")
+
+with open("../../sample_defs/csp_config.json") as fp:
+    cspcfg = json.load(fp)
+csp_host = cspcfg['host'] # host config -> dict
+csp_node = cspcfg['external'] # extgernal gomspace config -> 'list' of dict
+if (len(csp_node)+1 > max_csp):
+    raise Exception((f"CSP Device is too many. Max: {max_csp} || Input: {len(csp_node)+1}.\nReduce CSP device."))
 
 # Generate cfe_srl_mission_cfg.h
 with open('../../cfe/modules/srl/config/default_cfe_srl_mission_cfg.h', 'w') as f:
@@ -44,9 +58,59 @@ with open('../../cfe/modules/srl/config/default_cfe_srl_mission_cfg.h', 'w') as 
         f.write(f"#define CFE_SRL_TOT_GPIO_NUM\t\t{gpio_num}\n\n")
         f.write("typedef enum {\n")
         f.write("\tNOTHING\n")
-        f.write("} CFE_SRL_GPIO_Indexer_t;\n\n")
+        f.write("} CFE_SRL_GPIO_Indexer_t;\n\n\n")
+
+
+
+# Generate CSP Node configuration
+    f.write("/* CSP Node  Configuration */\n")
+    f.write("typedef enum {\n")
+    f.write(f"\tCSP_NODE_{csp_host['hostname']} = {csp_host['address']},\n")
+    for iface in csp_node:
+        f.write(f"\tCSP_NODE_{iface['name']} = {iface['node']},\n")
+    f.write("} CFE_SRL_CSP_Node_t;\n\n")
     f.write("#endif /* CFE_SRL_MISSION_CFG_H */")
 
+# Generate CSP Init
+with open('../../cfe/modules/srl/fsw/src/cfe_srl_csp_config.c', 'w') as f:
+    f.write("/* Auto-Generated file. Never change this code! */\n\n")
+    f.write('#include "cfe_srl_csp.h"\n\n')
+    f.write("int CFE_SRL_RtableCSP(csp_iface_t *Iface) {\n")
+    f.write("\tint Status;\n\n")
+    for node in csp_node:
+        via = "CSP_NO_VIA_ADDRESS" if node['via'] == None else f"CSP_NODE_{node['via']}"
+        f.write(f"\tStatus = csp_rtable_set(CSP_NODE_{node['name']}, CSP_ID_HOST_SIZE, Iface, {via});\n")
+        f.write("\tif (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;\n\n")
+    f.write("\treturn CFE_SUCCESS;\n")
+    f.write("}\n\n")
+
+
+    f.write("int CFE_SRL_AllNodeConfigCSP(void) {\n\n")
+    for node in csp_node:
+        priority = 'CSP_PRIO_NORM'
+        if node['priority'] == 0: priority = 'CSP_PRIO_CRITICAL'
+        elif node['priority'] == 1: priority = 'CSP_PRIO_HIGH'
+        elif node['priority'] == 2: priority = 'CSP_PRIO_NORM'
+        elif node['priority'] == 3: priority = 'CSP_PRIO_LOW'
+        f.write(f"\tCFE_SRL_NodeConfigCSP(CSP_NODE_{node['name']}, {priority}, CSP_TIMEOUT({node['timeout']}), {node['option']});\n")
+    f.write("\n\treturn CFE_SUCCESS;\n")
+    f.write("}\n\n")
+
+    f.write("void CFE_SRL_ConfigHost(csp_conf_t *Conf) {\n\n")
+    f.write(f"\tConf->address = CSP_NODE_{csp_host['hostname']};\n")
+    f.write(f"\tConf->hostname = \"{csp_host['hostname']}\";\n")
+    f.write(f"\tConf->model = \"{csp_host['model']}\";\n")
+    f.write(f"\tConf->revision = \"{csp_host['revision']}\";\n")
+    f.write(f"\tConf->conn_max = {csp_host['conn_max']};\n")
+    f.write(f"\tConf->conn_queue_length = {csp_host['conn_queue_length']};\n")
+    f.write(f"\tConf->fifo_length = {csp_host['fifo_length']};\n")
+    f.write(f"\tConf->port_max_bind = {csp_host['port_max_bind']};\n")
+    f.write(f"\tConf->rdp_max_window = {csp_host['rdp_max_window']};\n")
+    f.write(f"\tConf->buffers = {csp_host['buffers']};\n")
+    f.write(f"\tConf->buffer_data_size = {csp_host['buffer_data_size']};\n")
+    f.write(f"\tConf->conn_dfl_so = {csp_host['conn_dfl_so']};\n")
+    f.write("\n\treturn;\n")
+    f.write("}\n")
 
 # Generate cfe_srl_error.h
 with open('../../cfe/modules/core_api/fsw/inc/cfe_srl_error.h', 'w') as f:
