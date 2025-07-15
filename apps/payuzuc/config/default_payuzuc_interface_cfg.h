@@ -34,7 +34,17 @@
 #define PAYUZUC_TLM_HDR_SIZE            5
 #define PAYUZUC_TLM_TAIL_SIZE           1
 
-/* `data` means only real payload size */
+#define PAYUZUC_HDR_TAIL_SIZE           PAYUZUC_TLM_HDR_SIZE + PAYUZUC_TLM_TAIL_SIZE
+
+/**
+ * Image Size
+ * This size means **one line (row)** of Image
+ */
+#define PAYUZUC_IMG_SIZE                640
+#define PAYUZUC_THUMBNAIL_IMG_SIZE      80
+
+
+/* Var `data` means only real payload size */
 #define PAYUZUC_GET_TLM_SIZE(data)\
         (PAYUZUC_TLM_HDR_SIZE + PAYUZUC_TLM_TAIL_SIZE + (data))
 
@@ -46,8 +56,8 @@
 #define PAYUZUC_MEMORY_STATUS_TLM_SIZE          PAYUZUC_GET_TLM_SIZE(20)
 #define PAYUZUC_SET_EXPOSURE_TLM_SIZE           PAYUZUC_GET_TLM_SIZE(0)
 #define PAYUZUC_CAPTURE_TLM_SIZE                PAYUZUC_GET_TLM_SIZE(2)
-#define PAYUZUC_DOWNLOAD_TLM_SIZE               PAYUZUC_GET_TLM_SIZE(642)
-#define PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE     PAYUZUC_GET_TLM_SIZE(82)
+#define PAYUZUC_DOWNLOAD_TLM_SIZE               PAYUZUC_GET_TLM_SIZE(PAYUZUC_IMG_SIZE + 2) // +2 is returned line number
+#define PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE     PAYUZUC_GET_TLM_SIZE(PAYUZUC_THUMBNAIL_IMG_SIZE + 2)  // +2 is returned line number
 #define PAYUZUC_READ_REGISTER_TLM_SIZE          PAYUZUC_GET_TLM_SIZE(4)
 #define PAYUZUC_WRITE_REGISTER_TLM_SIZE         PAYUZUC_GET_TLM_SIZE(0)
 

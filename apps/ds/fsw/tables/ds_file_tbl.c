@@ -150,31 +150,35 @@ DS_DestFileTable_t DS_DestFileTable = {
             /* .MaxFileAge    = */ (60 * 60 * 2),     /* 2 hours */
             /* .SequenceCount = */ 5000,
         },
-        /* File Index 06 */
+
+        /*******************************************
+         * PAYUZUC IMG Data - Including Tlm Header
+         *******************************************/
+        /* File Index 06 - `FILE_PAYUZUC_IMG_PKTS` */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ DS_EMPTY_STRING,
-            /* .Basename      = */ DS_EMPTY_STRING,
-            /* .Extension     = */ DS_EMPTY_STRING,
+            /* .Pathname      = */ "/cf/kiss",
+            /* .Basename      = */ "KissCAM",
+            /* .Extension     = */ "img",
 
-            /* .FileNameType  = */ DS_UNUSED,
-            /* .EnableState   = */ DS_UNUSED,
-            /* .MaxFileSize   = */ DS_UNUSED,
-            /* .MaxFileAge    = */ DS_UNUSED,
-            /* .SequenceCount = */ DS_UNUSED,
+            /* .FileNameType  = */ DS_BY_COUNT,
+            /* .EnableState   = */ DS_DISABLED,
+            /* .MaxFileSize   = */ ((5+2+640+1 + 12) * 480 * 4), /* `+12` for CCSDS tlm hdr */
+            /* .MaxFileAge    = */ (60 * 10),     /* 10 minutes */
+            /* .SequenceCount = */ 488, // M P C 23
         },
-        /* File Index 07 */
+        /* File Index 07 - `FILE_PAYUZUC_THUMBNAIL_PKTS` */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ DS_EMPTY_STRING,
-            /* .Basename      = */ DS_EMPTY_STRING,
-            /* .Extension     = */ DS_EMPTY_STRING,
+            /* .Pathname      = */ "/cf/kiss_thumb",
+            /* .Basename      = */ "KissCAM",
+            /* .Extension     = */ "img",
 
-            /* .FileNameType  = */ DS_UNUSED,
-            /* .EnableState   = */ DS_UNUSED,
-            /* .MaxFileSize   = */ DS_UNUSED,
-            /* .MaxFileAge    = */ DS_UNUSED,
-            /* .SequenceCount = */ DS_UNUSED,
+            /* .FileNameType  = */ DS_BY_COUNT,
+            /* .EnableState   = */ DS_DISABLED,
+            /* .MaxFileSize   = */ ((5+2+80+1 + 12) * 60 * 4), /* `+12` for CCSDS tlm hdr */
+            /* .MaxFileAge    = */ (60 * 5),    /* 5 minutes */
+            /* .SequenceCount = */ 250, // M H S 7
         },
         /* File Index 08 */
         {

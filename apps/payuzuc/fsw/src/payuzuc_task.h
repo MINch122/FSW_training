@@ -55,6 +55,12 @@ typedef struct {
      * Serial Handle
      */
     CFE_SRL_IO_Handle_t *Handle;
+    
+    /**
+     * Image Data
+     */
+    PAYUZUC_ImgTlm_t ImgTlm;
+    
 } PAYUZUC_Data_t;
 
 /**

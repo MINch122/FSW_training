@@ -58,6 +58,7 @@
 /* #include "mm_msgids.h"  */
 /* #include "sc_msgids.h"  */
 /* #include "sch_msgids.h" */
+#include "payuzuc_msgids.h"
 
 /*
 ** Note: It is suggested that missions pre-define their file table
@@ -77,6 +78,11 @@
 #define FILE_CFE_APP_HK_PKTS  4
 #define FILE_CFE_APP_TLM_PKTS 5
 
+/**
+ * PAYUZUC IMG's `file_tbl.c` index number
+ */
+#define FILE_PAYUZUC_IMG_PKTS 6
+#define FILE_PAYUZUC_THUMBNAIL_PKTS 7
 /*
 ** Sample packet filter table data
 */
@@ -195,22 +201,32 @@ DS_FilterTable_t DS_FilterTable = {
        {FILE_ALL_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
+
+
+    /******************************************
+     * PAYUZUC IMG Data - Including Tlm Header
+     ******************************************/
      /* Packet Index 014 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_IMG_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {FILE_PAYUZUC_IMG_PKTS, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
+    /******************************************
+     * PAYUZUC Preview IMG Data - Including Tlm Header
+     ******************************************/
      /* Packet Index 015 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_THUMBNAIL_IMG_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {FILE_PAYUZUC_THUMBNAIL_PKTS, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
+
+
      /* Packet Index 016 */
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */

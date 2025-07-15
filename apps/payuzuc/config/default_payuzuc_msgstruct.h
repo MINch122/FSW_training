@@ -120,4 +120,13 @@ typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     PAYUZUC_HkTlm_Payload_t Payload;
 } PAYUZUC_HkTlm_t;
+
+/**
+ * Image MSG struct
+ */
+typedef struct {
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    uint8_t Payload[640];
+} PAYUZUC_ImgTlm_t;
+
 #endif

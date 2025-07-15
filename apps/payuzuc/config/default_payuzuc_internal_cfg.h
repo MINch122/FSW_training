@@ -18,7 +18,7 @@
 
 
 /**
- * Define Command Code
+ * Define Command Code of KissCAM
  */
 #define PAYUZUC_PING_CMD_CODE           0x50 /* `P` */
 #define PAYUZUC_SET_MODE_CMD_CODE       0x4D /* `M` */

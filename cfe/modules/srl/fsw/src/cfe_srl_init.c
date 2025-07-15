@@ -40,5 +40,12 @@ int32 CFE_SRL_EarlyInit(void) {
 	}
 	CFE_ES_WriteToSysLog("%s: socat Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_SOCAT_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_SOCAT_HANDLE_INDEXER])->DevName);
 
+	Status = CFE_SRL_InitCSP();
+	if (Status != CFE_SUCCESS) {
+		CFE_ES_WriteToSysLog("%s: CSP Initialization failed! RC=%d\n", __func__, Status);
+		return CFE_SRL_CSP_INIT_ERR;
+	}
+	CFE_ES_WriteToSysLog("%s: CSP Successfully Initialized.\n", __func__);
+
 return CFE_SUCCESS;
 }

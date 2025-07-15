@@ -27,6 +27,7 @@ typedef enum {
 	CSP_NODE_STRX = 6,
 	CSP_NODE_GS_KISS = 8,
 	CSP_NODE_GSTRX = 20,
+	CSP_NODE_SOBC = 23,
 } CFE_SRL_CSP_Node_t;
 
 #endif /* CFE_SRL_MISSION_CFG_H */

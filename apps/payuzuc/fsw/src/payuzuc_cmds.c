@@ -3,6 +3,14 @@
  *   This file contains the source code for the PAY UZURO CAM Ground Command-handling functions
  */
 
+/**
+ * Preprocessor
+ * This is the indicator of w/w.o SOBC architecture
+ * If SOBC not used, undef `USE_SOBC`
+ */
+#define USE_SOBC
+// #undef USE_SOBC
+
 /*
 ** Include Files:
 */
@@ -82,13 +90,16 @@ CFE_Status_t PAYUZUC_ResetCountersCmd(const PAYUZUC_ResetCountersCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUC_PingCmd(const PAYUZUC_PingCmd_t *Msg) {
+    PAYUZUC_Data.CmdCounter++;
+
     int32 Status;
-    CFE_SRL_IO_Param_t Params = {0,};
+    
     PAYUZUC_Cmd_t Cmd = {0,};
     uint8 RxBuf[PAYUZUC_PING_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_PING_PARAM_SIZE, PAYUZUC_PING_CMD_CODE);
-    
+#ifndef USE_SOBC
+    CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
     Params.RxData = &RxBuf;
@@ -99,7 +110,17 @@ CFE_Status_t PAYUZUC_PingCmd(const PAYUZUC_PingCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-
+#else
+    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_PING_TLM_SIZE);
+    if (Status == 0) {
+        PAYUZUC_Data.ErrCounter ++;
+    }
+#endif
+    for (int i = 0; i < sizeof(RxBuf); i++) {
+        OS_printf("0x%02X\n", RxBuf[i]);
+    }
+    
+    
     return CFE_SUCCESS;
 }
 
@@ -109,13 +130,16 @@ CFE_Status_t PAYUZUC_PingCmd(const PAYUZUC_PingCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUC_SetModeCmd(const PAYUZUC_SetModeCmd_t *Msg) {
+    PAYUZUC_Data.CmdCounter++;
+
     int32 Status;
-    CFE_SRL_IO_Param_t Params = {0,};
+    
     PAYUZUC_Cmd_t Cmd = {0,};
     uint8 RxBuf[PAYUZUC_SET_MODE_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_SET_MODE_PARAM_SIZE, PAYUZUC_SET_MODE_CMD_CODE);
-    
+#ifndef USE_SOBC
+    CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
     Params.RxData = &RxBuf;
@@ -126,7 +150,15 @@ CFE_Status_t PAYUZUC_SetModeCmd(const PAYUZUC_SetModeCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-
+#else
+    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_SET_MODE_TLM_SIZE);
+    if (Status == 0) {
+        PAYUZUC_Data.ErrCounter ++;
+    }
+#endif
+    for (int i = 0; i < sizeof(RxBuf); i++) {
+        OS_printf("0x%02X\n", RxBuf[i]);
+    }
     return CFE_SUCCESS;
 }
 
@@ -136,13 +168,15 @@ CFE_Status_t PAYUZUC_SetModeCmd(const PAYUZUC_SetModeCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUC_MemoryStatusCmd(const PAYUZUC_MemoryStatusCmd_t *Msg) {
+    PAYUZUC_Data.CmdCounter++;
     int32 Status;
-    CFE_SRL_IO_Param_t Params = {0,};
+    
     PAYUZUC_Cmd_t Cmd = {0,};
     uint8 RxBuf[PAYUZUC_MEMORY_STATUS_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(Msg, &Cmd, PAYUZUC_MEMORY_STATUS_PARAM_SIZE, PAYUZUC_MEMORY_STATUS_CMD_CODE);
-    
+#ifndef USE_SOBC
+    CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
     Params.RxData = &RxBuf;
@@ -153,7 +187,15 @@ CFE_Status_t PAYUZUC_MemoryStatusCmd(const PAYUZUC_MemoryStatusCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-
+#else
+    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_MEMORY_STATUS_TLM_SIZE);
+    if (Status == 0) {
+        PAYUZUC_Data.ErrCounter ++;
+    }
+#endif
+    for (int i = 0; i < sizeof(RxBuf); i++) {
+        OS_printf("0x%02X\n", RxBuf[i]);
+    }
     return CFE_SUCCESS;
 }
 
@@ -163,13 +205,16 @@ CFE_Status_t PAYUZUC_MemoryStatusCmd(const PAYUZUC_MemoryStatusCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUC_SetExposureCmd(const PAYUZUC_SetExposureCmd_t *Msg) {
+    PAYUZUC_Data.CmdCounter++;
+
     int32 Status;
-    CFE_SRL_IO_Param_t Params = {0,};
+    
     PAYUZUC_Cmd_t Cmd = {0,};
     uint8 RxBuf[PAYUZUC_SET_EXPOSURE_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_SET_EXPOSURE_PARAM_SIZE, PAYUZUC_SET_EXPOSURE_CMD_CODE);
-    
+#ifndef USE_SOBC
+    CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
     Params.RxData = &RxBuf;
@@ -180,7 +225,15 @@ CFE_Status_t PAYUZUC_SetExposureCmd(const PAYUZUC_SetExposureCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-
+#else
+    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_SET_EXPOSURE_TLM_SIZE);
+    if (Status == 0) {
+        PAYUZUC_Data.ErrCounter ++;
+    }
+#endif
+    for (int i = 0; i < sizeof(RxBuf); i++) {
+        OS_printf("0x%02X\n", RxBuf[i]);
+    }
     return CFE_SUCCESS;
 }
 
@@ -190,13 +243,16 @@ CFE_Status_t PAYUZUC_SetExposureCmd(const PAYUZUC_SetExposureCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUC_CaptureCmd(const PAYUZUC_CaptureCmd_t *Msg) {
+    PAYUZUC_Data.CmdCounter++;
+
     int32 Status;
-    CFE_SRL_IO_Param_t Params = {0,};
+    
     PAYUZUC_Cmd_t Cmd = {0,};
     uint8 RxBuf[PAYUZUC_CAPTURE_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_CAPTURE_PARAM_SIZE, PAYUZUC_CAPTURE_CMD_CODE);
-    
+#ifndef USE_SOBC
+    CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
     Params.RxData = &RxBuf;
@@ -207,7 +263,15 @@ CFE_Status_t PAYUZUC_CaptureCmd(const PAYUZUC_CaptureCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-
+#else
+    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_CAPTURE_TLM_SIZE);
+    if (Status == 0) {
+        PAYUZUC_Data.ErrCounter ++;
+    }
+#endif
+    for (int i = 0; i < sizeof(RxBuf); i++) {
+        OS_printf("0x%02X\n", RxBuf[i]);
+    }
     return CFE_SUCCESS;
 }
 
@@ -217,46 +281,59 @@ CFE_Status_t PAYUZUC_CaptureCmd(const PAYUZUC_CaptureCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUC_DownloadCmd(const PAYUZUC_DownloadCmd_t *Msg) {
-    int32 Status;
-    CFE_SRL_IO_Param_t Params = {0,};
+    PAYUZUC_Data.CmdCounter++;
 
+    int32 Status;
     PAYUZUC_Cmd_t Cmd = {0,};
 
-    uint8 RxBufThumb[PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE] = {0,};
+    // uint8 RxBufThumb[PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE] = {0,};
     uint8 RxBuf[PAYUZUC_DOWNLOAD_TLM_SIZE] = {0,};
 
-    if (Msg->Payload.PRE == PAYUZUC_DOWNLOAD_THUMBNAIL_FLAG) {    
-
-        PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_DOWNLOAD_PARAM_SIZE,
+    if (Msg->Payload.PRE != PAYUZUC_DOWNLOAD_THUMBNAIL_FLAG && Msg->Payload.PRE != PAYUZUC_DOWNLOAD_ORIGINAL_FLAG) {
+        PAYUZUC_Data.ErrCounter ++;
+        return CFE_SUCCESS;
+    }    
+    PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_DOWNLOAD_PARAM_SIZE,
                                 PAYUZUC_DOWNLOAD_CMD_CODE);
+#ifndef USE_SOBC
+    CFE_SRL_IO_Param_t Params = {0,};
+    Params.TxData = &Cmd;
+    Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
+    Params.RxData = &RxBuf;
+    Params.RxSize = Msg->Payload.PRE ? PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE : PAYUZUC_DOWNLOAD_TLM_SIZE;
+    Params.Timeout = 100;
 
-        Params.TxData = &Cmd;
-        Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
-        Params.RxData = &RxBufThumb;
-        Params.RxSize = PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE;
-        Params.Timeout = 10;
-
-        Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
-    }
-
-    else if (Msg->Payload.PRE == PAYUZUC_DOWNLOAD_ORIGINAL_FLAG){
-
-        PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_DOWNLOAD_PARAM_SIZE,
-                                PAYUZUC_DOWNLOAD_CMD_CODE);
-
-        Params.TxData = &Cmd;
-        Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
-        Params.RxData = &RxBuf;
-        Params.RxSize = PAYUZUC_DOWNLOAD_TLM_SIZE;
-        Params.Timeout = 10;
-
-        Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
-    }
-    
+    Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
+#else
+    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf,
+                                    Msg->Payload.PRE ? 
+                                    PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE : PAYUZUC_DOWNLOAD_TLM_SIZE);
+    if (Status == 0) {
+        PAYUZUC_Data.ErrCounter ++;
+    }
+#endif
+    for (int i = 0; i < sizeof(RxBuf); i++) {
+        OS_printf("0x%02X\n", RxBuf[i]);
+    }
+    /**
+     * Init Image MSG
+     * Size varies upon the parameter `PRE`
+     */
+    CFE_MSG_Init(CFE_MSG_PTR(PAYUZUC_Data.ImgTlm.TelemetryHeader),
+                    Msg->Payload.PRE ? CFE_SB_ValueToMsgId(PAYUZUC_THUMBNAIL_IMG_MID) : CFE_SB_ValueToMsgId(PAYUZUC_IMG_MID),
+                    Msg->Payload.PRE ? PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE : PAYUZUC_DOWNLOAD_TLM_SIZE);
     
+    memcpy(PAYUZUC_Data.ImgTlm.Payload, RxBuf,
+            Msg->Payload.PRE ? PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE : PAYUZUC_DOWNLOAD_TLM_SIZE);
+    /**
+     * Transmit Message to SB. DS App will ingest this message (MID: `0x0831`)
+     */
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(PAYUZUC_Data.ImgTlm.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(PAYUZUC_Data.ImgTlm.TelemetryHeader), true);
+
     return CFE_SUCCESS;
 }
 
@@ -266,13 +343,16 @@ CFE_Status_t PAYUZUC_DownloadCmd(const PAYUZUC_DownloadCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUC_ReadRegisterCmd(const PAYUZUC_ReadRegisterCmd_t *Msg) {
+    PAYUZUC_Data.CmdCounter++;
+
     int32 Status;
-    CFE_SRL_IO_Param_t Params = {0,};
+    
     PAYUZUC_Cmd_t Cmd = {0,};
     uint8 RxBuf[PAYUZUC_READ_REGISTER_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_READ_REGISTER_PARAM_SIZE, PAYUZUC_READ_REGISTER_CMD_CODE);
-    
+#ifndef USE_SOBC
+    CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
     Params.RxData = &RxBuf;
@@ -283,23 +363,34 @@ CFE_Status_t PAYUZUC_ReadRegisterCmd(const PAYUZUC_ReadRegisterCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-    
+#else
+    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_READ_REGISTER_TLM_SIZE);
+    if (Status == 0) {
+        PAYUZUC_Data.ErrCounter ++;
+    }
+#endif
+    for (int i = 0; i < sizeof(RxBuf); i++) {
+        OS_printf("0x%02X\n", RxBuf[i]);
+    }
     return CFE_SUCCESS;
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
-/* PAYUZUC Write Register commands                                                       */
+/* PAYUZUC Write Register commands                                            */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUC_WriteRegisterCmd(const PAYUZUC_WriteRegisterCmd_t *Msg) {
+    PAYUZUC_Data.CmdCounter++;
+    
     int32 Status;
-    CFE_SRL_IO_Param_t Params = {0,};
+    
     PAYUZUC_Cmd_t Cmd = {0,};
     uint8 RxBuf[PAYUZUC_WRITE_REGISTER_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_WRITE_REGISTER_PARAM_SIZE, PAYUZUC_WRITE_REGISTER_CMD_CODE);
-    
+#ifndef USE_SOBC
+    CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
     Params.RxData = &RxBuf;
@@ -310,6 +401,14 @@ CFE_Status_t PAYUZUC_WriteRegisterCmd(const PAYUZUC_WriteRegisterCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-
+#else
+    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_WRITE_REGISTER_TLM_SIZE);
+    if (Status == 0) {
+        PAYUZUC_Data.ErrCounter ++;
+    }
+#endif
+    for (int i = 0; i < sizeof(RxBuf); i++) {
+        OS_printf("0x%02X\n", RxBuf[i]);
+    }
     return CFE_SUCCESS;
 }
