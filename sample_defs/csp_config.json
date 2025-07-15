@@ -11,7 +11,7 @@
         "port_max_bind":32,
         "rdp_max_window": 20,
         "buffers": 10,
-        "buffer_data_size": 256,
+        "buffer_data_size": 1024,
         "conn_dfl_so": "CSP_O_NONE"
     },
     "external" : [
