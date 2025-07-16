@@ -132,12 +132,13 @@ int CFE_SRL_BasicSetUART(CFE_SRL_IO_Handle_t *Handle, uint32_t BaudRate) {
     Termios2.c_lflag &= ~(ISIG | ICANON); // Neglect Terminal signal (like SIGINT), Read by character
     Termios2.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL); // Echo off
     
-    // Input Flag
+    // Input Flag - Applied to OBC's input data
     Termios2.c_iflag &= ~(INPCK | ISTRIP); // Parity check off, Masking(8 bit to 7 bit by Mask 0x7F) off
     Termios2.c_iflag &= ~(IXON | IXOFF | IXANY); // Flow Control off
+    Termios2.c_iflag &= ~(ICRNL | INLCR | IGNCR); // input `\r` <-> `\n` off, ignore `\r` off
 
-    // Output Flag
-    Termios2.c_oflag &= ~(OPOST); // Post Process off
+    // Output Flag - Applied to OBC's output data
+    Termios2.c_oflag &= ~(OPOST | ONLCR | OCRNL); // Post Process off & output `\r` <-> `\n` off
 
     Status = CFE_SRL_BasicIOCTL(Handle->FD, TCSETS2, &Termios2);
     if (Status == -1) {
