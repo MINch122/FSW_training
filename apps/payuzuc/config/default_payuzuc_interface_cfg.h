@@ -41,7 +41,7 @@
  * This size means **one line (row)** of Image
  */
 #define PAYUZUC_IMG_SIZE                640
-#define PAYUZUC_THUMBNAIL_IMG_SIZE      80
+#define PAYUZUC_THUMBNAIL_IMG_SIZE      64
 
 
 /* Var `data` means only real payload size */

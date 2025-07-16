@@ -97,6 +97,14 @@ typedef struct PAYUZUC_WriteRegister_Payload {
 } PAYUZUC_WriteRegister_Payload_t;
 
 
+/**
+ * Download All Command
+ */
+typedef struct PAYUZUC_DownloadAll_Payload {
+    uint8 MEM;
+    uint8 PRE;
+} PAYUZUC_DownloadAll_Payload_t;
+
 
 /************************************************
  * 

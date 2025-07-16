@@ -108,6 +108,15 @@ typedef struct {
 } PAYUZUC_WriteRegisterCmd_t;
 
 
+/**
+ * Download All Command
+ */
+typedef struct {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    PAYUZUC_DownloadAll_Payload_t Payload;
+} PAYUZUC_DownloadAllCmd_t;
+
+
 /*************************************************************************/
 /*
 ** Type definition (PAY UZURO CAM App housekeeping)

@@ -9,7 +9,7 @@
  * If SOBC not used, undef `USE_SOBC`
  */
 #define USE_SOBC
-// #undef USE_SOBC
+#undef USE_SOBC
 
 /*
 ** Include Files:
@@ -410,5 +410,43 @@ CFE_Status_t PAYUZUC_WriteRegisterCmd(const PAYUZUC_WriteRegisterCmd_t *Msg) {
     for (int i = 0; i < sizeof(RxBuf); i++) {
         OS_printf("0x%02X\n", RxBuf[i]);
     }
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t PAYUZUC_DownloadAllCmd(const PAYUZUC_DownloadAllCmd_t *Msg) {
+    PAYUZUC_Data.CmdCounter++;
+
+    int32 Status;
+    PAYUZUC_Cmd_t Cmd = {0,};
+
+    // uint8 RxBufThumb[PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE] = {0,};
+    uint8 RxBuf[PAYUZUC_DOWNLOAD_TLM_SIZE] = {0,};
+
+    if (Msg->Payload.PRE != PAYUZUC_DOWNLOAD_THUMBNAIL_FLAG && Msg->Payload.PRE != PAYUZUC_DOWNLOAD_ORIGINAL_FLAG) {
+        PAYUZUC_Data.ErrCounter ++;
+        return CFE_SUCCESS;
+    }
+    uint8_t Payload[4] = {0,};
+    memcpy(Payload, &Msg->Payload, sizeof(Msg->Payload));
+    for (uint16_t line = 0; line < Msg->Payload.PRE ? 48 : 480; line ++) {
+        Payload[2] = (line > 8) & 0xFF;
+        Payload[3] = line & 0xFF;
+        PAYUZUC_ConfigurePacket(Payload, &Cmd, PAYUZUC_DOWNLOAD_PARAM_SIZE,
+                            PAYUZUC_DOWNLOAD_CMD_CODE);
+        
+        CFE_SRL_IO_Param_t Params = {0,};
+        Params.TxData = &Cmd;
+        Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
+        Params.RxData = &RxBuf;
+        Params.RxSize = Msg->Payload.PRE ? PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE : PAYUZUC_DOWNLOAD_TLM_SIZE;
+        Params.Timeout = 10;
+        Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
+
+    }
+    
+    if (Status != CFE_SUCCESS) {
+        PAYUZUC_Data.ErrCounter ++;
+    }
+
     return CFE_SUCCESS;
 }
