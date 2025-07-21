@@ -65,7 +65,7 @@ typedef struct {
     /**
      * PAYUZUC Table Handle
      */
-    osal_id_t TblHandle;
+    int TblHandle;
 
     PAYUZUC_Memory_Status_t MemSlotStatus;
 

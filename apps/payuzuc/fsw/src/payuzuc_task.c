@@ -10,6 +10,7 @@
 #include "payuzuc_cmds.h"
 #include "payuzuc_eventids.h"
 #include "payuzuc_dispatch.h"
+#include "payuzuc_utils.h"
 
 /**
  * Global Data
@@ -66,6 +67,8 @@ void PAYUZUC_Main(void) {
             PAYUZUC_Data.RunStatus = CFE_ES_RunStatus_APP_ERROR;
         }
     }
+    Status = PAYUZUC_CloseFile(PAYUZUC_Data.TblHandle);
+    if (Status != 0) OS_printf("Close Fail App close.\n");
 
     /**
      * Performance Log Exit Stamp
@@ -157,8 +160,17 @@ CFE_Status_t PAYUZUC_Init(void) {
     /**
      * Get PAYUZUC Tbl Handle
      */
-    // Status = OS_OpenCreate(&PAYUZUC_Data.TblHandle, "/cf/sdcard/PAYUZUC.tbl", OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    // Status = OS_read(PAYUZUC_Data.TblHandle, &PAYUZUC_Data.MemSlotStatus, sizeof(PAYUZUC_Memory_Status_t));
+    PAYUZUC_Data.TblHandle = PAYUZUC_OpenTblFile();
+    if (PAYUZUC_Data.TblHandle < 0) {
+        OS_printf("PAYUZUC Table Open Fail.\n");
+        Status = -1;
+        return Status;
+    }
+    Status = PAYUZUC_ReadFile(PAYUZUC_Data.TblHandle, &PAYUZUC_Data.MemSlotStatus, sizeof(PAYUZUC_Memory_Status_t));
+    if (Status < 0) {
+        OS_printf("Read Error.\n");
+    }
+    else if (Status == sizeof(PAYUZUC_Memory_Status_t)) Status = CFE_SUCCESS;
 
     return Status;
 }

@@ -111,7 +111,7 @@ CFE_Status_t PAYUZUC_PingCmd(const PAYUZUC_PingCmd_t *Msg) {
     uint8 RxBuf[PAYUZUC_PING_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_PING_PARAM_SIZE, PAYUZUC_PING_CMD_CODE);
-#ifndef USE_SOBC
+
     CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
@@ -123,12 +123,7 @@ CFE_Status_t PAYUZUC_PingCmd(const PAYUZUC_PingCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-#else
-    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_PING_TLM_SIZE);
-    if (Status == 0) {
-        PAYUZUC_Data.ErrCounter ++;
-    }
-#endif
+
     for (int i = 0; i < sizeof(RxBuf); i++) {
         OS_printf("0x%02X\n", RxBuf[i]);
     }
@@ -151,7 +146,7 @@ CFE_Status_t PAYUZUC_SetModeCmd(const PAYUZUC_SetModeCmd_t *Msg) {
     uint8 RxBuf[PAYUZUC_SET_MODE_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_SET_MODE_PARAM_SIZE, PAYUZUC_SET_MODE_CMD_CODE);
-#ifndef USE_SOBC
+
     CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
@@ -163,12 +158,7 @@ CFE_Status_t PAYUZUC_SetModeCmd(const PAYUZUC_SetModeCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-#else
-    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_SET_MODE_TLM_SIZE);
-    if (Status == 0) {
-        PAYUZUC_Data.ErrCounter ++;
-    }
-#endif
+
     for (int i = 0; i < sizeof(RxBuf); i++) {
         OS_printf("0x%02X\n", RxBuf[i]);
     }
@@ -188,7 +178,7 @@ CFE_Status_t PAYUZUC_MemoryStatusCmd(const PAYUZUC_MemoryStatusCmd_t *Msg) {
     uint8 RxBuf[PAYUZUC_MEMORY_STATUS_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(Msg, &Cmd, PAYUZUC_MEMORY_STATUS_PARAM_SIZE, PAYUZUC_MEMORY_STATUS_CMD_CODE);
-#ifndef USE_SOBC
+
     CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
@@ -200,12 +190,7 @@ CFE_Status_t PAYUZUC_MemoryStatusCmd(const PAYUZUC_MemoryStatusCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-#else
-    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_MEMORY_STATUS_TLM_SIZE);
-    if (Status == 0) {
-        PAYUZUC_Data.ErrCounter ++;
-    }
-#endif
+
     for (int i = 0; i < sizeof(RxBuf); i++) {
         OS_printf("0x%02X\n", RxBuf[i]);
     }
@@ -226,7 +211,7 @@ CFE_Status_t PAYUZUC_SetExposureCmd(const PAYUZUC_SetExposureCmd_t *Msg) {
     uint8 RxBuf[PAYUZUC_SET_EXPOSURE_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_SET_EXPOSURE_PARAM_SIZE, PAYUZUC_SET_EXPOSURE_CMD_CODE);
-#ifndef USE_SOBC
+
     CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
@@ -238,12 +223,7 @@ CFE_Status_t PAYUZUC_SetExposureCmd(const PAYUZUC_SetExposureCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-#else
-    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_SET_EXPOSURE_TLM_SIZE);
-    if (Status == 0) {
-        PAYUZUC_Data.ErrCounter ++;
-    }
-#endif
+
     for (int i = 0; i < sizeof(RxBuf); i++) {
         OS_printf("0x%02X\n", RxBuf[i]);
     }
@@ -264,7 +244,7 @@ CFE_Status_t PAYUZUC_CaptureCmd(const PAYUZUC_CaptureCmd_t *Msg) {
     uint8 RxBuf[PAYUZUC_CAPTURE_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_CAPTURE_PARAM_SIZE, PAYUZUC_CAPTURE_CMD_CODE);
-#ifndef USE_SOBC
+
     CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
@@ -276,12 +256,7 @@ CFE_Status_t PAYUZUC_CaptureCmd(const PAYUZUC_CaptureCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-#else
-    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_CAPTURE_TLM_SIZE);
-    if (Status == 0) {
-        PAYUZUC_Data.ErrCounter ++;
-    }
-#endif
+
     /**
      * Clear Memory Slot Status
      */
@@ -315,7 +290,7 @@ CFE_Status_t PAYUZUC_DownloadCmd(const PAYUZUC_DownloadCmd_t *Msg) {
     }    
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_DOWNLOAD_PARAM_SIZE,
                                 PAYUZUC_DOWNLOAD_CMD_CODE);
-#ifndef USE_SOBC
+
     CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
@@ -328,29 +303,32 @@ CFE_Status_t PAYUZUC_DownloadCmd(const PAYUZUC_DownloadCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-#else
-    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf,
-                                    Msg->Payload.PRE ? 
-                                    PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE : PAYUZUC_DOWNLOAD_TLM_SIZE);
-    if (Status == 0) {
-        PAYUZUC_Data.ErrCounter ++;
-    }
-#endif
+
     uint16_t Line = (Msg->Payload.LN1 << 8) | Msg->Payload.LN2;
     
-    int FD = PAYUZUC_OpenFile(Msg->Payload.MEM, Line, 0, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE);
+    /**
+     * Open, Write and Close Image file
+     */
+    int FD = PAYUZUC_OpenFile(Msg->Payload.MEM, Line, 0);
     if (FD < 0) {
         OS_printf("Open error.\n");
     }
-    Status = PAYUZUC_WriteLineToFile(FD, RxBuf, 648);
-    if (Status > 0) PAYUZUC_SetLineTrue(Msg->Payload.MEM, Line);
-    else OS_printf("Write Error.\n");
+
+    Status = PAYUZUC_WriteToFile(FD, RxBuf, Msg->Payload.PRE ? PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE : PAYUZUC_DOWNLOAD_TLM_SIZE, false);
+    if (Status == CFE_SUCCESS) PAYUZUC_SetLineTrue(Msg->Payload.MEM, Line);
+    else OS_printf("Write Error. RC = %d\n", Status);
 
     Status = PAYUZUC_CloseFile(FD);
     if (Status < 0) OS_printf("Close Error.\n");
 
+    /**
+     * Update Memory State
+     */
     PAYUZUC_Data.MemSlotStatus.Entry[Msg->Payload.MEM].MemoryState = PAYUZUC_DOWNLOAD_ON_GOING;
 
+    /**
+     * Inspection
+     */
     PAYUZUC_Inspection(Msg->Payload.MEM);
 
     /* Rx Data Debugging */
@@ -359,11 +337,19 @@ CFE_Status_t PAYUZUC_DownloadCmd(const PAYUZUC_DownloadCmd_t *Msg) {
         if (i%10 == 9) OS_printf("\n");
     }
     
-    /* Debugging */
+    /* State Debugging */
     OS_printf("Line Status\n");
     for (uint8_t i=0; i<60; i++) {
         OS_printf("0x%02X\t",PAYUZUC_Data.MemSlotStatus.Entry[Msg->Payload.MEM].LineState[i]);
         if (i%10 == 9) OS_printf("\n");
+    }
+
+    /**
+     * Store Table State to File
+     */
+    Status = PAYUZUC_WriteToFile(PAYUZUC_Data.TblHandle, &PAYUZUC_Data.MemSlotStatus, sizeof(PAYUZUC_Memory_Status_t), true);
+    if (Status != CFE_SUCCESS) {
+        OS_printf("Write Fail.\n");
     }
 
     return CFE_SUCCESS;
@@ -394,8 +380,7 @@ CFE_Status_t PAYUZUC_DownloadAllCmd(const PAYUZUC_DownloadAllCmd_t *Msg) {
     /**
      * Open New file - If already exist, truncate it
      */
-    int FD = PAYUZUC_OpenFile(Msg->Payload.MEM, Msg->Payload.StartLine, Msg->Payload.LineNum,
-                                OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE);
+    int FD = PAYUZUC_OpenFile(Msg->Payload.MEM, Msg->Payload.StartLine, Msg->Payload.LineNum);
 
     uint8_t Payload[PAYUZUC_DOWNLOAD_PARAM_SIZE] = {0,};
     Payload[0] = Msg->Payload.MEM;
@@ -421,24 +406,40 @@ CFE_Status_t PAYUZUC_DownloadAllCmd(const PAYUZUC_DownloadAllCmd_t *Msg) {
             ErrCnt ++;
             continue;
         }
-  
-        Status  = PAYUZUC_WriteLineToFile(FD, RxBuf, Msg->Payload.PRE ? PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE : PAYUZUC_DOWNLOAD_TLM_SIZE);
-        if (Status < 0) {
+        
+        /**
+         * Write Image Data to file
+         */
+        Status  = PAYUZUC_WriteToFile(FD, RxBuf, Msg->Payload.PRE ? PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE : PAYUZUC_DOWNLOAD_TLM_SIZE, false);
+        if (Status != CFE_SUCCESS) {
+            OS_printf("Write Error. RC = %d\n", Status);
             ErrCnt ++;
             continue;
         }
-
-        PAYUZUC_SetLineTrue(Msg->Payload.MEM, line);
         memset(RxBuf, 0, sizeof(RxBuf));
-        
+
+        /**
+         * Update line state
+         */
+        PAYUZUC_SetLineTrue(Msg->Payload.MEM, line);
+
         /* Debugging */
         OS_printf("Line %u Download done.\n", line);
 
     }
+    /**
+     * When Download Done, Close file
+     */
     Status = PAYUZUC_CloseFile(FD);
 
+    /**
+     * Update download state
+     */
     PAYUZUC_Data.MemSlotStatus.Entry[Msg->Payload.MEM].MemoryState = PAYUZUC_DOWNLOAD_ON_GOING;
 
+    /**
+     * Inspection
+     */
     PAYUZUC_Inspection(Msg->Payload.MEM);
     
     /* Debugging */
@@ -450,6 +451,14 @@ CFE_Status_t PAYUZUC_DownloadAllCmd(const PAYUZUC_DownloadAllCmd_t *Msg) {
 
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
+    }
+
+    /**
+     * Store Table State to File
+     */
+    Status = PAYUZUC_WriteToFile(PAYUZUC_Data.TblHandle, &PAYUZUC_Data.MemSlotStatus, sizeof(PAYUZUC_Memory_Status_t), true);
+    if (Status != CFE_SUCCESS) {
+        OS_printf("Write Fail!.\n");
     }
 
     return CFE_SUCCESS;
@@ -469,7 +478,7 @@ CFE_Status_t PAYUZUC_ReadRegisterCmd(const PAYUZUC_ReadRegisterCmd_t *Msg) {
     uint8 RxBuf[PAYUZUC_READ_REGISTER_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_READ_REGISTER_PARAM_SIZE, PAYUZUC_READ_REGISTER_CMD_CODE);
-#ifndef USE_SOBC
+
     CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
@@ -481,12 +490,7 @@ CFE_Status_t PAYUZUC_ReadRegisterCmd(const PAYUZUC_ReadRegisterCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-#else
-    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_READ_REGISTER_TLM_SIZE);
-    if (Status == 0) {
-        PAYUZUC_Data.ErrCounter ++;
-    }
-#endif
+
     for (int i = 0; i < sizeof(RxBuf); i++) {
         OS_printf("0x%02X\n", RxBuf[i]);
     }
@@ -507,7 +511,7 @@ CFE_Status_t PAYUZUC_WriteRegisterCmd(const PAYUZUC_WriteRegisterCmd_t *Msg) {
     uint8 RxBuf[PAYUZUC_WRITE_REGISTER_TLM_SIZE] = {0,};
 
     PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_WRITE_REGISTER_PARAM_SIZE, PAYUZUC_WRITE_REGISTER_CMD_CODE);
-#ifndef USE_SOBC
+
     CFE_SRL_IO_Param_t Params = {0,};
     Params.TxData = &Cmd;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
@@ -519,12 +523,7 @@ CFE_Status_t PAYUZUC_WriteRegisterCmd(const PAYUZUC_WriteRegisterCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
-#else
-    Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, &Cmd, PAYUZUC_CMD_PKT_SIZE, RxBuf, PAYUZUC_WRITE_REGISTER_TLM_SIZE);
-    if (Status == 0) {
-        PAYUZUC_Data.ErrCounter ++;
-    }
-#endif
+
     for (int i = 0; i < sizeof(RxBuf); i++) {
         OS_printf("0x%02X\n", RxBuf[i]);
     }

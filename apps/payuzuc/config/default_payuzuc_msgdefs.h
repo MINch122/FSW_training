@@ -68,6 +68,8 @@ typedef struct PAYUZUC_Capture_Payload {
 
 /**
  * Download Command
+ * @param MEM Memory Slot: Can be `0` ~ `5`
+ * @param PRE Preview Flag : `0` or `1`
  */
 typedef struct PAYUZUC_Download_Payload {
     uint8 MEM;
@@ -99,6 +101,10 @@ typedef struct PAYUZUC_WriteRegister_Payload {
 
 /**
  * Download All Command
+ * @param MEM Memory Slot: Can be `0` ~ `5`
+ * @param PRE Preview Flag : `0` or `1`
+ * @param StartLine Starting line number: from `0` to `479`
+ * @param LineNum Total number to download : `0` for one line download
  */
 typedef struct PAYUZUC_DownloadAll_Payload {
     uint8 MEM;

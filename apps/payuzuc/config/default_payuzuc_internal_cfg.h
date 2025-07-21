@@ -60,6 +60,13 @@
 #define PAYUZUC_DOWNLOAD_ORIGINAL_FLAG      0x00
 #define PAYUZUC_DOWNLOAD_THUMBNAIL_FLAG     0x01
 
+
+/**
+ * PAYUZUC File Path Definition
+ */
+#define PAYUZUC_TBL_PATH            "./cf/sdcard/PAYUZUC.tbl"
+#define PAYUZUC_IMG_PATH            "./cf/sdcard/Kiss"
+
 typedef struct {
     uint8 StartByte; /* Always `0x40` */
     uint8 Command;
