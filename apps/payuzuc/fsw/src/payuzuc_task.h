@@ -18,6 +18,7 @@
 #include "payuzuc_perfids.h"
 #include "payuzuc_msgids.h"
 #include "payuzuc_msg.h"
+#include "payuzuc_tblstruct.h"
 
 /************************************************************************
 ** Type Definitions
@@ -60,7 +61,14 @@ typedef struct {
      * Image Data
      */
     PAYUZUC_ImgTlm_t ImgTlm;
-    
+
+    /**
+     * PAYUZUC Table Handle
+     */
+    osal_id_t TblHandle;
+
+    PAYUZUC_Memory_Status_t MemSlotStatus;
+
 } PAYUZUC_Data_t;
 
 /**

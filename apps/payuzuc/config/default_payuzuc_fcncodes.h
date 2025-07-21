@@ -19,5 +19,6 @@
 #define PAYUZUC_DOWNLOAD_CC         7
 #define PAYUZUC_READ_REGISTER_CC    8
 #define PAYUZUC_WRITE_REGISTER_CC   9
+#define PAYUZUC_DOWNLOAD_ALL_CC     10
 
 #endif

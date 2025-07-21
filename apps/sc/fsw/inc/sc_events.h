@@ -1356,4 +1356,15 @@
 
 /**\}*/
 
+/**
+ * \brief SC RTS started by request of Limit Checker (LC)
+ *
+ *  \par Type: INFORMATION
+ *
+ *  \par Cause:
+ *  This event message is issued when an LC's request (MID 0x18A9) is received
+ *  This MID has CC value `4`, so only trigger `SC_StartRTS()` function
+ */
+#define SC_START_RTS_BY_LC_REQUEST_INF_EID 140
+
 #endif

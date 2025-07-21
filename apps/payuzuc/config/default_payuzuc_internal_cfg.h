@@ -14,15 +14,22 @@
 #ifndef PAYUZUC_INTERNAL_CFG_H
 #define PAYUZUC_INTERNAL_CFG_H
 
-#define PAYUZUC_PIPE_DEPTH  32 /* Depth of the Command Pipe for Application */
+#define PAYUZUC_PIPE_DEPTH  50 /* Depth of the Command Pipe for Application */
 
+#include "common_types.h"
+
+/**
+ * Define Packet Start, End Byte
+ */
+#define PAYUZUC_PKT_START_BYTE          0x40
+#define PAYUZUC_PKT_TERMINATE_BYTE      0x0D
 
 /**
  * Define Command Code of KissCAM
  */
 #define PAYUZUC_PING_CMD_CODE           0x50 /* `P` */
 #define PAYUZUC_SET_MODE_CMD_CODE       0x4D /* `M` */
-#define PAYUZUC_MEMORY_STATUS_CMD_CODE  0x54 /* `S` */
+#define PAYUZUC_MEMORY_STATUS_CMD_CODE  0x53 /* `S` */
 #define PAYUZUC_SET_EXPOSURE_CMD_CODE   0x45 /* `E` */
 #define PAYUZUC_CAPTURE_CMD_CODE        0x43 /* `C` */
 #define PAYUZUC_DOWNLOAD_CMD_CODE       0x44 /* `D` */

@@ -50,4 +50,9 @@
 #define SC_ONEHZ_WAKEUP_MID SC_WAKEUP_MID
 #endif
 
+/**
+ * RTS start request Message ID by Limit Checker (LC)
+ */
+#define LC_RTS_REQUEST_MID  0x18A9
+
 #endif

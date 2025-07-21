@@ -34,7 +34,12 @@
         "cfe_msg.h": "c",
         "cfe_srl.h": "c",
         "cfe_srl_task.h": "c",
-        "cfe_perfids.h": "c"
+        "cfe_perfids.h": "c",
+        "to_lab_tbldefs.h": "c",
+        "payuzuc_tblstruct.h": "c",
+        "payuzuc_interface_cfg.h": "c",
+        "payuzuc_internal_cfg.h": "c",
+        "source_location": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

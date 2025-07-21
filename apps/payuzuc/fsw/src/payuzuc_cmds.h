@@ -24,5 +24,6 @@ CFE_Status_t PAYUZUC_CaptureCmd(const PAYUZUC_CaptureCmd_t *Msg);
 CFE_Status_t PAYUZUC_DownloadCmd(const PAYUZUC_DownloadCmd_t *Msg);
 CFE_Status_t PAYUZUC_ReadRegisterCmd(const PAYUZUC_ReadRegisterCmd_t *Msg);
 CFE_Status_t PAYUZUC_WriteRegisterCmd(const PAYUZUC_WriteRegisterCmd_t *Msg);
+CFE_Status_t PAYUZUC_DownloadAllCmd(const PAYUZUC_DownloadAllCmd_t *Msg);
 
 #endif /* PAYUZUC_CMDS_H */

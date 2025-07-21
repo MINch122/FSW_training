@@ -2,6 +2,14 @@
 - Author : Hyeok-jin Kweon
 - Astrodynamics and Control Lab, Yonsei University
 
+# Update
+- 25/07/18 : Add member `Interval` in struct `CFE_SRL_IO_Param_t`
+    - This member is used for **time term between Write -> Read**
+    - Only applid to `UART, CAN`
+    - **Micro second** unit
+    - If external device requires time for data preparing, use this for waiting.
+    - If not used, just put `0`
+
 # Overview
 - This is user developed core module, which is located at the cFE layer
 - This module provides serial communication API for various protocol
@@ -44,6 +52,7 @@ Params.TxSize = sizeof(TxBuf);
 Params.RxData = RxBuf;
 Params.RxSize = sizeof(RxBuf);
 Params.Timeout = 10
+Params.Interval = 1000
 
 /* Execute API */
 CFE_SRL_ApiRead(Handle, &Params);

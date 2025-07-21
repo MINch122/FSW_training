@@ -4,6 +4,7 @@ set(APP_SRC_FILES
   fsw/src/payuzuc_task.c
   fsw/src/payuzuc_cmds.c
   fsw/src/payuzuc_dispatch.c
+  fsw/src/payuzuc_utils.c
 )
 
 # Create the app module

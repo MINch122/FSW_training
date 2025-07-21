@@ -115,6 +115,18 @@ void SC_ProcessRequest(const CFE_SB_Buffer_t *BufPtr)
                 SC_WakeupCmd((const SC_WakeupCmd_t *)BufPtr);
             }
             break;
+        case LC_RTS_REQUEST_MID:
+            if (SC_VerifyCmdLength(&BufPtr->Msg, sizeof(SC_StartRtsCmd_t))) {
+                uint16_t CC;
+                CFE_MSG_GetFcnCode(&BufPtr->Msg, &CC);
+                if (CC == SC_START_RTS_CC) {
+                    CFE_EVS_SendEvent(SC_START_RTS_BY_LC_REQUEST_INF_EID, CFE_EVS_EventType_INFORMATION, "LC's RTS start request Received.\n");
+                    SC_StartRtsCmd((const SC_StartRtsCmd_t *)BufPtr);
+                }
+                
+                
+            }
+            break;
 
         default:
             CFE_EVS_SendEvent(SC_MID_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid command pipe message ID: 0x%08lX",

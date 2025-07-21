@@ -154,5 +154,11 @@ CFE_Status_t PAYUZUC_Init(void) {
     PAYUZUC_Data.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_SOCAT_HANDLE_INDEXER);
     CFE_ES_WriteToSysLog("%s: IO Handle Ptr: %p", __func__, (void *)PAYUZUC_Data.Handle);
 
+    /**
+     * Get PAYUZUC Tbl Handle
+     */
+    // Status = OS_OpenCreate(&PAYUZUC_Data.TblHandle, "/cf/sdcard/PAYUZUC.tbl", OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    // Status = OS_read(PAYUZUC_Data.TblHandle, &PAYUZUC_Data.MemSlotStatus, sizeof(PAYUZUC_Memory_Status_t));
+
     return Status;
 }

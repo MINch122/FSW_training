@@ -50,7 +50,7 @@
             "type": "uart",
             "ready": true,
             "name": "socat",
-            "DevName": "/dev/pts/4",
+            "DevName": "/dev/pts/5",
             "baudrate": 115200
         },
         {

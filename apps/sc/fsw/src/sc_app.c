@@ -218,6 +218,17 @@ CFE_Status_t SC_AppInit(void)
         return Result;
     }
 
+    /**
+     * Must be able to subscribe to RTS request by LC
+     */ 
+    Result = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(LC_RTS_REQUEST_MID), SC_OperData.CmdPipe);
+    if (Result != CFE_SUCCESS)
+    {
+        CFE_EVS_SendEvent(SC_INIT_SB_SUBSCRIBE_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "Software Bus subscribe to command returned: 0x%08X", (unsigned int)Result);
+        return Result;
+    }
+
     /* Must be able to create and initialize tables */
     Result = SC_InitTables();
     if (Result != CFE_SUCCESS)

@@ -59,9 +59,12 @@
 #include "lc_msgids.h"
 #endif
 
+#include "payuzuc_msgids.h"
+
 TO_LAB_Subs_t TO_LAB_Subs = {.Subs = {/* CFS App Subscriptions */
                                       {CFE_SB_MSGID_WRAP_VALUE(TO_LAB_HK_TLM_MID), {0, 0}, 4},
                                       {CFE_SB_MSGID_WRAP_VALUE(TO_LAB_DATA_TYPES_MID), {0, 0}, 4},
+                                      {CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_HK_TLM_MID), {0, 0}, 4},
 
                                       /* cFE Core subscriptions */
                                       {CFE_SB_MSGID_WRAP_VALUE(CFE_ES_HK_TLM_MID), {0, 0}, 4},

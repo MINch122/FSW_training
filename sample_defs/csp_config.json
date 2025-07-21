@@ -1,6 +1,7 @@
 {
     "host" :
     {
+        "ready": false,
         "address": 3,
         "hostname": "POBC",
         "model": "COSMIC",

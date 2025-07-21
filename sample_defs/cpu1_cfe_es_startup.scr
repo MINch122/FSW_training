@@ -1,6 +1,11 @@
 CFE_LIB, cfe_assert,  CFE_Assert_LibInit, ASSERT_LIB,    0,   0,     0x0, 0;
 CFE_LIB, sample_lib,  SAMPLE_LIB_Init,    SAMPLE_LIB,    0,   0,     0x0, 0;
-CFE_LIB, libcsp-client, NULL,             LIBCSP-CLIENT, 0,   0,     0x0, 0;
+CFE_APP, hk,          HK_AppMain,         HK,           40,   16384, 0x0, 0;
+CFE_APP, sc,          SC_AppMain,         SC,           41,   16384, 0x0, 0;
+CFE_APP, hs,          HS_AppMain,         HS,           42,   16384, 0x0, 0;
+CFE_APP, lc,          LC_AppMain,         LC,           43,   16384, 0x0, 0;
+CFE_APP, ds,          DS_AppMain,         DS,           44,   16384, 0x0, 0;
+CFE_APP, fm,          FM_AppMain,         FM,           45,   16384, 0x0, 0;
 CFE_APP, sample_app,  SAMPLE_APP_Main,    SAMPLE_APP,   50,   16384, 0x0, 0;
 CFE_APP, payuzuc,     PAYUZUC_Main,       PAYUZUC_APP,  51,   16384, 0x0, 0;
 CFE_APP, ci_lab,      CI_LAB_AppMain,     CI_LAB_APP,   60,   16384, 0x0, 0;

@@ -55,6 +55,11 @@ struct CFE_SRL_IO_Param_s {
      * CAN : CAN frame ID
      */
     uint32_t Addr;
+    /**
+     * Used for ApiRead - Not used in I2C, SPI
+     * The parameter determine the **time interval** between `Write` -> `Read`
+     */
+    uint32_t Interval;
 };
 
 

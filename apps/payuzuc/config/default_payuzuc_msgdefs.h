@@ -103,6 +103,9 @@ typedef struct PAYUZUC_WriteRegister_Payload {
 typedef struct PAYUZUC_DownloadAll_Payload {
     uint8 MEM;
     uint8 PRE;
+
+    uint16_t StartLine;
+    uint16_t LineNum;
 } PAYUZUC_DownloadAll_Payload_t;
 
 
@@ -112,8 +115,23 @@ typedef struct PAYUZUC_DownloadAll_Payload {
  * 
  ************************************************/
 typedef struct PAYUZUC_HkTlm_Payload {
-    uint8 CommandErrorCounter;
+    
     uint8 CommandCounter;
+    uint8 CommandErrorCounter;
+    
+    /**
+     * `0` : Image Download Not-Started
+     * `1` : Image Download On-going
+     * `2` : Image Download Done
+     */
+    uint8 MemoryState[PAYUZUC_MEMORY_SLOT];
+
+    /**
+     * Last Image number of specific memory slot. Used for image naming.
+     * e.g.) If 10 image downloaded on specific memory slot, then `LastImgIdx` become `10`
+     */
+    uint8 LastImgIdx[PAYUZUC_MEMORY_SLOT];
+
 } PAYUZUC_HkTlm_Payload_t;
 
 #endif

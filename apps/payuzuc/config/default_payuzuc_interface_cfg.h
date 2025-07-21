@@ -15,13 +15,6 @@
 #define PAYUZUC_INTERFACE_CFG_H
 
 /**
- * Define Packet Start, End Byte
- */
-#define PAYUZUC_PKT_START_BYTE          0x40
-#define PAYUZUC_PKT_TERMINATE_BYTE      0x0D
-
-
-/**
  * Define Command Packet size
  * **Every command** has same size
  */
@@ -38,10 +31,13 @@
 
 /**
  * Image Size
- * This size means **one line (row)** of Image
+ * This value means **one line (row)** of Image
  */
 #define PAYUZUC_IMG_SIZE                640
 #define PAYUZUC_THUMBNAIL_IMG_SIZE      64
+
+#define PAYUZUC_IMG_LINE_NUM            480
+#define PAYUZUC_THUMBNAIL_IMG_LINE_NUM  48
 
 
 /* Var `data` means only real payload size */
@@ -62,5 +58,16 @@
 #define PAYUZUC_WRITE_REGISTER_TLM_SIZE         PAYUZUC_GET_TLM_SIZE(0)
 
 #define PAYUZUC_ERROR_TLM_SIZE                  PAYUZUC_GET_TLM_SIZE(3)
+
+
+
+/*******************************************
+ * Download Table Define
+ *******************************************/
+#define PAYUZUC_MEMORY_SLOT             6
+
+#define PAYUZUC_DOWNLOAD_NOT_STARTED    0
+#define PAYUZUC_DOWNLOAD_ON_GOING       1
+#define PAYUZUC_DOWNLOAD_DONE           2
 
 #endif

@@ -120,6 +120,11 @@ void PAYUZUC_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
             PAYUZUC_WriteRegisterCmd((const PAYUZUC_WriteRegisterCmd_t *)SBBufPtr);
         }
         break;
+    case PAYUZUC_DOWNLOAD_ALL_CC:
+        if (PAYUZUC_VerifyCmdLength(&SBBufPtr->Msg, sizeof(PAYUZUC_DownloadAllCmd_t))) {
+            PAYUZUC_DownloadAllCmd((const PAYUZUC_DownloadAllCmd_t *)SBBufPtr);
+        }
+        break;
 
     default:
         CFE_EVS_SendEvent(PAYUZUC_CC_ERR_EID, CFE_EVS_EventType_ERROR, "%s: Invalid ground command code - CC = %d",
