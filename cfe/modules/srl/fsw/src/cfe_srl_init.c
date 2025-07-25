@@ -33,7 +33,7 @@ int32 CFE_SRL_EarlyInit(void) {
  	 * Only `ready == true` interface is initialized
 	 **************************************************/
 	/* socat Init */
-	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_SOCAT_HANDLE_INDEXER], "socat", "/dev/pts/3", SRL_DEVTYPE_UART, CFE_SRL_SOCAT_HANDLE_INDEXER, 115200, 0);
+	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_SOCAT_HANDLE_INDEXER], "socat", "/dev/pts/8", SRL_DEVTYPE_UART, CFE_SRL_SOCAT_HANDLE_INDEXER, 115200, 0);
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: socat Initialization failed! RC=%d\n", __func__, Status);
 		return CFE_SRL_SOCAT_INIT_ERR;

@@ -60,6 +60,11 @@ struct CFE_SRL_IO_Param_s {
      * The parameter determine the **time interval** between `Write` -> `Read`
      */
     uint32_t Interval;
+
+    /**
+     * Read Bytes from ApiRead - Not used in I2C, SPI
+     */
+    ssize_t ReadBytes;
 };
 
 

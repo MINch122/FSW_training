@@ -30,6 +30,7 @@
 typedef struct {
     uint8 CmdCounter;
     uint8 ErrCounter;
+    uint8 DeviceErrCounter;
 
     /**
      * Houskeeping telemetry packet
@@ -85,5 +86,6 @@ extern PAYUZUC_Data_t PAYUZUC_Data;
 */
 void         PAYUZUC_Main(void);
 CFE_Status_t PAYUZUC_Init(void);
+
 
 #endif /* PAYUZUC_TASK_H */

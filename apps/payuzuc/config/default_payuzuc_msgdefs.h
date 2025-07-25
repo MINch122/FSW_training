@@ -115,6 +115,17 @@ typedef struct PAYUZUC_DownloadAll_Payload {
 } PAYUZUC_DownloadAll_Payload_t;
 
 
+/**
+ * MOSAIC Command
+ * @param MEM Memory Slot: Recommend `4` or `5`
+ */
+typedef struct PAYUZUC_Mosaic_Payload {
+    
+    uint8_t MEM;
+
+} PAYUZUC_Mosaic_Payload_t;
+
+
 /************************************************
  * 
  * Telemetry Payload Type Definition

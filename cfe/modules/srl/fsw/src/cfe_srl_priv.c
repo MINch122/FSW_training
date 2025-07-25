@@ -291,7 +291,7 @@ int32 CFE_SRL_ReadGenericI2C(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Pa
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Timeout, uint32_t Delay) {
+int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Timeout, uint32_t Delay, ssize_t *Read) {
     // write -> poll read
     int Status;
     CFE_SRL_DevType_t DevType;
@@ -313,7 +313,7 @@ int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t T
     Sleep_us(Delay);
 
     // Poll Read
-    Status = CFE_SRL_Read(Handle, RxData, RxSize, Timeout);
+    Status = CFE_SRL_Read(Handle, RxData, RxSize, Timeout, Read);
     if (Status != CFE_SUCCESS) goto error;
 
     // Mutex Unlock
@@ -328,7 +328,7 @@ error:
 }
 
 int32 CFE_SRL_ReadGenericUART(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_ReadUART(Handle, Params->TxData, Params->TxSize, Params->RxData, Params->RxSize, Params->Timeout, Params->Interval);
+    return CFE_SRL_ReadUART(Handle, Params->TxData, Params->TxSize, Params->RxData, Params->RxSize, Params->Timeout, Params->Interval, &Params->ReadBytes);
 }
 
 /*----------------------------------------------------------------
@@ -337,7 +337,7 @@ int32 CFE_SRL_ReadGenericUART(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *P
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_ReadCAN(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Timeout, uint32_t Addr, uint32_t Delay) {
+int32 CFE_SRL_ReadCAN(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Timeout, uint32_t Addr, uint32_t Delay, ssize_t *Read) {
     int32 Status;
     CFE_SRL_DevType_t DevType;
     struct can_frame Frame = {0,};
@@ -363,7 +363,7 @@ int32 CFE_SRL_ReadCAN(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
     while (TotBytes < RxSize) {
         RdBytes = (RxSize - TotBytes >= CAN_MAX_DLEN) ? CAN_MAX_DLEN : (RxSize - TotBytes);
         // Poll Read
-        Status = CFE_SRL_Read(Handle, &Frame, sizeof(struct can_frame), Timeout);
+        Status = CFE_SRL_Read(Handle, &Frame, sizeof(struct can_frame), Timeout, NULL);
         if (Status != CFE_SUCCESS) goto error;
 
         uint32_t RxID = 0;
@@ -377,6 +377,7 @@ int32 CFE_SRL_ReadCAN(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
         memcpy((uint8_t *)RxData + TotBytes, Frame.data, RdBytes);
         TotBytes += RdBytes;
     }
+    if (Read) *Read = TotBytes;
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
@@ -390,7 +391,7 @@ error:
 }
 
 int32 CFE_SRL_ReadGenericCAN(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_ReadCAN(Handle, Params->TxData, Params->TxSize, Params->RxData, Params->RxSize, Params->Timeout, Params->Addr, Params->Interval);
+    return CFE_SRL_ReadCAN(Handle, Params->TxData, Params->TxSize, Params->RxData, Params->RxSize, Params->Timeout, Params->Addr, Params->Interval, &Params->ReadBytes);
 }
 
 /*----------------------------------------------------------------

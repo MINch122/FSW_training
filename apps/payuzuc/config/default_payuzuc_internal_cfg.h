@@ -35,6 +35,7 @@
 #define PAYUZUC_DOWNLOAD_CMD_CODE       0x44 /* `D` */
 #define PAYUZUC_READ_REGISTER_CMD_CODE  0x52 /* `R` */
 #define PAYUZUC_WRITE_REGISTER_CMD_CODE 0x57 /* `W` */
+#define PAYUZUC_MOSAIC_CMD_CODE         0x51 /* `Q` */
 
 /**
  * Define Param number
@@ -47,6 +48,7 @@
 #define PAYUZUC_DOWNLOAD_PARAM_SIZE       4
 #define PAYUZUC_READ_REGISTER_PARAM_SIZE  2
 #define PAYUZUC_WRITE_REGISTER_PARAM_SIZE 4
+#define PAYUZUC_MOSAIC_PARAM_SIZE         1
 
 /**
  * Define Tlm Error flag

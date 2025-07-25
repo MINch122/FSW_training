@@ -24,22 +24,8 @@
 #include "payuzuc_interface_cfg.h"
 #include "payuzuc_utils.h"
 #include "cfe.h"
+#include <unistd.h>
 
-void PAYUZUC_ConfigurePacket(const void *Payload, void *Packet, uint8 ParamNum, uint8_t Command) {
-    if (Packet == NULL) return;
-    if (ParamNum != 0 && Payload == NULL) return;
-
-    PAYUZUC_Cmd_t *Cmd = (PAYUZUC_Cmd_t *)Packet;
-
-    Cmd->Packet.StartByte = PAYUZUC_PKT_START_BYTE;
-    Cmd->Packet.Command = Command;
-    if (ParamNum != 0) {
-        memcpy(Cmd->Packet.Params, Payload, ParamNum);
-    }
-    Cmd->Packet.EndByte = PAYUZUC_PKT_TERMINATE_BYTE;
-    
-    return;
-}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
@@ -90,6 +76,7 @@ CFE_Status_t PAYUZUC_NoopCmd(const PAYUZUC_NoopCmd_t *Msg) {
 CFE_Status_t PAYUZUC_ResetCountersCmd(const PAYUZUC_ResetCountersCmd_t *Msg) {
     PAYUZUC_Data.CmdCounter = 0;
     PAYUZUC_Data.ErrCounter = 0;
+    PAYUZUC_Data.DeviceErrCounter = 0;
 
     CFE_EVS_SendEvent(PAYUZUC_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "PAYUZUC Reset Counters Command Received");
 
@@ -103,6 +90,8 @@ CFE_Status_t PAYUZUC_ResetCountersCmd(const PAYUZUC_ResetCountersCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUC_PingCmd(const PAYUZUC_PingCmd_t *Msg) {
+    // Tlm is bigger than error pkt
+
     PAYUZUC_Data.CmdCounter++;
 
     int32 Status;
@@ -117,17 +106,24 @@ CFE_Status_t PAYUZUC_PingCmd(const PAYUZUC_PingCmd_t *Msg) {
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
     Params.RxData = &RxBuf;
     Params.RxSize = PAYUZUC_PING_TLM_SIZE;
-    Params.Timeout = 10;
+    Params.Timeout = 100;
 
     Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
 
+    /**
+     * Handle Error packet
+     */
+    if (RxBuf[1] == PAYUZUC_TLM_ERR_FLAG) {
+        PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes);
+        PAYUZUC_Data.DeviceErrCounter ++;
+    }
+
     for (int i = 0; i < sizeof(RxBuf); i++) {
         OS_printf("0x%02X\n", RxBuf[i]);
     }
-    
     
     return CFE_SUCCESS;
 }
@@ -138,6 +134,7 @@ CFE_Status_t PAYUZUC_PingCmd(const PAYUZUC_PingCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUC_SetModeCmd(const PAYUZUC_SetModeCmd_t *Msg) {
+    // Tlm is smaller than error pkt
     PAYUZUC_Data.CmdCounter++;
 
     int32 Status;
@@ -152,11 +149,15 @@ CFE_Status_t PAYUZUC_SetModeCmd(const PAYUZUC_SetModeCmd_t *Msg) {
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
     Params.RxData = &RxBuf;
     Params.RxSize = PAYUZUC_SET_MODE_TLM_SIZE;
-    Params.Timeout = 10;
+    Params.Timeout = 100;
 
     Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
+    }
+    if (RxBuf[1] == PAYUZUC_TLM_ERR_FLAG) {
+        PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes);
+        PAYUZUC_Data.DeviceErrCounter ++;
     }
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
@@ -168,6 +169,7 @@ CFE_Status_t PAYUZUC_SetModeCmd(const PAYUZUC_SetModeCmd_t *Msg) {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
 /* PAYUZUC Memory Status commands                                             */
+/* @deprecated  Not used function                                             */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUC_MemoryStatusCmd(const PAYUZUC_MemoryStatusCmd_t *Msg) {
@@ -185,7 +187,7 @@ CFE_Status_t PAYUZUC_MemoryStatusCmd(const PAYUZUC_MemoryStatusCmd_t *Msg) {
     Params.RxData = &RxBuf;
     Params.RxSize = PAYUZUC_MEMORY_STATUS_TLM_SIZE;
     Params.Timeout = 10;
-
+    
     Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
@@ -223,6 +225,9 @@ CFE_Status_t PAYUZUC_SetExposureCmd(const PAYUZUC_SetExposureCmd_t *Msg) {
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
     }
+    if (RxBuf[1] == PAYUZUC_TLM_ERR_FLAG) {
+        PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes);
+    }
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
         OS_printf("0x%02X\n", RxBuf[i]);
@@ -255,6 +260,10 @@ CFE_Status_t PAYUZUC_CaptureCmd(const PAYUZUC_CaptureCmd_t *Msg) {
     Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
+    }
+    if (RxBuf[1] == PAYUZUC_TLM_ERR_FLAG) {
+        PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes);
+        PAYUZUC_Data.DeviceErrCounter ++;
     }
 
     /**
@@ -302,6 +311,11 @@ CFE_Status_t PAYUZUC_DownloadCmd(const PAYUZUC_DownloadCmd_t *Msg) {
     Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
+    }
+    if (RxBuf[1] == PAYUZUC_TLM_ERR_FLAG) {
+        PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes);
+        PAYUZUC_Data.DeviceErrCounter ++;
+        return CFE_SUCCESS; 
     }
 
     uint16_t Line = (Msg->Payload.LN1 << 8) | Msg->Payload.LN2;
@@ -406,6 +420,11 @@ CFE_Status_t PAYUZUC_DownloadAllCmd(const PAYUZUC_DownloadAllCmd_t *Msg) {
             ErrCnt ++;
             continue;
         }
+        if (RxBuf[1] == PAYUZUC_TLM_ERR_FLAG) {
+            PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes);
+            PAYUZUC_Data.DeviceErrCounter ++;
+            return CFE_SUCCESS;
+        }
         
         /**
          * Write Image Data to file
@@ -464,6 +483,45 @@ CFE_Status_t PAYUZUC_DownloadAllCmd(const PAYUZUC_DownloadAllCmd_t *Msg) {
     return CFE_SUCCESS;
 }
 
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* PAYUZUC Mosaic commands                                                    */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+CFE_Status_t PAYUZUC_MosaicCmd(const PAYUZUC_MosaicCmd_t *Msg) {
+    PAYUZUC_Data.CmdCounter++;
+
+    int32 Status;
+
+    PAYUZUC_Cmd_t Cmd = {0,};
+    uint8 RxBuf[PAYUZUC_MOSAIC_TLM_SIZE] = {0,};
+
+    PAYUZUC_ConfigurePacket(&Msg->Payload, &Cmd, PAYUZUC_MOSAIC_PARAM_SIZE, PAYUZUC_MOSAIC_CMD_CODE);
+
+    CFE_SRL_IO_Param_t Params = {0,};
+    Params.TxData = &Cmd;
+    Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
+    Params.RxData = RxBuf;
+    Params.RxSize = PAYUZUC_MOSAIC_TLM_SIZE;
+    Params.Timeout = 10;
+
+    Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
+    if (Status != CFE_SUCCESS) {
+        PAYUZUC_Data.ErrCounter ++;
+    }
+    if (RxBuf[1] == PAYUZUC_TLM_ERR_FLAG) {
+        PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes);
+        PAYUZUC_Data.DeviceErrCounter ++;
+    }
+
+    for (uint8_t i = 0; i < sizeof(RxBuf); i++) {
+        OS_printf("0x%02X\n", RxBuf[i]);
+    }
+
+    return CFE_SUCCESS;
+}
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
 /* PAYUZUC Read Register commands                                             */
@@ -489,6 +547,10 @@ CFE_Status_t PAYUZUC_ReadRegisterCmd(const PAYUZUC_ReadRegisterCmd_t *Msg) {
     Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
+    }
+    if (RxBuf[1] == PAYUZUC_TLM_ERR_FLAG) {
+        PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes);
+        PAYUZUC_Data.DeviceErrCounter ++;
     }
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
@@ -522,6 +584,10 @@ CFE_Status_t PAYUZUC_WriteRegisterCmd(const PAYUZUC_WriteRegisterCmd_t *Msg) {
     Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
     if (Status != CFE_SUCCESS) {
         PAYUZUC_Data.ErrCounter ++;
+    }
+    if (RxBuf[1] == PAYUZUC_TLM_ERR_FLAG) {
+        PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes);
+        PAYUZUC_Data.DeviceErrCounter ++;
     }
 
     for (int i = 0; i < sizeof(RxBuf); i++) {

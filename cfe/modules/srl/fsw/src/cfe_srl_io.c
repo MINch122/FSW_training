@@ -53,9 +53,9 @@ int CFE_SRL_Write(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Size) {
     return CFE_SUCCESS;
 }
 
-int CFE_SRL_Read(CFE_SRL_IO_Handle_t *Handle, void *Data, size_t Size, uint32_t Timeout) {
+int CFE_SRL_Read(CFE_SRL_IO_Handle_t *Handle, void *Data, size_t Size, uint32_t Timeout, ssize_t *ReadBytes) {
     // int Status;
-    ssize_t ReadBytes;
+    ssize_t RdBytes;
 
     if (Handle == NULL || Data == NULL) return CFE_SRL_BAD_ARGUMENT;
     
@@ -63,22 +63,23 @@ int CFE_SRL_Read(CFE_SRL_IO_Handle_t *Handle, void *Data, size_t Size, uint32_t 
         return CFE_SRL_NOT_OPEN_ERR;        
     }
     
-    ReadBytes = CFE_SRL_BasicPollRead(Handle->FD, Data, Size, Timeout);
+    RdBytes = CFE_SRL_BasicPollRead(Handle->FD, Data, Size, Timeout);
+    if (ReadBytes) *ReadBytes = RdBytes;
 
-    if (ReadBytes == CFE_SRL_TIMEOUT) {
+    if (RdBytes == CFE_SRL_TIMEOUT) {
         Handle->RxErrCnt ++;
         Handle->__errno = errno;
         return CFE_SRL_TIMEOUT;
     }
-    else if (ReadBytes == CFE_SRL_ERR) {
+    else if (RdBytes == CFE_SRL_ERR) {
         Handle->RxErrCnt ++;
         Handle->__errno = errno;
         return CFE_SRL_READ_ERR;
     }
 
-    Handle->RxCount += ReadBytes;
+    Handle->RxCount += RdBytes;
 
-    if (ReadBytes != Size) {
+    if (RdBytes != Size) {
         Handle->RxErrCnt ++;
         Handle->__errno = errno;
         return CFE_SRL_PARTIAL_READ_ERR;

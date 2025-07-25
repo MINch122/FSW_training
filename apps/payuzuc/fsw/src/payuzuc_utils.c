@@ -92,3 +92,69 @@ void PAYUZUC_Inspection(uint8_t MemorySlot) {
     
     return;
 }
+
+
+
+
+/***********************************************
+ * 
+ * Error Handling Function
+ * 
+ ***********************************************/
+void PAYUZUC_HandleErrorPacket(const void *ErrPkt, ssize_t Size) {
+    if (ErrPkt == NULL || Size <= 0 || Size > PAYUZUC_ERROR_TLM_SIZE) return;
+    
+    uint8_t Pkt[PAYUZUC_ERROR_TLM_SIZE] = {0,};
+    memcpy(Pkt, ErrPkt, Size);
+    
+    if (Size < PAYUZUC_ERROR_TLM_SIZE) {
+        // Read residual data
+        uint8_t Residual = PAYUZUC_ERROR_TLM_SIZE - Size;
+        uint8_t ResBuf[Residual];
+        memset(ResBuf, 0, Residual);
+        ssize_t bytes = read(PAYUZUC_Data.Handle->FD, ResBuf, Residual);
+        if (bytes != Residual) {
+            PAYUZUC_Data.DeviceErrCounter ++;
+            PAYUZUC_Data.ErrCounter ++;
+            return;
+        }
+        memcpy(Pkt + Size, ResBuf, Residual);
+    }
+
+    uint8_t MD, CMD, ERR, RXF;
+    
+    if (Pkt[0] != '@' || Pkt[8] != '\r') return;
+    
+    MD  = Pkt[2];
+    CMD = Pkt[5];
+    ERR = Pkt[6];
+    RXF = Pkt[7];
+    OS_printf("MD: 0x%02X CMD: 0x%02X ERR: 0x%02X RXF: 0x%02X\n", MD, CMD, ERR, RXF);
+
+    /**
+     * RPT Function
+     */
+    // .....
+    return;
+}
+
+/***********************************************
+ * 
+ * Packet Configuration Util func
+ * 
+ ***********************************************/
+void PAYUZUC_ConfigurePacket(const void *Payload, void *Packet, uint8 ParamNum, uint8_t Command) {
+    if (Packet == NULL) return;
+    if (ParamNum != 0 && Payload == NULL) return;
+
+    PAYUZUC_Cmd_t *Cmd = (PAYUZUC_Cmd_t *)Packet;
+
+    Cmd->Packet.StartByte = PAYUZUC_PKT_START_BYTE;
+    Cmd->Packet.Command = Command;
+    if (ParamNum != 0) {
+        memcpy(Cmd->Packet.Params, Payload, ParamNum);
+    }
+    Cmd->Packet.EndByte = PAYUZUC_PKT_TERMINATE_BYTE;
+    
+    return;
+}

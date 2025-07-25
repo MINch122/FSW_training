@@ -52,4 +52,13 @@ int32 PAYUZUC_CloseFile(int ID);
 /// @param MemorySlot Memory Slot
 void PAYUZUC_Inspection(uint8_t MemorySlot);
 
+
+
+/// @brief Handle Error packet. If Data is insufficient, read residual bytes.
+/// @param ErrPkt Received error packet pointer
+/// @param Size Read size before this function
+void PAYUZUC_HandleErrorPacket(const void *ErrPkt, ssize_t Size);
+
+
+void PAYUZUC_ConfigurePacket(const void *Payload, void *Packet, uint8 ParamNum, uint8_t Command);
 #endif

@@ -116,6 +116,15 @@ typedef struct {
     PAYUZUC_DownloadAll_Payload_t Payload;
 } PAYUZUC_DownloadAllCmd_t;
 
+/**
+ * Mosaic Command
+ */
+typedef struct {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    PAYUZUC_Mosaic_Payload_t Payload;
+} PAYUZUC_MosaicCmd_t;
+
+
 
 /*************************************************************************/
 /*
