@@ -27,4 +27,5 @@ int32 CFE_SRL_SetModeSPI(CFE_SRL_IO_Handle_t *Handle, uint8_t Mode);
 int32 CFE_SRL_SetSpeedSPI(CFE_SRL_IO_Handle_t *Handle, uint32_t Speed);
 int32 CFE_SRL_SetBitPerWordSPI(CFE_SRL_IO_Handle_t *Handle, uint8_t BitPerWord);
 int32 CFE_SRL_SetSPI(CFE_SRL_IO_Handle_t *Handle, uint8_t Mode, uint32_t Speed, uint8_t BitPerWord);
+
 #endif /* CFE_SRL_IO_H */

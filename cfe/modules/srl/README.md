@@ -3,6 +3,11 @@
 - Astrodynamics and Control Lab, Yonsei University
 
 # Update
+- 25/07/23 : Add member `ReadBytes` in struct `CFE_SRL_IO_Param_t`
+    - This member is used for **Checking the actual readed bytes during transaction**
+    - Only applied to `UART, CAN`
+    - You don't need to do anything further, just check the value after the transaction
+    
 - 25/07/18 : Add member `Interval` in struct `CFE_SRL_IO_Param_t`
     - This member is used for **time term between Write -> Read**
     - Only applid to `UART, CAN`
@@ -57,3 +62,7 @@ Params.Interval = 1000
 /* Execute API */
 CFE_SRL_ApiRead(Handle, &Params);
 ```
+
+# Notandum
+1. When you using `CFE_SRL_ApiRead()`, beware about the `.TxData` pointer value. <br> This function does not check whether `.TxData` is `NULL` or not
+    - If `.TxData` is `NULL`, this function just skip "Write".

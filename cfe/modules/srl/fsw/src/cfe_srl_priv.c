@@ -296,7 +296,7 @@ int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t T
     int Status;
     CFE_SRL_DevType_t DevType;
 
-    if (Handle == NULL || TxData == NULL || RxData == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || RxData == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     DevType = CFE_SRL_GetHandleDevType(Handle);
     if (DevType != SRL_DEVTYPE_UART && DevType != SRL_DEVTYPE_RS422) return CFE_SRL_INVALID_TYPE;
@@ -305,12 +305,14 @@ int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t T
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    // Write
-    Status = CFE_SRL_Write(Handle, TxData, TxSize);
-    if (Status != CFE_SUCCESS) goto error;
-    
-    // Sleep for specific time interval
-    Sleep_us(Delay);
+    if (TxData != NULL) {
+        // Write
+        Status = CFE_SRL_Write(Handle, TxData, TxSize);
+        if (Status != CFE_SUCCESS) goto error;
+
+        // Sleep for specific time interval
+        Sleep_us(Delay);
+    }
 
     // Poll Read
     Status = CFE_SRL_Read(Handle, RxData, RxSize, Timeout, Read);
@@ -342,7 +344,7 @@ int32 CFE_SRL_ReadCAN(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
     CFE_SRL_DevType_t DevType;
     struct can_frame Frame = {0,};
 
-    if (Handle == NULL || TxData == NULL || RxData == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || RxData == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     DevType = CFE_SRL_GetHandleDevType(Handle);
     if(DevType != SRL_DEVTYPE_CAN) return CFE_SRL_INVALID_TYPE;
@@ -351,12 +353,14 @@ int32 CFE_SRL_ReadCAN(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    // Write
-    Status = CFE_SRL_WriteCAN(Handle, TxData, TxSize, Addr);
-    if (Status != CFE_SUCCESS) return Status;
+    if (TxData != NULL) {
+        // Write
+        Status = CFE_SRL_WriteCAN(Handle, TxData, TxSize, Addr);
+        if (Status != CFE_SUCCESS) return Status;
 
-    // Sleep for specific time interval
-    Sleep_us(Delay);
+        // Sleep for specific time interval
+        Sleep_us(Delay);
+    }
 
     size_t TotBytes = 0; // Total Rx bytes till now
     size_t RdBytes; // Read bytes at this very time
