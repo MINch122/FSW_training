@@ -46,7 +46,12 @@ def Write_socat_handle_init(f, iface:dict):
 
 def Write_gpio_init(f, iface:dict):
     f.write(f"\t/* GPIO {iface['name']} Init */\n")
-    f.write(f"\tStatus = CFE_SRL_GpioInit(&GPIO[CFE_SRL_{iface['name'].upper()}_GPIO_INDEXER], \"{iface['DevName']}\", {iface['line']}, \"{iface['name']}\", {iface['default']});\n")
+    if iface['direction'] == 'in':
+        f.write(f"\tStatus = CFE_SRL_GpioInit(&GPIO[CFE_SRL_{iface['name'].upper()}_GPIO_INDEXER], \"{iface['DevName']}\", {iface['line']}, \"{iface['name']}\", {iface['default']}, false);\n")
+    elif iface['direction'] == 'out':
+        f.write(f"\tStatus = CFE_SRL_GpioInit(&GPIO[CFE_SRL_{iface['name'].upper()}_GPIO_INDEXER], \"{iface['DevName']}\", {iface['line']}, \"{iface['name']}\", {iface['default']}, true);\n")
+    else:
+        raise Exception("GPIO direction is not proper. Check again the setting. It should be \"in\" or \"out\"")
     return
 
 def Write_spi_handle_init(f, iface:dict):

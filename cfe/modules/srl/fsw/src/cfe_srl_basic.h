@@ -85,7 +85,9 @@ int CFE_SRL_ChangeBaudUART(CFE_SRL_IO_Handle_t *Handle, uint32_t BaudRate);
 int32 CFE_SRL_BasicGpioOpen(CFE_SRL_GPIO_Handle_t *Handle, const char *Path);
 int32 CFE_SRL_BasicGpioGetLine(CFE_SRL_GPIO_Handle_t *Handle, unsigned int Line);
 int32 CFE_SRL_BasicGpioSetOutput(CFE_SRL_GPIO_Handle_t *Handle, const char *Name, bool Default);
+int32 CFE_SRL_BasicGpioSetInput(CFE_SRL_GPIO_Handle_t *Handle, const char *Name);
 int32 CFE_SRL_BasicGpioSetValue(CFE_SRL_GPIO_Handle_t *Handle, bool Value);
+int32 CFE_SRL_BasicGpioGetValue(CFE_SRL_GPIO_Handle_t *Handle);
 int32 CFE_SRL_BasicGpioClose(CFE_SRL_GPIO_Handle_t *Handle);
 
 #endif /* CFE_SRL_BASE_H */

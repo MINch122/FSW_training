@@ -36,14 +36,18 @@
     2. ready : readiness flag. MUST type in **bool**
     3. name : Nickname of each interface. MUST type **device file name in upper case**
     4. DevName : Device file path. Must type the exact same file path
-    5. MutexID : **Deprecated**
 - Some interfaces have unique keys
 ### UART series
-1. baudrate
+1. baudrate : Baud rate of communication
 ### GPIO
 1. line : the line number of each gpiochip
-2. default : default value of gpio. Must type `1` or `0`
-3. direction (NOT supported now): default gpio direction Must type `in` or `out`
+2. direction : GPIO direction. Must type `"in"` or `"out"` (String)
+3. default : Default value(i.e. state) of GPIO. Must type `1` for `High` or `0` for `Low`.
+    - This element is **not effective if direction is `"in"`**
+### SPI
+1. mode : SPI mode. Determined by **CPOL & CPHA**. Must be `0 ~ 3`
+2. speed : SPI communication speed.
+3. bitperword (Not suppored) : SPI bit per word. Default is `8`
 
 ## CSP interface
 - This json has two kinds of elements

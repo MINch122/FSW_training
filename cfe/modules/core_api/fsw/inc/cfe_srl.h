@@ -37,6 +37,7 @@ int32 CFE_SRL_ApiWrite(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params);
 
 
 /// @brief Read data from external device via various serial comm. protocol
+/// @details This function doesn't check the whether `.TxData` is `NULL` or not
 /// @param Handle A Pointer of SRL Handle. Distinguish character device file
 /// @param Params A Pointer of SRL Paramter. Correctly set the members `.TxData`, `.TxSize`, `.RxData`, `RxSize`. And `.Timeout`, `.Addr` if needed
 /// @return Only `CFE_SUCCESS`(which is `0`) is success.
@@ -54,6 +55,12 @@ int32 CFE_SRL_ApiClose(CFE_SRL_IO_Handle_t * Handle);
 /// @param Value `true` for HIGH, `false` for LOW
 /// @return Only `CFE_SUCCESS`(which is `0`) is success.
 int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value);
+
+
+/// @brief Get specified GPIO PIN input value
+/// @param Handle `CFE_SRL_GPIO_Handle_t` pointer
+/// @return If success, `0` for Low, `1` for High. Anything else is error.
+int32 CFE_SRL_ApiGpioGet(CFE_SRL_GPIO_Handle_t *Handle);
 
 
 /// @brief CSP Transaction API function via CSP CAN

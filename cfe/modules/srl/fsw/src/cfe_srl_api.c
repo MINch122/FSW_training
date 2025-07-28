@@ -48,7 +48,7 @@ CFE_SRL_GPIO_Handle_t *CFE_SRL_ApiGetGpioHandle(CFE_SRL_GPIO_Indexer_t Index) {
  *
  *-----------------------------------------------------------------*/
 int32 CFE_SRL_ApiWrite(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    if (Handle == NULL || Handle->Func.TxFunc == NULL ||Params->TxData == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || Handle->Func.TxFunc == NULL || Params->TxData == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     return Handle->Func.TxFunc(Handle, Params);
 }
@@ -62,8 +62,7 @@ int32 CFE_SRL_ApiWrite(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) 
  *
  *-----------------------------------------------------------------*/
 int32 CFE_SRL_ApiRead(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    if (Handle == NULL || Handle->Func.RxFunc == NULL || 
-        Params->TxData == NULL || Params->RxData == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || Handle->Func.RxFunc == NULL || Params->RxData == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     return Handle->Func.RxFunc(Handle, Params);
 }
@@ -103,6 +102,19 @@ int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value) {
 
 /*----------------------------------------------------------------
  *
+ * GPIO getting API
+ * Implemented per public API
+ * See description in header file for argument/return detail
+ *
+ *-----------------------------------------------------------------*/
+int32 CFE_SRL_ApiGpioGet(CFE_SRL_GPIO_Handle_t *Handle) {
+    if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
+
+    return CFE_SRL_BasicGpioGetValue(Handle);
+}
+
+/*----------------------------------------------------------------
+ *
  * CSP Transaction API
  * Implemented per public API
  * See description in header file for argument/return detail
@@ -111,7 +123,8 @@ int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value) {
 int32 CFE_SRL_ApiTransactionCSP(uint8_t Node, uint8_t Port, void *TxData, int TxSize, void *RxData, int RxSize) {
     int32 Status;
 
-    if (TxData == NULL || RxData == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (TxData == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (RxData == NULL && RxSize != 0) return CFE_SRL_BAD_ARGUMENT;
 
     Status = CFE_SRL_TransactionCSP(Node, Port, TxData, TxSize, RxData, RxSize);
     if (Status == CFE_SRL_TRANSACTION_ERR) return Status;

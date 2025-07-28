@@ -21,7 +21,7 @@ int CFE_SRL_Close(CFE_SRL_IO_Handle_t *Handle);
 
 int CFE_SRL_OpenSocket(CFE_SRL_IO_Handle_t *Handle, const char *DevName);
 
-int CFE_SRL_GpioInit(CFE_SRL_GPIO_Handle_t *Handle, const char *Path, unsigned int Line, const char *Name, bool Default);
+int CFE_SRL_GpioInit(CFE_SRL_GPIO_Handle_t *Handle, const char *Path, unsigned int Line, const char *Name, bool Default, bool IsOut);
 
 int32 CFE_SRL_SetModeSPI(CFE_SRL_IO_Handle_t *Handle, uint8_t Mode);
 int32 CFE_SRL_SetSpeedSPI(CFE_SRL_IO_Handle_t *Handle, uint32_t Speed);

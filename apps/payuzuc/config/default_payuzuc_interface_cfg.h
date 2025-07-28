@@ -1,6 +1,6 @@
 /**
  * @file
- *   SAMPLE_APP Application Public Definitions
+ *   PAYUZUZ Application Public Definitions
  *
  * This provides default values for configurable items that affect
  * the interface(s) of this module.  This includes the CMD/TLM message
