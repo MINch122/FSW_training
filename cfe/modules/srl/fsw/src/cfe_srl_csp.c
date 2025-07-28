@@ -197,7 +197,7 @@ int CFE_SRL_GetRparamCSP(uint8_t Type, uint8_t Node, gs_param_table_id_t TableId
 
     if (Status != GS_OK) {
         CFE_ES_WriteToSysLog("%s: Get param failed! CSP RC=%d", __func__, Status);
-        return CFE_SRL_GET_RPARAM_ERR;
+        return Status;
     }
     return CFE_SUCCESS;
 }
@@ -245,7 +245,7 @@ int CFE_SRL_SetRparamCSP(uint8_t Type, uint8_t Node, gs_param_table_id_t TableId
 
     if (Status != GS_OK) {
         CFE_ES_WriteToSysLog("%s: Set param failed! CSP RC=%d", __func__, Status);
-        return CFE_SRL_SET_RPARAM_ERR;
+        return Status;
     }
     return CFE_SUCCESS;
 }

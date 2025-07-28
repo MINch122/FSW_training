@@ -80,13 +80,14 @@ SET(SPACECRAFT_ID 0x42)
 # of the CFE core executable on every target.  These can be used to amend
 # or override parts of the CFE core on a mission-specific basis.
 list(APPEND MISSION_CORE_MODULES srl)
+list(APPEND MISSION_CORE_MODULES rf)
 
 # The "MISSION_GLOBAL_APPLIST" is a set of apps/libs that will be built
 # for every defined target.  These are built as dynamic modules
 # and must be loaded explicitly via startup script or command.
 # This list is effectively appended to every TGTx_APPLIST in targets.cmake.
 # Example:
-list(APPEND MISSION_GLOBAL_APPLIST sample_app sample_lib)
+list(APPEND MISSION_GLOBAL_APPLIST sample_app sample_lib rpt)
 
 # The "MISSION_GLOBAL_STATIC_APPLIST" is similar to MISSION_GLOBAL_APPLIST
 # but the apps are statically linked.
