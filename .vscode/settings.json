@@ -43,7 +43,9 @@
         "cfe_srl_priv.h": "c",
         "unistd.h": "c",
         "common_types.h": "c",
-        "cfe_error.h": "c"
+        "cfe_error.h": "c",
+        "payuzut_task.h": "c",
+        "payuzut_mission_cfg.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

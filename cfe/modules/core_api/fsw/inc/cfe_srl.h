@@ -99,4 +99,12 @@ int32 CFE_SRL_ApiSetRparamCSP(uint8_t Type, uint8_t Node, uint8_t TableId, uint1
 
 int32 CFE_SRL_ApiPingCSP(uint8 Node, uint32 Timeout, unsigned int Size, uint8 Options);
 
+/// @brief Changes the via address of packet whose destination is GS
+/// @param Via Via address. Should be `CSP_NODE_UTRX` or `CSP_NODE_STRX`
+/// @return `CSP_ERR_NONE` for success.
+int32 CFE_SRL_ApiChangeVia(uint8_t Via);
+
+
+void CFE_SRL_ApiPrintRtable(void);
+
 #endif /* CFE_SRL_H */

@@ -5,6 +5,9 @@
 #ifndef PAYUZUC_TOPICIDS_H
 #define PAYUZUC_TOPICIDS_H
 
+/**
+ * TOPIC definition
+ */
 #define CFE_MISSION_PAYUZUC_CMD_TOPICID             0x30
 #define CFE_MISSION_PAYUZUC_SEND_HK_TOPICID         0x31 
 

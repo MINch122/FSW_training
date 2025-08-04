@@ -1,0 +1,15 @@
+#ifndef PAYUZUT_TOPICIDS_H
+#define PAYUZUT_TOPICIDS_H
+
+
+/**
+ * TOPIC definition
+ */
+#define CFE_MISSION_PAYUZUT_CMD_TOPICID             0x35
+#define CFE_MISSION_PAYUZUT_SEND_HK_TOPICID         0x36
+#define CFE_MISSION_PAYUZUT_SEND_BCN_TOPICID        0x37 
+
+#define CFE_MISSION_PAYUZUT_HK_TLM_TOPICID          0x35
+#define CFE_MISSION_PAYUZUT_BCN_TLM_TOPICID         0x36
+
+#endif

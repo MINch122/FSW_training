@@ -2,6 +2,8 @@
 
 const char *SatName = "COSMIC"; // Revise name according to specific misison
 
+static csp_iface_t *InterfaceCAN = NULL;
+
 /**
  * Indexed by CSP Node number.
  */
@@ -9,8 +11,7 @@ CFE_SRL_CSP_Node_Config_t *NodeConfig[CFE_SRL_CSP_MAX_DEVICE_NUM] = {0,};
 
 int CFE_SRL_RouteInitCSP(void) {
     int Status;
-
-    csp_iface_t *InterfaceCAN = NULL;
+    
     // csp_iface_t *InterfaceI2C = NULL;
 
     Status = csp_route_start_task(CSP_TASK_STACK_SIZE(1), GS_THREAD_PRIORITY_HIGH);
@@ -252,4 +253,14 @@ int CFE_SRL_SetRparamCSP(uint8_t Type, uint8_t Node, gs_param_table_id_t TableId
 
 int CFE_SRL_PingCSP(uint8 Node, uint32 Timeout, unsigned int Size, uint8 Options) {
     return csp_ping(Node, Timeout, Size, Options);
+}
+
+
+
+int CFE_SRL_ChangeVia(uint8_t Via) {
+    return csp_rtable_set(CSP_NODE_GS_KISS, CSP_ID_HOST_SIZE, InterfaceCAN, Via);
+}
+
+void CFE_SRL_PrintRtable(void) {
+    return csp_rtable_print();
 }

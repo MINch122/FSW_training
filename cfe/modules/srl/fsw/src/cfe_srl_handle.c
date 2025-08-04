@@ -165,22 +165,24 @@ int CFE_SRL_HandleInit(CFE_SRL_IO_Handle_t **Handle, const char *Name, const cha
 }
 
 
-int CFE_SRL_HandleClose(CFE_SRL_IO_Handle_t *Handle) {
+int CFE_SRL_HandleClose(CFE_SRL_IO_Handle_t **Handle) {
     int Status;
     CFE_SRL_Global_Handle_t *Entry;
 
-    if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (*Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
 
-    Entry = (CFE_SRL_Global_Handle_t *)Handle;
+    Entry = (CFE_SRL_Global_Handle_t *)*Handle;
 
-    Status = CFE_SRL_Close(Handle);
+    Status = CFE_SRL_Close(*Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    Status = CFE_SRL_MutexDestroy(Handle);
+    Status = CFE_SRL_MutexDestroy(*Handle);
     if (Status != CFE_SUCCESS) return Status;
 
     Entry->Status = CFE_SRL_HANDLE_STATUS_NONE;
     memset(Entry, 0, sizeof(CFE_SRL_Global_Handle_t));
     
+    *Handle = NULL;
+
     return CFE_SUCCESS;
 }

@@ -80,7 +80,7 @@ int32 CFE_SRL_ApiClose(CFE_SRL_IO_Handle_t *Handle) {
 
     if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
 
-    Status = CFE_SRL_HandleClose(Handle);
+    Status = CFE_SRL_HandleClose(&Handle);
     if (Status != CFE_SUCCESS) return Status;
 
     return CFE_SUCCESS;
@@ -148,4 +148,12 @@ int32 CFE_SRL_ApiSetRparamCSP(uint8_t Type, uint8_t Node, uint8_t TableId, uint1
 
 int32 CFE_SRL_ApiPingCSP(uint8 Node, uint32 Timeout, unsigned int Size, uint8 Options) {
     return CFE_SRL_PingCSP(Node, Timeout, Size, Options);
+}
+
+int32 CFE_SRL_ApiChangeVia(uint8_t Via) {
+    return CFE_SRL_ChangeVia(Via);
+}
+
+void CFE_SRL_ApiPrintRtable(void) {
+    return CFE_SRL_PrintRtable();
 }

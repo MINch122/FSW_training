@@ -1,0 +1,5 @@
+#ifndef PAYUZUT_INTERFACE_CFG_H
+#define PAYUZUT_INTERFACE_CFG_H
+
+
+#endif

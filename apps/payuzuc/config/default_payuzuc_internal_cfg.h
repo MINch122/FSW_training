@@ -14,9 +14,12 @@
 #ifndef PAYUZUC_INTERNAL_CFG_H
 #define PAYUZUC_INTERNAL_CFG_H
 
-#define PAYUZUC_PIPE_DEPTH  50 /* Depth of the Command Pipe for Application */
 
 #include "common_types.h"
+
+
+#define PAYUZUC_PIPE_DEPTH  50 /* Depth of the Command Pipe for Application */
+
 
 /**
  * Define Packet Start, End Byte

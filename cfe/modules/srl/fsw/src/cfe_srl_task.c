@@ -68,23 +68,23 @@ void CFE_SRL_TaskMain(void) {
         **  use the RunLoop call.
         */
         CFE_ES_IncrementTaskCounter();
-        OS_printf("SRL TaskMain Loop\n");
+        // OS_printf("SRL TaskMain Loop %u\n", (unsigned int)sizeof(CFE_SRL_IO_Handle_t));
         /*
         ** Performance Time Stamp Exit
         */
-       CFE_ES_PerfLogExit(CFE_MISSION_SRL_MAIN_PERF_ID);
-
-       /**
+        CFE_ES_PerfLogExit(CFE_MISSION_SRL_MAIN_PERF_ID);
+        
+        /**
         * Wait for the next Software Bus message.
         */
-       Status = CFE_SB_ReceiveBuffer(&SBBufPtr, CFE_SRL_TaskData.CmdPipe, CFE_SB_PEND_FOREVER);
+        Status = CFE_SB_ReceiveBuffer(&SBBufPtr, CFE_SRL_TaskData.CmdPipe, CFE_SB_PEND_FOREVER);
 
-       /**
-        * Performance Time Stamp Entry
-        */
-       CFE_ES_PerfLogEntry(CFE_MISSION_SRL_MAIN_PERF_ID);
+        /**
+         * Performance Time Stamp Entry
+         */
+        CFE_ES_PerfLogEntry(CFE_MISSION_SRL_MAIN_PERF_ID);
 
-       if (Status == CFE_SUCCESS) {
+        if (Status == CFE_SUCCESS) {
         /**
          * Process Message.
          */
@@ -226,7 +226,8 @@ int32 CFE_SRL_InitHandleCmd(const CFE_SRL_InitHandleCmd_t *Cmd) {
 
 int32 CFE_SRL_CloseHandleCmd(const CFE_SRL_CloseHandleCmd_t *Cmd) {
     int32 Status;
-    Status = CFE_SRL_HandleClose(CFE_SRL_ApiGetHandle(Cmd->Payload.Indexer));
+
+    Status = CFE_SRL_HandleClose(&Handles[Cmd->Payload.Indexer]);
     
     if(Status == CFE_SUCCESS) {
         CFE_EVS_SendEvent(CFE_SRL_CLOSE_HANDLE_INF_EID, CFE_EVS_EventType_INFORMATION, "SRL Close Handle Cmd Success.");
@@ -245,7 +246,7 @@ int32 CFE_SRL_SendHkCmd(const CFE_SRL_SendHkCmd_t *data) {
     /**
      * Get IO Handle Status
      */
-    for (uint8_t i=0; i < CFE_SRL_GNRL_DEVICE_NUM; i++) {
+    for (uint8_t i = 0; i < CFE_SRL_GNRL_DEVICE_NUM; i++) {
         CFE_SRL_IO_Handle_t *TempHandle = CFE_SRL_ApiGetHandle(i);
 
         CFE_SRL_TaskData.HKTlmMsg.Payload.IOHandleStatus[i] = 
@@ -263,8 +264,8 @@ int32 CFE_SRL_SendHkCmd(const CFE_SRL_SendHkCmd_t *data) {
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(CFE_SRL_TaskData.HKTlmMsg.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(CFE_SRL_TaskData.HKTlmMsg.TelemetryHeader), true);
-
-    CFE_EVS_SendEvent(114, CFE_EVS_EventType_INFORMATION, "SRL Send HK Cmd Received.");
+    
+    // CFE_EVS_SendEvent(114, CFE_EVS_EventType_INFORMATION, "SRL Send HK Cmd Received.");
 
     return CFE_SUCCESS;
 }

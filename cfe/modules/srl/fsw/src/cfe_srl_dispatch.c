@@ -96,6 +96,8 @@ void CFE_SRL_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
             CFE_SRL_TaskData.HKTlmMsg.Payload.CommandErrorCounter++;
             break;
         }
+        break;
+        
     default:
         CFE_EVS_SendEvent(CFE_SRL_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                             "%s: Invalid MID, Unexpected Msg ID: 0x%X", __func__, 

@@ -1,7 +1,7 @@
 {
     "host" :
     {
-        "ready": false,
+        "ready": true,
         "address": 3,
         "hostname": "POBC",
         "model": "COSMIC",
@@ -60,7 +60,7 @@
             "name": "GSTRX",
             "node": 20,
             "interface": "CAN",
-            "via": "UTRX",
+            "via": "STRX",
 
             "priority": 2,
             "timeout": 1,

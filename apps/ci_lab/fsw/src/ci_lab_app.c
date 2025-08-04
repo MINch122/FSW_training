@@ -177,6 +177,17 @@ void CI_LAB_TaskInit(void)
     */
     OS_TaskInstallDeleteHandler(&CI_LAB_delete_callback);
 
+    /****************************************************************
+     * 
+     * Initialization for RF Ingest
+     * This RF Initialization should be proceed after `csp_init()`
+     * 
+     *****************************************************************/
+    // status = CFE_RF_CommandIngestInit(&CI_LAB_Global.ChildTaskId);
+    // if (status != CFE_SUCCESS) {
+    //     CFE_EVS_SendErr(CI_RF_INIT_ERR_EID, "CI RF Init Faild!. RC = 0x%08X\n", status);
+    // }
+
     CFE_MSG_Init(CFE_MSG_PTR(CI_LAB_Global.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(CI_LAB_HK_TLM_MID),
                  sizeof(CI_LAB_Global.HkTlm));
 

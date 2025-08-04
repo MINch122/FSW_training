@@ -56,6 +56,8 @@ typedef struct CFE_SRL_HandleInitCmd_Payload {
      */
     uint8_t DevType;
 
+    uint8_t Padding[3];
+
     /**
      * Only need UART series init
      */
@@ -65,6 +67,8 @@ typedef struct CFE_SRL_HandleInitCmd_Payload {
      * Only need SPI init
      */
     uint8_t SPIMode;
+
+    uint8_t Padding2[3];
     
 } CFE_SRL_HandleInitCmd_Payload_t;
 
@@ -80,6 +84,6 @@ typedef struct CFE_SRL_HousekeepingTlm_Payload {
 
     CFE_SRL_GPIO_Handle_t GPIOHandle[CFE_SRL_TOT_GPIO_NUM];
     
-} CFE_SRL_HousekeepingTlm_Payload_t;
+}__attribute__((packed)) CFE_SRL_HousekeepingTlm_Payload_t;
 
 #endif /* CFE_SRL_MSGDEFS_H */
