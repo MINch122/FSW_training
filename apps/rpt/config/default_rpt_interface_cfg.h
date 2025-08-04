@@ -22,6 +22,7 @@
 #define RPT_MAX_TBL_ENTRY       30
 
 typedef struct RPT_Report {
+
     uint16 MsgID;
     uint8 CommandCode;
 
@@ -32,43 +33,70 @@ typedef struct RPT_Report {
     int32 ReturnCode;
 
     /**
-     * This member can be used to 2 types
-     * 1. Get CMD -> earned value
-     * 2. HW's Error packet -> HW error value
+     * If cmd acquires **any kind of data**, use this member.
+     * Ex 1) Get CMD -> earned values 
+     *      (In this case, `ReturnType` must be `RPT_RETTYPE_SUCCESS`)
+     * 
+     * Ex 2) HW's Error packet -> that error values
+     *      (In this case, `ReturnType` must be `RPT_RETTYPE_SUCCESS`)
+     * 
+     * Ex 3) Partially readed packet -> segmented packet
+     *      (In this case, `ReturnType` must be `RPT_RETTYPE_CFE`
+     *       and `ReturnCode` must be `CFE_SRL_PARTIAL_READ_ERR`)
      */
     uint16 ReturnDataSize;
     uint8 ReturnValue[RPT_RET_VALUE_BUF_SIZE];
+
 } RPT_Report_t;
 
+
+
 typedef struct RPT_Critical {
+
     RPT_Report_t Report;
     CFE_TIME_SysTime_t Time;
+
 } RPT_Critical_t;
 
 
-/********************************
+/*****************************************************
  * Return Type definition
- ********************************/
+ * Should matched with return function
+ * If RETTYPE is CFE core error, `RPT_RETTYPE_CFE`
+ * If RETTYPE is App error, `RPT_RETTYPE_APP`
+ ****************************************************/
 typedef enum {
-    RPT_RETCODE_SUCCESS,
+
+    RPT_RETTYPE_SUCCESS,
+
     /**
      * `osapi-error.h`
      */
-    RPT_RETCODE_OSAL,
+    RPT_RETTYPE_OSAL,
 
     /**
      * `cfe_error.h`
      */
-    RPT_RETCODE_CFE,
-    RPT_RETCODE_LIB,
-    RPT_RETCODE_APP,
-    RPT_RETCODE_APPUTIL,
-    RPT_RETCODE_KNL, /* Kernel layer */
+    RPT_RETTYPE_CFE,
 
     /**
-     * Use this if HW send error packet
+     * App layer library
      */
-    RPT_RETCODE_HW,
+    RPT_RETTYPE_LIB,
+
+    /**
+     * App layer Application
+     * Also `cfe_error.h`
+     */
+    RPT_RETTYPE_APP,
+
+    /**
+     * H/W error packet case
+     * This means the **serial communication is successfully (or partially) done**
+     */
+    RPT_RETTYPE_HW,
 
 } RPT_ReturnType_t;
+
+
 #endif
