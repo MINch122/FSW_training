@@ -1,8 +1,9 @@
 {
     "host" :
     {
+        "ready": true,
         "address": 3,
-        "hostname": "POBC",
+        "hostname": "OBC",
         "model": "COSMIC",
         "revision": "mozart",
         "conn_max": 10,
@@ -16,8 +17,8 @@
     },
     "external" : [
         {
-            "name": "EPS",
-            "node": 2,
+            "name": "ADCS",
+            "node": 4,
             "interface": "CAN",
             "via": null,
 

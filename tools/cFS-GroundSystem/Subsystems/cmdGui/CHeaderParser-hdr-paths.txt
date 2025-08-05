@@ -22,6 +22,6 @@
 #../../../../cfe/fsw/cfe-core/src/inc/cfe_sb_msg.h
 #../../../../cfe/fsw/cfe-core/src/inc/cfe_tbl_msg.h
 #../../../../apps/payuzuc/config/default_payuzuc_msg.h
-#../../../../apps/payuzuc/config/default_payuzuc_msgdefs.h
+../../../../apps/payuzuc/config/default_payuzuc_msgdefs.h
 #../../../../apps/payuzuc/config/default_payuzuc_msgstruct.h
-#../../../../apps/payuzuc/config/default_payuzuc_fcncodes.h
+../../../../apps/payuzuc/config/default_payuzuc_fcncodes.h

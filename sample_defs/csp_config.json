@@ -1,9 +1,9 @@
 {
     "host" :
     {
-        "ready": true,
+        "ready": false,
         "address": 3,
-        "hostname": "POBC",
+        "hostname": "OBC",
         "model": "COSMIC",
         "revision": "mozart",
         "conn_max": 10,
@@ -12,13 +12,13 @@
         "port_max_bind":32,
         "rdp_max_window": 20,
         "buffers": 10,
-        "buffer_data_size": 1024,
+        "buffer_data_size": 256,
         "conn_dfl_so": "CSP_O_NONE"
     },
     "external" : [
         {
-            "name": "EPS",
-            "node": 2,
+            "name": "ADCS",
+            "node": 4,
             "interface": "CAN",
             "via": null,
 
@@ -60,17 +60,7 @@
             "name": "GSTRX",
             "node": 20,
             "interface": "CAN",
-            "via": "STRX",
-
-            "priority": 2,
-            "timeout": 1,
-            "option": "CSP_O_CRC32"
-        },
-        {
-            "name": "SOBC",
-            "node": 23,
-            "interface": "CAN",
-            "via": null,
+            "via": "UTRX",
 
             "priority": 2,
             "timeout": 1,
