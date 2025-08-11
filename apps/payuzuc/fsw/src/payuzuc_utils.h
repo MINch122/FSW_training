@@ -74,7 +74,7 @@ void PAYUZUC_HandleErrorSerial(int32 Status, uint8 CC, void *ReadData, ssize_t R
 /// @param ReadSize Readed data size from communication
 void PAYUZUC_HandleSuccess(uint8_t CC, void *ReadData, ssize_t ReadSize);
 
-/// @brief Do comprehensive transaction. This function handling all case
+/// @brief Do comprehensive transaction with KissCAM. This function handle all case
 /// @param Tx Tx data buffer pointer
 /// @param Rx Rx data buffer pointer
 /// @param CC Command Code which is invoked
