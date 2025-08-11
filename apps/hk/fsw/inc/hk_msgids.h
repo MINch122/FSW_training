@@ -43,7 +43,7 @@
 
 #define HK_HK_TLM_MID 0x0819 /**< \brief HK Housekeeping Telemetry Message ID */
 
-#define HK_COMBINED_PKT1_MID 0x081A /**< \brief HK Combined Packet 1 Message ID */
+#define HK_COMBINED_PKT1_MID 0x081A /**< \brief BCN Combined Packet Message ID */
 #define HK_COMBINED_PKT2_MID 0x081B /**< \brief HK Combined Packet 2 Message ID */
 #define HK_COMBINED_PKT3_MID 0x081C /**< \brief HK Combined Packet 3 Message ID */
 #define HK_COMBINED_PKT4_MID 0x081D /**< \brief HK Combined Packet 4 Message ID */

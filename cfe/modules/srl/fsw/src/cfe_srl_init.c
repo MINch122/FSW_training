@@ -40,5 +40,19 @@ int32 CFE_SRL_EarlyInit(void) {
 	}
 	CFE_ES_WriteToSysLog("%s: socat Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_SOCAT_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_SOCAT_HANDLE_INDEXER])->DevName);
 
+	/* GPIO GPIO_IN Init */
+	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_GPIO_IN_GPIO_INDEXER], "/dev/gpiochip0", 28, "GPIO_IN", 0, true);
+	if (Status != CFE_SUCCESS) {
+		CFE_ES_WriteToSysLog("%s: GPIO GPIO_IN Initialization failed! RC=%d\n", __func__, Status);
+		// return CFE_SRL_GPIO_IN_INIT_ERR;
+	}
+
+	/* GPIO GPIO_OUT Init */
+	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_GPIO_OUT_GPIO_INDEXER], "/dev/gpiochip0", 28, "GPIO_OUT", 0, true);
+	if (Status != CFE_SUCCESS) {
+		CFE_ES_WriteToSysLog("%s: GPIO GPIO_OUT Initialization failed! RC=%d\n", __func__, Status);
+		// return CFE_SRL_GPIO_OUT_INIT_ERR;
+	}
+
 return CFE_SUCCESS;
 }

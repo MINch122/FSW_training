@@ -54,11 +54,31 @@ void PAYUZUC_Inspection(uint8_t MemorySlot);
 
 
 
-/// @brief Handle Error packet. If Data is insufficient, read residual bytes.
+/// @brief Handle H/W Error packet. (i.e. serial comm. success) If Data is insufficient, read residual bytes.
 /// @param ErrPkt Received error packet pointer
 /// @param Size Read size before this function
-void PAYUZUC_HandleErrorPacket(const void *ErrPkt, ssize_t Size);
+/// @param CC Command Code where error occur
+void PAYUZUC_HandleErrorPacket(void *ErrPkt, ssize_t Size, uint8_t CC);
 
+
+/// @brief Handle Error situation. (i.e. serial comm. failed)
+/// @param Status Error status code
+/// @param CC Command code where error occur
+/// @param ReadData Readed data from communication
+/// @param ReadSize Readed data size from communication
+void PAYUZUC_HandleErrorSerial(int32 Status, uint8 CC, void *ReadData, ssize_t ReadSize);
+
+/// @brief Handle Success situation (Just report the result)
+/// @param CC Command code which is executed
+/// @param ReadData Readed data from communication
+/// @param ReadSize Readed data size from communication
+void PAYUZUC_HandleSuccess(uint8_t CC, void *ReadData, ssize_t ReadSize);
+
+/// @brief Do comprehensive transaction. This function handling all case
+/// @param Tx Tx data buffer pointer
+/// @param Rx Rx data buffer pointer
+/// @param CC Command Code which is invoked
+void PAYUZUC_Transaction(void *Tx, void *Rx, uint8_t CC);
 
 void PAYUZUC_ConfigurePacket(const void *Payload, void *Packet, uint8 ParamNum, uint8_t Command);
 #endif

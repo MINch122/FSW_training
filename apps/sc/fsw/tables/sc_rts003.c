@@ -141,7 +141,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  2  PAYUZUC CAPTURE CMD 
      * */
-    .rts.hdr2.WakeupCount       = 1,
+    .rts.hdr2.WakeupCount       = 2,
     .rts.cmd2.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd2), PAYUZUC_CAPTURE_CC, 0x12),
     .rts.cmd2.Payload.MEM       = (uint8)0,
     .rts.cmd2.Payload.TST       = (uint8)0,
@@ -157,7 +157,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  4  PAYUZUC CAPTURE CMD 
      * */
-    .rts.hdr4.WakeupCount       = 3,
+    .rts.hdr4.WakeupCount       = 2,
     .rts.cmd4.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd4), PAYUZUC_CAPTURE_CC, 0x10),
     .rts.cmd4.Payload.MEM       = (uint8)2,
     .rts.cmd4.Payload.TST       = (uint8)0,
@@ -165,7 +165,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  5  PAYUZUC CAPTURE CMD 
      * */
-    .rts.hdr5.WakeupCount       = 4,
+    .rts.hdr5.WakeupCount       = 2,
     .rts.cmd5.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd5), PAYUZUC_CAPTURE_CC, 0x11),
     .rts.cmd5.Payload.MEM       = (uint8)3,
     .rts.cmd5.Payload.TST       = (uint8)0,
@@ -173,7 +173,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  6  PAYUZUC MOSAIC CMD
      * */
-    .rts.hdr6.WakeupCount       = 4,
+    .rts.hdr6.WakeupCount       = 1,
     .rts.cmd6.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd6), PAYUZUC_MOSAIC_CC, 0x1A),
     .rts.cmd6.Payload.MEM       = (uint8)4,
 
@@ -182,7 +182,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  7  PAYUZUC CAPTURE CMD 
      * */
-    .rts.hdr7.WakeupCount       = 5,
+    .rts.hdr7.WakeupCount       = 1,
     .rts.cmd7.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd7), PAYUZUC_CAPTURE_CC, 0x12),
     .rts.cmd7.Payload.MEM       = (uint8)0,
     .rts.cmd7.Payload.TST       = (uint8)0,
@@ -190,7 +190,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  8  PAYUZUC CAPTURE CMD 
      * */
-    .rts.hdr8.WakeupCount       = 6,
+    .rts.hdr8.WakeupCount       = 2,
     .rts.cmd8.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd8), PAYUZUC_CAPTURE_CC, 0x13),
     .rts.cmd8.Payload.MEM       = (uint8)1,
     .rts.cmd8.Payload.TST       = (uint8)0,
@@ -198,7 +198,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  9  PAYUZUC CAPTURE CMD 
      * */
-    .rts.hdr9.WakeupCount       = 7,
+    .rts.hdr9.WakeupCount       = 2,
     .rts.cmd9.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd9), PAYUZUC_CAPTURE_CC, 0x10),
     .rts.cmd9.Payload.MEM       = (uint8)2,
     .rts.cmd9.Payload.TST       = (uint8)0,
@@ -206,7 +206,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  10  PAYUZUC CAPTURE CMD 
      * */
-    .rts.hdr10.WakeupCount       = 8,
+    .rts.hdr10.WakeupCount       = 2,
     .rts.cmd10.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd10), PAYUZUC_CAPTURE_CC, 0x11),
     .rts.cmd10.Payload.MEM       = (uint8)3,
     .rts.cmd10.Payload.TST       = (uint8)0,
@@ -214,7 +214,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  11  PAYUZUC MOSAIC CMD
      * */
-    .rts.hdr11.WakeupCount       = 8,
+    .rts.hdr11.WakeupCount       = 1,
     .rts.cmd11.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd11), PAYUZUC_MOSAIC_CC, 0x1B),
     .rts.cmd11.Payload.MEM       = (uint8)5,
 
@@ -224,7 +224,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  12  PAYUZUC CAPTURE CMD 
      * */
-    .rts.hdr12.WakeupCount       = 9,
+    .rts.hdr12.WakeupCount       = 1,
     .rts.cmd12.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd12), PAYUZUC_CAPTURE_CC, 0x12),
     .rts.cmd12.Payload.MEM       = (uint8)0,
     .rts.cmd12.Payload.TST       = (uint8)0,
@@ -232,7 +232,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  13  PAYUZUC CAPTURE CMD 
      * */
-    .rts.hdr13.WakeupCount       = 10,
+    .rts.hdr13.WakeupCount       = 2,
     .rts.cmd13.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd13), PAYUZUC_CAPTURE_CC, 0x13),
     .rts.cmd13.Payload.MEM       = (uint8)1,
     .rts.cmd13.Payload.TST       = (uint8)0,
@@ -240,7 +240,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  14  PAYUZUC CAPTURE CMD 
      * */
-    .rts.hdr14.WakeupCount       = 11,
+    .rts.hdr14.WakeupCount       = 2,
     .rts.cmd14.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd14), PAYUZUC_CAPTURE_CC, 0x10),
     .rts.cmd14.Payload.MEM       = (uint8)2,
     .rts.cmd14.Payload.TST       = (uint8)0,
@@ -248,7 +248,7 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  15  PAYUZUC CAPTURE CMD 
      * */
-    .rts.hdr15.WakeupCount       = 12,
+    .rts.hdr15.WakeupCount       = 2,
     .rts.cmd15.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd15), PAYUZUC_CAPTURE_CC, 0x11),
     .rts.cmd15.Payload.MEM       = (uint8)3,
     .rts.cmd15.Payload.TST       = (uint8)0,

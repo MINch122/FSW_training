@@ -309,10 +309,10 @@ int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t T
         // Write
         Status = CFE_SRL_Write(Handle, TxData, TxSize);
         if (Status != CFE_SUCCESS) goto error;
-
-        // Sleep for specific time interval
-        Sleep_us(Delay);
     }
+    // Sleep for specific time interval
+    OS_printf("Delay : %u\n",Delay);
+    Sleep_us(Delay);
 
     // Poll Read
     Status = CFE_SRL_Read(Handle, RxData, RxSize, Timeout, Read);

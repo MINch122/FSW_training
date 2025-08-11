@@ -70,6 +70,8 @@ typedef struct PAYUZUC_Capture_Payload {
  * Download Command
  * @param MEM Memory Slot: Can be `0` ~ `5`
  * @param PRE Preview Flag : `0` or `1`
+ * @param LN1 MSB line number
+ * @param LN2 LSB line number
  */
 typedef struct PAYUZUC_Download_Payload {
     uint8 MEM;
@@ -131,7 +133,7 @@ typedef struct PAYUZUC_Mosaic_Payload {
  * Telemetry Payload Type Definition
  * 
  ************************************************/
-typedef struct PAYUZUC_HkTlm_Payload {
+typedef struct PAYUZUC_BcnTlm_Payload {
     
     uint8 CommandCounter;
     uint8 CommandErrorCounter;
@@ -149,6 +151,6 @@ typedef struct PAYUZUC_HkTlm_Payload {
      */
     uint8 LastImgIdx[PAYUZUC_MEMORY_SLOT];
 
-} PAYUZUC_HkTlm_Payload_t;
+} PAYUZUC_BcnTlm_Payload_t;
 
 #endif

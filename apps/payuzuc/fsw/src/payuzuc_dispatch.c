@@ -129,6 +129,7 @@ void PAYUZUC_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
         if (PAYUZUC_VerifyCmdLength(&SBBufPtr->Msg, sizeof(PAYUZUC_MosaicCmd_t))) {
             PAYUZUC_MosaicCmd((const PAYUZUC_MosaicCmd_t *)SBBufPtr);
         }
+        break;
 
     default:
         CFE_EVS_SendEvent(PAYUZUC_CC_ERR_EID, CFE_EVS_EventType_ERROR, "%s: Invalid ground command code - CC = %d",

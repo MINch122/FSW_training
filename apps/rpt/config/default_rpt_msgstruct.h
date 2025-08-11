@@ -10,9 +10,9 @@
 typedef struct {
 
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    RPT_HkTlm_Payload_t Payload;
+    RPT_BcnTlm_Payload_t Payload;
     
-} RPT_HkTlm_t;
+} RPT_BcnTlm_t;
 
 
 typedef struct {

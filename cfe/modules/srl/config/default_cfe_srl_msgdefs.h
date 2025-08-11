@@ -80,9 +80,7 @@ typedef struct CFE_SRL_HousekeepingTlm_Payload {
 
     uint8 IOHandleStatus[CFE_SRL_GNRL_DEVICE_NUM];
 
-    CFE_SRL_IO_Handle_t IOHandle[CFE_SRL_GNRL_DEVICE_NUM];
-
-    CFE_SRL_GPIO_Handle_t GPIOHandle[CFE_SRL_TOT_GPIO_NUM];
+    uint16 IOHandleTxCount[CFE_SRL_GNRL_DEVICE_NUM];
     
 }__attribute__((packed)) CFE_SRL_HousekeepingTlm_Payload_t;
 

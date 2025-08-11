@@ -32,22 +32,70 @@
 #include "hk_tbldefs.h"
 #include "cfe_tbl_filedef.h"
 
+/**
+ * Include the hdr `*_msgids.h` of each app
+ */
+#include "rpt_msgids.h"
+#include "rpt_msg.h"
+
+#include "payuzuc_msgids.h"
+#include "payuzuc_msg.h"
+
+#include "payuzut_msgids.h"
+#include "payuzut_msg.h"
+
+
+/************************************************************************
+** Define
+*************************************************************************/
+#define CFE_MSG_TLM_HDR_SIZE    sizeof(CFE_MSG_TelemetryHeader_t)
+
+/* Beacon Packet */
+#define BCN_OFFSET_0            sizeof(CFE_MSG_TelemetryHeader_t)
+#define BCN_OFFSET_1            BCN_OFFSET_0 + sizeof(RPT_BcnTlm_Payload_t)
+#define BCN_OFFSET_2            BCN_OFFSET_1 + sizeof(SANT_BcnTlm_Payload_t)
+#define BCN_OFFSET_3            BCN_OFFSET_2 + sizeof(STRX_BcnTlm_Payload_t)
+#define BCN_OFFSET_4            BCN_OFFSET_3 + sizeof(UANT_BcnTlm_Payload_t)
+#define BCN_OFFSET_5            BCN_OFFSET_4 + sizeof(UTRX_BcnTlm_Payload_t)
+#define BCN_OFFSET_6            BCN_OFFSET_5 + sizeof(EPS_BcnTlm_Payload_t)
+#define BCN_OFFSET_7            BCN_OFFSET_6 + sizeof(ADCS_BcnTlm_Payload_t)
+#define BCN_OFFSET_8            BCN_OFFSET_7 + sizeof(PAYUZUC_BcnTlm_Payload_t)
+#define BCN_OFFSET_9            BCN_OFFSET_8 + sizeof(PAYUZUT_BcnTlm_Payload_t)
+#define BCN_OFFSET_10           BCN_OFFSET_9 + sizeof(PAYUELM_BcnTlm_Payload_t)
+#define BCN_OFFSET_11           BCN_OFFSET_10 + sizeof(PAYUELC_BcnTlm_Payload_t)
+
+
+/* HouseKeeping Packet */
+#define HK_OFFSET_0            sizeof(CFE_MSG_TelemetryHeader_t)
+#define HK_OFFSET_1            HK_OFFSET_0 + sizeof(RPT_HkTlm_Payload_t)
+#define HK_OFFSET_2            HK_OFFSET_1 + sizeof(SANT_HkTlm_Payload_t)
+#define HK_OFFSET_3            HK_OFFSET_2 + sizeof(STRX_HkTlm_Payload_t)
+#define HK_OFFSET_4            HK_OFFSET_3 + sizeof(UANT_HkTlm_Payload_t)
+#define HK_OFFSET_5            HK_OFFSET_4 + sizeof(UTRX_HkTlm_Payload_t)
+#define HK_OFFSET_6            HK_OFFSET_5 + sizeof(EPS_HkTlm_Payload_t)
+#define HK_OFFSET_7            HK_OFFSET_6 + sizeof(ADCS_HkTlm_Payload_t)
+#define HK_OFFSET_8            HK_OFFSET_7 + sizeof(PAYUZUC_HkTlm_Payload_t)
+#define HK_OFFSET_9            HK_OFFSET_8 + sizeof(PAYUZUT_HkTlm_Payload_t)
+#define HK_OFFSET_10           HK_OFFSET_9 + sizeof(PAYUELM_HkTlm_Payload_t)
+#define HK_OFFSET_11           HK_OFFSET_10 + sizeof(PAYUELC_HkTlm_Payload_t)
+
+
 hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
     /*         inputMid        inputOffset     outputMid    outputOffset  numBytes*/
 
     /*   0 */ {
-        CFE_SB_MSGID_WRAP_VALUE(CFE_EVS_HK_TLM_MID),
-        12,
+        CFE_SB_MSGID_WRAP_VALUE(RPT_BCN_TLM_MID),
+        CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        12,
-        4,
+        BCN_OFFSET_0,
+        sizeof(RPT_BcnTlm_Payload_t),
     },
     /*   1 */
     {
-        CFE_SB_MSGID_WRAP_VALUE(CFE_TIME_HK_TLM_MID),
-        12,
+        CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_HK_TLM_MID),
+        CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        16,
+        BCN_OFFSET_1,
         4,
     },
     /*   2 */

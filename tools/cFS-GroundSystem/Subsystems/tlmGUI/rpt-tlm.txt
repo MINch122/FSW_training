@@ -1,0 +1,20 @@
+Message ID,            12,  2,  H, Hex, NULL,        NULL,        NULL,       NULL
+Command Code,          14,  1,  B, Dec, NULL,        NULL,        NULL,       NULL
+Return Type,           15,  1,  B, Dec, NULL,        NULL,        NULL,       NULL
+Return Code,           16,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Size,      20,  2,  H, Dec, NULL,        NULL,        NULL,       NULL
+Return Data Value1,    22,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value2,    26,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value3,    30,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value4,    34,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value5,    38,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value6,    42,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value7,    46,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value8,    50,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value9,    54,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value10,   58,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value11,   62,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value12,   66,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value13,   70,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value14,   74,  4,  I, Hex, NULL,        NULL,        NULL,       NULL
+Return Data Value15,   78,  4,  I, Hex, NULL,        NULL,        NULL,       NULL

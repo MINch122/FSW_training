@@ -75,10 +75,10 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
         {CFE_SB_MSGID_WRAP_VALUE(CFE_TIME_SEND_HK_MID), 98, 0},
         {CFE_SB_MSGID_WRAP_VALUE(CFE_SB_SEND_HK_MID), 97, 0},
         {CFE_SB_MSGID_WRAP_VALUE(CFE_EVS_SEND_HK_MID), 96, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_SEND_HK_MID), 1000, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_SEND_HK_MID), 1000, 0},
         {CFE_SB_MSGID_WRAP_VALUE(SC_ONEHZ_WAKEUP_MID), 100, 0},
 
-/* Example of including additional open source apps  */
+/* Example of including additional open source apps */
 #ifdef HAVE_CI_LAB
         {CFE_SB_MSGID_WRAP_VALUE(CI_LAB_SEND_HK_MID), 95, 0},
 #endif

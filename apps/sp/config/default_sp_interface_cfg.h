@@ -1,0 +1,6 @@
+#ifndef SP_APP_INTERFACE_CFG_H
+#define SP_APP_INTERFACE_CFG_H
+
+#define SP_APP_VAL_LEN 1
+
+#endif

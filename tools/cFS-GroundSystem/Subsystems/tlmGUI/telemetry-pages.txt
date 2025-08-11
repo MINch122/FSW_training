@@ -29,3 +29,4 @@ ES Shell Tlm,              GenericTelemetry.py,     0x80F,   cfe-es-shell-tlm.tx
 ES MEMSTATS Tlm,           GenericTelemetry.py,     0x810,   cfe-es-memstats-tlm.txt
 ES BlockStats Tlm 1,       GenericTelemetry.py,     0x810,   cfe-es-blockstats_1-tlm.txt
 PAYUZUC Tlm,               GenericTelemetry.py,     0x830,   payuzuc-tlm.txt
+RPT Tlm,                   GenericTelemetry.py,     0x825,   rpt-tlm.txt

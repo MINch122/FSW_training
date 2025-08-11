@@ -45,7 +45,7 @@
 
 /* Checksum for each sample command */
 #ifndef SC_NOOP_CKSUM
-#define SC_NOOP_CKSUM (0x8F)
+#define SC_NOOP_CKSUM (0x06)
 #endif
 
 /* Custom table structure, modify as needed to add desired commands */

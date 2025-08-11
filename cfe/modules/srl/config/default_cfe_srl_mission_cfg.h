@@ -12,12 +12,12 @@ typedef enum {
 #define CFE_SRL_GNRL_DEVICE_NUM		(CFE_SRL_SOCAT_HANDLE_INDEXER + 1)
 
 /* \# of used gpio pin */
-#define CFE_SRL_TOT_GPIO_NUM		0
+#define CFE_SRL_TOT_GPIO_NUM		2
 
 typedef enum {
-	NOTHING
+	CFE_SRL_GPIO_IN_GPIO_INDEXER,
+	CFE_SRL_GPIO_OUT_GPIO_INDEXER,
 } CFE_SRL_GPIO_Indexer_t;
-
 
 /* CSP Node  Configuration */
 typedef enum {

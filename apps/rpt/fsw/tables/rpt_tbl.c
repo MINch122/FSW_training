@@ -5,7 +5,7 @@
 /**************************
  * Add More `*_msgids.h`
  **************************/
-
+#include "payuzuc_msgids.h"
 
 
 
@@ -18,9 +18,9 @@
 
 RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
     /* Entry 0 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
-        .Entry.IsCritical = RPT_CRITICAL},
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_REPORT_TLM_MID),
+        .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 1 */
     {.UsedState = RPT_DISABLED,

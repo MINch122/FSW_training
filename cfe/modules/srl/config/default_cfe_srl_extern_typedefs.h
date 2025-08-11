@@ -26,10 +26,10 @@ typedef struct {
 struct CFE_SRL_IO_Handle_s {
     int FD;
     int __errno;
-    uint32_t TxCount;
-    uint32_t RxCount;
-    uint32_t TxErrCnt;
-    uint32_t RxErrCnt;
+    uint16_t TxCount;
+    uint16_t RxCount;
+    uint8_t TxErrCnt;
+    uint8_t RxErrCnt;
     /**
      * I/O function for each handle
      */
@@ -58,6 +58,7 @@ struct CFE_SRL_IO_Param_s {
     /**
      * Used for ApiRead - Not used in I2C, SPI
      * The parameter determine the **time interval** between `Write` -> `Read`
+     * Unit : micro-second
      */
     uint32_t Interval;
 

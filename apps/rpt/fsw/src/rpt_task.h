@@ -48,7 +48,7 @@ typedef struct {
     /**
      * RPT Tlm struct
      */
-    RPT_HkTlm_t HkTlm;
+    RPT_BcnTlm_t HkTlm;
 
     /**
      * RPT Report Queue

@@ -6,6 +6,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include "rpt_interface_cfg.h"
 
 void PAYUZUC_SetLineTrue(uint8_t MemSlot, uint16_t Line) {
     if(PAYUZUC_Data.MemSlotStatus.Entry[MemSlot].MemoryState == PAYUZUC_DOWNLOAD_DONE) return;
@@ -99,42 +100,133 @@ void PAYUZUC_Inspection(uint8_t MemorySlot) {
 /***********************************************
  * 
  * Error Handling Function
+ * There are several error handling function
+ * Refer the description of each function
  * 
  ***********************************************/
-void PAYUZUC_HandleErrorPacket(const void *ErrPkt, ssize_t Size) {
+
+/**************************************************
+ * Serial Comm success, but H/W error packet came.
+ **************************************************/
+void PAYUZUC_HandleErrorPacket(void *ErrPkt, ssize_t Size, uint8_t CC) {
+    int32 Status;
+
     if (ErrPkt == NULL || Size <= 0 || Size > PAYUZUC_ERROR_TLM_SIZE) return;
-    
-    uint8_t Pkt[PAYUZUC_ERROR_TLM_SIZE] = {0,};
-    memcpy(Pkt, ErrPkt, Size);
     
     if (Size < PAYUZUC_ERROR_TLM_SIZE) {
         // Read residual data
         uint8_t Residual = PAYUZUC_ERROR_TLM_SIZE - Size;
-        uint8_t ResBuf[Residual];
-        memset(ResBuf, 0, Residual);
-        ssize_t bytes = read(PAYUZUC_Data.Handle->FD, ResBuf, Residual);
-        if (bytes != Residual) {
+        CFE_SRL_IO_Param_t Params = {0,};
+        Params.TxData = NULL;
+        Params.TxSize = 0;
+        Params.RxData = (uint8_t *)ErrPkt + Size;
+        Params.RxSize = Residual;
+        Params.Timeout = 100;
+
+        Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
+        if (Status != CFE_SUCCESS || Params.ReadBytes != Residual) {
             PAYUZUC_Data.DeviceErrCounter ++;
             PAYUZUC_Data.ErrCounter ++;
             return;
         }
-        memcpy(Pkt + Size, ResBuf, Residual);
     }
 
     uint8_t MD, CMD, ERR, RXF;
     
-    if (Pkt[0] != '@' || Pkt[8] != '\r') return;
+    if (((uint8_t *)ErrPkt)[0] != '@' || ((uint8_t *)ErrPkt)[8] != '\r') return;
     
-    MD  = Pkt[2];
-    CMD = Pkt[5];
-    ERR = Pkt[6];
-    RXF = Pkt[7];
+    MD  = ((uint8_t *)ErrPkt)[2];
+    CMD = ((uint8_t *)ErrPkt)[5];
+    ERR = ((uint8_t *)ErrPkt)[6];
+    RXF = ((uint8_t *)ErrPkt)[7];
     OS_printf("MD: 0x%02X CMD: 0x%02X ERR: 0x%02X RXF: 0x%02X\n", MD, CMD, ERR, RXF);
 
     /**
-     * RPT Function
+     * Configure Report for RPT
      */
-    // .....
+    PAYUZUC_ReportTlm_t *BufPtr = (PAYUZUC_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(PAYUZUC_ReportTlm_t));
+    if (BufPtr == NULL) return;
+
+    if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
+        CFE_SB_ValueToMsgId(PAYUZUC_REPORT_TLM_MID),
+        sizeof(PAYUZUC_ReportTlm_t)) != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
+    BufPtr->Report.MsgID = PAYUZUC_CMD_MID;
+    BufPtr->Report.CommandCode = CC;
+    BufPtr->Report.ReturnType = RPT_RETTYPE_HW;
+    BufPtr->Report.ReturnCode = 0x23;
+    BufPtr->Report.ReturnDataSize = PAYUZUC_ERROR_TLM_SIZE;
+    memcpy(BufPtr->Report.ReturnValue, ErrPkt, PAYUZUC_ERROR_TLM_SIZE);
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+    if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+    }
+
+    return;
+}
+
+/************************************************
+ * Serial Comm. failed
+ ************************************************/
+void PAYUZUC_HandleErrorSerial(int32 Status, uint8 CC, void *ReadData, ssize_t ReadSize) {
+    
+    PAYUZUC_Data.ErrCounter ++;
+
+    PAYUZUC_ReportTlm_t *BufPtr = (PAYUZUC_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(PAYUZUC_ReportTlm_t));
+    if (BufPtr == NULL) return;
+
+    if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
+        CFE_SB_ValueToMsgId(PAYUZUC_REPORT_TLM_MID),
+        sizeof(PAYUZUC_ReportTlm_t)) != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
+    BufPtr->Report.MsgID = PAYUZUC_CMD_MID;
+    BufPtr->Report.CommandCode = CC;
+    BufPtr->Report.ReturnType = RPT_RETTYPE_CFE;
+    BufPtr->Report.ReturnCode = Status;
+    BufPtr->Report.ReturnDataSize = (uint16_t)ReadSize;
+    memcpy(BufPtr->Report.ReturnValue, ReadData, 
+            ReadSize > sizeof(BufPtr->Report.ReturnValue) ? sizeof(BufPtr->Report.ReturnValue) : ReadSize);
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+    if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+    }
+
+    return;
+}
+
+/*************************************************
+ * All success - Report to RPT
+ * **Special case**
+ * Noop cmd report the **CmdCounter & ErrCounter**
+ ************************************************/
+void PAYUZUC_HandleSuccess(uint8_t CC, void *ReadData, ssize_t ReadSize) {
+    PAYUZUC_ReportTlm_t *BufPtr = (PAYUZUC_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(PAYUZUC_ReportTlm_t));
+    if (BufPtr == NULL) return;
+
+    if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUC_REPORT_TLM_MID),
+        sizeof(PAYUZUC_ReportTlm_t)) != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
+    BufPtr->Report.MsgID = PAYUZUC_CMD_MID;
+    BufPtr->Report.CommandCode = CC;
+    BufPtr->Report.ReturnType = RPT_RETTYPE_SUCCESS;
+    BufPtr->Report.ReturnCode = CFE_SUCCESS;
+    BufPtr->Report.ReturnDataSize = (uint16_t)ReadSize;
+    memcpy(BufPtr->Report.ReturnValue, ReadData, 
+            ReadSize > sizeof(BufPtr->Report.ReturnValue) ? sizeof(BufPtr->Report.ReturnValue) : ReadSize);
+    
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+    if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+    }
+
     return;
 }
 
@@ -156,5 +248,78 @@ void PAYUZUC_ConfigurePacket(const void *Payload, void *Packet, uint8 ParamNum, 
     }
     Cmd->Packet.EndByte = PAYUZUC_PKT_TERMINATE_BYTE;
     
+    return;
+}
+
+/***********************************************
+ * 
+ * Download task util function
+ * 
+ ***********************************************/
+void PAYUZUC_CreateDownloadTask(void) {
+    return;
+}
+
+
+/*************************************************
+ * 
+ * Transaction function
+ * Sequencial read
+ * 
+ **************************************************/
+void PAYUZUC_Transaction(void *Tx, void *Rx, uint8_t CC) {
+    int32 Status;
+    CFE_SRL_IO_Param_t Params = {0,};
+
+    Params.TxData = Tx;
+    Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
+    Params.RxData = Rx;
+    Params.RxSize = 3; // Read Start byte, Ack, Mode
+    Params.Timeout = 100;
+
+    // Read Start byte, Ack, Mode
+    Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
+    if (Status != CFE_SUCCESS) {
+        PAYUZUC_HandleErrorSerial(Status, CC, Rx, Params.ReadBytes);
+        return;
+    }
+
+    if (((uint8_t *)Rx)[1] == PAYUZUC_TLM_ERR_FLAG) {
+        PAYUZUC_HandleErrorPacket(Rx, Params.ReadBytes, CC);
+        return;
+    }
+
+    /* Read Tlm payload length */
+    memset(&Params, 0, sizeof(Params));
+    Params.TxData = NULL;
+    Params.TxSize = 0;
+    Params.RxData = (uint8_t *)Rx + 3;
+    Params.RxSize = 2; // MSB + LSB
+    Params.Timeout = 100;
+    Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
+    if (Status != CFE_SUCCESS) {
+        PAYUZUC_HandleErrorSerial(Status, CC, Rx, Params.ReadBytes);
+        return;
+    }
+    uint16_t Len = ((uint8_t *)Params.RxData)[0] << 8 | ((uint8_t *)Params.RxData)[1];
+
+    /* Read Tlm Payload length */
+    memset(&Params, 0, sizeof(Params));
+    Params.TxData = NULL;
+    Params.TxSize = 0;
+    Params.RxData = (uint8_t *)Rx + 5;
+    Params.RxSize = Len + 1; // Include Terminate byte
+    Params.Timeout = 700;
+    if (CC == PAYUZUC_DOWNLOAD_ALL_CC || CC == PAYUZUC_DOWNLOAD_CC) {
+        Params.Interval = 1000 * 70;
+    }
+    Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
+    if (Status != CFE_SUCCESS) {
+        PAYUZUC_HandleErrorSerial(Status, CC, Rx, Params.ReadBytes);
+        return;
+    }
+
+    PAYUZUC_HandleSuccess(CC, Rx, 3 + 2 + Len + 1);
+
     return;
 }

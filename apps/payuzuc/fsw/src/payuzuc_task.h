@@ -35,7 +35,7 @@ typedef struct {
     /**
      * Houskeeping telemetry packet
      */
-    PAYUZUC_HkTlm_t HkTlm;
+    PAYUZUC_BcnTlm_t HkTlm;
 
     /*
     ** Run Status variable used in the main processing loop
@@ -59,16 +59,22 @@ typedef struct {
     CFE_SRL_IO_Handle_t *Handle;
     
     /**
-     * Image Data
+     * Report Data for RPT
      */
-    PAYUZUC_ImgTlm_t ImgTlm;
+    PAYUZUC_ReportTlm_t *ReprotTlm;
 
     /**
      * PAYUZUC Table Handle
+     * Not use cFE TBL service
      */
     int TblHandle;
 
     PAYUZUC_Memory_Status_t MemSlotStatus;
+
+    /**
+     * Arguments of Download Task Arguments
+     */
+    PAYUZUC_DownloadAll_Payload_t DownTaskArg;
 
 } PAYUZUC_Data_t;
 

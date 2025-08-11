@@ -23,7 +23,7 @@ typedef struct RPT_HkTlm_Payload{
     uint32 TimeSubsec;
     uint32 Sequence; /* Backup data numbering */
 
-} RPT_HkTlm_Payload_t;
+} RPT_BcnTlm_Payload_t;
 
 
 typedef struct RPT_Report_Payload {

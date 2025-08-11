@@ -248,24 +248,29 @@ int32 CFE_SRL_SendHkCmd(const CFE_SRL_SendHkCmd_t *data) {
      */
     for (uint8_t i = 0; i < CFE_SRL_GNRL_DEVICE_NUM; i++) {
         CFE_SRL_IO_Handle_t *TempHandle = CFE_SRL_ApiGetHandle(i);
+        if (TempHandle == NULL) { // If handle closed, put 0 to Tlm
+            CFE_SRL_TaskData.HKTlmMsg.Payload.IOHandleStatus[i] = 0;
+            CFE_SRL_TaskData.HKTlmMsg.Payload.IOHandleTxCount[i] = 0;
+            continue;
+        }
 
         CFE_SRL_TaskData.HKTlmMsg.Payload.IOHandleStatus[i] = 
         ((const CFE_SRL_Global_Handle_t *)TempHandle)->Status;
 
-        CFE_SRL_TaskData.HKTlmMsg.Payload.IOHandle[i] = *TempHandle;
+        CFE_SRL_TaskData.HKTlmMsg.Payload.IOHandleTxCount[i] = TempHandle->TxCount;
     }
 
     /**
      * Get GPIO Handle Status
      */
-    for (uint8_t i=0; i < CFE_SRL_TOT_GPIO_NUM; i++) {
-        CFE_SRL_TaskData.HKTlmMsg.Payload.GPIOHandle[i] = *CFE_SRL_ApiGetGpioHandle(i);
-    }
+    // for (uint8_t i=0; i < CFE_SRL_TOT_GPIO_NUM; i++) {
+    //     CFE_SRL_TaskData.HKTlmMsg.Payload.GPIOHandle[i] = *CFE_SRL_ApiGetGpioHandle(i);
+    // }
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(CFE_SRL_TaskData.HKTlmMsg.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(CFE_SRL_TaskData.HKTlmMsg.TelemetryHeader), true);
     
-    // CFE_EVS_SendEvent(114, CFE_EVS_EventType_INFORMATION, "SRL Send HK Cmd Received.");
+    CFE_EVS_SendEvent(114, CFE_EVS_EventType_INFORMATION, "SRL Send HK Cmd Received.");
 
     return CFE_SUCCESS;
 }

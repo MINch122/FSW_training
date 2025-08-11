@@ -17,6 +17,8 @@
 #include "payuzuc_msgdefs.h"
 #include "cfe_msg_hdr.h"
 
+#include "rpt_interface_cfg.h"
+
 /*************************************************************************/
 
 /*
@@ -136,15 +138,15 @@ typedef struct {
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    PAYUZUC_HkTlm_Payload_t Payload;
-} PAYUZUC_HkTlm_t;
+    PAYUZUC_BcnTlm_Payload_t Payload;
+}__attribute__((packed)) PAYUZUC_BcnTlm_t;
 
 /**
- * Image MSG struct
+ * Rerport MSG struct for RPT
  */
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    uint8_t Payload[640];
-} PAYUZUC_ImgTlm_t;
+    RPT_Report_t Report;
+} PAYUZUC_ReportTlm_t;
 
 #endif

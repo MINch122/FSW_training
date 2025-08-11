@@ -1,0 +1,9 @@
+#ifndef SP_APP_TOPICIDS_H
+#define SP_APP_TOPICIDS_H
+
+#define CFE_MISSION_SP_APP_CMD_TOPICID          0x58
+#define CFE_MISSION_SP_APP_SEND_BCN_TOPICID     0x59
+
+#define CFE_MISSION_SP_APP_BCN_TLM_TOPICID      0x54
+
+#endif
