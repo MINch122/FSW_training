@@ -1,9 +1,9 @@
 #ifndef SP_APP_FCNCODES_H
 #define SP_APP_FCNCODES_H
 
-#define SP_APP_NOOP_CC 0
-#define SP_APP_RESET_COUNTERS_CC 1
-#define SP_APP_DEPLOY_CC 2
-#define SP_APP_GET_DEPLOY_CC 3
+#define SP_APP_NOOP_CC              0
+#define SP_APP_RESET_COUNTERS_CC    1
+#define SP_APP_DEPLOY_CC            2
+#define SP_APP_GET_DEPLOY_CC        3
 
 #endif
