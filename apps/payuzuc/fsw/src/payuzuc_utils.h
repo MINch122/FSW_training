@@ -80,5 +80,10 @@ void PAYUZUC_HandleSuccess(uint8_t CC, void *ReadData, ssize_t ReadSize);
 /// @param CC Command Code which is invoked
 void PAYUZUC_Transaction(void *Tx, void *Rx, uint8_t CC);
 
+/// @brief Configure the Command packet for KissCAM
+/// @param Payload [in] Data pointer of Parameter payload 
+/// @param Packet [out] Configured packet. Type should be `PAYUZUC_Cmd_t`
+/// @param ParamNum [in] Number of parameter in specific Command
+/// @param Command [in] KissCAM Command code of specific Command
 void PAYUZUC_ConfigurePacket(const void *Payload, void *Packet, uint8 ParamNum, uint8_t Command);
 #endif

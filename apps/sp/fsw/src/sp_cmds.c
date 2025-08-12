@@ -11,7 +11,7 @@
 
 CFE_Status_t SP_APP_SendBcnCmd(const SP_APP_SendBcnCmd_t *Msg) {
     int32 Status;
-    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_GPIO_IN_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
 
     Status = CFE_SRL_ApiGpioGet(Handle);
     if (Status == 0 || Status == 1) {
@@ -49,7 +49,7 @@ CFE_Status_t SP_APP_DeployCmd(const SP_APP_DeployCmd_t *Msg){
 
     int32 Status;
     
-    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_GPIO_OUT_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_OUT_GPIO_INDEXER);
     if (Handle == NULL) return -1;
 
     Status = CFE_SRL_ApiGpioSet(Handle, Msg->Payload.deploy);
@@ -74,7 +74,7 @@ CFE_Status_t SP_APP_Get_DeployCmd(const SP_APP_Get_DeployCmd_t *Msg){
     Report.CommandCode = SP_APP_GET_DEPLOY_CC;
     Report.ReturnDataSize = 1;
 
-    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_GPIO_IN_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
     if (Handle == NULL) return -1;
     
     Status = CFE_SRL_ApiGpioGet(Handle);

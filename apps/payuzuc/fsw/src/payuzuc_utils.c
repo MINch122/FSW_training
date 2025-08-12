@@ -254,6 +254,7 @@ void PAYUZUC_ConfigurePacket(const void *Payload, void *Packet, uint8 ParamNum, 
 /***********************************************
  * 
  * Download task util function
+ * @deprecated
  * 
  ***********************************************/
 void PAYUZUC_CreateDownloadTask(void) {
@@ -319,7 +320,7 @@ void PAYUZUC_Transaction(void *Tx, void *Rx, uint8_t CC) {
         return;
     }
 
-    PAYUZUC_HandleSuccess(CC, Rx, 3 + 2 + Len + 1);
+    PAYUZUC_HandleSuccess(CC, Rx, PAYUZUC_HDR_TAIL_SIZE + Len);
 
     return;
 }

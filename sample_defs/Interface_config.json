@@ -58,7 +58,7 @@
 
         {
             "type": "gpio", 
-            "ready": false, 
+            "ready": true, 
             "name":"SP_IN",
             "DevName": "/dev/gpiochip2",
             "line": 4,
@@ -67,7 +67,7 @@
         },
         {
             "type": "gpio", 
-            "ready": false, 
+            "ready": true, 
             "name":"SP_OUT",
             "DevName": "/dev/gpiochip2",
             "line": 3,
@@ -76,7 +76,7 @@
         },
         {
             "type": "gpio", 
-            "ready": false, 
+            "ready": true, 
             "name":"ADCS_EN",
             "DevName": "/dev/gpiochip0",
             "line": 29,
@@ -85,7 +85,7 @@
         },
         {
             "type": "gpio", 
-            "ready": false, 
+            "ready": true, 
             "name":"ADCS_BOOT",
             "DevName": "/dev/gpiochip0",
             "line": 28,

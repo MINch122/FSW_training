@@ -41,8 +41,35 @@ bool PAYUZUC_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLen
         Result = false;
 
         PAYUZUC_Data.ErrCounter ++;
-    }
 
+        /* RPT */
+        PAYUZUC_ReportTlm_t *BufPtr = (PAYUZUC_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(PAYUZUC_ReportTlm_t));
+        if (BufPtr == NULL) goto cleanup;
+
+        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUC_REPORT_TLM_MID),
+        sizeof(PAYUZUC_ReportTlm_t)) != CFE_SUCCESS) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            goto cleanup;
+        }
+        BufPtr->Report.MsgID = (uint16_t)CFE_SB_MsgIdToValue(MsgId);
+        BufPtr->Report.CommandCode = (uint8_t)FcnCode;
+        BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
+        BufPtr->Report.ReturnCode = 0x21212121; // Error code of `Length error`
+        BufPtr->Report.ReturnDataSize = 2 * sizeof(uint32_t);
+        
+        uint32_t Temp32 = (uint32_t)ActualLength;
+        memcpy(BufPtr->Report.ReturnValue, &Temp32, sizeof(uint32_t));
+        Temp32 = (uint32_t)ExpectedLength;
+        memcpy(BufPtr->Report.ReturnValue + sizeof(uint32_t), &Temp32, sizeof(uint32_t));
+
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+        if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            goto cleanup;
+        }
+        /* End of RPT */
+    }
+cleanup:
     return Result;
 }
 
@@ -134,6 +161,24 @@ void PAYUZUC_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
     default:
         CFE_EVS_SendEvent(PAYUZUC_CC_ERR_EID, CFE_EVS_EventType_ERROR, "%s: Invalid ground command code - CC = %d",
                             __func__, CommandCode);
+        /* RPT */
+        PAYUZUC_ReportTlm_t *BufPtr = (PAYUZUC_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(PAYUZUC_ReportTlm_t));
+        if (BufPtr == NULL) break;
+        if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUC_REPORT_TLM_MID), sizeof(PAYUZUC_ReportTlm_t) != CFE_SUCCESS)) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            break;
+        }
+        BufPtr->Report.MsgID = PAYUZUC_CMD_MID;
+        BufPtr->Report.CommandCode = (uint8_t)CommandCode;
+        BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
+        BufPtr->Report.ReturnCode = 0x22222222;
+        BufPtr->Report.ReturnDataSize = 0;
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+        if(CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            break;
+        }
+        /* End of RPT */
         break;
     }
     
@@ -166,6 +211,25 @@ void PAYUZUC_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
         CFE_EVS_SendEvent(PAYUZUC_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                             "PAYUZUC: Invalid command packet, MID = 0x%X",
                             (unsigned int)CFE_SB_MsgIdToValue(MsgId));
+        /* RPT */
+        PAYUZUC_ReportTlm_t *BufPtr = (PAYUZUC_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(PAYUZUC_ReportTlm_t));
+        if (BufPtr == NULL) break;
+        if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUC_REPORT_TLM_MID), sizeof(PAYUZUC_ReportTlm_t) != CFE_SUCCESS)) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            break;
+        }
+        BufPtr->Report.MsgID = PAYUZUC_CMD_MID;
+        BufPtr->Report.CommandCode = 0;
+        BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
+        BufPtr->Report.ReturnCode = 0x23232323;
+        BufPtr->Report.ReturnDataSize = sizeof(CFE_SB_MsgId_Atom_t);
+        memcpy(BufPtr->Report.ReturnValue, &MsgId.Value, sizeof(CFE_SB_MsgId_Atom_t));
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+        if(CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            break;
+        }
+        /* End of RPT */
         break;
     }
 }
