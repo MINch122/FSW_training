@@ -74,7 +74,7 @@ CFE_Status_t SP_APP_Init(void){
     if (status == CFE_SUCCESS){
         status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(SP_APP_SEND_BCN_MID), SP_APP_Data.CommandPipe);
         
-        if (status != CFE_SUCCESS){
+        if (status != CFE_SUCCESS) {
             CFE_EVS_SendEvent(SP_APP_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "SP APP: Error Subscribing to Send Bcn MID, RC = 0x%08lx\n", (unsigned long)status);
         }
     }
@@ -82,10 +82,10 @@ CFE_Status_t SP_APP_Init(void){
     if (status == CFE_SUCCESS){
         status = CFE_TBL_Register(&SP_APP_Data.TblHandles[0], "ExampleTable", sizeof(SP_APP_ExampleTable_t), CFE_TBL_OPT_DEFAULT, SP_APP_TBLValidationFunc);
 
-        if (status != CFE_SUCCESS){
+        if (status != CFE_SUCCESS) {
             CFE_EVS_SendEvent(SP_APP_TABLE_REG_ERR_EID, CFE_EVS_EventType_ERROR, "SP App: Error Registering Example Table, RC = 0x%08lx\n", (unsigned long)status);
         }
-        else{
+        else {
             status = CFE_TBL_Load(SP_APP_Data.TblHandles[0], CFE_TBL_SRC_FILE, SP_APP_TABLE_FILE);
         }
 
