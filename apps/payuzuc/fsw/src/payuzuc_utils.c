@@ -271,6 +271,7 @@ void PAYUZUC_CreateDownloadTask(void) {
 void PAYUZUC_Transaction(void *Tx, void *Rx, uint8_t CC) {
     int32 Status;
     CFE_SRL_IO_Param_t Params = {0,};
+    ssize_t ReadByte = 0;
 
     Params.TxData = Tx;
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
@@ -280,13 +281,14 @@ void PAYUZUC_Transaction(void *Tx, void *Rx, uint8_t CC) {
 
     // Read Start byte, Ack, Mode
     Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
+    ReadByte += Params.ReadBytes;
     if (Status != CFE_SUCCESS) {
-        PAYUZUC_HandleErrorSerial(Status, CC, Rx, Params.ReadBytes);
+        PAYUZUC_HandleErrorSerial(Status, CC, Rx, ReadByte);
         return;
     }
 
     if (((uint8_t *)Rx)[1] == PAYUZUC_TLM_ERR_FLAG) {
-        PAYUZUC_HandleErrorPacket(Rx, Params.ReadBytes, CC);
+        PAYUZUC_HandleErrorPacket(Rx, ReadByte, CC);
         return;
     }
 
@@ -298,6 +300,7 @@ void PAYUZUC_Transaction(void *Tx, void *Rx, uint8_t CC) {
     Params.RxSize = 2; // MSB + LSB
     Params.Timeout = 100;
     Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
+    ReadByte += Params.ReadBytes;
     if (Status != CFE_SUCCESS) {
         PAYUZUC_HandleErrorSerial(Status, CC, Rx, Params.ReadBytes);
         return;

@@ -105,9 +105,9 @@ CFE_Status_t PAYUZUT_Init(void) {
     }
     else {
         /**
-         * Initialize housekeeping packet (clear user data area)
+         * Initialize Beacon packet (clear user data area)
          */
-        CFE_MSG_Init(CFE_MSG_PTR(PAYUZUT_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUT_HK_TLM_MID),
+        CFE_MSG_Init(CFE_MSG_PTR(PAYUZUT_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUT_BCN_TLM_MID),
                         sizeof(PAYUZUT_Data.HkTlm));
 
         /**
@@ -122,9 +122,9 @@ CFE_Status_t PAYUZUT_Init(void) {
 
     if (Status == CFE_SUCCESS) {
         /**
-         * Subscribe to housekeeping request commands
+         * Subscribe to Beacon request commands
          */
-        Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(PAYUZUT_SEND_HK_MID), PAYUZUT_Data.CommandPipe);
+        Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(PAYUZUT_SEND_BCN_MID), PAYUZUT_Data.CommandPipe);
         if (Status != CFE_SUCCESS) {
             CFE_EVS_SendEvent(PAYUZUT_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
                                 "%s: Error Subscribing to HK request, RC = 0x%08lX", 
@@ -151,9 +151,17 @@ CFE_Status_t PAYUZUT_Init(void) {
 
     /**
      * Get Serial Handle pointer
+     * I2C1. For temperature
      */
-    PAYUZUT_Data.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_SOCAT_HANDLE_INDEXER);
-    CFE_ES_WriteToSysLog("%s: IO Handle Ptr: %p", __func__, (void *)PAYUZUT_Data.Handle);
+    // PAYUZUT_Data.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_I2C1_HANDLE_INDEXER);
+    // CFE_ES_WriteToSysLog("%s: IO Handle Ptr: %p", __func__, (void *)PAYUZUT_Data.Handle);
 
+    /**
+     * Get GPIO Handle Pointer
+     * PC5. For thruster
+     */
+    PAYUZUT_Data.GpioHandle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_THRUSTER_GPIO_INDEXER);
+    CFE_ES_WriteToSysLog("%s: GPIO Handle Ptr: %p", __func__, (void *)PAYUZUT_Data.GpioHandle);
+    
     return Status;
 }

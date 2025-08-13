@@ -56,8 +56,15 @@ typedef struct {
 
     /**
      * Serial Handle
+     * I2C1. For temperature read
      */
     CFE_SRL_IO_Handle_t *Handle;
+
+    /**
+     * GPIO Handle
+     * PC5. For Thruster control
+     */
+    CFE_SRL_GPIO_Handle_t *GpioHandle;
 
     /**
      * PAYUZUT Table Handle

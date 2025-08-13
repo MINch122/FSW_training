@@ -33,7 +33,7 @@ int32 CFE_SRL_EarlyInit(void) {
  	 * Only `ready == true` interface is initialized
 	 **************************************************/
 	/* socat Init */
-	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_SOCAT_HANDLE_INDEXER], "socat", "/dev/pts/4", SRL_DEVTYPE_UART, CFE_SRL_SOCAT_HANDLE_INDEXER, 115200, 0);
+	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_SOCAT_HANDLE_INDEXER], "socat", "/dev/pts/2", SRL_DEVTYPE_UART, CFE_SRL_SOCAT_HANDLE_INDEXER, 115200, 0);
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: socat Initialization failed! RC=%d\n", __func__, Status);
 		return CFE_SRL_SOCAT_INIT_ERR;
@@ -66,6 +66,13 @@ int32 CFE_SRL_EarlyInit(void) {
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: GPIO ADCS_BOOT Initialization failed! RC=%d\n", __func__, Status);
 		return CFE_SRL_ADCS_BOOT_INIT_ERR;
+	}
+
+	/* GPIO THRUSTER Init */
+	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_THRUSTER_GPIO_INDEXER], "/dev/gpiochip2", 5, "THRUSTER", 0, true);
+	if (Status != CFE_SUCCESS) {
+		CFE_ES_WriteToSysLog("%s: GPIO THRUSTER Initialization failed! RC=%d\n", __func__, Status);
+		return CFE_SRL_THRUSTER_INIT_ERR;
 	}
 
 return CFE_SUCCESS;

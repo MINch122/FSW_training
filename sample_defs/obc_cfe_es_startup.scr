@@ -9,6 +9,7 @@ CFE_APP, ds,          DS_AppMain,         DS,           44,   16384, 0x0, 0;
 CFE_APP, fm,          FM_AppMain,         FM,           45,   16384, 0x0, 0;
 CFE_APP, sample_app,  SAMPLE_APP_Main,    SAMPLE_APP,   50,   16384, 0x0, 0;
 CFE_APP, payuzuc,     PAYUZUC_Main,       PAYUZUC_APP,  51,   16384, 0x0, 0;
+CFE_APP, payuzut,     PAYUZUT_Main,       PAYUZUT_APP,  52,   16384, 0x0, 0;
 CFE_APP, ci_lab,      CI_LAB_AppMain,     CI_LAB_APP,   60,   16384, 0x0, 0;
 CFE_APP, to_lab,      TO_LAB_AppMain,     TO_LAB_APP,   70,   16384, 0x0, 0;
 CFE_APP, sch_lab,     SCH_LAB_AppMain,    SCH_LAB_APP,  80,   16384, 0x0, 0;

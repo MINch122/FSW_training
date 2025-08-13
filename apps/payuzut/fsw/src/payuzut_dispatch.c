@@ -41,8 +41,35 @@ bool PAYUZUT_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLen
         Result = false;
 
         PAYUZUT_Data.ErrCounter ++;
-    }
 
+        /* RPT */
+        PAYUZUT_ReportTlm_t *BufPtr = (PAYUZUT_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(PAYUZUT_ReportTlm_t));
+        if (BufPtr == NULL) goto cleanup;
+
+        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUT_REPORT_TLM_MID),
+        sizeof(PAYUZUT_ReportTlm_t)) != CFE_SUCCESS) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            goto cleanup;
+        }
+        BufPtr->Report.MsgID = (uint16_t)CFE_SB_MsgIdToValue(MsgId);
+        BufPtr->Report.CommandCode = (uint8_t)FcnCode;
+        BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
+        BufPtr->Report.ReturnCode = 0x21212121; // Error code of `Length error`
+        BufPtr->Report.ReturnDataSize = 2 * sizeof(uint32_t);
+        
+        uint32_t Temp32 = (uint32_t)ActualLength;
+        memcpy(BufPtr->Report.ReturnValue, &Temp32, sizeof(uint32_t));
+        Temp32 = (uint32_t)ExpectedLength;
+        memcpy(BufPtr->Report.ReturnValue + sizeof(uint32_t), &Temp32, sizeof(uint32_t));
+
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+        if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            goto cleanup;
+        }
+        /* End of RPT */
+    }
+cleanup:
     return Result;
 }
 
@@ -73,9 +100,45 @@ void PAYUZUT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
         }
         break;
 
+    case PAYUZUT_GET_TEMP_CC:
+        if (PAYUZUT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(PAYUZUT_GetTempCmd_t))) {
+            PAYUZUT_GetTempCmd((const PAYUZUT_GetTempCmd_t *)SBBufPtr);
+        }
+        break;
+    
+    case PAYUZUT_THRUSTER_ON_CC:
+        if (PAYUZUT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(PAYUZUT_ThrusterOnCmd_t))) {
+            PAYUZUT_ThrusterOnCmd((const PAYUZUT_ThrusterOnCmd_t *)SBBufPtr);
+        }
+        break;
+
+    case PAYUZUT_THRUSTER_OFF_CC:
+        if (PAYUZUT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(PAYUZUT_ThrusterOffCmd_t))) {
+            PAYUZUT_ThrusterOffCmd((const PAYUZUT_ThrusterOffCmd_t *)SBBufPtr);
+        }
+        break;
+
     default:
         CFE_EVS_SendEvent(PAYUZUT_CC_ERR_EID, CFE_EVS_EventType_ERROR, "%s: Invalid ground command code - CC = %d",
                             __func__, CommandCode);
+        /* RPT */
+        PAYUZUT_ReportTlm_t *BufPtr = (PAYUZUT_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(PAYUZUT_ReportTlm_t));
+        if (BufPtr == NULL) break;
+        if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUT_REPORT_TLM_MID), sizeof(PAYUZUT_ReportTlm_t) != CFE_SUCCESS)) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            break;
+        }
+        BufPtr->Report.MsgID = PAYUZUT_CMD_MID;
+        BufPtr->Report.CommandCode = (uint8_t)CommandCode;
+        BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
+        BufPtr->Report.ReturnCode = 0x22222222;
+        BufPtr->Report.ReturnDataSize = 0;
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+        if(CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            break;
+        }
+        /* End of RPT */
         break;
     }
     

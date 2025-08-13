@@ -8,6 +8,7 @@
 #include "payuzut_msgdefs.h"
 #include "cfe_msg_hdr.h"
 
+#include "rpt_interface_cfg.h"
 
 /*************************************************************************/
 
@@ -26,7 +27,17 @@ typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
 } PAYUZUT_ResetCountersCmd_t;
 
+typedef struct {
+    CFE_MSG_CommandHeader_t CommandHeader;
+} PAYUZUT_GetTempCmd_t;
 
+typedef struct {
+    CFE_MSG_CommandHeader_t CommandHeader;
+} PAYUZUT_ThrusterOnCmd_t;
+
+typedef struct {
+    CFE_MSG_CommandHeader_t CommandHeader;
+} PAYUZUT_ThrusterOffCmd_t;
 
 
 /*************************************************************************/
@@ -50,5 +61,15 @@ typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     PAYUZUT_BcnTlm_Payload_t Payload;
 } PAYUZUT_BcnTlm_t;
+
+
+/**
+ * Report Tlm for RPT
+ */
+typedef struct {
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    RPT_Report_t Report;
+} PAYUZUT_ReportTlm_t;
+
 
 #endif

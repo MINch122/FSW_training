@@ -19,8 +19,7 @@ typedef struct PAYUZUT_HkTlm_Payload {
 
 typedef struct PAYUZUT_BcnTlm_Payload {
     
-    uint8 CommandCounter;
-    uint8 CommandErrorCounter;
+    uint32 Temperature; // Type should be modified
 
 } PAYUZUT_BcnTlm_Payload_t;
 

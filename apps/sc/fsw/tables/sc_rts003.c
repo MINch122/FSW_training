@@ -24,7 +24,7 @@
  * This source file creates a RTS table that contains only
  * the following commands that are scheduled as follows:
  *
- * ------------ RTS 3 ------------
+ * ------------ RTS #3 ------------
  * PAYUZUC set mode to SD mode (mode 1)
  * PAYUZUC capture in Memory Slot 0
  * PAYUZUC capture in Memory Slot 1
@@ -59,11 +59,6 @@
 
 #include "payuzuc_msgids.h"
 #include "payuzuc_msg.h"
-
-/* Checksum for each sample command */
-#ifndef SC_NOOP_CKSUM
-#define SC_NOOP_CKSUM (0x8F)
-#endif
 
 /* Custom table structure, modify as needed to add desired commands */
 typedef struct

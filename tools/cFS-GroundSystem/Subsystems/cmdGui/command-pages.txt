@@ -30,6 +30,7 @@ Command Ingest,             CI_LAB_CMD,         0x1884, LE, UdpCommands.py,  127
 Telemetry Output,           TO_LAB_CMD,         0x1823, LE, UdpCommands.py,  127.0.0.1,   1234
 Sample App,                 SAMPLE_APP_CMD,     0x1882, LE, UdpCommands.py,  127.0.0.1,   1234
 PAYUZUC,                    PAYUZUC_CMD,        0x1830, LE, UdpCommands.py,  127.0.0.1,   1234
+PAYUZUT,                    PAYUZUT_CMD,        0x1835, LE, UdpCommands.py,  127.0.0.1,   1234
 Solar Panel,                SP_CMD,             0x1858, LE, UdpCommands.py,  127.0.0.1,   1234
 Spare,                                    ,     0x0000, LE, UdpCommands.py,  127.0.0.1,   1234
 LEGACY DEFINITIONS,                       ,     0x0000, LE, UdpCommands.py,  127.0.0.1,   1234
