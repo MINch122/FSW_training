@@ -44,35 +44,35 @@ int32 CFE_SRL_EarlyInit(void) {
 	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_SP_IN_GPIO_INDEXER], "/dev/gpiochip2", 4, "SP_IN", 0, false);
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: GPIO SP_IN Initialization failed! RC=%d\n", __func__, Status);
-		return CFE_SRL_SP_IN_INIT_ERR;
+		// return CFE_SRL_SP_IN_INIT_ERR;
 	}
 
 	/* GPIO SP_OUT Init */
 	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_SP_OUT_GPIO_INDEXER], "/dev/gpiochip2", 3, "SP_OUT", 0, true);
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: GPIO SP_OUT Initialization failed! RC=%d\n", __func__, Status);
-		return CFE_SRL_SP_OUT_INIT_ERR;
+		// return CFE_SRL_SP_OUT_INIT_ERR;
 	}
 
 	/* GPIO ADCS_EN Init */
 	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_ADCS_EN_GPIO_INDEXER], "/dev/gpiochip0", 29, "ADCS_EN", 0, true);
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: GPIO ADCS_EN Initialization failed! RC=%d\n", __func__, Status);
-		return CFE_SRL_ADCS_EN_INIT_ERR;
+		// return CFE_SRL_ADCS_EN_INIT_ERR;
 	}
 
 	/* GPIO ADCS_BOOT Init */
 	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_ADCS_BOOT_GPIO_INDEXER], "/dev/gpiochip0", 28, "ADCS_BOOT", 0, true);
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: GPIO ADCS_BOOT Initialization failed! RC=%d\n", __func__, Status);
-		return CFE_SRL_ADCS_BOOT_INIT_ERR;
+		// return CFE_SRL_ADCS_BOOT_INIT_ERR;
 	}
 
 	/* GPIO THRUSTER Init */
 	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_THRUSTER_GPIO_INDEXER], "/dev/gpiochip2", 5, "THRUSTER", 0, true);
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: GPIO THRUSTER Initialization failed! RC=%d\n", __func__, Status);
-		return CFE_SRL_THRUSTER_INIT_ERR;
+		// return CFE_SRL_THRUSTER_INIT_ERR;
 	}
 
 return CFE_SUCCESS;

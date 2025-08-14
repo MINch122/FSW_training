@@ -16,5 +16,8 @@ CFE_Status_t PAYUZUT_ResetCountersCmd(const PAYUZUT_ResetCountersCmd_t *Msg);
 CFE_Status_t PAYUZUT_GetTempCmd(const PAYUZUT_GetTempCmd_t *Msg);
 CFE_Status_t PAYUZUT_ThrusterOnCmd(const PAYUZUT_ThrusterOnCmd_t *Msg);
 CFE_Status_t PAYUZUT_ThrusterOffCmd(const PAYUZUT_ThrusterOffCmd_t *Msg);
+CFE_Status_t PAYUZUT_CumulateTempCmd(const PAYUZUT_CumulateTempCmd_t *Msg);
+
+void PAYUZUT_CumulateTempTask(void);
 
 #endif

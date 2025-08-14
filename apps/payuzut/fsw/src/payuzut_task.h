@@ -71,6 +71,11 @@ typedef struct {
      */
     int TblHandle;
 
+    /**
+     * PAYUZUT Child Task Id
+     */
+    CFE_ES_TaskId_t TaskId;
+
 } PAYUZUT_Data_t;
 
 /**

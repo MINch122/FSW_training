@@ -53,7 +53,9 @@
         "cfe_usr_error_macro.h": "c",
         "cfe_core_api_base_msgids.h": "c",
         "rpt_interface_cfg.h": "c",
-        "cfe_srl_io.h": "c"
+        "cfe_srl_io.h": "c",
+        "payuzut_internal_cfg.h": "c",
+        "payuzut_utils.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

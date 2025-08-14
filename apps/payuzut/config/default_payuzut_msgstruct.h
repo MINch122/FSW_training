@@ -39,6 +39,10 @@ typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
 } PAYUZUT_ThrusterOffCmd_t;
 
+typedef struct {
+    CFE_MSG_CommandHeader_t CommandHeader;
+} PAYUZUT_CumulateTempCmd_t;
+
 
 /*************************************************************************/
 /*

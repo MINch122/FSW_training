@@ -163,9 +163,9 @@ CFE_Status_t PAYUZUT_GetTempCmd(const PAYUZUT_GetTempCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUT_ThrusterOnCmd(const PAYUZUT_ThrusterOnCmd_t *Msg) {
-    int32 Status;
+    int32 Status = 0;
 
-    Status = CFE_SRL_ApiGpioSet(PAYUZUT_Data.GpioHandle, true);
+    // Status = CFE_SRL_ApiGpioSet(PAYUZUT_Data.GpioHandle, true);
     if (Status != CFE_SUCCESS) PAYUZUT_Data.ErrCounter ++;
     
     PAYUZUT_ReportTlm_t Report = {0, };
@@ -180,6 +180,8 @@ CFE_Status_t PAYUZUT_ThrusterOnCmd(const PAYUZUT_ThrusterOnCmd_t *Msg) {
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
+
+    CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "PAYUZUT: Thruster On Cmd.\n");
 
     return CFE_SUCCESS;
 }
@@ -191,9 +193,9 @@ CFE_Status_t PAYUZUT_ThrusterOnCmd(const PAYUZUT_ThrusterOnCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUT_ThrusterOffCmd(const PAYUZUT_ThrusterOffCmd_t *Msg) {
-    int32 Status;
+    int32 Status = 0;
 
-    Status = CFE_SRL_ApiGpioSet(PAYUZUT_Data.GpioHandle, false);
+    // Status = CFE_SRL_ApiGpioSet(PAYUZUT_Data.GpioHandle, false);
     if (Status != CFE_SUCCESS) PAYUZUT_Data.ErrCounter ++;
 
     PAYUZUT_ReportTlm_t Report = {0, };
@@ -209,5 +211,70 @@ CFE_Status_t PAYUZUT_ThrusterOffCmd(const PAYUZUT_ThrusterOffCmd_t *Msg) {
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
 
+    CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "PAYUZUT: Thruster Off Cmd.\n");
+
     return CFE_SUCCESS;
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* PAYUZUT Cumulate Temperature Command                                       */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+CFE_Status_t PAYUZUT_CumulateTempCmd(const PAYUZUT_CumulateTempCmd_t *Msg) {
+
+    CFE_ES_CreateChildTask(&PAYUZUT_Data.TaskId, "Temperature Task", 
+                        PAYUZUT_CumulateTempTask, CFE_ES_TASK_STACK_ALLOCATE,
+                        PAYUZUT_TEMP_TASK_STACK_SIZE, PAYUZUT_TEMP_TASK_STACK_PRIORITY, 0);
+
+    CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "PAYUZUT: Cumulate Temp Task Start.\n");
+    
+    return CFE_SUCCESS;
+}
+
+
+void PAYUZUT_CumulateTempTask(void) {
+    int32 Status;
+    CFE_SRL_IO_Param_t Params = {0, };
+    uint8_t Iteration = 0;
+    uint8_t Success = 0;
+
+    uint8_t TxBuf[23] = {0,};
+    uint8_t RxBuf[4]  = {0,};
+
+    int FD = PAYUZUT_OpenFile();
+
+    /**
+     * !!!!!!!!!!!!!!!!Revise the parameters!!!!!!!!!!!!!!!!!1
+     */
+    Params.TxData = TxBuf;
+    Params.TxSize = sizeof(TxBuf);
+    Params.RxData = RxBuf;
+    Params.RxSize = sizeof(RxBuf);
+    Params.Addr = 0x23;
+    
+
+    do {
+        OS_printf("Iteration : %u || Success : %u\n", Iteration, Success);
+
+        Status = CFE_SRL_ApiRead(PAYUZUT_Data.Handle, &Params);
+        if (Status != CFE_SUCCESS) {
+            Iteration ++;
+            // continue;
+        }
+        Status = PAYUZUT_WriteToFile(FD, RxBuf, sizeof(RxBuf));
+        if (Status != CFE_SUCCESS) {
+            Iteration ++;
+            // continue;
+        }
+
+        OS_TaskDelay(PAYUZUT_TEMP_GATHER_TERM);
+        Success ++;
+        Iteration ++;
+    } while (Iteration < PAYUZUT_TEMP_GATHER_TIME && Success < PAYUZUT_TEMP_GATHER_TIME);
+
+    PAYUZUT_CloseFile(FD);
+
+    CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "PAYUZUT temperature gathering Done.\n");
 }

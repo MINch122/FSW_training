@@ -134,8 +134,9 @@ CFE_Status_t PAYUZUC_PingCmd(const PAYUZUC_PingCmd_t *Msg) {
 
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X\n", RxBuf[i]);
+        OS_printf("0x%02X\t", RxBuf[i]);
     }
+    OS_printf("\n");
     
     return CFE_SUCCESS;
 }
@@ -177,8 +178,9 @@ CFE_Status_t PAYUZUC_SetModeCmd(const PAYUZUC_SetModeCmd_t *Msg) {
     PAYUZUC_Transaction(&Cmd, RxBuf, PAYUZUC_SET_MODE_CC);
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X\n", RxBuf[i]);
+        OS_printf("0x%02X\t", RxBuf[i]);
     }
+    OS_printf("\n");
 
     CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "Set Mode");
     return CFE_SUCCESS;
@@ -216,8 +218,10 @@ CFE_Status_t PAYUZUC_MemoryStatusCmd(const PAYUZUC_MemoryStatusCmd_t *Msg) {
     PAYUZUC_Transaction(&Cmd, RxBuf, PAYUZUC_MEMORY_STATUS_CC);
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X\n", RxBuf[i]);
+        OS_printf("0x%02X\t", RxBuf[i]);
     }
+    OS_printf("\n");
+
     return CFE_SUCCESS;
 }
 
@@ -256,8 +260,10 @@ CFE_Status_t PAYUZUC_SetExposureCmd(const PAYUZUC_SetExposureCmd_t *Msg) {
     PAYUZUC_Transaction(&Cmd, RxBuf, PAYUZUC_SET_EXPOSURE_CC);
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X\n", RxBuf[i]);
+        OS_printf("0x%02X\t", RxBuf[i]);
     }
+    OS_printf("\n");
+
     return CFE_SUCCESS;
 }
 
@@ -305,8 +311,10 @@ CFE_Status_t PAYUZUC_CaptureCmd(const PAYUZUC_CaptureCmd_t *Msg) {
     }
        
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X\n", RxBuf[i]);
+        OS_printf("0x%02X\t", RxBuf[i]);
     }
+    OS_printf("\n");
+
     CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "Capture");
     return CFE_SUCCESS;
 }
@@ -581,8 +589,9 @@ CFE_Status_t PAYUZUC_MosaicCmd(const PAYUZUC_MosaicCmd_t *Msg) {
     PAYUZUC_Transaction(&Cmd, RxBuf, PAYUZUC_READ_REGISTER_CC);
 
     for (uint8_t i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X\n", RxBuf[i]);
+        OS_printf("0x%02X\t", RxBuf[i]);
     }
+    OS_printf("\n");
 
     CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "Mosaic");
     return CFE_SUCCESS;
@@ -624,8 +633,10 @@ CFE_Status_t PAYUZUC_ReadRegisterCmd(const PAYUZUC_ReadRegisterCmd_t *Msg) {
     PAYUZUC_Transaction(&Cmd, RxBuf, PAYUZUC_WRITE_REGISTER_CC);
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X\n", RxBuf[i]);
+        OS_printf("0x%02X\t", RxBuf[i]);
     }
+    OS_printf("\n");
+
     return CFE_SUCCESS;
 }
 
@@ -663,8 +674,9 @@ CFE_Status_t PAYUZUC_WriteRegisterCmd(const PAYUZUC_WriteRegisterCmd_t *Msg) {
     else PAYUZUC_HandleSuccess(PAYUZUC_WRITE_REGISTER_CC, Params.RxData, Params.ReadBytes);
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X\n", RxBuf[i]);
+        OS_printf("0x%02X\t", RxBuf[i]);
     }
+    OS_printf("\n");
 
     return CFE_SUCCESS;
 }

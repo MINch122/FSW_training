@@ -118,6 +118,12 @@ void PAYUZUT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
         }
         break;
 
+    case PAYUZUT_CUMULATE_TEMP_CC:
+        if (PAYUZUT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(PAYUZUT_CumulateTempCmd_t))) {
+            PAYUZUT_CumulateTempCmd((const PAYUZUT_CumulateTempCmd_t *)SBBufPtr);
+        }
+        break;
+
     default:
         CFE_EVS_SendEvent(PAYUZUT_CC_ERR_EID, CFE_EVS_EventType_ERROR, "%s: Invalid ground command code - CC = %d",
                             __func__, CommandCode);

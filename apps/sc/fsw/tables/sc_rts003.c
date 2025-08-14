@@ -136,11 +136,11 @@ SC_RtsTable003_t SC_Rts003 = {
     /**
      *  2  PAYUZUC CAPTURE CMD 
      * */
-    .rts.hdr2.WakeupCount       = 2,
+    .rts.hdr2.WakeupCount       = 1,
     .rts.cmd2.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd2), PAYUZUC_CAPTURE_CC, 0x12),
     .rts.cmd2.Payload.MEM       = (uint8)0,
     .rts.cmd2.Payload.TST       = (uint8)0,
-
+    
     /**
      *  3  PAYUZUC CAPTURE CMD 
      * */
@@ -156,7 +156,7 @@ SC_RtsTable003_t SC_Rts003 = {
     .rts.cmd4.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd4), PAYUZUC_CAPTURE_CC, 0x10),
     .rts.cmd4.Payload.MEM       = (uint8)2,
     .rts.cmd4.Payload.TST       = (uint8)0,
-    
+
     /**
      *  5  PAYUZUC CAPTURE CMD 
      * */

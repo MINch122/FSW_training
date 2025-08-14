@@ -15,6 +15,7 @@
 #define PAYUZUT_GET_TEMP_CC         2
 #define PAYUZUT_THRUSTER_ON_CC      3
 #define PAYUZUT_THRUSTER_OFF_CC     4
+#define PAYUZUT_CUMULATE_TEMP_CC    5
 
 
 #endif

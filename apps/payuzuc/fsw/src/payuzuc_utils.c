@@ -22,7 +22,7 @@ int PAYUZUC_OpenTblFile(void) {
     int ID;
 
     ID = open(PAYUZUC_TBL_PATH, O_CREAT | O_RDWR, 0666);
-    OS_printf("ID: %u\n",ID);
+    OS_printf("ID: %d\n",ID);
     return ID;
 }
 
