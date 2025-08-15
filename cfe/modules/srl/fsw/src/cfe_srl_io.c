@@ -207,6 +207,8 @@ int CFE_SRL_GpioInit(CFE_SRL_GPIO_Handle_t *Handle, const char *Path, unsigned i
     else Status = CFE_SRL_BasicGpioSetInput(Handle, Name);
     if (Status != CFE_SUCCESS) return Status;
 
+    Handle->IsInit = true;
+
     return CFE_SUCCESS;
 }
 

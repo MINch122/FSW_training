@@ -102,7 +102,7 @@ error:
 }
 
 int32 CFE_SRL_WriteGenericI2C(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_WriteI2C(Handle, Params->TxData, Params->TxSize, Params->Addr);
+    return CFE_SRL_WriteI2C(Handle, Params->TxData, Params->TxSize, (uint8_t)Params->Addr);
 }
 
 /*----------------------------------------------------------------

@@ -55,7 +55,15 @@
         "rpt_interface_cfg.h": "c",
         "cfe_srl_io.h": "c",
         "payuzut_internal_cfg.h": "c",
-        "payuzut_utils.h": "c"
+        "payuzut_utils.h": "c",
+        "utrx.h": "c",
+        "rparam.h": "c",
+        "utrx_app_eventids.h": "c",
+        "strx_app_cmds.h": "c",
+        "strx_app.h": "c",
+        "strx_app_msgids.h": "c",
+        "strx_app_dispatch.h": "c",
+        "strx.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

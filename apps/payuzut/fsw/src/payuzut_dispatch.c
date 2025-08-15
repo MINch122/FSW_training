@@ -54,7 +54,7 @@ bool PAYUZUT_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLen
         BufPtr->Report.MsgID = (uint16_t)CFE_SB_MsgIdToValue(MsgId);
         BufPtr->Report.CommandCode = (uint8_t)FcnCode;
         BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
-        BufPtr->Report.ReturnCode = 0x21212121; // Error code of `Length error`
+        BufPtr->Report.ReturnCode = CFE_STATUS_WRONG_MSG_LENGTH; // Error code of `Length error`
         BufPtr->Report.ReturnDataSize = 2 * sizeof(uint32_t);
         
         uint32_t Temp32 = (uint32_t)ActualLength;
@@ -137,7 +137,7 @@ void PAYUZUT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
         BufPtr->Report.MsgID = PAYUZUT_CMD_MID;
         BufPtr->Report.CommandCode = (uint8_t)CommandCode;
         BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
-        BufPtr->Report.ReturnCode = 0x22222222;
+        BufPtr->Report.ReturnCode = CFE_STATUS_BAD_COMMAND_CODE;
         BufPtr->Report.ReturnDataSize = 0;
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
         if(CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
@@ -181,6 +181,26 @@ void PAYUZUT_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
         CFE_EVS_SendEvent(PAYUZUT_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                             "PAYUZUT: Invalid command packet, MID = 0x%X",
                             (unsigned int)CFE_SB_MsgIdToValue(MsgId));
+
+        /* RPT */
+        PAYUZUT_ReportTlm_t *BufPtr = (PAYUZUT_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(PAYUZUT_ReportTlm_t));
+        if (BufPtr == NULL) break;
+        if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUT_REPORT_TLM_MID), sizeof(PAYUZUT_ReportTlm_t) != CFE_SUCCESS)) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            break;
+        }
+        BufPtr->Report.MsgID = PAYUZUT_CMD_MID;
+        BufPtr->Report.CommandCode = 0;
+        BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
+        BufPtr->Report.ReturnCode = CFE_STATUS_UNKNOWN_MSG_ID;
+        BufPtr->Report.ReturnDataSize = sizeof(CFE_SB_MsgId_Atom_t);
+        memcpy(BufPtr->Report.ReturnValue, &MsgId.Value, sizeof(CFE_SB_MsgId_Atom_t));
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+        if(CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            break;
+        }
+        /* End of RPT */
         break;
     }
 }

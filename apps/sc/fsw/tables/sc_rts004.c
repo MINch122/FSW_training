@@ -78,7 +78,7 @@ SC_RtsTable004_t SC_Rts004 = {
     /**
      *  2  PAYUZUC Thruster Off Cmd
      * */
-    .rts.hdr2.WakeupCount       = 20,
+    .rts.hdr2.WakeupCount       = 40, // Should be 20 sec. Depend on the sch tick
     .rts.cmd2.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUT_CMD_MID, SC_MEMBER_SIZE(cmd2), PAYUZUT_THRUSTER_OFF_CC, 0x17),
     
 };

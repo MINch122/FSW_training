@@ -97,6 +97,12 @@ int32 CFE_SRL_ApiGetRparamCSP(uint8_t Type, uint8_t Node, uint8_t TableId, uint1
 /// @return Only `CFE_SUCCESS`(which is `0`) is success
 int32 CFE_SRL_ApiSetRparamCSP(uint8_t Type, uint8_t Node, uint8_t TableId, uint16_t Addr, void *Param);
 
+/// @brief Send a single ping/echo packet.
+/// @param Node address of subsystem.
+/// @param Timeout timeout in ms to wait for reply.
+/// @param Size payload size in bytes.
+/// @param Options connection options, see @ref CSP_CONNECTION_OPTIONS.
+/// @return >0 = echo time in mS on success, otherwise -1 for error.
 int32 CFE_SRL_ApiPingCSP(uint8 Node, uint32 Timeout, unsigned int Size, uint8 Options);
 
 /// @brief Changes the via address of packet whose destination is GS
@@ -105,6 +111,15 @@ int32 CFE_SRL_ApiPingCSP(uint8 Node, uint32 Timeout, unsigned int Size, uint8 Op
 int32 CFE_SRL_ApiChangeVia(uint8_t Via);
 
 
+/// @brief Print-out the routing table of Host (OBC) 
 void CFE_SRL_ApiPrintRtable(void);
+
+/// @brief Save Rparam command to CSP device
+/// @param Node CSP device node
+/// @param Timeout Timeout of transaction
+/// @param TableId Table ID want to save
+/// @param To Table ID want to save
+/// @return `0` for success. Anything else is error. Refer enum `gs_error_t`
+int32 CFE_SRL_ApiRparamSaveCSP(uint8 Node, uint32 Timeout, uint8 TableId, uint8 To);
 
 #endif /* CFE_SRL_H */

@@ -41,23 +41,13 @@ CFE_Status_t PAYUZUT_SendHkCmd(const PAYUZUT_SendHkCmd_t *Msg) {
 
 CFE_Status_t PAYUZUT_SendBcnCmd(const PAYUZUT_SendBcnCmd_t *Msg) {
 
-    CFE_SRL_IO_Param_t Params = {0,};
-
-    uint8_t TxBuf[23] = {0,};
-
-    /**
-     * !!!!!!!!!!!!!!!!Revise the parameters!!!!!!!!!!!!!!!!!1
-     */
-    Params.TxData = TxBuf;
-    Params.TxSize = sizeof(TxBuf);
-    Params.RxData = &PAYUZUT_Data.BcnTlm.Payload.Temperature;
-    Params.RxSize = sizeof(PAYUZUT_Data.BcnTlm.Payload.Temperature);
-    Params.Addr = 0x23;
-
-    CFE_SRL_ApiRead(PAYUZUT_Data.Handle, &Params);
+    PAYUZUT_GetADCValue(PAYUZUT_ADC_SLAVE_ADDR_1, &PAYUZUT_Data.BcnTlm.Payload.ADC1);
+    PAYUZUT_GetADCValue(PAYUZUT_ADC_SLAVE_ADDR_2, &PAYUZUT_Data.BcnTlm.Payload.ADC2);
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(PAYUZUT_Data.BcnTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(PAYUZUT_Data.BcnTlm.TelemetryHeader), true);
+
+    memset(&PAYUZUT_Data.BcnTlm.Payload, 0, sizeof(PAYUZUT_Data.BcnTlm.Payload));
 
     // CFE_EVS_SendEvent(PAYUZUT_SEND_HK_INF_EID, CFE_EVS_EventType_INFORMATION, "PAYUZUT Send HK Cmd Received.");
 
@@ -120,23 +110,14 @@ CFE_Status_t PAYUZUT_ResetCountersCmd(const PAYUZUT_ResetCountersCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUT_GetTempCmd(const PAYUZUT_GetTempCmd_t *Msg) {
-    int32 Status;
-    CFE_SRL_IO_Param_t Params = {0,};
+    int32 Status1, Status2;
 
-    uint8_t TxBuf[23] = {0,};
-    uint8_t RxBuf[4]  = {0,};
+    uint16_t ADC[2] = {0,};
 
-    /**
-     * !!!!!!!!!!!!!!!!Revise the parameters!!!!!!!!!!!!!!!!!1
-     */
-    Params.TxData = TxBuf;
-    Params.TxSize = sizeof(TxBuf);
-    Params.RxData = RxBuf;
-    Params.RxSize = sizeof(RxBuf);
-    Params.Addr = 0x23;
-
-    Status = CFE_SRL_ApiRead(PAYUZUT_Data.Handle, &Params);
-    if (Status != CFE_SUCCESS) PAYUZUT_Data.ErrCounter ++;
+    Status1 = PAYUZUT_GetADCValue(PAYUZUT_ADC_SLAVE_ADDR_1, &ADC[0]);
+    if (Status1 != CFE_SUCCESS) PAYUZUT_Data.ErrCounter ++;
+    Status2 = PAYUZUT_GetADCValue(PAYUZUT_ADC_SLAVE_ADDR_2, &ADC[1]);
+    if (Status2 != CFE_SUCCESS) PAYUZUT_Data.ErrCounter ++;
 
     PAYUZUT_ReportTlm_t Report = {0,};
     CFE_MSG_Init(CFE_MSG_PTR(Report.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUT_REPORT_TLM_MID),
@@ -144,13 +125,17 @@ CFE_Status_t PAYUZUT_GetTempCmd(const PAYUZUT_GetTempCmd_t *Msg) {
     
     Report.Report.MsgID = PAYUZUT_CMD_MID;
     Report.Report.CommandCode = PAYUZUT_GET_TEMP_CC;
-    Report.Report.ReturnType = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
-    Report.Report.ReturnCode = Status;
-    Report.Report.ReturnDataSize = sizeof(RxBuf);
-    memcpy(Report.Report.ReturnValue, RxBuf, sizeof(RxBuf));
+    Report.Report.ReturnType = (Status1 == CFE_SUCCESS && Status2 == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
+    if (Report.Report.ReturnType == RPT_RETTYPE_SUCCESS) Report.Report.ReturnCode = CFE_SUCCESS;
+    else if (Status1 != CFE_SUCCESS) Report.Report.ReturnCode = Status1;
+    else Report.Report.ReturnCode = Status2;
+    Report.Report.ReturnDataSize = sizeof(ADC);
+    memcpy(Report.Report.ReturnValue, ADC, sizeof(ADC));
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
+
+    OS_printf("ADC1 : %u || ADC2 : %u\n", ADC[0], ADC[1]);
     
     
     return CFE_SUCCESS;
@@ -165,7 +150,7 @@ CFE_Status_t PAYUZUT_GetTempCmd(const PAYUZUT_GetTempCmd_t *Msg) {
 CFE_Status_t PAYUZUT_ThrusterOnCmd(const PAYUZUT_ThrusterOnCmd_t *Msg) {
     int32 Status = 0;
 
-    // Status = CFE_SRL_ApiGpioSet(PAYUZUT_Data.GpioHandle, true);
+    Status = CFE_SRL_ApiGpioSet(PAYUZUT_Data.GpioHandle, true);
     if (Status != CFE_SUCCESS) PAYUZUT_Data.ErrCounter ++;
     
     PAYUZUT_ReportTlm_t Report = {0, };
@@ -195,7 +180,7 @@ CFE_Status_t PAYUZUT_ThrusterOnCmd(const PAYUZUT_ThrusterOnCmd_t *Msg) {
 CFE_Status_t PAYUZUT_ThrusterOffCmd(const PAYUZUT_ThrusterOffCmd_t *Msg) {
     int32 Status = 0;
 
-    // Status = CFE_SRL_ApiGpioSet(PAYUZUT_Data.GpioHandle, false);
+    Status = CFE_SRL_ApiGpioSet(PAYUZUT_Data.GpioHandle, false);
     if (Status != CFE_SUCCESS) PAYUZUT_Data.ErrCounter ++;
 
     PAYUZUT_ReportTlm_t Report = {0, };
@@ -235,46 +220,50 @@ CFE_Status_t PAYUZUT_CumulateTempCmd(const PAYUZUT_CumulateTempCmd_t *Msg) {
 
 
 void PAYUZUT_CumulateTempTask(void) {
-    int32 Status;
-    CFE_SRL_IO_Param_t Params = {0, };
-    uint8_t Iteration = 0;
-    uint8_t Success = 0;
+    int32 Status1 = 0, Status2 = 0;
+    uint8_t Iteration = 0, Success = 0;
 
-    uint8_t TxBuf[23] = {0,};
-    uint8_t RxBuf[4]  = {0,};
-
-    int FD = PAYUZUT_OpenFile();
-
-    /**
-     * !!!!!!!!!!!!!!!!Revise the parameters!!!!!!!!!!!!!!!!!1
-     */
-    Params.TxData = TxBuf;
-    Params.TxSize = sizeof(TxBuf);
-    Params.RxData = RxBuf;
-    Params.RxSize = sizeof(RxBuf);
-    Params.Addr = 0x23;
-    
+    int FD = PAYUZUT_OpenFile(0);
+    int FD2 = PAYUZUT_OpenFile(1);
+    if (FD < 0 || FD2 < 0) {
+        if (FD >= 0) PAYUZUT_CloseFile(FD);
+        if (FD2 >= 0) PAYUZUT_CloseFile(FD2);
+        return;
+    }
 
     do {
         OS_printf("Iteration : %u || Success : %u\n", Iteration, Success);
+        uint16_t Temp1 = 0xFFFF, Temp2 = 0xFFFF;
 
-        Status = CFE_SRL_ApiRead(PAYUZUT_Data.Handle, &Params);
-        if (Status != CFE_SUCCESS) {
-            Iteration ++;
-            // continue;
-        }
-        Status = PAYUZUT_WriteToFile(FD, RxBuf, sizeof(RxBuf));
-        if (Status != CFE_SUCCESS) {
-            Iteration ++;
-            // continue;
-        }
+        Status1 = PAYUZUT_ConfigADC(PAYUZUT_ADC_SLAVE_ADDR_1);
+        Status2 = PAYUZUT_ConfigADC(PAYUZUT_ADC_SLAVE_ADDR_2);
 
-        OS_TaskDelay(PAYUZUT_TEMP_GATHER_TERM);
-        Success ++;
+        if (Status1 == CFE_SUCCESS || Status2 == CFE_SUCCESS)  {
+            OS_TaskDelay(PAYUZUT_ADC_POLL_MSEC);
+            if (Status1 == CFE_SUCCESS) {
+                Status1 = PAYUZUT_ReadADC(PAYUZUT_ADC_SLAVE_ADDR_1, &Temp1);
+            }
+            if (Status2 == CFE_SUCCESS) {
+                Status2 = PAYUZUT_ReadADC(PAYUZUT_ADC_SLAVE_ADDR_2, &Temp2);
+            }
+        }
+        else {
+            Iteration ++;
+            continue;
+        }
+        
+        PAYUZUT_WriteToFile(FD, &Temp1, sizeof(Temp1));
+        PAYUZUT_WriteToFile(FD2, &Temp2, sizeof(Temp2));
+
+        if (Status1 == CFE_SUCCESS || Status2 == CFE_SUCCESS) Success ++;
         Iteration ++;
-    } while (Iteration < PAYUZUT_TEMP_GATHER_TIME && Success < PAYUZUT_TEMP_GATHER_TIME);
+
+        OS_TaskDelay(PAYUZUT_TEMP_GATHER_TERM - PAYUZUT_ADC_POLL_MSEC);
+
+    } while (Iteration < 255 && Success < PAYUZUT_TEMP_GATHER_TIME);
 
     PAYUZUT_CloseFile(FD);
+    PAYUZUT_CloseFile(FD2);
 
     CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "PAYUZUT temperature gathering Done.\n");
 }

@@ -142,7 +142,7 @@ int CFE_SRL_InitCSP(void) {
 int CFE_SRL_TransactionCSP(uint8_t Node, uint8_t Port, void *TxData, int TxSize, void *RxData, int RxSize) {
     // If there is no reply, Put `RxSize = 0`
     int Status;
-    if (NodeConfig[Node] == NULL || TxData == NULL || RxData == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (NodeConfig[Node] == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     Status = csp_transaction_w_opts(NodeConfig[Node]->Priority, Node, Port, NodeConfig[Node]->Timeout, TxData, TxSize, RxData, RxSize, NodeConfig[Node]->Options);
     if (Status == 0) return CFE_SRL_TRANSACTION_ERR;
@@ -255,12 +255,14 @@ int CFE_SRL_PingCSP(uint8 Node, uint32 Timeout, unsigned int Size, uint8 Options
     return csp_ping(Node, Timeout, Size, Options);
 }
 
-
-
 int CFE_SRL_ChangeVia(uint8_t Via) {
     return csp_rtable_set(CSP_NODE_GS_KISS, CSP_ID_HOST_SIZE, InterfaceCAN, Via);
 }
 
 void CFE_SRL_PrintRtable(void) {
     return csp_rtable_print();
+}
+
+int CFE_SRL_RparamSaveCSP(uint8 Node, uint32 Timeout, uint8 TableId, uint8 To) {
+    return gs_rparam_save(Node, Timeout, TableId, To);
 }

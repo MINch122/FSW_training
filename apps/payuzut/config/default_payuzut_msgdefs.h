@@ -19,8 +19,9 @@ typedef struct PAYUZUT_HkTlm_Payload {
 
 typedef struct PAYUZUT_BcnTlm_Payload {
     
-    uint32 Temperature; // Type should be modified
-
+    uint16 ADC1; //1001001b
+    uint16 ADC2; //1001000b
+    
 } PAYUZUT_BcnTlm_Payload_t;
 
 #endif

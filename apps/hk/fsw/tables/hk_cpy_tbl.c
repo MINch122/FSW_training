@@ -44,6 +44,11 @@
 #include "payuzut_msgids.h"
 #include "payuzut_msg.h"
 
+#include "strx_app_msgids.h"
+#include "strx_app_msg.h"
+#include "utrx_app_msgids.h"
+#include "utrx_app_msg.h"
+
 
 /************************************************************************
 ** Define

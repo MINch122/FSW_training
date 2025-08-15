@@ -32,6 +32,9 @@
  *   SC     Start RTS #4 (Thruster)
  * 
  * Total 5 commands
+ * 
+ * --------------------------To Do---------------------------
+ * This RTS should include the 5V power on to UZURO IF boards
  */
 
 #include "cfe.h"
@@ -99,19 +102,19 @@ SC_RtsTable005_t SC_Rts005 = {
     .rts.cmd3.Payload.RtsNum = 4,
 
     /**
-     *  4  SC Start RTS 3 (KissCAM)
+     *  4  SC Start RTS 4 (Thruster)
      * */
-    .rts.hdr4.WakeupCount       = 14,
-    .rts.cmd4.CommandHeader = CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd4), SC_START_RTS_CC, 0x05),
-    .rts.cmd4.Payload.RtsNum = 3,
+    .rts.hdr4.WakeupCount       = 10,
+    .rts.cmd4.CommandHeader = CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd4), SC_START_RTS_CC, 0x02),
+    .rts.cmd4.Payload.RtsNum = 4,
 
 
     /**
-     *  5  SC Start RTS 4 (Thruster)
+     *  5  SC Start RTS 3 (KissCAM)
      * */
-    .rts.hdr5.WakeupCount       = 4,
-    .rts.cmd5.CommandHeader = CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd5), SC_START_RTS_CC, 0x02),
-    .rts.cmd5.Payload.RtsNum = 4
+    .rts.hdr5.WakeupCount       = 0,
+    .rts.cmd5.CommandHeader = CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd5), SC_START_RTS_CC, 0x05),
+    .rts.cmd5.Payload.RtsNum = 3
     
 };
 

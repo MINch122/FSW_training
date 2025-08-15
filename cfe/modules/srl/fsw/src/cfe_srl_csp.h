@@ -69,4 +69,7 @@ int CFE_SRL_AllNodeConfigCSP(void);
 void CFE_SRL_ConfigHost(csp_conf_t *Conf);
 int CFE_SRL_ChangeVia(uint8_t Via);
 void CFE_SRL_PrintRtable(void);
+
+int CFE_SRL_RparamSaveCSP(uint8 Node, uint32 Timeout, uint8 TableId, uint8 To);
+
 #endif /* CFE_SRL_CSP_H */

@@ -54,7 +54,7 @@ bool PAYUZUC_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLen
         BufPtr->Report.MsgID = (uint16_t)CFE_SB_MsgIdToValue(MsgId);
         BufPtr->Report.CommandCode = (uint8_t)FcnCode;
         BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
-        BufPtr->Report.ReturnCode = 0x21212121; // Error code of `Length error`
+        BufPtr->Report.ReturnCode = CFE_STATUS_WRONG_MSG_LENGTH; // Error code of `Length error`
         BufPtr->Report.ReturnDataSize = 2 * sizeof(uint32_t);
         
         uint32_t Temp32 = (uint32_t)ActualLength;
@@ -171,7 +171,7 @@ void PAYUZUC_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
         BufPtr->Report.MsgID = PAYUZUC_CMD_MID;
         BufPtr->Report.CommandCode = (uint8_t)CommandCode;
         BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
-        BufPtr->Report.ReturnCode = 0x22222222;
+        BufPtr->Report.ReturnCode = CFE_STATUS_BAD_COMMAND_CODE;
         BufPtr->Report.ReturnDataSize = 0;
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
         if(CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
@@ -221,7 +221,7 @@ void PAYUZUC_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
         BufPtr->Report.MsgID = PAYUZUC_CMD_MID;
         BufPtr->Report.CommandCode = 0;
         BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
-        BufPtr->Report.ReturnCode = 0x23232323;
+        BufPtr->Report.ReturnCode = CFE_STATUS_UNKNOWN_MSG_ID;
         BufPtr->Report.ReturnDataSize = sizeof(CFE_SB_MsgId_Atom_t);
         memcpy(BufPtr->Report.ReturnValue, &MsgId.Value, sizeof(CFE_SB_MsgId_Atom_t));
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));

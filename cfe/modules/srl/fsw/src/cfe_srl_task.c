@@ -118,8 +118,8 @@ int32 CFE_SRL_TaskInit(void) {
     /**
      * Initialize housekeeping packet
      */
-    CFE_MSG_Init(CFE_MSG_PTR(CFE_SRL_TaskData.HKTlmMsg.TelemetryHeader), CFE_SB_ValueToMsgId(CFE_SRL_HK_TLM_MID),
-                sizeof(CFE_SRL_TaskData.HKTlmMsg));
+    CFE_MSG_Init(CFE_MSG_PTR(CFE_SRL_TaskData.HkTlmMsg.TelemetryHeader), CFE_SB_ValueToMsgId(CFE_SRL_HK_TLM_MID),
+                sizeof(CFE_SRL_TaskData.HkTlmMsg));
 
     Status = CFE_SB_CreatePipe(&CFE_SRL_TaskData.CmdPipe, CFE_SRL_PIPE_DEPTH, CFE_SRL_PIPE_NAME);
     if (Status != CFE_SUCCESS) {
@@ -165,7 +165,7 @@ int32 CFE_SRL_NoopCmd(const CFE_SRL_NoopCmd_t *Cmd) {
     CFE_Config_GetVersionString(VersionString,  CFE_CFG_MAX_VERSION_STR_LEN, "cFE",
                                 CFE_SRC_VERSION, CFE_BUILD_CODENAME, CFE_LAST_OFFICIAL);
     
-    CFE_SRL_TaskData.HKTlmMsg.Payload.CommandCounter++;
+    CFE_SRL_TaskData.HkTlmMsg.Payload.CommandCounter++;
 
     CFE_EVS_SendEvent(CFE_SRL_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
                         "SRL No-op command: %s", VersionString);
@@ -175,8 +175,8 @@ int32 CFE_SRL_NoopCmd(const CFE_SRL_NoopCmd_t *Cmd) {
 
 int32 CFE_SRL_ResetCounterCmd(const CFE_SRL_ResetCounterCmd_t *Cmd) {
 
-    CFE_SRL_TaskData.HKTlmMsg.Payload.CommandCounter = 0;
-    CFE_SRL_TaskData.HKTlmMsg.Payload.CommandErrorCounter = 0;
+    CFE_SRL_TaskData.HkTlmMsg.Payload.CommandCounter = 0;
+    CFE_SRL_TaskData.HkTlmMsg.Payload.CommandErrorCounter = 0;
 
     CFE_EVS_SendEvent(CFE_SRL_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "SRL Reset Counter Cmd Received.");
 
@@ -249,26 +249,19 @@ int32 CFE_SRL_SendHkCmd(const CFE_SRL_SendHkCmd_t *data) {
     for (uint8_t i = 0; i < CFE_SRL_GNRL_DEVICE_NUM; i++) {
         CFE_SRL_IO_Handle_t *TempHandle = CFE_SRL_ApiGetHandle(i);
         if (TempHandle == NULL) { // If handle closed, put 0 to Tlm
-            CFE_SRL_TaskData.HKTlmMsg.Payload.IOHandleStatus[i] = 0;
-            CFE_SRL_TaskData.HKTlmMsg.Payload.IOHandleTxCount[i] = 0;
+            CFE_SRL_TaskData.HkTlmMsg.Payload.IOHandleStatus[i] = 0;
+            CFE_SRL_TaskData.HkTlmMsg.Payload.IOHandleTxCount[i] = 0;
             continue;
         }
 
-        CFE_SRL_TaskData.HKTlmMsg.Payload.IOHandleStatus[i] = 
+        CFE_SRL_TaskData.HkTlmMsg.Payload.IOHandleStatus[i] = 
         ((const CFE_SRL_Global_Handle_t *)TempHandle)->Status;
 
-        CFE_SRL_TaskData.HKTlmMsg.Payload.IOHandleTxCount[i] = TempHandle->TxCount;
+        CFE_SRL_TaskData.HkTlmMsg.Payload.IOHandleTxCount[i] = TempHandle->TxCount;
     }
 
-    /**
-     * Get GPIO Handle Status
-     */
-    // for (uint8_t i=0; i < CFE_SRL_TOT_GPIO_NUM; i++) {
-    //     CFE_SRL_TaskData.HKTlmMsg.Payload.GPIOHandle[i] = *CFE_SRL_ApiGetGpioHandle(i);
-    // }
-
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(CFE_SRL_TaskData.HKTlmMsg.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(CFE_SRL_TaskData.HKTlmMsg.TelemetryHeader), true);
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(CFE_SRL_TaskData.HkTlmMsg.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(CFE_SRL_TaskData.HkTlmMsg.TelemetryHeader), true);
     
     CFE_EVS_SendEvent(114, CFE_EVS_EventType_INFORMATION, "SRL Send HK Cmd Received.");
 

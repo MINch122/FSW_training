@@ -40,4 +40,6 @@
 #define CI_LAB_SB_SUBSCRIBE_UL_ERR_EID  14
 #define CI_LAB_CMD_LEN_ERR_EID          16
 
+#define CI_RF_INIT_ERR_EID              17
+
 #endif

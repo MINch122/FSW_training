@@ -95,7 +95,7 @@ int32 CFE_SRL_ApiClose(CFE_SRL_IO_Handle_t *Handle) {
  *
  *-----------------------------------------------------------------*/
 int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value) {
-    if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || !Handle->IsInit) return CFE_SRL_BAD_ARGUMENT;
     
     return CFE_SRL_BasicGpioSetValue(Handle, Value);
 }
@@ -108,7 +108,7 @@ int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value) {
  *
  *-----------------------------------------------------------------*/
 int32 CFE_SRL_ApiGpioGet(CFE_SRL_GPIO_Handle_t *Handle) {
-    if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL|| !Handle->IsInit) return CFE_SRL_BAD_ARGUMENT;
 
     return CFE_SRL_BasicGpioGetValue(Handle);
 }
@@ -123,7 +123,7 @@ int32 CFE_SRL_ApiGpioGet(CFE_SRL_GPIO_Handle_t *Handle) {
 int32 CFE_SRL_ApiTransactionCSP(uint8_t Node, uint8_t Port, void *TxData, int TxSize, void *RxData, int RxSize) {
     int32 Status;
 
-    if (TxData == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (TxData == NULL && TxSize != 0) return CFE_SRL_BAD_ARGUMENT;
     if (RxData == NULL && RxSize != 0) return CFE_SRL_BAD_ARGUMENT;
 
     Status = CFE_SRL_TransactionCSP(Node, Port, TxData, TxSize, RxData, RxSize);
@@ -156,4 +156,8 @@ int32 CFE_SRL_ApiChangeVia(uint8_t Via) {
 
 void CFE_SRL_ApiPrintRtable(void) {
     return CFE_SRL_PrintRtable();
+}
+
+int32 CFE_SRL_ApiRparamSaveCSP(uint8 Node, uint32 Timeout, uint8 TableId, uint8 To) {
+    return CFE_SRL_RparamSaveCSP(Node, Timeout, TableId, To);
 }

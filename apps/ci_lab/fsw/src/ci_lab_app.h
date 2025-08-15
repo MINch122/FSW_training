@@ -64,6 +64,8 @@ typedef struct
     void * NetBufPtr;
     size_t NetBufSize;
 
+    CFE_ES_TaskId_t ChildTaskId;
+
 } CI_LAB_GlobalData_t;
 
 /****************************************************************************/

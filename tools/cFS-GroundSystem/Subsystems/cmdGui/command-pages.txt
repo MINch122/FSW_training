@@ -43,3 +43,4 @@ Command Ingest LAB,         ci_lab_msg,         0x1884, LE, UdpCommands.py,  127
 Telemetry Output LAB,       to_lab_msg,         0x1823, LE, UdpCommands.py,  127.0.0.1,   1234
 Sample App (CPU1),          sample_app_cmd,     0x1882, LE, UdpCommands.py,  127.0.0.1,   1234
 Stored command,             SC_CMD,             0x1820, LE, UdpCommands.py,  127.0.0.1,   1234
+Limit Checker,              LC_CMD,             0x181D, LE, UdpCommands.py,  127.0.0.1,   1234

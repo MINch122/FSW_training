@@ -73,6 +73,7 @@ struct CFE_SRL_IO_Param_s {
 typedef struct {
     struct gpiod_chip *Chip;
     struct gpiod_line *Line;
+    bool IsInit;
 } CFE_SRL_GPIO_Handle_t;
 
 

@@ -1,7 +1,7 @@
 {
     "host" :
     {
-        "ready": false,
+        "ready": true,
         "address": 3,
         "hostname": "OBC",
         "model": "COSMIC",

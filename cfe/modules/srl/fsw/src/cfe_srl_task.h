@@ -41,7 +41,7 @@ typedef struct {
 
     CFE_SB_PipeId_t CmdPipe;
     
-    CFE_SRL_HousekeepingTlm_t HKTlmMsg;
+    CFE_SRL_HousekeepingTlm_t HkTlmMsg;
 } CFE_SRL_TaskData_t;
 
 

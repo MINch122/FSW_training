@@ -38,7 +38,7 @@ int32 PAYUZUC_ReadFile(int ID, void *Data, size_t Size);
 /// @param Data Data buffer. Might be memory status or image data
 /// @param Size Size of data
 /// @param IsTbl If table data, true. Else (i.e. image data), false
-/// @return Write Bytes. -1 for Error
+/// @return only `CFE_SUCCESS` `0` is success
 int32 PAYUZUC_WriteToFile(int ID, void *Data, size_t Size, bool IsTbl);
 
 
