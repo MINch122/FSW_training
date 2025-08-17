@@ -135,7 +135,7 @@ CFE_Status_t PAYUZUT_GetTempCmd(const PAYUZUT_GetTempCmd_t *Msg) {
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
 
-    OS_printf("ADC1 : %u || ADC2 : %u\n", ADC[0], ADC[1]);
+    OS_printf("Status1 : 0x%08X || Status2 : 0x%08X\nADC1 : %u || ADC2 : %u\n", Status1, Status2, ADC[0], ADC[1]);
     
     
     return CFE_SUCCESS;
