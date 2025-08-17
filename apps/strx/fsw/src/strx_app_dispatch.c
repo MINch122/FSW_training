@@ -304,15 +304,6 @@ void STRX_APP_ProcessRequestedTelemetry(const CFE_SB_Buffer_t *SBBufPtr){
 
     switch (CommandCode)
     {
-        case STRX_GET_STATUS_CONFIGURATION_CC:
-        {
-            if (STRX_APP_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STRX_APP_NoArgsCmd_t)))
-            {
-                STRX_GetStatusConfigurationCmd();
-            }
-            break;
-        }
-
         case STRX_RXCONF_GET_BAUD_CC: //Using for Request Telemetry
         {
 

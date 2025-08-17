@@ -92,7 +92,12 @@
         "variant": "c",
         "charconv": "c",
         "compare": "c",
-        "memory_resource": "c"
+        "memory_resource": "c",
+        "uant_app_perfids.h": "c",
+        "uant_app_cmds.h": "c",
+        "uant_app.h": "c",
+        "uant_app_msg.h": "c",
+        "uant_app_interface_cfg.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

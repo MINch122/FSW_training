@@ -131,16 +131,7 @@ CFE_Status_t STRX_APP_Init(void)
         CFE_ES_WriteToSysLog("Strx App: Error Registering Events, RC = 0x%08lX\n", (unsigned long)status);
     }
     else
-    {
-        /*
-         ** Initialize housekeeping packet (clear user data area).
-         */
-    //    CFE_MSG_Init(CFE_MSG_PTR(STRX_APP_Data.ExecReportMsg.TlmHeader),
-    //          CFE_SB_ValueToMsgId(STRX_APP_HK_TLM_MID),
-    //          sizeof(STRX_APP_Data.ExecReportMsg));
-
-              
-
+    {         
         /*
          ** Create Software Bus message pipe.
          */
@@ -192,7 +183,7 @@ CFE_Status_t STRX_APP_Init(void)
     if (status == CFE_SUCCESS)
     {
 
-        CFE_EVS_SendEvent(STRX_APP_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "Strx App Successfully Initialized");
+        CFE_EVS_SendEvent(STRX_APP_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "STRX app Successfully Initialized.");
     }
 
     return status;

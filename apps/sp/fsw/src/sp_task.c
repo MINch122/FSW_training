@@ -3,7 +3,6 @@
 #include "sp_utils.h"
 #include "sp_eventids.h"
 #include "sp_dispatch.h"
-#include "sp_version.h"
 
 SP_APP_Data_t SP_APP_Data;
 
@@ -42,7 +41,6 @@ void SP_APP_Main(void){
 
 CFE_Status_t SP_APP_Init(void){
     CFE_Status_t status;
-    char VersionString[SP_APP_CFG_MAX_VERSION_STR_LEN];
 
     memset(&SP_APP_Data, 0, sizeof(SP_APP_Data));
 
@@ -80,9 +78,7 @@ CFE_Status_t SP_APP_Init(void){
 
     if (status == CFE_SUCCESS){
 
-        CFE_Config_GetVersionString(VersionString, SP_APP_CFG_MAX_VERSION_STR_LEN, "SP App", SP_APP_VERSION, SP_APP_BUILD_CODENAME, SP_APP_LAST_OFFICIAL);
-
-        CFE_EVS_SendEvent(SP_APP_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "Sp App Initialized.%s", VersionString);
+        CFE_EVS_SendEvent(SP_APP_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "SP App Successfully Initialized.");
     }
 
     return status;

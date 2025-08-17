@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/apps/strx/fsw/inc"
+                "${workspaceFolder}/apps/strx/fsw/inc",
+                "${workspaceFolder}/apps/uant/device/inc/uant"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

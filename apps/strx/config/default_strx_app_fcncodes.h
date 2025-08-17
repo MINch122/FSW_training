@@ -67,7 +67,7 @@
 #define STRX_TLM_GET_LAST_CONTACT_CC      25 //get
 #define STRX_TLM_GET_TOT_TX_BYTES_CC      26 //get
 #define STRX_TLM_GET_TOT_RX_BYTES_CC      27 //get
-#define STRX_GET_STATUS_CONFIGURATION_CC  28 //get
+// #define STRX_GET_STATUS_CONFIGURATION_CC  28 //get
 #define STRX_RXCONF_GET_FREQ_CC           29 //get
 #define STRX_TXCONF_GET_FREQ_CC           30 //get
 #define STRX_TLM_RXMODE_CC                32 //get

@@ -77,7 +77,6 @@ void STRX_TLM_GET_GND_WDT_CNTCmd(void);
 void STRX_TLM_GET_GND_WDT_LEFTCmd(void);
 void STRX_TLM_GET_KISS_USARTCmd(void);
 void STRX_TLM_GET_GOSH_USARTCmd(void);
-void STRX_GetStatusConfigurationCmd(void);
 
 void CmdErrCounter(uint8 *CmdCounter,
                    uint8 *ErrCounter,

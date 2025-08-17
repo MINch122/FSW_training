@@ -402,11 +402,11 @@ CFE_Status_t RPT_OpsDataInit(void) {
              * Set Spacecraft time
              */
             if (RPT_Data.OpsData.TimeSec != 0 || RPT_Data.OpsData.TimeSubsec != 0) {
-                RPT_SetTimeCmt_t Cmd;
-                CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(CFE_TIME_CMD_MID), sizeof(RPT_SetTimeCmt_t));
+                RPT_SetTimeCmd_t Cmd;
+                CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(CFE_TIME_CMD_MID), sizeof(RPT_SetTimeCmd_t));
                 CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), 7);
                 Cmd.Payload.Seconds = RPT_Data.OpsData.TimeSec;
-                Cmd.Payload.Subseconds = RPT_Data.OpsData.TimeSubsec;
+                Cmd.Payload.MicroSeconds = CFE_TIME_Sub2MicroSecs(RPT_Data.OpsData.TimeSubsec);
                 CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
             }
             
@@ -426,6 +426,7 @@ CFE_Status_t RPT_OpsDataInit(void) {
          * Store ResetCause
          */
         RPT_Data.ResetType = CFE_ES_GetResetType(&RPT_Data.ResetSubType);
+        OS_printf("Reset Type: %d || Reset SubType: %u\n", RPT_Data.ResetType, RPT_Data.ResetSubType);
         RPT_Data.OpsData.ResetCause = RPT_CalculateResetCause((uint8)RPT_Data.ResetType, (uint8)RPT_Data.ResetSubType);
         OS_printf("Reset Cause : 0x%02X\n", RPT_Data.OpsData.ResetCause);
         

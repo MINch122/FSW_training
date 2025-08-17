@@ -27,9 +27,6 @@
  */
 #ifndef STRX_APP_MSGSTRUCT_H
 #define STRX_APP_MSGSTRUCT_H
-#define MAX_TM_DATASIZE 170
-#define MAX_RAW_DATASIZE 200
-#define MAX_TX_DATASIZE 170
 
 /************************************************************************
  * Includes

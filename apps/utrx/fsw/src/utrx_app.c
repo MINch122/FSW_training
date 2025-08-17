@@ -133,15 +133,6 @@ CFE_Status_t UTRX_APP_Init(void)
     else
     {
         /*
-         ** Initialize housekeeping packet (clear user data area).
-         */
-    //    CFE_MSG_Init(CFE_MSG_PTR(UTRX_APP_Data.ExecReportMsg.TlmHeader),
-    //          CFE_SB_ValueToMsgId(UTRX_APP_HK_TLM_MID),
-    //          sizeof(UTRX_APP_Data.ExecReportMsg));
-
-              
-
-        /*
          ** Create Software Bus message pipe.
          */
         status = CFE_SB_CreatePipe(&UTRX_APP_Data.CommandPipe, UTRX_APP_Data.PipeDepth, UTRX_APP_Data.PipeName);
@@ -192,7 +183,7 @@ CFE_Status_t UTRX_APP_Init(void)
     if (status == CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(UTRX_APP_INIT_INF_EID, CFE_EVS_EventType_INFORMATION,
-                            "Utrx App Successfully Initialized.");
+                            "UTRX App Successfully Initialized.");
     }
 
     return status;

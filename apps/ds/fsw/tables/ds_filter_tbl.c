@@ -207,7 +207,7 @@ DS_FilterTable_t DS_FilterTable = {
      * PAYUZUC IMG Data - Including Tlm Header
      ******************************************/
      /* Packet Index 014 */
-     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_IMG_MID),
+     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
        {FILE_PAYUZUC_IMG_PKTS, DS_BY_COUNT, 1, 1, 0},
@@ -218,7 +218,7 @@ DS_FilterTable_t DS_FilterTable = {
      * PAYUZUC Preview IMG Data - Including Tlm Header
      ******************************************/
      /* Packet Index 015 */
-     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_THUMBNAIL_IMG_MID),
+     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
        {FILE_PAYUZUC_THUMBNAIL_PKTS, DS_BY_COUNT, 1, 1, 0},

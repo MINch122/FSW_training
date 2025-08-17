@@ -338,7 +338,7 @@ uint32 RPT_CalculateCRC(const void *Data, size_t Size) {
 uint8 RPT_CalculateResetCause(uint8 ResetType, uint8 ResetSubType) {
     uint8 TempVal = 0;
 
-    TempVal = ((ResetType & 3u) << 4) || (ResetSubType & 15u);
+    TempVal = ((ResetType & 3u) << 4) | (ResetSubType & 15u);
 
     return TempVal;
 }

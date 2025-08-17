@@ -2,7 +2,6 @@
 #include "sp_cmds.h"
 #include "sp_msgids.h"
 #include "sp_eventids.h"
-#include "sp_version.h"
 #include "sp_utils.h"
 #include "sp_msg.h"
 
@@ -29,7 +28,7 @@ CFE_Status_t SP_APP_SendBcnCmd(const SP_APP_SendBcnCmd_t *Msg) {
 CFE_Status_t SP_APP_NoopCmd(const SP_APP_NoopCmd_t *Msg){
     SP_APP_Data.CmdCounter++;
 
-    CFE_EVS_SendEvent(SP_APP_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "SP: NOOP command %s", SP_APP_VERSION);
+    CFE_EVS_SendEvent(SP_APP_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "SP: NOOP command received.");
 
     return CFE_SUCCESS;
 }
