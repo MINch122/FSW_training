@@ -32,7 +32,7 @@
 #include "cfe_tbl_filedef.h"
 
 HS_AMTEntry_t HS_AppMon_Tbl[HS_MAX_MONITORED_APPS] = {
-    /*          AppName                    NullTerm CycleCount     ActionType */
+    /*          AppName     NullTerm        CycleCount     ActionType */
 
     /*   0 */ {"CFE_ES", 0, 10, HS_AMT_ACT_NOACT},
     /*   1 */ {"CFE_EVS", 0, 10, HS_AMT_ACT_NOACT},

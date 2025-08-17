@@ -391,12 +391,28 @@ CFE_Status_t RPT_OpsDataInit(void) {
         /**
          * CRC Check
          */
-        uint32 CRC = RPT_CalculateCRC(&RPT_Data.OpsData, (sizeof(RPT_OperationData_t) - sizeof(uint32_t)));
-        if (RPT_Data.OpsData.CRC == CRC) {
-            OS_printf("Ops CRC well matched.\n");
-            Status = CFE_SUCCESS;
+        uint32 CRC = RPT_CalculateCRC(&RPT_Data.OpsData, (sizeof(RPT_OperationData_t) - sizeof(CFE_MSG_Checksum_t)));
+        if (RPT_Data.OpsData.CRC != CRC) {
+            /* If CRC is not matched, clear all data */
+            memset(&RPT_Data.OpsData, 0, sizeof(RPT_OperationData_t));
         }
-        else Status = -1; // Revise
+        else {
+            /**
+             * If CRC well matched, and if contained the time data, 
+             * Set Spacecraft time
+             */
+            if (RPT_Data.OpsData.TimeSec != 0 || RPT_Data.OpsData.TimeSubsec != 0) {
+                RPT_SetTimeCmt_t Cmd;
+                CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(CFE_TIME_CMD_MID), sizeof(RPT_SetTimeCmt_t));
+                CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), 7);
+                Cmd.Payload.Seconds = RPT_Data.OpsData.TimeSec;
+                Cmd.Payload.Subseconds = RPT_Data.OpsData.TimeSubsec;
+                CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
+            }
+            
+            // Debugging
+            OS_printf("Ops CRC well matched.\n");
+        }
     }
 
     if (Status == CFE_SUCCESS) {
@@ -405,6 +421,13 @@ CFE_Status_t RPT_OpsDataInit(void) {
          */
         RPT_Data.OpsData.BootCount ++;
         OS_printf("Boot Count: %u\n", RPT_Data.OpsData.BootCount);
+
+        /**
+         * Store ResetCause
+         */
+        RPT_Data.ResetType = CFE_ES_GetResetType(&RPT_Data.ResetSubType);
+        RPT_Data.OpsData.ResetCause = RPT_CalculateResetCause((uint8)RPT_Data.ResetType, (uint8)RPT_Data.ResetSubType);
+        OS_printf("Reset Cause : 0x%02X\n", RPT_Data.OpsData.ResetCause);
         
         RPT_Data.OpsData.CRC = RPT_CalculateCRC(&RPT_Data.OpsData, (sizeof(RPT_OperationData_t) - sizeof(uint32_t)));
         Status = RPT_WriteToFile(RPT_Data.OpsDataHandle, &RPT_Data.OpsData, sizeof(RPT_OperationData_t));

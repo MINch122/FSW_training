@@ -15,7 +15,7 @@ typedef struct{
     uint8 CmdCounter;
     uint8 ErrCounter;
 
-    SP_APP_DEPTlm_t DEPTlm;
+    SP_APP_BcnTlm_t BcnTlm;
     
     //SP_APP_DeployCmd_t DeployCmd;
 

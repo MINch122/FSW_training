@@ -46,4 +46,15 @@ typedef struct {
 } RPT_GetOpsDataCmd_t;
 
 
+/**
+ * Command Struct sended to cFE TIME
+ * cFE TIME Set Time cmd
+ * Only used for Init
+ */
+typedef struct {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    CFE_TIME_SysTime_t Payload;
+} RPT_SetTimeCmt_t;
+
+
 #endif

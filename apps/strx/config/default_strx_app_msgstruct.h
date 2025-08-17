@@ -131,22 +131,19 @@ typedef struct
 } STRX_APP_ResetDeviceCmdCountersCmd_t;
 
 /**************Telemetry******************** */
+typedef struct {
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    STRX_HkTlm_Payload_t Payload;
+} STRX_HkTlm_t;
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    union {
-        STRX_HkTlm_Payload_t hk;
-        STRX_BcnTlm_Payload_t bcn;
-    } Payload;
-} STRX_Tlm_t;
+    STRX_BcnTlm_Payload_t Payload;
+} STRX_BcnTlm_t;
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     RPT_Report_t Report;
 } STRX_ReportTlm_t;
-
-/* Size of each Tlm */
-#define STRX_TLM_HK_SIZE  (offsetof(STRX_Tlm_t, Payload) + sizeof(STRX_HkTlm_Payload_t))
-#define STRX_TLM_BCN_SIZE (offsetof(STRX_Tlm_t, Payload) + sizeof(STRX_BcnTlm_Payload_t))
 
 #endif /* STRX_APP_MSGSTRUCT_H */

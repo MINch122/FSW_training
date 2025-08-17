@@ -51,10 +51,8 @@ typedef struct
     /*
     ** Housekeeping telemetry packet...
     */
-    // STRX_APP_HkTlm_t HkTlm;
 
     STRX_AppCount_t AppCnt;
-    STRX_Tlm_t Telemetry;
 
     STRX_ReportTlm_t RptPkt;
     /*

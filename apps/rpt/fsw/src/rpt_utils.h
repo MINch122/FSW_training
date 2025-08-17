@@ -54,4 +54,10 @@ int RPT_OpenCriticalFile(void);
 
 uint32 RPT_CalculateCRC(const void *Data, size_t Size);
 
+/// @brief Calculate Reset value via bit operation
+/// @param ResetType Reset Type earned by `CFE_ES_GetResetType`
+/// @param ResetSubType Reset SubType earned by `CFE_ES_GetResetType`
+/// @return Calculated U8 value
+uint8 RPT_CalculateResetCause(uint8 ResetType, uint8 ResetSubType);
+
 #endif

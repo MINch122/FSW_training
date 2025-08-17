@@ -35,7 +35,7 @@ CFE_TBL_FileDef_t CFE_TBL_FileDef = {"HS_EventMon_Tbl", HS_APP_NAME ".EventMon_T
                                      (sizeof(HS_EMTEntry_t) * HS_MAX_MONITORED_EVENTS)};
 
 HS_EMTEntry_t HS_EventMon_Tbl[HS_MAX_MONITORED_EVENTS] = {
-    /*          AppName                    NullTerm EventID        ActionType */
+    /*          AppName     NullTerm     EventID     ActionType */
 
     /*   0 */ {"CFE_ES", 0, 10, HS_EMT_ACT_NOACT},
     /*   1 */ {"CFE_EVS", 0, 10, HS_EMT_ACT_NOACT},

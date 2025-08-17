@@ -57,12 +57,10 @@ typedef struct
     uint8 AppErrCounter;
     uint8 DeviceErrCounter;
 
-    /*
-    ** Housekeeping telemetry packet...
+    /**
+    * Housekeeping telemetry packet...
+    * Not defined. (use zero copy API)
     */
-    // UTRX_APP_HkTlm_t HkTlm;
-
-    UTRX_Tlm_t Telemetry;
     UTRX_ReportTlm_t RptPkt;
 
     /*

@@ -3,7 +3,6 @@
 #include "sp_utils.h"
 #include "sp_eventids.h"
 #include "sp_dispatch.h"
-#include "sp_tbl.h"
 #include "sp_version.h"
 
 SP_APP_Data_t SP_APP_Data;
@@ -54,7 +53,7 @@ CFE_Status_t SP_APP_Init(void){
         CFE_ES_WriteToSysLog("SP APP: Error Registering Events, RC = 0x%08lx\n", (unsigned long)status);
     }
     else{
-        CFE_MSG_Init(CFE_MSG_PTR(SP_APP_Data.DEPTlm.TelemetryHeader), CFE_SB_ValueToMsgId(SP_APP_BCN_TLM_MID), sizeof(SP_APP_Data.DEPTlm));
+        CFE_MSG_Init(CFE_MSG_PTR(SP_APP_Data.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(SP_APP_BCN_TLM_MID), sizeof(SP_APP_Data.BcnTlm));
 
         status = CFE_SB_CreatePipe(&SP_APP_Data.CommandPipe, SP_APP_PIPE_DEPTH, SP_APP_PIPE_NAME);
         
@@ -80,14 +79,6 @@ CFE_Status_t SP_APP_Init(void){
     }
 
     if (status == CFE_SUCCESS){
-        status = CFE_TBL_Register(&SP_APP_Data.TblHandles[0], "ExampleTable", sizeof(SP_APP_ExampleTable_t), CFE_TBL_OPT_DEFAULT, SP_APP_TBLValidationFunc);
-
-        if (status != CFE_SUCCESS) {
-            CFE_EVS_SendEvent(SP_APP_TABLE_REG_ERR_EID, CFE_EVS_EventType_ERROR, "SP App: Error Registering Example Table, RC = 0x%08lx\n", (unsigned long)status);
-        }
-        else {
-            status = CFE_TBL_Load(SP_APP_Data.TblHandles[0], CFE_TBL_SRC_FILE, SP_APP_TABLE_FILE);
-        }
 
         CFE_Config_GetVersionString(VersionString, SP_APP_CFG_MAX_VERSION_STR_LEN, "SP App", SP_APP_VERSION, SP_APP_BUILD_CODENAME, SP_APP_LAST_OFFICIAL);
 

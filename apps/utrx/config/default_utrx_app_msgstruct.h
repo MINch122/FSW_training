@@ -163,27 +163,18 @@ typedef UTRX_NoArgsCmd_t UTRX_AX100_GetTotRxBytesCmd_t;
 /**************Telemetry******************** */
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    union {
-        UTRX_HkTlm_Payload_t  hk;
-        UTRX_BcnTlm_Payload_t bcn;
-    } Payload;
-} UTRX_Tlm_t;
+    UTRX_HkTlm_Payload_t Payload;
+} UTRX_HkTlm_t;
+
+typedef struct {
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    UTRX_BcnTlm_Payload_t Payload;
+} UTRX_BcnTlm_t;
 
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     RPT_Report_t Report;
 } UTRX_ReportTlm_t;
-
-/* Size of each Tlm */
-#define UTRX_TLM_HK_SIZE  (offsetof(UTRX_Tlm_t, Payload) + sizeof(UTRX_HkTlm_Payload_t))
-#define UTRX_TLM_BCN_SIZE (offsetof(UTRX_Tlm_t, Payload) + sizeof(UTRX_BcnTlm_Payload_t))
-
-
-
-
-
-
-
 
 #endif /* UTRX_APP_MSGSTRUCT_H */

@@ -4,9 +4,9 @@
 
 #include "cfe.h"
 
-#include "../inc/strx.h"
-#include "../inc/strx_conf.h"
-#include "../../fsw/inc/strx_app_eventids.h"
+#include "strx.h"
+#include "strx_conf.h"
+#include "strx_app_eventids.h"
 
 
 
@@ -68,8 +68,6 @@ int32_t STRX_RXCONF_GetFreq(uint32_t *FreqRxconf)
 		return status;
     }
 
-    
-
     return status;
 }
 
@@ -83,8 +81,6 @@ int32_t STRX_RXCONF_GetBaud(uint32_t *BaudRxconf)
         CFE_EVS_SendEvent(STRX_RXCONF_GET_BAUD_ERR_EID, CFE_EVS_EventType_ERROR, "STRX: rparam Error (Error code : %d, Table ID : %d, Address : 0x%02X)", status, table_id, addr);
 		return status;
     }
-
-    
 
     return status;
 }
@@ -101,7 +97,6 @@ int32_t STRX_RXCONF_SetBaud(uint32_t BaudRxconf)
 		return status;
     }
 
-
     return status;
 }
 
@@ -116,7 +111,6 @@ int32_t STRX_TXCONF_SetFreq(uint32_t FreqTxconf)
         CFE_EVS_SendEvent(STRX_TXCONF_SET_BAUD_ERR_EID, CFE_EVS_EventType_ERROR, "STRX: rparam Error (Error code : %d, Table ID : %d, Address : 0x%02X)", status, table_id, addr);
 		return status;
     }
-
 
     return status;
 }

@@ -18,7 +18,9 @@ typedef struct PAYUZUT_HkTlm_Payload {
 } PAYUZUT_HkTlm_Payload_t;
 
 typedef struct PAYUZUT_BcnTlm_Payload {
-    
+    /**
+     * Converted ADC value
+     */
     uint16 ADC1; //1001001b
     uint16 ADC2; //1001000b
     

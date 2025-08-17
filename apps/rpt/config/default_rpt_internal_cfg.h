@@ -35,6 +35,7 @@ typedef struct {
 } RPT_CriticalQueue_t;
 
 typedef struct {
+    uint8 ResetCause;
     uint16 BootCount;
     uint32 TimeSec;
     uint32 TimeSubsec;

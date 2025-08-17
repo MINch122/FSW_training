@@ -74,6 +74,12 @@ typedef struct {
     osal_id_t ReportMutexID;
     osal_id_t CritMutexID;
     osal_id_t OpsMutexID;
+
+    /**
+     * Boot Cause
+     */
+    int32_t ResetType;
+    uint32_t ResetSubType;
     
 
 } RPT_Data_t;

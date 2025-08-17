@@ -37,8 +37,8 @@ typedef struct
 typedef struct 
 {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    SP_APP_DEPTlm_Payload_t Payload;
-} SP_APP_DEPTlm_t;
+    SP_APP_BcnTlm_Payload_t Payload;
+} SP_APP_BcnTlm_t;
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;

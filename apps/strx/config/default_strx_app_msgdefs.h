@@ -65,29 +65,20 @@ typedef struct
 
 typedef struct {
     uint32_t BaudRxconf;
-    uint16_t GuardRxconf;
     uint32_t BaudTxconf;
+    uint16_t GuardRxconf;
 } STRX_ConfBitTable_t;
 
 typedef struct
 {
-    uint32_t rx_freq;
-    uint32_t rx_baud;
     int16_t LastRssi;
     uint16_t BootCount;
     uint32_t BootCause;
     uint8_t rxmode;
     uint16_t gnd_wdt_cnt;
     uint32_t gnd_wdt_left;
-    uint32_t tx_freq;
-    uint32_t tx_baud;
-} STRX_BcnTlm_Payload_t;
-
-typedef struct {
-    CFE_SB_MsgId_t MsgId;
-    uint16_t CommandCode;
-    uint16_t DataSize;
-} STRX_CmdExecutionReportMsg_t;
+    
+}__attribute__((packed)) STRX_BcnTlm_Payload_t;
 
 
 typedef struct STRX_AppCount

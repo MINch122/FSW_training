@@ -22,8 +22,8 @@
  * Define Sample App Events IDs
  */
 
-#ifndef UTRX_APP_EVENTS_H
-#define UTRX_APP_EVENTS_H
+#ifndef UTRX_APP_EVENTIDS_H
+#define UTRX_APP_EVENTIDS_H
 
 
 typedef enum{

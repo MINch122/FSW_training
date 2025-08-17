@@ -36,8 +36,6 @@
 /*         the software bus                                                   */
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 CFE_Status_t PAYUZUC_SendHkCmd(const PAYUZUC_SendHkCmd_t *Msg) {
-    PAYUZUC_Data.HkTlm.Payload.CommandCounter = PAYUZUC_Data.CmdCounter;
-    PAYUZUC_Data.HkTlm.Payload.CommandErrorCounter = PAYUZUC_Data.ErrCounter;
 
     for (uint8_t i = 0; i < PAYUZUC_MEMORY_SLOT; i++) {
         PAYUZUC_Data.HkTlm.Payload.MemoryState[i] = PAYUZUC_Data.MemSlotStatus.Entry[i].MemoryState;

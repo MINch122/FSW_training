@@ -44,20 +44,17 @@ typedef struct
     uint32 LastContact;
     uint32 TotTxBytes;
     uint32 TotRxBytes;
+
 } UTRX_HkTlm_Payload_t;
 
 
 
 typedef struct
 {   
-    uint32 rx_baudrate; //0x0004
-    int16 LastRssi; // 0x0004
     uint8 ActiveConf; //0x0018
     uint16 BootCount; //0x0020
     uint32 BootCause; //0x0024
-    uint32 TotRxBytes; //0x003C
-    uint32 tx_baudrate; //0x0004
     
-} UTRX_BcnTlm_Payload_t;
+}__attribute__((packed)) UTRX_BcnTlm_Payload_t;
 
 #endif

@@ -142,22 +142,26 @@ void CmdErrCounter(uint8 *CmdCounter,
 
 void UTRX_ReportHousekeeping(void)
 {
-    /* 0) 전체 텔레메트리 버퍼 클리어 */
-    memset(&UTRX_APP_Data.Telemetry, 0, sizeof(UTRX_APP_Data.Telemetry));
+    int32 Status;
+    
+    UTRX_HkTlm_t *BufPtr = (UTRX_HkTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(UTRX_HkTlm_t));
+    if (BufPtr == NULL) return;
 
-    /* 1) HK 텔레메트리 헤더/길이 설정 (union payload + HK 크기) */
-    CFE_MSG_Init(CFE_MSG_PTR(UTRX_APP_Data.Telemetry.TelemetryHeader),
-                CFE_SB_ValueToMsgId(UTRX_APP_HK_TLM_MID), UTRX_TLM_HK_SIZE);
+    Status = CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
+                        CFE_SB_ValueToMsgId(UTRX_APP_HK_TLM_MID), sizeof(UTRX_HkTlm_t));
+    if (Status != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
 
-    /* 2) 라디오 생존 확인 (ping 실패 시 전송하지 않음) */
-    // int32 ping_rc = csp_checkstate_ping(CSP_NODE_UTRX);
-    // if (ping_rc < 0) {
-    //     OS_printf("[UTRX][HK] radio ping failed, skip HK (rc=%d)\n", (int)ping_rc);
-    //     return;
-    // }
+    /* Check the alive signal via PING */
+    int32 ping_rc = csp_checkstate_ping(CSP_NODE_UTRX);
+    if (ping_rc < 0) {
+        OS_printf("[UTRX][HK] radio ping failed, skip HK (rc=%d)\n", (int)ping_rc);
+        return;
+    }
 
-    /* 3) 항목 수집 */
-    UTRX_HkTlm_Payload_t *hk = &UTRX_APP_Data.Telemetry.Payload.hk;
+    UTRX_HkTlm_Payload_t *hk = &BufPtr->Payload;
 
     uint32 errmask = 0;
     if (UTRX_TLM_GetTempBrd(&hk->TempBrd)       != DEVICE_SUCCESS) errmask |= (1u << 0);
@@ -174,11 +178,14 @@ void UTRX_ReportHousekeeping(void)
         OS_printf("[UTRX][HK] collected with errors mask=0x%08X\n", (unsigned)errmask);
     }
 
-    /* 4) 타임스탬프 & 전송 (헤더 포인터로) */
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(UTRX_APP_Data.Telemetry.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(UTRX_APP_Data.Telemetry.TelemetryHeader), true);
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+    Status = CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true);
+    if (Status != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
 
-    /* 5) 요약 로그 (선택) */
+    /* Debugging */
     OS_printf("[UTRX][HK] temp=%d, rssi=%d, rferr=%d, act=%u, boot_cnt=%u, cause=0x%08X, "
               "last=%u, tx=%u, rx=%u\n",
               (int)hk->TempBrd, (int)hk->LastRssi, (int)hk->LastRferr,
@@ -190,44 +197,54 @@ void UTRX_ReportHousekeeping(void)
 
 void UTRX_ReportBeacon(void)
 {
-    /* 0) 전체 텔레메트리 구조를 클리어(쓰레기 바이트 전송 방지) */
-    memset(&UTRX_APP_Data.Telemetry, 0, sizeof(UTRX_APP_Data.Telemetry));
+    int32 Status;
+    UTRX_BcnTlm_t *BufPtr = (UTRX_BcnTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(UTRX_BcnTlm_t));
+    if (BufPtr == NULL) return;
 
-    /* 1) 헤더 초기화: 비콘 MID, 패킷 길이는 현재 UTRX_Tlm_t 전체 */
-      CFE_MSG_Init(CFE_MSG_PTR(UTRX_APP_Data.Telemetry.TelemetryHeader),
-                    CFE_SB_ValueToMsgId(UTRX_APP_BCN_TLM_MID), UTRX_TLM_BCN_SIZE);
+    Status = CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
+                        CFE_SB_ValueToMsgId(UTRX_APP_BCN_TLM_MID), sizeof(UTRX_BcnTlm_t));
+    if (Status != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
 
-    /* 2) ping 상태 확인*/
+    /* Check the alive signal via PING */
     int32 ping_rc = csp_checkstate_ping(CSP_NODE_UTRX);
      if (ping_rc < 0) {
         OS_printf("[UTRX][BCN] radio ping failed, skip beacon (rc=%d)\n", (int)ping_rc);
         return;
     }
 
-    UTRX_BcnTlm_Payload_t *bcn = &UTRX_APP_Data.Telemetry.Payload.bcn;
+    UTRX_BcnTlm_Payload_t *bcn = &BufPtr->Payload;
 
-    /* 3) 디바이스에서 비콘 필드 수집 */
-    uint32 errmask = 0;
-    if (UTRX_RXCONF_GetBaud(&bcn->rx_baudrate)   != DEVICE_SUCCESS) errmask |= (1u << 0);
-    if (UTRX_TLM_GetLastRssi(&bcn->LastRssi)     != DEVICE_SUCCESS) errmask |= (1u << 1);
-    if (UTRX_TLM_GetActiveConf(&bcn->ActiveConf) != DEVICE_SUCCESS) errmask |= (1u << 2);
-    if (UTRX_TLM_GetBootCount(&bcn->BootCount)   != DEVICE_SUCCESS) errmask |= (1u << 3);
-    if (UTRX_TLM_GetBootCause(&bcn->BootCause)   != DEVICE_SUCCESS) errmask |= (1u << 4);
-    if (UTRX_TLM_GetTotRxBytes(&bcn->TotRxBytes) != DEVICE_SUCCESS) errmask |= (1u << 5);
-    if (UTRX_TXCONF_GetBaud(&bcn->tx_baudrate)   != DEVICE_SUCCESS) errmask |= (1u << 6);
+    uint8 errmask = 0;
+    if (CFE_PUT_VALUE_TO_STRUCT(uint8, &bcn->ActiveConf, UTRX_TLM_GetActiveConf, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
+        errmask |= (1u << 0);
+    }
+    if (CFE_PUT_VALUE_TO_STRUCT(uint16, &bcn->BootCount, UTRX_TLM_GetBootCount, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
+        errmask |= (1u << 1);
+    }
+    if (CFE_PUT_VALUE_TO_STRUCT(uint32, &bcn->BootCause, UTRX_TLM_GetBootCause, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
+        errmask |= (1u << 2);
+    }
+    // if (UTRX_TLM_GetActiveConf(&bcn->ActiveConf) != DEVICE_SUCCESS) errmask |= (1u << 0);
+    // if (UTRX_TLM_GetBootCount(&bcn->BootCount)   != DEVICE_SUCCESS) errmask |= (1u << 1);
+    // if (UTRX_TLM_GetBootCause(&bcn->BootCause)   != DEVICE_SUCCESS) errmask |= (1u << 2);
 
   if (errmask != 0u) {
-    OS_printf("[UTRX][BCN] collected with errors mask=0x%08X\n",
+    OS_printf("[UTRX][BCN] collected with errors mask=0x%02X\n",
               (unsigned)errmask);
     }
 
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(UTRX_APP_Data.Telemetry.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(UTRX_APP_Data.Telemetry.TelemetryHeader), true);
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+    Status = CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true);
+    if (Status != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
 
-    OS_printf("[UTRX][BCN] tx_baud=%u, rx_baud=%u, rssi=%d, act=%u, boot_cnt=%u, cause=0x%08X, rx_bytes=%u\n",
-              (unsigned)bcn->tx_baudrate, (unsigned)bcn->rx_baudrate,
-              (int)bcn->LastRssi, (unsigned)bcn->ActiveConf,
-              (unsigned)bcn->BootCount, (unsigned)bcn->BootCause,
-              (unsigned)bcn->TotRxBytes);
+    OS_printf("[UTRX][BCN] act=%u, boot_cnt=%u, cause=0x%08X\n",
+            bcn->ActiveConf, bcn->BootCount, 
+            bcn->BootCause);
 
 }

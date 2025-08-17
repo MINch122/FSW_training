@@ -17,7 +17,7 @@ target_include_directories(sp PUBLIC fsw/inc)
 #add_cfe_app_dependency(sp sp_lib)
 
 # Add table
-add_cfe_tables(sp fsw/tables/sp_tbl.c)
+# add_cfe_tables(sp fsw/tables/sp_tbl.c)
 
 # If UT is enabled, then add the tests from the subdirectory
 # Note that this is an app, and therefore does not provide

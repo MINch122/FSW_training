@@ -55,4 +55,6 @@
 
 #include "cfe_psp.h" /* Define Platform Support Package API */
 
+#include "cfe_usr_macro.h"
+
 #endif /* CFE_H */

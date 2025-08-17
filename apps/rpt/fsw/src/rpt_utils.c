@@ -312,6 +312,33 @@ int RPT_OpenCriticalFile(void) {
 }
 
 
+/**********************************
+ * 
+ * Other Util function
+ * 
+ **********************************/
 uint32 RPT_CalculateCRC(const void *Data, size_t Size) {
     return CFE_ES_CalculateCRC(Data, Size, 0, CFE_MISSION_ES_DEFAULT_CRC);
+}
+
+/****************************************************************
+ * Calculate Reset Cause
+ * Two value combined in bit operation manner.
+ * Look up Lower diagram
+ * 
+ *   7  6  5  4  3  2  1  0
+ *  +----------------------+
+ *  |  R  |Type|  SubType  |
+ *  +----------------------+
+ * R - are reserved bits. Always `00`
+ * Type - Must be `01` or `10`
+ * SubType - Must be `0001` ~ `1001`
+ * For more specification, refer `cfe_psp_watchdog_api.h`
+ ****************************************************************/
+uint8 RPT_CalculateResetCause(uint8 ResetType, uint8 ResetSubType) {
+    uint8 TempVal = 0;
+
+    TempVal = ((ResetType & 3u) << 4) || (ResetSubType & 15u);
+
+    return TempVal;
 }

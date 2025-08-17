@@ -28,7 +28,7 @@
 #include "strx.h"
 #include "strx_app_cmds.h"
 #include "strx_app_msgids.h"
-#include "../inc/strx_app_eventids.h"
+#include "strx_app_eventids.h"
 #include "strx_app_msg.h"
 
 #include <inttypes.h>
@@ -41,9 +41,6 @@
 /* RPT */
 static inline void STRX_RptBegin(void)
 {
-    /* 전체 패킷 0 초기화 후 헤더 초기화 */
-    memset(&STRX_APP_Data.RptPkt, 0, sizeof(STRX_APP_Data.RptPkt));
-
     CFE_MSG_Init(CFE_MSG_PTR(STRX_APP_Data.RptPkt.TelemetryHeader),
                  CFE_SB_ValueToMsgId(STRX_APP_RPT_TLM_MID),  /* <- 앱에서 정의한 TLM MID 사용 */
                  sizeof(STRX_APP_Data.RptPkt));             /* 통째로 전송 */
@@ -114,14 +111,19 @@ void CmdErrCounter(uint8 *CmdCounter,
 
 void STRX_ReportHousekeeping(void)
 {
-    CFE_EVS_SendEvent(5003, CFE_EVS_EventType_ERROR,
-                          "STRX: ReportHousekeeping command sent successfully");
+    int32 Status;
 
-    memset(&STRX_APP_Data.Telemetry.Payload.hk, 0, sizeof(STRX_HkTlm_Payload_t));
-    CFE_MSG_Init(CFE_MSG_PTR(STRX_APP_Data.Telemetry.TelemetryHeader),
-                CFE_SB_ValueToMsgId(STRX_APP_HK_TLM_MID), STRX_TLM_HK_SIZE);
+    STRX_HkTlm_t *BufPtr = (STRX_HkTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(STRX_HkTlm_t));
+    if (BufPtr == NULL) return;
 
-    STRX_HkTlm_Payload_t* hk = &STRX_APP_Data.Telemetry.Payload.hk;
+    Status = CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
+                        CFE_SB_ValueToMsgId(STRX_APP_HK_TLM_MID), sizeof(STRX_HkTlm_t));
+    if (Status != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
+
+    STRX_HkTlm_Payload_t* hk = &BufPtr->Payload;
 
     if (STRX_RXCONF_GetFreq(&hk->rx_freq) != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
     if (STRX_RXCONF_GetBaud(&hk->rx_baud) != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
@@ -144,47 +146,65 @@ void STRX_ReportHousekeeping(void)
     OS_printf("[STRX] TX FREQ: %u\n", hk->tx_freq);
     OS_printf("[STRX] HK succes\n");
 
-    CFE_SB_TimeStampMsg((CFE_MSG_Message_t *)&STRX_APP_Data.Telemetry);
-    CFE_SB_TransmitMsg((CFE_MSG_Message_t *)&STRX_APP_Data.Telemetry, true);
-
-    return ;
- 
-
-} 
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+    Status = CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true);
+    if (Status != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
+}
 
 void STRX_ReportBeacon(void)
 {
-    CFE_EVS_SendEvent(5003, CFE_EVS_EventType_ERROR,
-                          "STRX: ReportBeacon command sent successfully");
+    int32 Status;
+    STRX_BcnTlm_t *BufPtr = (STRX_BcnTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(STRX_BcnTlm_t));
+    if (BufPtr == NULL) return;
+
+    Status = CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
+                        CFE_SB_ValueToMsgId(STRX_APP_BCN_TLM_MID), sizeof(STRX_BcnTlm_t));
+    if (Status != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
+    STRX_BcnTlm_Payload_t* bcn = &BufPtr->Payload;
+
+    if (CFE_PUT_VALUE_TO_STRUCT(int16, &bcn->LastRssi, STRX_TLM_GetLastRssi, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
+        STRX_APP_Data.AppCnt.DeviceErrCounter++;
+    }
+    if (CFE_PUT_VALUE_TO_STRUCT(uint16, &bcn->BootCount, STRX_TLM_GetBootCount, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
+        STRX_APP_Data.AppCnt.DeviceErrCounter++;
+    }
+    if (CFE_PUT_VALUE_TO_STRUCT(uint32, &bcn->BootCause, STRX_TLM_GetBootCause, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
+        STRX_APP_Data.AppCnt.DeviceErrCounter++;
+    }
+    if (CFE_PUT_VALUE_TO_STRUCT(uint8, &bcn->rxmode, STRX_TLM_GET_RXMODE, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
+        STRX_APP_Data.AppCnt.DeviceErrCounter++;
+    }
+    if (CFE_PUT_VALUE_TO_STRUCT(uint16, &bcn->gnd_wdt_cnt, STRX_TLM_GET_GND_WDT_CNT, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
+        STRX_APP_Data.AppCnt.DeviceErrCounter++;
+    }
+    if (CFE_PUT_VALUE_TO_STRUCT(uint32, &bcn->gnd_wdt_left, STRX_TLM_GET_GND_WDT_LEFT, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
+        STRX_APP_Data.AppCnt.DeviceErrCounter++;
+    }
+    // if (STRX_TLM_GetLastRssi(&bcn->LastRssi)      != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
+    // if (STRX_TLM_GetBootCount(&bcn->BootCount)    != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
+    // if (STRX_TLM_GetBootCause(&bcn->BootCause)    != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
+    // if (STRX_TLM_GET_RXMODE(&bcn->rxmode)         != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
+    // if (STRX_TLM_GET_GND_WDT_CNT(&bcn->gnd_wdt_cnt)   != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
+    // if (STRX_TLM_GET_GND_WDT_LEFT(&bcn->gnd_wdt_left) != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
 
 
-    memset(&STRX_APP_Data.Telemetry.Payload.bcn, 0, sizeof(STRX_BcnTlm_Payload_t));
-    CFE_MSG_Init(CFE_MSG_PTR(STRX_APP_Data.Telemetry.TelemetryHeader),
-                CFE_SB_ValueToMsgId(STRX_APP_BCN_TLM_MID), STRX_TLM_BCN_SIZE);
-    STRX_BcnTlm_Payload_t* bcn = &STRX_APP_Data.Telemetry.Payload.bcn;
-
-    if (STRX_RXCONF_GetFreq(&bcn->rx_freq)        != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
-    if (STRX_RXCONF_GetBaud(&bcn->rx_baud)        != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
-    if (STRX_TLM_GetLastRssi(&bcn->LastRssi)      != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
-    if (STRX_TLM_GetBootCount(&bcn->BootCount)    != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
-    if (STRX_TLM_GetBootCause(&bcn->BootCause)    != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
-    if (STRX_TLM_GET_RXMODE(&bcn->rxmode)         != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
-    if (STRX_TLM_GET_GND_WDT_CNT(&bcn->gnd_wdt_cnt)   != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
-    if (STRX_TLM_GET_GND_WDT_LEFT(&bcn->gnd_wdt_left) != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
-    if (STRX_TXCONF_GetFreq(&bcn->tx_freq)        != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
-    if (STRX_TXCONF_GetBaud(&bcn->tx_baud)        != DEVICE_SUCCESS) STRX_APP_Data.AppCnt.DeviceErrCounter++;
-
-
-    OS_printf("[STRX] RX FREQ: %u\n", bcn->rx_freq);
-    OS_printf("[STRX] TX FREQ: %u\n", bcn->tx_freq);
+    OS_printf("[STRX] RX FREQ: %u\n", bcn->BootCount);
+    OS_printf("[STRX] TX FREQ: %u\n", bcn->BootCause);
     OS_printf("[STRX] bcn succes\n");
 
 
-    CFE_SB_TimeStampMsg((CFE_MSG_Message_t *)&STRX_APP_Data.Telemetry);
-    CFE_SB_TransmitMsg((CFE_MSG_Message_t *)&STRX_APP_Data.Telemetry, true);
-
-    return;
-
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+    Status = CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true);
+    if (Status != CFE_SUCCESS) {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
 }
     
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/

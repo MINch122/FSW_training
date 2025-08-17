@@ -17,9 +17,6 @@ set(SP_MISSION_CONFIG_FILE_LIST
   sp_msg.h
   sp_msgdefs.h
   sp_msgstruct.h
-  sp_tbl.h
-  sp_tbldefs.h
-  sp_tblstruct.h
   sp_topicids.h
 )
 

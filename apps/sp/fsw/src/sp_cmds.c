@@ -3,7 +3,6 @@
 #include "sp_msgids.h"
 #include "sp_eventids.h"
 #include "sp_version.h"
-#include "sp_tbl.h"
 #include "sp_utils.h"
 #include "sp_msg.h"
 
@@ -15,14 +14,14 @@ CFE_Status_t SP_APP_SendBcnCmd(const SP_APP_SendBcnCmd_t *Msg) {
 
     Status = CFE_SRL_ApiGpioGet(Handle);
     if (Status == 0 || Status == 1) {
-        SP_APP_Data.DEPTlm.Payload.get_result = (uint8_t)Status;
+        SP_APP_Data.BcnTlm.Payload.get_result = (uint8_t)Status;
     }
 
     /* If Error, put other value which is not `0` or `1` */
-    else SP_APP_Data.DEPTlm.Payload.get_result = 0xFF;
+    else SP_APP_Data.BcnTlm.Payload.get_result = 0xFF;
 
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(SP_APP_Data.DEPTlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(SP_APP_Data.DEPTlm.TelemetryHeader), true);
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(SP_APP_Data.BcnTlm.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(SP_APP_Data.BcnTlm.TelemetryHeader), true);
 
     return CFE_SUCCESS;
 }

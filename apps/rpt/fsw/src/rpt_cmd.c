@@ -28,6 +28,7 @@ CFE_Status_t RPT_SendBeaconCmd(void) {
     OS_MutSemGive(RPT_Data.CritMutexID);
 
     OS_MutSemTake(RPT_Data.OpsMutexID);
+    RPT_Data.HkTlm.Payload.ResetCause = RPT_Data.OpsData.ResetCause;
     RPT_Data.HkTlm.Payload.BootCount = RPT_Data.OpsData.BootCount;
     RPT_Data.HkTlm.Payload.TimeSec = RPT_Data.OpsData.TimeSec;
     RPT_Data.HkTlm.Payload.TimeSubsec = RPT_Data.OpsData.TimeSubsec;

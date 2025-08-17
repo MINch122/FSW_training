@@ -22,8 +22,8 @@
  * Define Sample App Events IDs
  */
 
-#ifndef STRX_APP_EVENTS_H
-#define STRX_APP_EVENTS_H
+#ifndef STRX_APP_EVENTIDS_H
+#define STRX_APP_EVENTIDS_H
 
 
 typedef enum{

@@ -11,5 +11,5 @@ typedef struct SP_APP_Deploy_Payload{
 
 typedef struct SP_APP_DEPTlm_Payload{
     uint8_t get_result;
-} SP_APP_DEPTlm_Payload_t;
+} SP_APP_BcnTlm_Payload_t;
 #endif
