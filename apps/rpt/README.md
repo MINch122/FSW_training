@@ -64,51 +64,67 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
 - After the table reivision, external app should configure the Report packet. The structure is shown below
 ```c
 typedef struct RPT_Report {
-    uint16_t MsgID;
-    uint8_t CommandCode;
+
+    uint16 MsgID;
+    uint8 CommandCode;
 
     /**
      * `enum RPT_ReturnType_t`
      */
-    uint8_t ReturnType;
-    int32_t ReturnCode;
+    uint8 ReturnType;
+    int32 ReturnCode;
 
     /**
-     * This member can be used to 2 types
-     * 1. Get CMD -> earned value
-     * 2. HW's Error packet -> HW error value
+     * If cmd acquires **any kind of data**, use this member.
+     * Ex 1) Get CMD -> earned values 
+     *      (In this case, `ReturnType` must be `RPT_RETTYPE_SUCCESS`)
+     * 
+     * Ex 2) HW's Error packet -> that error values
+     *      (In this case, `ReturnType` must be `RPT_RETTYPE_SUCCESS`)
+     * 
+     * Ex 3) Partially readed packet -> segmented packet
+     *      (In this case, `ReturnType` must be `RPT_RETTYPE_CFE`
+     *       and `ReturnCode` must be `CFE_SRL_PARTIAL_READ_ERR`)
      */
-    uint16_t ReturnDataSize;
-    uint8_t ReturnValue[RPT_RET_VALUE_BUF_SIZE]; /* `RPT_RET_VALUE_BUF_SIZE` == 60 */
+    uint16 ReturnDataSize;
+    uint8 ReturnValue[RPT_RET_VALUE_BUF_SIZE];
+
 } RPT_Report_t;
 ```
 1. MsgID : Specific Message ID which the satellite ingest
 2. CommandCode : Specific Command code which the satellite ingest
 3. ReturnType : Returned code type. Refer the `default_rpt_interface_cfg.h`
     ```c
-    /********************************
-     * Return Type definition
-    ********************************/
     typedef enum {
-        RPT_RETCODE_SUCCESS,
+
+        RPT_RETTYPE_SUCCESS,
+
         /**
         * `osapi-error.h`
         */
-        RPT_RETCODE_OSAL,
+        RPT_RETTYPE_OSAL,
 
         /**
         * `cfe_error.h`
         */
-        RPT_RETCODE_CFE,
-        RPT_RETCODE_LIB,
-        RPT_RETCODE_APP,
-        RPT_RETCODE_APPUTIL,
-        RPT_RETCODE_KNL, /* Kernel layer */
+        RPT_RETTYPE_CFE,
 
         /**
-        * Use this if HW send error packet
+        * App layer library
         */
-        RPT_RETCODE_HW,
+        RPT_RETTYPE_LIB,
+
+        /**
+        * App layer Application
+        * Also `cfe_error.h`
+        */
+        RPT_RETTYPE_APP,
+
+        /**
+        * H/W error packet case
+        * This means the **serial communication is successfully (or partially) done**
+        */
+        RPT_RETTYPE_HW,
 
     } RPT_ReturnType_t;
     ```

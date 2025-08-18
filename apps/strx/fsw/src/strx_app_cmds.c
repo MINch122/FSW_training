@@ -383,10 +383,10 @@ void STRX_TLM_SET_KISS_USARTCmd(const STRX_8ArgsCmd_t * SBBufPtr){
 
 }
 
-void STRX_TLM_SET_GOSH_USARTTCmd(const STRX_8ArgsCmd_t * SBBufPtr){
+void STRX_TLM_SET_GOSH_USARTTCmd(const STRX_U8ArgsCmd_t * SBBufPtr){
     STRX_RptBegin();
 
-    int status     = STRX_TLM_SET_GOSH_USART( SBBufPtr->arg);
+    int status     = STRX_TLM_SET_GOSH_USART(SBBufPtr->arg);
 
     STRX_RptSetStatusAuto(STRX_TLM_SET_GOSH_USART_CC, status);
     STRX_CountFromReport();
@@ -856,7 +856,7 @@ void STRX_TLM_GET_GND_WDT_LEFTCmd(void){
 void STRX_TLM_GET_KISS_USARTCmd(void){
     STRX_RptBegin();
 
-    uint8_t  val = 0;
+    int8_t  val = 0;
     int status = STRX_TLM_GET_KISS_USART(&val);
 
     STRX_RptSetStatusAuto(STRX_TLM_GET_KISS_USART_CC , status);

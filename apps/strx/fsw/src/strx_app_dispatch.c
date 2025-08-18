@@ -194,7 +194,7 @@ void STRX_APP_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 
             if (STRX_APP_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STRX_U8ArgsCmd_t)))
             {
-                STRX_TLM_SET_GOSH_USARTTCmd((STRX_8ArgsCmd_t *) SBBufPtr);
+                STRX_TLM_SET_GOSH_USARTTCmd((STRX_U8ArgsCmd_t *) SBBufPtr);
             }
             break;
         }

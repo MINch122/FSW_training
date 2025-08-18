@@ -49,7 +49,7 @@ void STRX_TXCONF_SetBaudCmd(const STRX_U32ArgsCmd_t * SBBufPtr);
 void STRX_RXCONF_SetFreqCmd(const STRX_U32ArgsCmd_t * SBBufPtr);
 void STRX_TXCONF_SetFreqCmd(const STRX_U32ArgsCmd_t * SBBufPtr);
 void STRX_TLM_SET_KISS_USARTCmd(const STRX_8ArgsCmd_t * SBBufPtr);
-void STRX_TLM_SET_GOSH_USARTTCmd(const STRX_8ArgsCmd_t * SBBufPtr);
+void STRX_TLM_SET_GOSH_USARTTCmd(const STRX_U8ArgsCmd_t * SBBufPtr);
 void STRX_SetDefaultBaudCmd(void);
 void STRX_RparamSave0Cmd(void);
 void STRX_RparamSave1Cmd(void);

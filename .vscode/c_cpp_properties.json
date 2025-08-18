@@ -5,7 +5,10 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/apps/strx/fsw/inc",
-                "${workspaceFolder}/apps/uant/device/inc/uant"
+                "${workspaceFolder}/apps/uant/device/inc/uant",
+                "${workspaceFolder}/apps/sant/fsw/inc",
+                "${workspaceFolder}/apps/eps/fsw/inc",
+                "${workspaceFolder}/apps/eps/device/p31u/inc"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
