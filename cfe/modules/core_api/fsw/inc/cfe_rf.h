@@ -18,6 +18,13 @@
 
 int32 CFE_RF_CommandIngestInit(CFE_ES_TaskId_t *TaskIdPtr);
 
+
+
+/// @brief Telemetry output function. Must only used in To app
+/// @param BufPtr Tx Buffer
+/// @param Size TxSize
+/// @param Port Destination Port
+/// @return `1` on success, `0` on failure.
 int32 CFE_RF_TelemetryEmit(void *BufPtr, size_t Size, uint8_t Port);
 
 #endif
