@@ -113,7 +113,7 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader;
-    /* data */
+
 } UTRX_APP_ResetAppCmdCountersCmd_t;
 
 typedef struct

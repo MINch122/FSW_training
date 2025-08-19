@@ -1,5 +1,5 @@
-#ifndef SP_APP_MSGSTRUCT_H
-#define SP_APP_MSGSTRUCT_H
+#ifndef SP_MSGSTRUCT_H
+#define SP_MSGSTRUCT_H
 
 #include "sp_mission_cfg.h"
 #include "sp_msgdefs.h"
@@ -10,39 +10,39 @@
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader;
-} SP_APP_SendBcnCmd_t;
+} SP_SendBcnCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader;
-} SP_APP_NoopCmd_t;
+} SP_NoopCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader;
-} SP_APP_ResetCountersCmd_t;
+} SP_ResetCountersCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader;
-    SP_APP_Deploy_Payload_t Payload;
-} SP_APP_DeployCmd_t;
+    SP_Deploy_Payload_t Payload;
+} SP_DeployCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader;
-} SP_APP_Get_DeployCmd_t;
+} SP_Get_DeployCmd_t;
 
 
 typedef struct 
 {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    SP_APP_BcnTlm_Payload_t Payload;
-} SP_APP_BcnTlm_t;
+    SP_BcnTlm_Payload_t Payload;
+} SP_BcnTlm_t;
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     RPT_Report_t Report;
-} SP_APP_ReportTlm_t;
+} SP_ReportTlm_t;
 
 #endif

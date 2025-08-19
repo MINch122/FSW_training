@@ -22,8 +22,8 @@
  * Main header file for the Sample application
  */
 
-#ifndef UANT_APP_H
-#define UANT_APP_H
+#ifndef UANT_H
+#define UANT_H
 
 /*
 ** Required header files.
@@ -32,12 +32,12 @@
 #include "cfe_config.h"
 #include "cfe_msg.h"
 
-#include "uant_app_mission_cfg.h"
-#include "uant_app_platform_cfg.h"
+#include "uant_mission_cfg.h"
+#include "uant_platform_cfg.h"
 
-#include "uant_app_perfids.h"
-#include "uant_app_msgids.h"
-#include "uant_app_msg.h"
+#include "uant_perfids.h"
+#include "uant_msgids.h"
+#include "uant_msg.h"
 
 /************************************************************************
 ** Type Definitions
@@ -55,12 +55,12 @@ typedef struct
     uint8 ErrCounter;
 
     //beacon telemetry packet
-    UANT_APP_bcnTlm_t bcn;
+    UANT_BcnTlm_t bcn;
 
     /*
     ** Housekeeping telemetry packet...
     */
-    UANT_APP_HkTlm_t HkTlm;
+    UANT_HkTlm_t HkTlm;
 
     UANT_RPT_Tlm_t rpt;
 
@@ -81,21 +81,21 @@ typedef struct
     uint16 PipeDepth;
 
     CFE_SRL_IO_Handle_t *Handle;
-} UANT_APP_Data_t;
+} UANT_Data_t;
 
 /*
 ** Global data structure
 */
-extern UANT_APP_Data_t UANT_APP_Data;
+extern UANT_Data_t UANT_Data;
 
 /****************************************************************************/
 /*
 ** Local function prototypes.
 **
-** Note: Except for the entry point (UANT_APP_Main), these
+** Note: Except for the entry point (UANT_Main), these
 **       functions are not called from any other source module.
 */
-void         UANT_APP_Main(void);
-CFE_Status_t UANT_APP_Init(void);
+void         UANT_AppMain(void);
+CFE_Status_t UANT_AppInit(void);
 
-#endif /* UANT_APP_H */
+#endif /* UANT_H */

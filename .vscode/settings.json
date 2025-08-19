@@ -97,7 +97,19 @@
         "uant_app_cmds.h": "c",
         "uant_app.h": "c",
         "uant_app_msg.h": "c",
-        "uant_app_interface_cfg.h": "c"
+        "uant_app_interface_cfg.h": "c",
+        "p31u.h": "c",
+        "eps_app.h": "c",
+        "cfe_msg_hdr.h": "c",
+        "uant_app_msgdefs.h": "c",
+        "gssb_cmd_id.h": "c",
+        "gssb_common.h": "c",
+        "uant.h": "c",
+        "sp_perfids.h": "c",
+        "string": "c",
+        "string_view": "c",
+        "ranges": "c",
+        "span": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

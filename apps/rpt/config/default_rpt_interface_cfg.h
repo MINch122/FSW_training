@@ -13,7 +13,7 @@
 /**
  * Report Buffer Size
  */
-#define RPT_RET_VALUE_BUF_SIZE  60
+#define RPT_RET_VALUE_BUF_SIZE  512
 
 
 /**

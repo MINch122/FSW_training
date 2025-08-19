@@ -16,4 +16,5 @@ list(APPEND APP_SRC_FILES
 add_cfe_app(eps ${APP_SRC_FILES})
 
 target_include_directories(eps PUBLIC fsw/inc)
+target_include_directories(eps PUBLIC fsw/src)
 target_include_directories(eps PUBLIC device/p31u/inc)

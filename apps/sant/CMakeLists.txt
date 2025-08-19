@@ -5,15 +5,16 @@ message(STATUS "sant_app cmake start")
 
 set(APP_SRC_FILES
     fsw/src/sant_app.c
-    fsw/src/sant_app_cmds.c
-    fsw/src/sant_app_utils.c
-    fsw/src/sant_app_dispatch.c
+    fsw/src/sant_cmds.c
+    fsw/src/sant_utils.c
+    fsw/src/sant_dispatch.c
 )
 
 add_cfe_app(sant ${APP_SRC_FILES})
 
 target_include_directories(sant PUBLIC
     fsw/inc
+    fsw/src
     ../../submodules/libgscsp/lib/libutil/include/
     ../../submodules/libgscsp/lib/libgssb_client/include/
 )

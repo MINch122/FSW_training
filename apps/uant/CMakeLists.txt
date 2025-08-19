@@ -3,8 +3,8 @@ project(CFE_UANT_APP C)
 
 set(APP_SRC_FILES
   fsw/src/uant_app.c
-  fsw/src/uant_app_cmds.c
-  fsw/src/uant_app_dispatch.c
+  fsw/src/uant_cmds.c
+  fsw/src/uant_dispatch.c
   device/src/uant.c
 )
 

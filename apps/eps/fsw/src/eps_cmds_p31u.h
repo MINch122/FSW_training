@@ -56,6 +56,6 @@ void EPS_P31U_SetConfig2Cmd(const EPS_P31U_SetConfig2Cmd_t *Msg);
 void EPS_P31U_Config2Cmd(const EPS_P31U_Config2Cmd_t *Msg);
 void EPS_P31U_SetConfig3Cmd(const EPS_P31U_SetConfig3Cmd_t *Msg);
 
-void EPS_P31U_TransactionCmd(const EPS_P31U_TransactionCmd_t* Msg);
+// void EPS_P31U_TransactionCmd(const EPS_P31U_TransactionCmd_t* Msg);
 
 #endif

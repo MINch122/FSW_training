@@ -32,12 +32,12 @@
 #include "cfe_config.h"
 #include "cfe_msg.h"
 
-#include "sant_app_mission_cfg.h"
-#include "sant_app_platform_cfg.h"
+#include "sant_mission_cfg.h"
+#include "sant_platform_cfg.h"
 
-#include "sant_app_perfids.h"
-#include "sant_app_msgids.h"
-#include "sant_app_msg.h"
+#include "sant_perfids.h"
+#include "sant_msgids.h"
+#include "sant_msg.h"
 
 /************************************************************************
 ** Type Definitions
@@ -57,9 +57,9 @@ typedef struct
     /*
     ** Housekeeping telemetry packet...
     */
-    SANT_APP_HkTlm_t HkTlm;
-    SANT_APP_BcnTlm_t BcnTlm;
-    SANT_APP_OperationTlm_t OperationTlm;
+    SANT_HkTlm_t HkTlm;
+    SANT_BcnTlm_t BcnTlm;
+    SANT_OperationTlm_t OperationTlm;
 
     /*
     ** Run Status variable used in the main processing loop
@@ -77,22 +77,22 @@ typedef struct
     char   PipeName[CFE_MISSION_MAX_API_LEN];
     uint16 PipeDepth;
 
-    CFE_TBL_Handle_t TblHandles[SANT_APP_NUMBER_OF_TABLES];
-} SANT_APP_Data_t;
+
+} SANT_Data_t;
 
 /*
 ** Global data structure
 */
-extern SANT_APP_Data_t SANT_APP_Data; // 메모리를 한 번만 할당하기 위해
+extern SANT_Data_t SANT_Data; // 메모리를 한 번만 할당하기 위해
 
 /****************************************************************************/
 /*
 ** Local function prototypes.
 **
-** Note: Except for the entry point (SANT_APP_Main), these
+** Note: Except for the entry point (SANT_Main), these
 **       functions are not called from any other source module.
 */
-void         SANT_APP_Main(void);
-CFE_Status_t SANT_APP_Init(void);
+void         SANT_AppMain(void);
+CFE_Status_t SANT_AppInit(void);
 
-#endif /* SANT_APP_H */
+#endif /* SANT_H */

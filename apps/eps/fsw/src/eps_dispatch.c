@@ -97,8 +97,9 @@ void EPS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 
         /* default case already found during FC vs length test */
         default:
-            CFE_EVS_SendEvent(EPS_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
-                              CommandCode);
+            EPS_ProcessDeviceCommand(SBBufPtr);
+            // CFE_EVS_SendEvent(EPS_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
+            //                   CommandCode);
             break;
     }
 }
@@ -271,7 +272,7 @@ void EPS_ProcessDeviceCommand(const CFE_SB_Buffer_t *SBBufPtr)
         case EPS_P31U_TRANSACTION_CC:
             if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_TransactionCmd_t)))
             {
-                EPS_P31U_TransactionCmd((const EPS_P31U_TransactionCmd_t *)SBBufPtr);
+                // EPS_P31U_TransactionCmd((const EPS_P31U_TransactionCmd_t *)SBBufPtr);
             }
             break;
         

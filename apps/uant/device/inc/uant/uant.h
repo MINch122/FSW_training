@@ -1,7 +1,6 @@
 #ifndef _UANT_H_
 #define _UANT_H_
 
-#include <cfe.h>
 #include <stdint.h>
 
 typedef enum {

@@ -15,21 +15,20 @@ typedef struct{
     uint8 CmdCounter;
     uint8 ErrCounter;
 
-    SP_APP_BcnTlm_t BcnTlm;
+    SP_BcnTlm_t BcnTlm;
     
-    //SP_APP_DeployCmd_t DeployCmd;
+    //SP_DeployCmd_t DeployCmd;
 
     uint32 RunStatus;
 
     CFE_SB_PipeId_t CommandPipe;
 
-    CFE_TBL_Handle_t TblHandles[SP_APP_NUMBER_OF_TABLES];
-} SP_APP_Data_t;
+} SP_AppData_t;
 
-extern SP_APP_Data_t SP_APP_Data;
+extern SP_AppData_t SP_AppData;
 
-void SP_APP_Main(void);
-CFE_Status_t SP_APP_Init(void);
+void SP_AppMain(void);
+CFE_Status_t SP_AppInit(void);
 
 #endif
 

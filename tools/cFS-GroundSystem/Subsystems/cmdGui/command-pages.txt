@@ -32,6 +32,15 @@ Sample App,                 SAMPLE_APP_CMD,     0x1882, LE, UdpCommands.py,  127
 PAYUZUC,                    PAYUZUC_CMD,        0x1830, LE, UdpCommands.py,  127.0.0.1,   1234
 PAYUZUT,                    PAYUZUT_CMD,        0x1835, LE, UdpCommands.py,  127.0.0.1,   1234
 Solar Panel,                SP_CMD,             0x1858, LE, UdpCommands.py,  127.0.0.1,   1234
+Stored command,             SC_CMD,             0x1820, LE, UdpCommands.py,  127.0.0.1,   1234
+Limit Checker,              LC_CMD,             0x181D, LE, UdpCommands.py,  127.0.0.1,   1234
+EPS,                        EPS_CMD,            0x1890, LE, UdpCommands.py,  127.0.0.1,   1234
+STRX_set,                   STRX_SET,           0x1854, LE, UdpCommands.py,  127.0.0.1,   1234
+STRX_get,                   STRX_GET,           0x1856, LE, UdpCommands.py,  127.0.0.1,   1234
+UTRX_set,                   UTRX_CMD,           0x1850, LE, UdpCommands.py,  127.0.0.1,   1234
+UTRX_get,                   UTRX_CMD,           0x1852, LE, UdpCommands.py,  127.0.0.1,   1234
+UANT,                       UANT_CMD,           0x1840, LE, UdpCommands.py,  127.0.0.1,   1234
+SANT,                       SANT_CMD,           0x1843, LE, UdpCommands.py,  127.0.0.1,   1234
 Spare,                                    ,     0x0000, LE, UdpCommands.py,  127.0.0.1,   1234
 LEGACY DEFINITIONS,                       ,     0x0000, LE, UdpCommands.py,  127.0.0.1,   1234
 Executive Services (CPU1),  cfe__es__msg_8h,    0x1806, LE, UdpCommands.py,  127.0.0.1,   1234
@@ -42,5 +51,3 @@ Event Services (CPU1),      cfe__evs__msg_8h,   0x1801, LE, UdpCommands.py,  127
 Command Ingest LAB,         ci_lab_msg,         0x1884, LE, UdpCommands.py,  127.0.0.1,   1234
 Telemetry Output LAB,       to_lab_msg,         0x1823, LE, UdpCommands.py,  127.0.0.1,   1234
 Sample App (CPU1),          sample_app_cmd,     0x1882, LE, UdpCommands.py,  127.0.0.1,   1234
-Stored command,             SC_CMD,             0x1820, LE, UdpCommands.py,  127.0.0.1,   1234
-Limit Checker,              LC_CMD,             0x181D, LE, UdpCommands.py,  127.0.0.1,   1234

@@ -1,7 +1,10 @@
 #include <stdint.h>
 #include <stdbool.h>
-#include "../inc/uant/uant.h"
-#include "uant_app_mission_cfg.h"
+
+#include "cfe.h"
+
+#include "uant.h"
+#include "uant_mission_cfg.h"
 #include "uant_app.h"
 
 int ISIS_UANT_SendCmd(uint8_t cc) {
@@ -11,10 +14,10 @@ int ISIS_UANT_SendCmd(uint8_t cc) {
     params.TxData  = &reg;    // Tx 버퍼: 레지스터
     params.TxSize  = 1;       // 버퍼 크기: 1바이트
     params.Timeout = 10;
-    params.Addr    = UANT_APP_I2C_ADDR;   // 타임아웃: 10ms
+    params.Addr    = UANT_I2C_ADDR;   // 타임아웃: 10ms
 
     // I2C 쓰기 수행
-    int32 status = CFE_SRL_ApiWrite(UANT_APP_Data.Handle, &params);
+    int32 status = CFE_SRL_ApiWrite(UANT_Data.Handle, &params);
     return status;
 }
 
@@ -26,9 +29,9 @@ int ISIS_UANT_SendCmdWithParam(uint8_t cc, uint8_t param) {
     params.TxData  = buf;         // Tx 버퍼 설정
     params.TxSize  = sizeof(buf); // 버퍼 크기: 2바이트
     params.Timeout = 10;          // 타임아웃: 10ms
-    params.Addr    = UANT_APP_I2C_ADDR; 
+    params.Addr    = UANT_I2C_ADDR; 
     // I2C 쓰기 수행
-    int32 status = CFE_SRL_ApiWrite(UANT_APP_Data.Handle, &params);
+    int32 status = CFE_SRL_ApiWrite(UANT_Data.Handle, &params);
     return status;
 }
 
@@ -43,9 +46,9 @@ int ISIS_UANT_SendCmdWithResponse(uint8_t cc, uint8_t respLen, void* resp) {
     params.RxData  = (uint8_t*)resp;  // Rx: 응답 버퍼
     params.RxSize  = respLen;        // 읽을 바이트 수
     params.Timeout = 100;            // 타임아웃: 100ms
-    params.Addr    = UANT_APP_I2C_ADDR; 
+    params.Addr    = UANT_I2C_ADDR; 
     // I2C 읽기 수행
-    int32 status = CFE_SRL_ApiRead(UANT_APP_Data.Handle, &params);
+    int32 status = CFE_SRL_ApiRead(UANT_Data.Handle, &params);
     return status;
 }
 

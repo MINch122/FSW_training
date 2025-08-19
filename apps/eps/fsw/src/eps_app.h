@@ -64,11 +64,14 @@ typedef struct
     uint32 RunStatus;
 
     EPS_ReportTlm_t Report;
+    
+    CFE_SB_PipeId_t CommandPipe;
 
     /*
     ** Operational data (not reported in housekeeping)...
     */
-    CFE_SB_PipeId_t CommandPipe;
+
+    CFE_SRL_IO_Handle_t *Handle;
 
 } EPS_AppData_t;
 
