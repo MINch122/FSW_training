@@ -35,7 +35,7 @@
             "name": "RS422",
             "DevName": "/dev/ttyS1",
             "MutexID": 3,
-            "baudrate": 250000
+            "baudrate": 115200
         },
         {
             "type": "uart",

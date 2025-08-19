@@ -171,5 +171,10 @@ CFE_Status_t EPS_Init(void)
         CFE_EVS_SendEvent(EPS_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "EPS P31u Successfully Initialized");
     }
 
+    /**
+     * I2C1 Handle Init
+     */
+    // EPS_AppData.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_I2C1_HANDLE_INDEXER);
+
     return status;
 }
