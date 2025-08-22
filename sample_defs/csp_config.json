@@ -24,7 +24,7 @@
 
             "priority": 2,
             "timeout": 1,
-            "option": "CSP_O_CRC32"
+            "option": "CSP_O_NONE"
         },
         {
             "name": "UTRX",

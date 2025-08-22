@@ -8,6 +8,7 @@ CFE_APP, sch_lab,     SCH_LAB_AppMain,    SCH_LAB_APP,  13,   16384, 0x0, 0;
 CFE_APP, sp,          SP_AppMain,         SP_APP,       20,   4096,  0x0, 0;
 CFE_APP, uant,        UANT_AppMain,       UANT,         30,   16384, 0x0, 0;
 CFE_APP, sant,        SANT_AppMain,       SANT,         35,   16384, 0x0, 0;
+CFE_APP, adcs,        ADCS_AppMain,       ADCS,         36,   16384, 0x0, 0;
 CFE_APP, hk,          HK_AppMain,         HK,           40,   16384, 0x0, 0;
 CFE_APP, sc,          SC_AppMain,         SC,           41,   16384, 0x0, 0;
 CFE_APP, hs,          HS_AppMain,         HS,           42,   16384, 0x0, 0;

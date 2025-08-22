@@ -8,7 +8,11 @@
                 "${workspaceFolder}/apps/uant/device/inc/uant",
                 "${workspaceFolder}/apps/sant/fsw/inc",
                 "${workspaceFolder}/apps/eps/fsw/inc",
-                "${workspaceFolder}/apps/eps/device/p31u/inc"
+                "${workspaceFolder}/apps/eps/device/p31u/inc",
+                "${workspaceFolder}/apps/adcs/fsw/inc/adcsapp",
+                "${workspaceFolder}/apps/adcs/fsw/inc",
+                "${workspaceFolder}/libs/adcs_lib/fsw/inc/adcs",
+                "${workspaceFolder}/libs/adcs_lib/fsw/public_inc"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

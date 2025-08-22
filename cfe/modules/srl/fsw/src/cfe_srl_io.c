@@ -62,23 +62,24 @@ int CFE_SRL_Read(CFE_SRL_IO_Handle_t *Handle, void *Data, size_t Size, uint32_t 
     if (!CFE_SRL_QueryStatus((CFE_SRL_Global_Handle_t *)Handle, CFE_SRL_HANDLE_STATUS_FD_INIT)) {
         return CFE_SRL_NOT_OPEN_ERR;        
     }
+
+    if(ReadBytes) *ReadBytes = 0;
     
     RdBytes = CFE_SRL_BasicPollRead(Handle->FD, Data, Size, Timeout);
-    if (ReadBytes && RdBytes > 0) *ReadBytes = RdBytes;
+    if (ReadBytes && RdBytes >= 0) *ReadBytes = RdBytes;
 
     if (RdBytes == CFE_SRL_TIMEOUT) {
         Handle->RxErrCnt ++;
         Handle->__errno = errno;
-        *ReadBytes = 0;
         return CFE_SRL_TIMEOUT;
     }
     else if (RdBytes == CFE_SRL_ERR) {
         Handle->RxErrCnt ++;
         Handle->__errno = errno;
-        *ReadBytes = 0;
         return CFE_SRL_READ_ERR;
     }
 
+    *ReadBytes = RdBytes;
     Handle->RxCount += RdBytes;
 
     if (RdBytes != Size) {

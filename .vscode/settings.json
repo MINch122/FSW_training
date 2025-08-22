@@ -109,7 +109,22 @@
         "string": "c",
         "string_view": "c",
         "ranges": "c",
-        "span": "c"
+        "span": "c",
+        "adcs_app_utils.h": "c",
+        "adcs_app_tbl.h": "c",
+        "adcs_device_tlm.h": "c",
+        "adcs_device_msg.h": "c",
+        "adcs_app_msg.h": "c",
+        "adcs_app_eventids.h": "c",
+        "adcs_can.h": "c",
+        "sample_lib.h": "c",
+        "adcs_endpoint.h": "c",
+        "cubeobc_errtypedef.h": "c",
+        "adcs_cube_error_typedefs.h": "c",
+        "cstddef": "c",
+        "rope": "c",
+        "*.def": "c",
+        "coroutine": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

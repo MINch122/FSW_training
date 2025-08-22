@@ -30,5 +30,7 @@
 #../../../../apps/sp/config/default_sp_msgdefs.h
 #../../../../apps/payuzut/config/default_payuzut_fcncodes.h
 #../../../../apps/payuzut/config/default_payuzut_msgdefs.h
-../../../../apps/utrx/config/default_utrx_app_fcncodes.h
-../../../../apps/utrx/config/default_utrx_app_msgstruct.h
+#../../../../apps/utrx/config/default_utrx_app_fcncodes.h
+#../../../../apps/utrx/config/default_utrx_app_msgstruct.h
+../../../../apps/adcs/config/default_adcs_fcncodes.h
+../../../../apps/adcs/config/default_adcs_msgdefs.h

@@ -52,6 +52,12 @@ ssize_t CFE_SRL_BasicPollRead(int FD, void *Data, size_t Size, uint32_t Timeout)
 
     int Ret = poll(FDS, 1, Timeout);
 
+    if(Ret == 0) return CFE_SRL_TIMEOUT;
+    if(Ret < 0) return CFE_SRL_ERR;
+
+    if (FDS[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+        return CFE_SRL_ERR;
+
     if (Ret > 0 && FDS[0].revents & POLLIN) { // When Read Event Occured,
         // int BufSize = 0;
         // uint8_t Iteration = 0;
@@ -64,12 +70,7 @@ ssize_t CFE_SRL_BasicPollRead(int FD, void *Data, size_t Size, uint32_t Timeout)
         // }
         return CFE_SRL_BasicRead(FD, Data, Size); // Read.
     }
-    else if (Ret == 0) {
-        return CFE_SRL_TIMEOUT;
-    }
-    else {
-        return CFE_SRL_ERR;
-    }
+    else return CFE_SRL_ERR;
 }
 
 

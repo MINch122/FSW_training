@@ -74,6 +74,8 @@
  * ADCS Header 
  ********************/
 // include CubeADCS...
+#include "adcs_msgids.h"
+#include "adcs_msg.h"
 /* End of ADCS Header */
 
 /*********************

@@ -1,0 +1,37 @@
+project(CFE_ADCS_APP C)
+
+set(APP_SRC_FILES
+  fsw/src/adcs_app.c
+  fsw/src/adcs_utils.c
+  fsw/src/adcs_dispatch.c
+  fsw/src/adcs_cmds.c
+)
+
+# Create the app module
+add_cfe_app(adcs ${APP_SRC_FILES})
+
+target_include_directories(adcs PUBLIC 
+  fsw/inc
+  ../../submodules/libgscsp/lib/libgattos-uc_client_client/include
+  ../../submodules/libgscsp/lib/isl-modem-app_client/include
+  ../../submodules/libgscsp/lib/libaardvark/include
+  ../../submodules/libgscsp/lib/libadcs_client/include
+  ../../submodules/libgscsp/lib/libfp_client/include
+  ../../submodules/libgscsp/lib/libftp_client/include
+  ../../submodules/libgscsp/lib/libgosh_client/include
+  ../../submodules/libgscsp/lib/libgscsp/include
+  ../../submodules/libgscsp/lib/libgscsp/lib/libcsp/include
+  ../../submodules/libgscsp/lib/libgscsp/lib/libcsp/src # #include <csp_conn.h>
+  ../../submodules/libgscsp/lib/libgssb_client/include
+  ../../submodules/libgscsp/lib/libhk_client/include
+  ../../submodules/libgscsp/lib/libnanopb_client/include
+  ../../submodules/libgscsp/lib/libp60_client/include
+  ../../submodules/libgscsp/lib/libparam_client/include
+  ../../submodules/libgscsp/lib/libparam_client/include/deprecated
+  ../../submodules/libgscsp/lib/librgosh_client/include
+  ../../submodules/libgscsp/lib/libutil/include
+  ../../submodules/libgscsp/build/lib/libgscsp/lib/libcsp/include
+  ../../submodules/libgscsp/lib/nanocom-ax_client/include
+)
+
+target_compile_options(adcs PRIVATE -Wno-pedantic -Wno-error=pedantic)
