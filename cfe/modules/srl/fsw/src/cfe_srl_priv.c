@@ -253,7 +253,7 @@ int32 CFE_SRL_WriteGenericSPI(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *P
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Addr) {
+int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Addr, uint32_t Timeout, ssize_t *Read) {
     int32 Status;
     CFE_SRL_DevType_t DevType;
 
@@ -266,10 +266,30 @@ int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    // Transaction
-    Status = CFE_SRL_TransactionI2C(Handle, TxData, TxSize, RxData, RxSize, Addr);
-    if (Status != CFE_SUCCESS) goto error;
+    if (Timeout) {
+        /**
+         * If `Timeout` Parameter is uesd, do atomic transaction
+         */
+        OS_printf("I2C Atomic Transaction.\n");
+        if (TxData != NULL) {
+            // Write
+            Status = CFE_SRL_Write(Handle, TxData, TxSize);
+            if (Status != CFE_SUCCESS) goto error;
+        }
 
+        // Poll Read
+        Status = CFE_SRL_Read(Handle, RxData, RxSize, Timeout, Read);
+        if (Status != CFE_SUCCESS) goto error;
+    }
+    else {
+        /**
+         * If `Timeout` Parameter is not used, do combined transaction
+         */
+        OS_printf("I2C Combined Transaction.\n");
+        Status = CFE_SRL_TransactionI2C(Handle, TxData, TxSize, RxData, RxSize, Addr);
+        if (Status != CFE_SUCCESS) goto error;
+    }
+    
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
     if (Status != CFE_SUCCESS) goto error;
@@ -282,7 +302,7 @@ error:
 }
 
 int32 CFE_SRL_ReadGenericI2C(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_ReadI2C(Handle, Params->TxData, Params->TxSize, Params->RxData, Params->RxSize, Params->Addr);
+    return CFE_SRL_ReadI2C(Handle, Params->TxData, Params->TxSize, Params->RxData, Params->RxSize, Params->Addr, Params->Timeout, &Params->ReadBytes);
 }
 
 /*----------------------------------------------------------------
@@ -304,6 +324,8 @@ int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t T
     // Mutex Lock
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
+
+    ioctl(Handle->FD, TCFLSH, TCIOFLUSH);
 
     if (TxData != NULL) {
         // Write

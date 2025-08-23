@@ -73,7 +73,6 @@
 /*********************
  * ADCS Header 
  ********************/
-// include CubeADCS...
 #include "adcs_msgids.h"
 #include "adcs_msg.h"
 /* End of ADCS Header */
@@ -187,14 +186,14 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
         BCN_OFFSET_6,
-        0, // sizeof(EPS_BcnTlm_Payload_t)
+        sizeof(EPS_BcnTlm_Payload_t)
     },
     /*   7 : SP     */
     {
         CFE_SB_MSGID_WRAP_VALUE(SP_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        0, // Revise to BCN_OFFSET_7
+        BCN_OFFSET_7,
         sizeof(SP_BcnTlm_Payload_t),
     },
     /*   8 : ADCS   */
@@ -202,8 +201,8 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
         CFE_SB_MSGID_RESERVED,
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        0, // Revise to BCN_OFFSET_8
-        0, // sizeof(ADCS_BcnTlm_Payload_t)
+        BCN_OFFSET_8,
+        sizeof(ADCS_BcnTlm_Payload_t),
     },
 
     /*   9 : PAYUZUC    */
@@ -211,7 +210,7 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
         CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_HK_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        0, // Revise to BCN_OFFSET_9
+        BCN_OFFSET_9,
         sizeof(PAYUZUC_BcnTlm_Payload_t),
     },
     /*  10 : PAYUZUT    */
@@ -219,7 +218,7 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
         CFE_SB_MSGID_WRAP_VALUE(PAYUZUT_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        0, // Revise to BCN_OFFSET_10
+        BCN_OFFSET_10,
         sizeof(PAYUZUT_BcnTlm_Payload_t),
     },
     /*  11 : PAYUELM    */

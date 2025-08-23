@@ -135,6 +135,7 @@ CFE_Status_t ADCS_EN_HighCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Enable Enable pin: 0x%08lx", (unsigned long)status);
         return status;
     }
+    OS_printf("GPIO EN HIGH success.\n");
 
     return CFE_SUCCESS;
 }
@@ -150,6 +151,7 @@ CFE_Status_t ADCS_EN_LowCmd(void){
         CFE_ES_WriteToSysLog("Adcs App: Fail to Disable Enable pin: 0x%08lx", (unsigned long)status);
         return status;
     }
+    OS_printf("GPIO EN LOW success.\n");
 
     return CFE_SUCCESS;
 }
@@ -165,6 +167,7 @@ CFE_Status_t ADCS_Boot_HighCmd(void){
         CFE_ES_WriteToSysLog("Adcs App: Fail to Enable Boot pin: 0x%08lx", (unsigned long)status);
         return status;
     }
+    OS_printf("GPIO BOOT high success.\n");
 
     return CFE_SUCCESS;
 }
@@ -180,6 +183,7 @@ CFE_Status_t ADCS_Boot_LowCmd(void){
         CFE_ES_WriteToSysLog("Adcs App: Fail to Disable Boot pin: 0x%08lx", (unsigned long)status);
         return status;
     }
+    OS_printf("GPIO BOOT Low success.\n");
 
     return CFE_SUCCESS;
 }
@@ -199,6 +203,7 @@ CFE_Status_t ADCS_ExitBootloader(void){
 }
 
 CFE_Status_t ADCS_SetReset(void){
+    // This command has no reply
     CFE_Status_t               status;
 
     status = ADCS_Reset();
@@ -208,6 +213,7 @@ CFE_Status_t ADCS_SetReset(void){
         CFE_ES_WriteToSysLog("Adcs App: Fail to Set Reset: 0x%08lx", (unsigned long)status);
         return status;
     }
+    OS_printf("Set reset success.\n");
 
     return CFE_SUCCESS;
 }
@@ -245,7 +251,7 @@ CFE_Status_t ADCS_SetControlEstimationModeCmd(ADCS_ControlEstimationModeCmd_t *m
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Control Estimation Mode: 0x%08lx", (unsigned long)status);
         return status;
     }
     OS_printf("ADCS cmd Success.");
@@ -261,7 +267,7 @@ CFE_Status_t ADCS_SetReferenceLLHTargetCmd(ADCS_ReferenceLLHTargetCmd_t *msg) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Reference LLH Target: 0x%08lx", (unsigned long)status);
         return status;
     }
     OS_printf("ADCS cmd Success.");
@@ -277,7 +283,7 @@ CFE_Status_t ADCS_SetOrbitModeCmd(ADCS_OrbitModeCmd_t *msg) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Orbit Mode: 0x%08lx", (unsigned long)status);
         return status;
     }
     OS_printf("ADCS cmd Success.");
@@ -293,7 +299,7 @@ CFE_Status_t ADCS_SetReferenceRPYValuesCmd(ADCS_ReferenceRPYvaluesCmd_t *msg) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Reference RPY Values: 0x%08lx", (unsigned long)status);
         return status;
     }
     OS_printf("ADCS cmd Success.");
@@ -309,7 +315,7 @@ CFE_Status_t ADCS_SetSatOrbitParamConfigCmd(ADCS_SatOrbitParamConfigCmd_t *msg) 
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
         return status;
     }
     OS_printf("ADCS cmd Success.");
@@ -327,7 +333,7 @@ CFE_Status_t ADCS_GetCurrentUnixTimeCmd(void) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Current Unix Time: 0x%08lx", (unsigned long)status);
         return status;
     }
     
@@ -346,7 +352,7 @@ CFE_Status_t ADCS_GetControlEstimationModeCmd(void) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Control Estimation Mode: 0x%08lx", (unsigned long)status);
         return status;
     }
     
@@ -366,7 +372,7 @@ CFE_Status_t ADCS_GetReferenceLLHTargetCmd(void) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Reference LLH Target: 0x%08lx", (unsigned long)status);
         return status;
     }
     
@@ -385,7 +391,7 @@ CFE_Status_t ADCS_GetOrbitModeCmd(void) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Orbit Mode: 0x%08lx", (unsigned long)status);
         return status;
     }
     
@@ -404,7 +410,7 @@ CFE_Status_t ADCS_GetRawCubeSenseSunCmd(void) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Raw CubeSense Sun: 0x%08lx", (unsigned long)status);
         return status;
     }
     
@@ -414,10 +420,7 @@ CFE_Status_t ADCS_GetRawCubeSenseSunCmd(void) {
     OS_printf("FSS1 Alpha: %d || Beta: %d || Capture Res: %u || Detection Res: %u\n", RetVal.FSS1AlphaAngle, RetVal.FSS1BetaAngle, RetVal.FSS1CaptureResult, RetVal.FSS1DetectionResult);
     OS_printf("FSS2 Alpha: %d || Beta: %d || Capture Res: %u || Detection Res: %u\n", RetVal.FSS2AlphaAngle, RetVal.FSS2BetaAngle, RetVal.FSS2CaptureResult, RetVal.FSS2DetectionResult);
     OS_printf("FSS3 Alpha: %d || Beta: %d || Capture Res: %u || Detection Res: %u\n", RetVal.FSS3AlphaAngle, RetVal.FSS3BetaAngle, RetVal.FSS3CaptureResult, RetVal.FSS3DetectionResult);
-    OS_printf("Valid Res: %s || %s || %s || %s", RetVal.FSS0ValidResult ? "true":"false",
-                                                RetVal.FSS1ValidResult ? "true":"false",
-                                            RetVal.FSS2ValidResult ? "true":"false",
-                                        RetVal.FSS3ValidResult ? "true":"false");
+    OS_printf("Valid Res: 0x%02X\n", RetVal.ValidResult);
     
     return CFE_SUCCESS;
 }
@@ -431,7 +434,7 @@ CFE_Status_t ADCS_GetPowerStateCmd(void) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Power State: 0x%08lx", (unsigned long)status);
         return status;
     }
     
@@ -454,7 +457,7 @@ CFE_Status_t ADCS_GetSatOrbitParamConfigCmd(void) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
         return status;
     }
     
@@ -473,7 +476,7 @@ CFE_Status_t ADCS_GetRawCSSSensorCmd(void) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Raw CSS Sensor: 0x%08lx", (unsigned long)status);
         return status;
     }
     
@@ -494,7 +497,7 @@ CFE_Status_t ADCS_GetRawGYRSensorCmd(void) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Raw GYR Sensor: 0x%08lx", (unsigned long)status);
         return status;
     }
     
@@ -502,8 +505,7 @@ CFE_Status_t ADCS_GetRawGYRSensorCmd(void) {
     OS_printf("TimeSec : %u || TimeNanoSec : %u\n", RetVal.TimeSeconds, RetVal.TimeNanoSeconds);
     OS_printf("GYR0 RawRate X: %f || RawRate Y: %f || RawRate Z: %f\n", RetVal.GYR0RawRateX, RetVal.GYR0RawRateY, RetVal.GYR0RawRateZ);
     OS_printf("GYR1 RawRate X: %f || RawRate Y: %f || RawRate Z: %f\n", RetVal.GYR1RawRateX, RetVal.GYR1RawRateY, RetVal.GYR1RawRateZ);
-    OS_printf("Valid Flag GYR0 : %s || GYR1 : %s", RetVal.GYR0ValidFlag ? "true":"false",
-                                                RetVal.GYR1ValidFlag ? "true":"false");
+    OS_printf("Valid Flag GYR0 : 0x%02X\n", RetVal.ValidFlag);
     
     return CFE_SUCCESS;
 }
@@ -517,7 +519,7 @@ CFE_Status_t ADCS_GetCalibratedGYRSensorCmd(void) {
 
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Current Unix Time: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
         return status;
     }
     
@@ -527,11 +529,7 @@ CFE_Status_t ADCS_GetCalibratedGYRSensorCmd(void) {
     OS_printf("GYR1 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n", RetVal.GYR1CalibratedRateX, RetVal.GYR1CalibratedRateY, RetVal.GYR1CalibratedRateZ);
     OS_printf("Ext GYR0 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n", RetVal.ExtGYR0CalibratedRateX, RetVal.ExtGYR0CalibratedRateY, RetVal.ExtGYR0CalibratedRateZ);
     OS_printf("Ext GYR1 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n", RetVal.ExtGYR1CalibratedRateX, RetVal.ExtGYR1CalibratedRateY, RetVal.ExtGYR1CalibratedRateZ);
-    OS_printf("Valid flag GYR0 : %s || GYR1 : %s || ExtGYR0 : %s || ExtGYR1 : %s",
-                RetVal.GYR0ValidFlag ? "true":"false",
-                RetVal.GYR1ValidFlag ? "true":"false",
-                RetVal.ExtGYR0ValidFlag ? "true":"false",
-                RetVal.ExtGYR1ValidFlag ? "true":"false");    
+    OS_printf("Valid flag GYR0 : 0x%02X\n", RetVal.ValidFlag);    
     
     return CFE_SUCCESS;
 }

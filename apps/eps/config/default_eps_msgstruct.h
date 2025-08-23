@@ -145,5 +145,10 @@ typedef struct {
     EPS_HkTlm_Payload_t Payload;
 } EPS_HkTlm_t;
 
+typedef struct {
+    CFE_MSG_TelemetryHeader_t  TelemetryHeader;
+    EPS_BcnTlm_Payload_t Payload;
+} EPS_BcnTlm_t;
+
 #endif
       

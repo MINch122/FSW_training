@@ -187,18 +187,41 @@ static ErrorCode cubeObc_sendReceive(TctlmCommsMasterSvc_Endpoint *masterEndpoin
 	txCspDataBuffer[CSP_MSG_TYPE_IDX] = msgType;
 	txCspDataBuffer[CSP_TCTLM_ID_IDX] = masterEndpoint->id;
 
+	/**
+	 * Copy the data buffer
+	 */
+	memcpy(txCspDataBuffer + CSP_HEADER_SIZE, handle[endpoint->type].buffer, datalen);
+	OS_printf("TxData: ");
+	for (uint8_t i=0; i< datalen + CSP_HEADER_SIZE; i++) {
+		OS_printf("0x%02X\t", txCspDataBuffer[i]);
+	}
+	OS_printf("\n");
+
 	int32 res;
 	if(msgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TC) {
+		/**
+		 * If the TC is Reset, there is not ack (i.e. No reply)
+		 */
+		if(masterEndpoint->id == ADCS_ID_SET_RESET) {
+			res = CFE_SRL_ApiTransactionCSP(endpoint->addr, dstPort,
+										txCspDataBuffer, datalen + CSP_HEADER_SIZE,
+										NULL, 0);
+			if (res == 1) result = CUBEOBC_ERROR_OK;
+			goto cleanup;
+		}
+		else {
 		/**
 		 * In this case, return length shoud be `3`(ACK) or `4`(NACK)
 		 */
 		res = CFE_SRL_ApiTransactionCSP(endpoint->addr, dstPort,
 									txCspDataBuffer, datalen + CSP_HEADER_SIZE,
 									rxCspDataBuffer, CSP_UNKNOWN_LEN);
+		}
+		
 	}
-	else {
+	else { // msgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TLM
 		res = CFE_SRL_ApiTransactionCSP(endpoint->addr, dstPort,
-									txCspDataBuffer, datalen + CSP_HEADER_SIZE,
+									txCspDataBuffer, CSP_HEADER_SIZE,
 									rxCspDataBuffer, datalen + CSP_HEADER_SIZE);
 	}
 									
@@ -238,6 +261,7 @@ static ErrorCode cubeObc_sendReceive(TctlmCommsMasterSvc_Endpoint *masterEndpoin
 		// Extract TCTLM data from CSP response data
 		memcpy(handle[endpoint->type].buffer, &rxCspDataBuffer[CSP_DATA_IDX], datalen);
 	}
+cleanup:
 	return result;
 }
 

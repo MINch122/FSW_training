@@ -91,38 +91,73 @@ int CFE_SRL_Read(CFE_SRL_IO_Handle_t *Handle, void *Data, size_t Size, uint32_t 
     return CFE_SUCCESS;
 }
 
+/**
+ * This function has speccial functionality for handling TxSize
+ * This is required because of the limitation of first Tx buffer size
+ * If Combined transaction (which use Sr, i.e. Repeated start) is used,
+ * AT91 limit the first write size for `4`
+ * { (SADR(`1`) + IADR(depends on IADRSZ which maximum is `3`) }
+ * So, Tx Packet should be splited to `if(N > 3), N = 3 + (N-3)`
+ */
 int CFE_SRL_TransactionI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Addr) {
-    int Status;
-    struct i2c_rdwr_ioctl_data Packet = {0,};
-    struct i2c_msg MsgI2C[2] = {0,};
+
+    struct i2c_msg MsgI2C[3] = {0,};
+    struct i2c_rdwr_ioctl_data Packet = {.msgs = MsgI2C,
+                                         .nmsgs = 0};
+    int Bytes = 0;
 
     if (TxData != NULL && TxSize > 0) {
-        // First Message - Write
-        MsgI2C[Packet.nmsgs].addr = (uint16_t)Addr;
-        MsgI2C[Packet.nmsgs].flags = 0;    // Write flag
-        MsgI2C[Packet.nmsgs].len = TxSize;
-        MsgI2C[Packet.nmsgs].buf = (uint8_t *)TxData;
-
-        Packet.nmsgs ++;
+        /**
+         * If TxSize is greater than 3 Bytes, this gonna be First Message
+         * First Message : Write 3 bytes
+         * 
+         * If else, this gonna be neglected
+         */
+        if (TxSize > 3) {
+            MsgI2C[Packet.nmsgs ++] = (struct i2c_msg) {
+                .addr = (uint16_t)Addr,
+                .flags = 0, // Write flag
+                .len = 3,
+                .buf = (uint8_t *)TxData
+            };
+            Bytes += 3;
+        }
+        /**
+         * If TxSize is less than 3 Bytes, this gonna be First Message
+         * First Message : Write some bytes which is less than 3 bytes
+         * 
+         * If else, this gonna be Second Message
+         * Second Message : Write residual
+         */
+        MsgI2C[Packet.nmsgs ++] = (struct i2c_msg) {
+            .addr = (uint16_t)Addr,
+            .flags = 0, // Write flag
+            .len = TxSize - Bytes,
+            .buf = (uint8_t *)TxData + Bytes
+        };
     }
 
-    // Second Message - Read
-    MsgI2C[Packet.nmsgs].addr = (uint16_t)Addr;
-    MsgI2C[Packet.nmsgs].flags = I2C_M_RD; // Read flag
-    MsgI2C[Packet.nmsgs].len = RxSize;
-    MsgI2C[Packet.nmsgs].buf = RxData;
+    // Second (or Third) Message - Read
+    if (RxData != NULL && RxSize > 0) {
+        MsgI2C[Packet.nmsgs ++] = (struct i2c_msg) {
+            .addr = (uint16_t)Addr,
+            .flags = I2C_M_RD,
+            .len = RxSize,
+            .buf = RxData
+        };
+    }
 
-    Packet.nmsgs ++;
-    
-    /**
-     * Configure Transaction Packet
-     */
-    Packet.msgs = MsgI2C;
+    if (Packet.nmsgs == 0) return CFE_SUCCESS; // Do nothing
 
     /**
      * Do transaction
+     * If ioctl return -1 by interrupt signal, try again
      */
-    Status = ioctl(Handle->FD, I2C_RDWR, &Packet);
+    int Status;
+    do {
+        Status = ioctl(Handle->FD, I2C_RDWR, &Packet);
+    } while (Status < 0 && errno == EINTR);
+
     if (Status < 0) {
         Handle->__errno = errno;
         return CFE_SRL_READ_ERR;

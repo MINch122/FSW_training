@@ -157,12 +157,15 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_ControlEstimationModeCmd_t))) {
                 ADCS_SetControlEstimationModeCmd((ADCS_ControlEstimationModeCmd_t *)SBBufPtr);
             }
+            break;
 
         case ADCS_SET_REFERENCE_LLH_TARGET_CC:
             // ID 48
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_ReferenceLLHTargetCmd_t))) {
                 ADCS_SetReferenceLLHTargetCmd((ADCS_ReferenceLLHTargetCmd_t *)SBBufPtr);
             }
+            break;
+
         case ADCS_SET_ORBIT_MODE_CC:
             // ID 51
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_OrbitModeCmd_t))) {

@@ -108,10 +108,11 @@ typedef struct {
 /*
 ** Type definition (EPS housekeeping)
 */
-
-
 typedef struct {
     uint16 something; //todo
 } EPS_HkTlm_Payload_t;
 
+typedef struct {
+    uint16 something; //todo
+} EPS_BcnTlm_Payload_t;
 #endif

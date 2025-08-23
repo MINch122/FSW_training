@@ -293,10 +293,7 @@ typedef struct { // ID 170
     int16 FSS3BetaAngle;
     uint8 FSS3CaptureResult;
     uint8 FSS3DetectionResult;
-    bool FSS0ValidResult;
-    bool FSS1ValidResult;
-    bool FSS2ValidResult;
-    bool FSS3ValidResult;
+    bool ValidResult; // FSS0, 1, 2, 3
 }__attribute__((packed)) ADCS_RawCubeSenseSunTlm_Payload_t;
 
 typedef struct { // ID 183
@@ -374,8 +371,7 @@ typedef struct { // ID 204
     float GYR1RawRateX;
     float GYR1RawRateY;
     float GYR1RawRateZ;
-    bool GYR0ValidFlag;
-    bool GYR1ValidFlag;
+    bool ValidFlag; // GYR0, 1
 }__attribute__((packed)) ADCS_RawGYRSensorTlm_Paylaod_t;
 
 typedef struct { // ID 207
@@ -393,10 +389,7 @@ typedef struct { // ID 207
     float ExtGYR1CalibratedRateX;
     float ExtGYR1CalibratedRateY;
     float ExtGYR1CalibratedRateZ;
-    bool GYR0ValidFlag;
-    bool GYR1ValidFlag;
-    bool ExtGYR0ValidFlag;
-    bool ExtGYR1ValidFlag;
+    bool ValidFlag; // GYR0, 1, ExtGYR0, 1
 }__attribute__((packed)) ADCS_CalibratedGYRSensorTlm_Payload_t;
 
 
