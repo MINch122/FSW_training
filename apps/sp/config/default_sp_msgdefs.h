@@ -10,6 +10,7 @@ typedef struct SP_Deploy_Payload{
 } SP_Deploy_Payload_t;
 
 typedef struct SP_DEPTlm_Payload{
-    uint8_t get_result;
+    uint8_t DeployStatus;
 } SP_BcnTlm_Payload_t;
+
 #endif

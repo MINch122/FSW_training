@@ -35,7 +35,8 @@
 /***********************************************************************/
 #define ADCS_PIPE_DEPTH 32 /* Depth of the Command Pipe for Application */
 
-
+#define ADCS_EVS_TASK_STACK_SIZE        2048
+#define ADCS_EVS_TASK_STACK_PRIORITY    200
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                              EndPoint ID                                  */
@@ -48,8 +49,18 @@
 #define ADCS_ID_SET_ORBIT_MODE                      51
 #define ADCS_ID_SET_REFERENCE_RPY_VALUES            54
 #define ADCS_ID_SET_SAT_ORBIT_PARAM_CONFIG          68
-/* Set fucntion : ID 128 ~ 244 */
-#define	ADCS_ID_GET_CURRENT_UNIX_TIME_TELEMETRY     133
+
+#define ADCS_ID_SET_PERSIST_CONFIG                  7
+#define ADCS_ID_SET_POWER_STATE                     56
+#define ADCS_ID_SET_RUN_MODE                        57
+#define ADCS_ID_SET_SATELLITE_CONFIG                61
+#define ADCS_ID_SET_CONTROLLER_CONFIG               62
+#define ADCS_ID_SET_DEFAULT_MODE_CONFIG             64
+#define ADCS_ID_SET_MOUNTING_CONFIG                 65
+#define ADCS_ID_SET_UNSOLICIT_EVENT_MSG_SETUP       116
+
+/* Get fucntion : ID 128 ~ 244 */
+#define	ADCS_ID_GET_CURRENT_UNIX_TIME               133
 #define ADCS_ID_GET_CONTROL_ESTIMATION_MODE         150
 #define ADCS_ID_GET_REFERENCE_LLH_TARGET            157
 #define ADCS_ID_GET_ORBIT_MODE                      162
@@ -60,6 +71,16 @@
 #define ADCS_ID_GET_RAW_CSS_SENSOR                  203
 #define ADCS_ID_GET_RAW_GYR_SENSOR                  204
 #define ADCS_ID_GET_CALIBRATED_GYR_SENSOR           207
+
+#define ADCS_ID_GET_PERSIST_CONFIG_DIAGNOSTIC       134
+#define ADCS_ID_GET_COMMUNICATION_STATUS            135
+#define ADCS_ID_GET_RUN_MODE                        184
+#define ADCS_ID_GET_SATELLITE_CONFIG                189
+#define ADCS_ID_GET_CONTROLLER_CONFIG               190
+#define ADCS_ID_GET_DEFAULT_MODE_CONFIG             192
+#define ADCS_ID_GET_MOUNTING_CONFIG                 193
+#define ADCS_ID_GET_OPERATIONAL_STATE               200
+#define ADCS_ID_GET_UNSOLICIT_EVENT_MSG_SETUP       233
 /* End of EndPoint ID */
 
 #endif

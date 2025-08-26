@@ -60,6 +60,12 @@ void SP_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
                 SP_Get_DeployCmd((const SP_Get_DeployCmd_t*)SBBufPtr);
             }
             break;
+
+        case SP_START_DEPLOY_TASK_CC:
+            if (SP_VerifyCmdLength(&SBBufPtr->Msg, sizeof(SP_StartDeployTaskCmd_t))) {
+
+            }
+            break;
         
         default : 
             CFE_EVS_SendEvent(SP_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalud ground command code : CC = %d", CommandCode);

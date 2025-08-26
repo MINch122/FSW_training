@@ -124,7 +124,8 @@
         "cstddef": "c",
         "rope": "c",
         "*.def": "c",
-        "coroutine": "c"
+        "coroutine": "c",
+        "cfe_rf_typedef.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

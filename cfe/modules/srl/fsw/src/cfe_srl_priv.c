@@ -79,7 +79,7 @@ int32 CFE_SRL_WriteI2C(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Siz
     if (Status != CFE_SUCCESS) return Status;
 
     // Set Slave Addr
-    Status = CFE_SRL_BasicIOCTL(Handle->FD, I2C_SLAVE, &Addr);
+    Status = ioctl(Handle->FD, I2C_SLAVE, Addr);
     if (Status < 0) {
         Handle->__errno = errno;
         Status = CFE_SRL_IOCTL_ERR;
@@ -247,6 +247,20 @@ int32 CFE_SRL_WriteGenericSPI(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *P
  * Private Read function
  */
 
+
+static int32 CFE_SRL_PrepareI2C(CFE_SRL_IO_Handle_t *Handle, uint32_t Addr, uint32_t Timeout) {
+    int32 Status;
+
+    if (Addr > 128) return CFE_SRL_I2C_ADDR_ERR;
+
+    Status = ioctl(Handle->FD, I2C_SLAVE, Addr);
+    if (Status < 0) {Handle->__errno = errno; Status = CFE_SRL_IOCTL_ERR; return Status;}
+    Status = ioctl(Handle->FD, I2C_TIMEOUT, (Timeout + 9)/10u);
+    if (Status < 0) {Handle->__errno = errno; Status = CFE_SRL_IOCTL_ERR; return Status;}
+
+    return CFE_SUCCESS;
+}
+
 /*----------------------------------------------------------------
  *
  * Implemented per public API
@@ -270,6 +284,9 @@ int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
         /**
          * If `Timeout` Parameter is uesd, do atomic transaction
          */
+        Status = CFE_SRL_PrepareI2C(Handle, Addr, Timeout);
+        if (Status != CFE_SUCCESS) goto error;
+        
         OS_printf("I2C Atomic Transaction.\n");
         if (TxData != NULL) {
             // Write
@@ -277,9 +294,18 @@ int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
             if (Status != CFE_SUCCESS) goto error;
         }
 
-        // Poll Read
-        Status = CFE_SRL_Read(Handle, RxData, RxSize, Timeout, Read);
-        if (Status != CFE_SUCCESS) goto error;
+        // Read
+        ssize_t N = CFE_SRL_BasicRead(Handle->FD, RxData, RxSize);
+        if (N < 0) {
+            Handle->__errno = errno;
+            Status = CFE_SRL_READ_ERR;
+            goto error;
+        }
+        else if ((size_t)N != RxSize) {
+            Status = CFE_SRL_PARTIAL_READ_ERR;
+            goto error;
+        }
+        else Status = CFE_SUCCESS;
     }
     else {
         /**
@@ -325,9 +351,12 @@ int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t T
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    ioctl(Handle->FD, TCFLSH, TCIOFLUSH);
-
-    if (TxData != NULL) {
+    if (TxData != NULL && TxSize > 0) {
+        /**
+         * If something is written, cleanup the TRx buffer before write
+         * Unless, do nothing
+         */
+        ioctl(Handle->FD, TCFLSH, TCIOFLUSH);
         // Write
         Status = CFE_SRL_Write(Handle, TxData, TxSize);
         if (Status != CFE_SUCCESS) goto error;

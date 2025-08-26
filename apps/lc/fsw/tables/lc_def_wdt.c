@@ -37,6 +37,12 @@
 #include "lc_msgdefs.h"
 #include "lc_tbl.h"
 
+#include "eps_msgids.h"
+#include "eps_msg.h"
+
+#include "sp_msgids.h"
+#include "sp_msg.h"
+
 /*************************************************************************
 ** Examples
 ** (note that comment delimiters have been changed to '**')
@@ -97,7 +103,22 @@ CFE_TBL_FileDef_t CFE_TBL_FileDef = {"LC_WDT", LC_APP_NAME "." LC_WDT_TABLENAME,
 ** Default watchpoint definition table (WDT) data
 */
 LC_WDTEntry_t LC_WDT[LC_MAX_WATCHPOINTS] = {
-    /* #0 (unused) */
+/*--------------------------Deploy WP----------------------------*/
+    /** #0 VBat for Deploy (SP, UANT, SANT) 
+     *  VBat >= [TBD] mV
+    */
+    {
+        .DataType                   = LC_DATA_WATCH_UWORD_LE, // U16 in LE
+        .OperatorID                 = LC_OPER_GE,
+        .MessageID                  = CFE_SB_MSGID_WRAP_VALUE(EPS_BCN_TLM_MID),
+        .WatchpointOffset           = (offsetof(EPS_BcnTlm_t, Payload) + offsetof(EPS_BcnTlm_Payload_t, something)),
+        .BitMask                    = LC_BITMASK_NONE,
+        .CustomFuncArgument         = 0,
+        .ResultAgeWhenStale         = 0,
+        .ComparisonValue.Unsigned16 = 14000, // TBD, Vbat in [mV]
+    },
+
+    /* #1 ADCS Sun detection Flag (SP, UANT, SANT) */
     {
         .DataType                   = LC_DATA_WATCH_NOT_USED,
         .OperatorID                 = LC_OPER_NONE,
@@ -109,43 +130,37 @@ LC_WDTEntry_t LC_WDT[LC_MAX_WATCHPOINTS] = {
         .ComparisonValue.Unsigned32 = 0,
     },
 
-    /* #1 (unused) */
+    /** #2  SP Deploy Task is not running. "IsRunning == false"
+     *  i.e. `false` which is less than `1` 
+     *  SP `IsRunning < 1`
+     */
     {
-        .DataType                   = LC_DATA_WATCH_NOT_USED,
-        .OperatorID                 = LC_OPER_NONE,
-        .MessageID                  = CFE_SB_MSGID_RESERVED,
-        .WatchpointOffset           = 0,
+        .DataType                   = LC_DATA_WATCH_UBYTE,
+        .OperatorID                 = LC_OPER_LT,
+        .MessageID                  = CFE_SB_MSGID_WRAP_VALUE(SP_BCN_TLM_MID),
+        .WatchpointOffset           = offsetof(SP_BcnTlm_t, IsRunning),
         .BitMask                    = LC_BITMASK_NONE,
         .CustomFuncArgument         = 0,
         .ResultAgeWhenStale         = 0,
-        .ComparisonValue.Unsigned32 = 0,
+        .ComparisonValue.Unsigned8  = 1,
     },
 
-    /* #2 (unused) */
+    /** #3 SP is not deployed. "IsDeploy == false"
+     * i.e. `false` which is less than `1`
+     * SP `IsDeploy < 1`
+     * */
     {
-        .DataType                   = LC_DATA_WATCH_NOT_USED,
-        .OperatorID                 = LC_OPER_NONE,
-        .MessageID                  = CFE_SB_MSGID_RESERVED,
-        .WatchpointOffset           = 0,
+        .DataType                   = LC_DATA_WATCH_UBYTE,
+        .OperatorID                 = LC_OPER_LT,
+        .MessageID                  = CFE_SB_MSGID_WRAP_VALUE(SP_BCN_TLM_MID),
+        .WatchpointOffset           = offsetof(SP_BcnTlm_t, IsDeploy),
         .BitMask                    = LC_BITMASK_NONE,
         .CustomFuncArgument         = 0,
         .ResultAgeWhenStale         = 0,
-        .ComparisonValue.Unsigned32 = 0,
+        .ComparisonValue.Unsigned8  = 1,
     },
 
-    /* #3 (unused) */
-    {
-        .DataType                   = LC_DATA_WATCH_NOT_USED,
-        .OperatorID                 = LC_OPER_NONE,
-        .MessageID                  = CFE_SB_MSGID_RESERVED,
-        .WatchpointOffset           = 0,
-        .BitMask                    = LC_BITMASK_NONE,
-        .CustomFuncArgument         = 0,
-        .ResultAgeWhenStale         = 0,
-        .ComparisonValue.Unsigned32 = 0,
-    },
-
-    /* #4 (unused) */
+    /* #4 UANT Deploy Task Is not running. ""*/
     {
         .DataType                   = LC_DATA_WATCH_NOT_USED,
         .OperatorID                 = LC_OPER_NONE,

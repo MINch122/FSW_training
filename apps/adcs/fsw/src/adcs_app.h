@@ -74,6 +74,8 @@ typedef struct
     char   PipeName[CFE_MISSION_MAX_API_LEN];
     uint16 PipeDepth;
 
+    CFE_ES_TaskId_t TaskId;
+
 } ADCS_AppData_t;
 
 /*

@@ -29,4 +29,6 @@
 */
 #include "sant_app.h"
 
+void SANT_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSize);
+
 #endif /* SANT_APP_UTILS_H */

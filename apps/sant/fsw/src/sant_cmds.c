@@ -89,6 +89,10 @@ CFE_Status_t SANT_NoopCmd(const SANT_NoopCmd_t *Msg)
 {
     SANT_Data.CmdCounter++;
 
+    uint8_t Cmds[2] = {SANT_Data.CmdCounter, SANT_Data.ErrCounter};
+
+    SANT_HandleReport(CFE_SUCCESS, SANT_NOOP_CC, Cmds, sizeof(Cmds));
+
     CFE_EVS_SendEvent(SANT_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "SANT: NOOP command received.");
 
     return CFE_SUCCESS;
@@ -106,6 +110,10 @@ CFE_Status_t SANT_ResetCountersCmd(const SANT_ResetCountersCmd_t *Msg)
     SANT_Data.CmdCounter = 0;
     SANT_Data.ErrCounter = 0;
 
+    uint8_t Cmds[2] = {SANT_Data.CmdCounter, SANT_Data.ErrCounter};
+
+    SANT_HandleReport(CFE_SUCCESS, SANT_RESET_COUNTERS_CC, Cmds, sizeof(Cmds));
+
     CFE_EVS_SendEvent(SANT_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "SANT: RESET command");
 
     return CFE_SUCCESS;
@@ -115,9 +123,11 @@ CFE_Status_t SANT_SoftRebootCmd(const SANT_SoftRebootCmd_t *Msg)
 {
     SANT_Data.CmdCounter++;
     CFE_Status_t gs_st;
-    uint8_t SANT_I2C_ADDR = 0x05;
 
     gs_st = gs_gssb_soft_reset(SANT_I2C_ADDR, SANT_I2C_TIMEOUT_MS);
+
+    SANT_HandleReport(gs_st, SANT_SOFT_REBOOT_CC, NULL, 0);
+
     if (gs_st != GS_OK)
     {
         CFE_EVS_SendEvent(SANT_I2C_XFER_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -140,8 +150,10 @@ CFE_Status_t SANT_BurnCmd(const SANT_BurnCmd_t *Msg)
         SANT_Data.ErrCounter++;
     }
 
-    uint8_t SANT_I2C_ADDR = 0x05;
     gs_st = gs_gssb_ar6_burn(SANT_I2C_ADDR, SANT_I2C_TIMEOUT_MS, Msg->Duration);
+
+    SANT_HandleReport(gs_st, SANT_BURN_CC, NULL, 0);
+
     if (gs_st != GS_OK)
     {
         CFE_EVS_SendEvent(SANT_BURN_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -157,8 +169,10 @@ CFE_Status_t SANT_StopBurnCmd(const SANT_StopBurnCmd_t *Msg)
     SANT_Data.CmdCounter++;
     CFE_Status_t gs_st;
 
-    uint8_t SANT_I2C_ADDR = 0x05;
     gs_st = gs_gssb_ar6_stop_burn(SANT_I2C_ADDR, SANT_I2C_TIMEOUT_MS);
+
+    SANT_HandleReport(gs_st, SANT_STOP_BURN_CC, NULL, 0);
+
     if (gs_st != GS_OK)
     {
         CFE_EVS_SendEvent(SANT_STOP_BURN_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -175,8 +189,10 @@ CFE_Status_t SANT_GetBoardStatusCmd(const SANT_GetBoardStatusCmd_t *Msg)
     CFE_Status_t gs_st;
     gs_gssb_board_status_t board_status;
 
-    uint8_t SANT_I2C_ADDR = 0x05;
     gs_st = gs_gssb_ar6_get_board_status(SANT_I2C_ADDR, SANT_I2C_TIMEOUT_MS, &board_status);
+
+    SANT_HandleReport(gs_st, SANT_GET_BOARD_STATUS_CC, &board_status, sizeof(board_status));
+
     if (gs_st != GS_OK)
     {
         CFE_EVS_SendEvent(SANT_GET_BOARD_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -194,8 +210,10 @@ CFE_Status_t SANT_GetTemperatureCmd(const SANT_GetTemperatureCmd_t *Msg)
 
     int16_t temperature;
 
-    uint8_t SANT_I2C_ADDR = 0x05;
     gs_st = gs_gssb_ar6_get_internal_temp(SANT_I2C_ADDR, SANT_I2C_TIMEOUT_MS, &temperature);
+
+    SANT_HandleReport(gs_st, SANT_GET_TEMPERATURE_CC, &temperature, sizeof(temperature));
+
     if (gs_st != GS_OK)
     {
         CFE_EVS_SendEvent(SANT_GET_TEMP_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -212,8 +230,10 @@ CFE_Status_t SANT_GetStatusCmd(const SANT_GetStatusCmd_t *Msg)
     CFE_Status_t gs_st;
     gs_gssb_ar6_release_status_t release_status;
 
-    uint8_t SANT_I2C_ADDR = 0x05;
     gs_st = gs_gssb_ar6_get_release_status(SANT_I2C_ADDR, SANT_I2C_TIMEOUT_MS, &release_status);
+
+    SANT_HandleReport(gs_st, SANT_GET_STATUS_CC, &release_status, sizeof(release_status));
+
     if (gs_st != GS_OK)
     {
         CFE_EVS_SendEvent(SANT_GET_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -229,9 +249,11 @@ CFE_Status_t SANT_GetBackupStatusCmd(const SANT_GetBackupStatusCmd_t *Msg)
     SANT_Data.CmdCounter++;
     CFE_Status_t gs_st;
     gs_gssb_backup_status_t backup_status;
-
-    uint8_t SANT_I2C_ADDR = 0x05; 
+ 
     gs_st = gs_gssb_ar6_get_backup_status(SANT_I2C_ADDR, SANT_I2C_TIMEOUT_MS, &backup_status);
+
+    SANT_HandleReport(gs_st, SANT_GET_BACKUP_STATUS_CC, &backup_status, sizeof(backup_status));
+
     if (gs_st != GS_OK)
     {
         CFE_EVS_SendEvent(SANT_GET_BACKUP_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -248,8 +270,10 @@ CFE_Status_t SANT_GetBackupSettingsCmd(const SANT_GetSettingsCmd_t *Msg)
     CFE_Status_t gs_st;
     gs_gssb_backup_settings_t cfg;
 
-    uint8_t SANT_I2C_ADDR = 0x05;
     gs_st = gs_gssb_ar6_get_backup_settings(SANT_I2C_ADDR, SANT_I2C_TIMEOUT_MS, &cfg);
+
+    SANT_HandleReport(gs_st, SANT_GET_SETTINGS_CC, &cfg, sizeof(cfg));
+
     if (gs_st != GS_OK)
     {
         CFE_EVS_SendEvent(SANT_GET_SETTINGS_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -278,8 +302,10 @@ CFE_Status_t SANT_SetBackupSettingsCmd(const SANT_SetSettingsCmd_t *Msg)
         SANT_Data.ErrCounter++;
     }
 
-    uint8_t SANT_I2C_ADDR = 0x05;
     gs_st = gs_gssb_ar6_set_backup_settings(SANT_I2C_ADDR, SANT_I2C_TIMEOUT_MS, cfg);
+
+    SANT_HandleReport(gs_st, SANT_SET_SETTINGS_CC, NULL, 0);
+
     if (gs_st != GS_OK)
     {
         CFE_EVS_SendEvent(SANT_SET_SETTINGS_ERR_EID, CFE_EVS_EventType_ERROR,

@@ -62,8 +62,35 @@ bool ADCS_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength
         result = false;
 
         ADCS_AppData.ErrCounter++;
-    }
 
+        /* RPT */
+        ADCS_ReportTlm_t *BufPtr = (ADCS_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(ADCS_ReportTlm_t));
+        if (BufPtr == NULL) goto cleanup;
+
+        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(ADCS_REPORT_TLM_MID),
+        sizeof(ADCS_ReportTlm_t)) != CFE_SUCCESS) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            goto cleanup;
+        }
+        BufPtr->Report.MsgID = (uint16_t)CFE_SB_MsgIdToValue(MsgId);
+        BufPtr->Report.CommandCode = (uint8_t)FcnCode;
+        BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
+        BufPtr->Report.ReturnCode = CFE_STATUS_WRONG_MSG_LENGTH; // Error code of `Length error`
+        BufPtr->Report.ReturnDataSize = 2 * sizeof(uint32_t);
+        
+        uint32_t Temp32 = (uint32_t)ActualLength;
+        memcpy(BufPtr->Report.ReturnValue, &Temp32, sizeof(uint32_t));
+        Temp32 = (uint32_t)ExpectedLength;
+        memcpy(BufPtr->Report.ReturnValue + sizeof(uint32_t), &Temp32, sizeof(uint32_t));
+
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+        if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            goto cleanup;
+        }
+        /* End of RPT */
+    }
+cleanup:
     return result;
 }
 
@@ -108,7 +135,7 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }            
             break;
 
-        case ADCS_GPIO_ENALBE_LOW_CC:
+        case ADCS_GPIO_ENABLE_LOW_CC:
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GpioEnLowCmd_t)))
             {
                 ADCS_EN_LowCmd();
@@ -148,42 +175,93 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             // ID 2
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_CurrentUnixTimeCmd_t)))
             {
-                ADCS_SetCurrentUnixTimeCmd((ADCS_CurrentUnixTimeCmd_t *)SBBufPtr);
+                ADCS_SetCurrentUnixTimeCmd((const ADCS_CurrentUnixTimeCmd_t *)SBBufPtr);
             }
             break;
             
         case ADCS_SET_CONTROL_ESTIMATION_MODE_CC:
             // ID 42
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_ControlEstimationModeCmd_t))) {
-                ADCS_SetControlEstimationModeCmd((ADCS_ControlEstimationModeCmd_t *)SBBufPtr);
+                ADCS_SetControlEstimationModeCmd((const ADCS_ControlEstimationModeCmd_t *)SBBufPtr);
             }
             break;
 
         case ADCS_SET_REFERENCE_LLH_TARGET_CC:
             // ID 48
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_ReferenceLLHTargetCmd_t))) {
-                ADCS_SetReferenceLLHTargetCmd((ADCS_ReferenceLLHTargetCmd_t *)SBBufPtr);
+                ADCS_SetReferenceLLHTargetCmd((const ADCS_ReferenceLLHTargetCmd_t *)SBBufPtr);
             }
             break;
 
         case ADCS_SET_ORBIT_MODE_CC:
             // ID 51
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_OrbitModeCmd_t))) {
-                ADCS_SetOrbitModeCmd((ADCS_OrbitModeCmd_t *)SBBufPtr);
+                ADCS_SetOrbitModeCmd((const ADCS_OrbitModeCmd_t *)SBBufPtr);
             }
             break;
         
         case ADCS_SET_REFERENCE_RPY_VALUES_CC:
             // ID 54
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_ReferenceRPYvaluesCmd_t))) {
-                ADCS_SetReferenceRPYValuesCmd((ADCS_ReferenceRPYvaluesCmd_t *)SBBufPtr);
+                ADCS_SetReferenceRPYValuesCmd((const ADCS_ReferenceRPYvaluesCmd_t *)SBBufPtr);
             }
             break;
         
         case ADCS_SET_SAT_ORBIT_PARAMS_CONFIG_CC:
             // ID 68
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SatOrbitParamConfigCmd_t))) {
-                ADCS_SetSatOrbitParamConfigCmd((ADCS_SatOrbitParamConfigCmd_t *)SBBufPtr);
+                ADCS_SetSatOrbitParamConfigCmd((const ADCS_SatOrbitParamConfigCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_SET_PERSIST_CONFIG_CC:
+            // ID 7
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_PersistConfigCmd_t))) {
+                ADCS_SetPersistConfigCmd((const ADCS_PersistConfigCmd_t *)SBBufPtr);
+            }
+            break;
+        
+        case ADCS_SET_POWER_STATE_CC:
+            // ID 56
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_PowerStateCmd_t))) {
+                ADCS_SetPowerStateCmd((const ADCS_PowerStateCmd_t *)SBBufPtr);
+            }
+            break;
+        case ADCS_SET_RUN_MODE_CC:
+            // ID 57
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_RunModeCmd_t))) {
+                ADCS_SetRunModeCmd((const ADCS_RunModeCmd_t *)SBBufPtr);
+            }
+            break;
+        case ADCS_SET_SATELLITE_CONFIG_CC:
+            // ID 61
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SatConfigCmd_t))) {
+                ADCS_SetSatelliteConfigCmd((const ADCS_SatConfigCmd_t *)SBBufPtr);
+            }
+            break;
+        case ADCS_SET_CONTROLLER_CONFIG_CC:
+            // ID 62
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_ControllerConfig_t))) {
+                ADCS_SetControllerConfigCmd((const ADCS_ControllerConfig_t *)SBBufPtr);
+            }
+            break;
+        case ADCS_SET_DEFAULT_MODE_CONFIG_CC:
+            // ID 64
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_DefaultModeConfigCmd_t))) {
+                ADCS_SetDefaultModeConfigCmd((const ADCS_DefaultModeConfigCmd_t *)SBBufPtr);
+            }
+            break;
+        case ADCS_SET_MOUNTING_CONFIG_CC:
+            // ID 65
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_MountingConfigCmd_t))) {
+                ADCS_SetMountingConfigCmd((const ADCS_MountingConfigCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_SET_UNSOLICIT_EVENT_MSG_SETUP_CC:
+            // ID 116
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_UnsolicitEventMsgSetupCmd_t))) {
+                ADCS_SetUnsolicitEventMsgSetupCmd((const ADCS_UnsolicitEventMsgSetupCmd_t *)SBBufPtr);
             }
             break;
         
@@ -191,62 +269,135 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
         * Process Requested Telemetry
         */
         case ADCS_GET_CURRENT_UNIX_TIME_CC:
+            // ID 133
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetCurrentUnixTimeCmd_t))) {
                 ADCS_GetCurrentUnixTimeCmd();
             }
             break;
             
         case ADCS_GET_CONTROL_ESTIMATION_MODE_CC:
+            // ID 150
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetControlEstimationModeCmd_t))) {
                 ADCS_GetControlEstimationModeCmd();
             }
             break;
         
         case ADCS_GET_REFERENCE_LLH_TARGET_CC:
+            // ID 157
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetReferenceLLHTargetCmd_t))) {
                 ADCS_GetReferenceLLHTargetCmd();
             }
             break;
 
         case ADCS_GET_ORBIT_MODE_CC:
+            // ID 162
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetOrbitModeCmd_t))) {
                 ADCS_GetOrbitModeCmd();
             }
             break;
 
         case ADCS_GET_RAW_CUBESENSE_SUN_CC:
+            // ID 170
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRawCubeSenseSunCmd_t))) {
                 ADCS_GetRawCubeSenseSunCmd();
             }
             break;
 
         case ADCS_GET_POWER_STATE_CC:
+            // ID 183
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetPowerStateCmd_t))) {
                 ADCS_GetPowerStateCmd();
             }
             break;
         
         case ADCS_GET_SAT_ORBIT_PARAM_CONFIG_CC:
+            // ID 196
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetSatOrbitParamConfigCmd_t))) {
                 ADCS_GetSatOrbitParamConfigCmd();
             }
             break;
 
         case ADCS_GET_RAW_CSS_SENSOR_CC:
+            // ID 203
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRawCSSSensorCmd_t))) {
                 ADCS_GetRawCSSSensorCmd();
             }
             break;
 
         case ADCS_GET_RAW_GYR_SENSOR_CC:
+            // ID 204
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRawGYRSensorCmd_t))) {
                 ADCS_GetRawGYRSensorCmd();
             }
             break;
 
         case ADCS_GET_CALIBRATED_GYR_SENSOR_CC:
+            // ID 207
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetCalibratedGYRSensorCmd_t))) {
                 ADCS_GetCalibratedGYRSensorCmd();
+            }
+            break;
+
+        case ADCS_GET_PERSIST_CONFIG_DIAGNOSTIC_CC:
+            // ID 134
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetPersistConfigDiagnosticCmd_t))) {
+                ADCS_GetPersistConfigDiagnosticCmd();
+            }
+            break;
+        
+        case ADCS_GET_COMMUNICATION_STATUS_CC:
+            // ID 135
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetCommunicationStatusCmd_t))) {
+                ADCS_GetCommunicationStatusCmd();
+            }
+            break;
+
+        case ADCS_GET_RUN_MODE_CC:
+            // ID 184
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRunModeCmd_t))) {
+                ADCS_GetRunModeCmd();
+            }
+            break;
+
+        case ADCS_GET_SATELLITE_CONFIG_CC:
+            // ID 189
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetSatelliteConfigCmd_t))) {
+                ADCS_GetSatelliteConfigCmd();
+            }
+            break;
+
+        case ADCS_GET_CONTROLLER_CONFIG_CC:
+            // ID 190
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetControllerConfigCmd_t))) {
+                ADCS_GetControllerConfigCmd();
+            }
+            break;
+
+        case ADCS_GET_DEFAULT_MODE_CONFIG_CC:
+            // ID 192
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetDefaultModeConfigCmd_t))) {
+                ADCS_GetDefaultModeConfigCmd();
+            }
+            break;
+
+        case ADCS_GET_MOUNTING_CONFIG_CC:
+            // ID 193
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetMountingConfigCmd_t))) {
+                ADCS_GetMountingConfigCmd();
+            }
+            break;
+
+        case ADCS_GET_OPERATIONAL_STATE:
+            // ID 200
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetOperationalStateCmd_t))) {
+                ADCS_GetOperationalStateCmd();
+            }
+            break;
+
+        case ADCS_GET_UNSOLICIT_EVENT_MSG_SETUP_CC:
+            // ID 233
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetUnsolicitEventMsgSetupCmd_t))) {
+                ADCS_GetUnsolicitEventMsgSetupCmd();
             }
             break;
 
@@ -254,6 +405,26 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
         default:
             CFE_EVS_SendEvent(ADCS_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
                               CommandCode);
+
+
+            /* RPT */
+            ADCS_ReportTlm_t *BufPtr = (ADCS_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(ADCS_ReportTlm_t));
+            if (BufPtr == NULL) break;
+            if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(ADCS_REPORT_TLM_MID), sizeof(ADCS_ReportTlm_t) != CFE_SUCCESS)) {
+                CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+                break;
+            }
+            BufPtr->Report.MsgID = ADCS_CMD_MID;
+            BufPtr->Report.CommandCode = (uint8_t)CommandCode;
+            BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
+            BufPtr->Report.ReturnCode = CFE_STATUS_BAD_COMMAND_CODE;
+            BufPtr->Report.ReturnDataSize = 0;
+            CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+            if(CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+                CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+                break;
+            }
+            /* End of RPT */
             break;
     }
 }
@@ -288,6 +459,27 @@ void ADCS_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
         default:
             CFE_EVS_SendEvent(ADCS_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                               "ADCS: invalid command packet,MID = 0x%x", (unsigned int)CFE_SB_MsgIdToValue(MsgId));
+
+
+             /* RPT */
+            ADCS_ReportTlm_t *BufPtr = (ADCS_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(ADCS_ReportTlm_t));
+            if (BufPtr == NULL) break;
+            if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(ADCS_REPORT_TLM_MID), sizeof(ADCS_ReportTlm_t) != CFE_SUCCESS)) {
+                CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+                break;
+            }
+            BufPtr->Report.MsgID = ADCS_CMD_MID;
+            BufPtr->Report.CommandCode = 0;
+            BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
+            BufPtr->Report.ReturnCode = CFE_STATUS_UNKNOWN_MSG_ID;
+            BufPtr->Report.ReturnDataSize = sizeof(CFE_SB_MsgId_Atom_t);
+            memcpy(BufPtr->Report.ReturnValue, &MsgId.Value, sizeof(CFE_SB_MsgId_Atom_t));
+            CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+            if(CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+                CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+                break;
+            }
+            /* End of RPT */
             break;
     }
 }

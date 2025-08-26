@@ -34,6 +34,8 @@
 
 #include "cfe_msg_hdr.h"
 
+#include "rpt_interface_cfg.h"
+
 /*
 ** The following commands all share the "NoArgs" format
 **
@@ -126,6 +128,45 @@ typedef struct{ // ID 68
     ADCS_SatOrbitParamConfigCmd_Payload_t Payload;
 } ADCS_SatOrbitParamConfigCmd_t;
 
+typedef struct { // ID 7
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_PersistConfigCmd_t;
+
+typedef struct { // ID 56
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_PowerStateCmd_Payload_t Payload;
+} ADCS_PowerStateCmd_t;
+
+typedef struct { // ID 57
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_RunModeCmd_Payload_t Payload;
+} ADCS_RunModeCmd_t;
+
+typedef struct { // ID 61
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_SatConfigCmd_Payload_t Payload;
+} ADCS_SatConfigCmd_t;
+
+typedef struct { // ID 62
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_ControllerConfig_Payload_t Payload;
+} ADCS_ControllerConfig_t;
+
+typedef struct { // ID 64
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_DefaultModeConfigCmd_Payload_t Payload;
+} ADCS_DefaultModeConfigCmd_t;
+
+typedef struct { // ID 65
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_MountingConfigCmd_Payload_t Payload;
+} ADCS_MountingConfigCmd_t;
+
+typedef struct {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_UnsolicitEventMsgSetupCmd_ExternalPayload_t Payload;
+} ADCS_UnsolicitEventMsgSetupCmd_t;
+
 /********************************************************
  * 
  * COSMIC Actual Get Command structure
@@ -139,7 +180,6 @@ typedef struct{ // ID 133
 typedef struct{ // ID 150
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_GetControlEstimationModeCmd_t;
-
 
 typedef struct{ // ID 157
     CFE_MSG_CommandHeader_t CommandHeader;
@@ -173,6 +213,41 @@ typedef struct{ // ID 207
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_GetCalibratedGYRSensorCmd_t;
 
+typedef struct{ // ID 134
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetPersistConfigDiagnosticCmd_t;
+
+typedef struct{ // ID 135
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetCommunicationStatusCmd_t;
+
+typedef struct{ // ID 184
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetRunModeCmd_t;
+
+typedef struct{ // ID 189
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetSatelliteConfigCmd_t;
+
+typedef struct{ // ID 190
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetControllerConfigCmd_t;
+
+typedef struct{ // ID 192
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetDefaultModeConfigCmd_t;
+
+typedef struct{ // ID 193
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetMountingConfigCmd_t;
+
+typedef struct{ // ID 200
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetOperationalStateCmd_t;
+
+typedef struct{ // ID 233
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetUnsolicitEventMsgSetupCmd_t;
 
 /********************************************************
  * 
@@ -184,6 +259,7 @@ typedef struct
 {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
     ADCS_BcnTlm_Payload_t Payload;         /**< \brief Telemetry payload */
+    bool IsSunlight;
 } ADCS_BcnTlm_t;
 
 /* Housekeeping SB MSG */
@@ -192,5 +268,11 @@ typedef struct
     CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
     ADCS_HkTlm_Payload_t Payload;         /**< \brief Telemetry payload */
 } ADCS_HkTlm_t;
+
+/* Report SB MSG */
+typedef struct {
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    RPT_Report_t Report;
+} ADCS_ReportTlm_t;
 
 #endif /* _adcs_app_msg_h_ */

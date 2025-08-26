@@ -47,6 +47,7 @@ struct CFE_SRL_IO_Param_s {
     size_t RxSize;
     /**
      * Used for ApiRead - Not used in I2C, SPI
+     * Unit : milli-second
      */
     uint32_t Timeout;
     /**

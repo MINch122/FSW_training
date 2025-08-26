@@ -51,12 +51,22 @@ CFE_Status_t ADCS_ExitBootloader(void);
  *********************************************/
 /* Set function */
 CFE_Status_t ADCS_SetReset(void);
-CFE_Status_t ADCS_SetCurrentUnixTimeCmd(ADCS_CurrentUnixTimeCmd_t *msg);
-CFE_Status_t ADCS_SetControlEstimationModeCmd(ADCS_ControlEstimationModeCmd_t *msg);
-CFE_Status_t ADCS_SetReferenceLLHTargetCmd(ADCS_ReferenceLLHTargetCmd_t *msg);
-CFE_Status_t ADCS_SetOrbitModeCmd(ADCS_OrbitModeCmd_t *msg);
-CFE_Status_t ADCS_SetReferenceRPYValuesCmd(ADCS_ReferenceRPYvaluesCmd_t *msg);
-CFE_Status_t ADCS_SetSatOrbitParamConfigCmd(ADCS_SatOrbitParamConfigCmd_t *msg);
+CFE_Status_t ADCS_SetCurrentUnixTimeCmd(const ADCS_CurrentUnixTimeCmd_t *msg);
+CFE_Status_t ADCS_SetControlEstimationModeCmd(const ADCS_ControlEstimationModeCmd_t *msg);
+CFE_Status_t ADCS_SetReferenceLLHTargetCmd(const ADCS_ReferenceLLHTargetCmd_t *msg);
+CFE_Status_t ADCS_SetOrbitModeCmd(const ADCS_OrbitModeCmd_t *msg);
+CFE_Status_t ADCS_SetReferenceRPYValuesCmd(const ADCS_ReferenceRPYvaluesCmd_t *msg);
+CFE_Status_t ADCS_SetSatOrbitParamConfigCmd(const ADCS_SatOrbitParamConfigCmd_t *msg);
+
+CFE_Status_t ADCS_SetPersistConfigCmd(const ADCS_PersistConfigCmd_t *msg);
+CFE_Status_t ADCS_SetPowerStateCmd(const ADCS_PowerStateCmd_t *msg);
+CFE_Status_t ADCS_SetRunModeCmd(const ADCS_RunModeCmd_t *msg);
+CFE_Status_t ADCS_SetSatelliteConfigCmd(const ADCS_SatConfigCmd_t *msg);
+CFE_Status_t ADCS_SetControllerConfigCmd(const ADCS_ControllerConfig_t *msg);
+CFE_Status_t ADCS_SetDefaultModeConfigCmd(const ADCS_DefaultModeConfigCmd_t *msg);
+CFE_Status_t ADCS_SetMountingConfigCmd(const ADCS_MountingConfigCmd_t *msg);
+CFE_Status_t ADCS_SetUnsolicitEventMsgSetupCmd(const ADCS_UnsolicitEventMsgSetupCmd_t *msg);
+
 /* Get function */
 CFE_Status_t ADCS_GetCurrentUnixTimeCmd(void);
 CFE_Status_t ADCS_GetControlEstimationModeCmd(void);
@@ -68,5 +78,15 @@ CFE_Status_t ADCS_GetSatOrbitParamConfigCmd(void);
 CFE_Status_t ADCS_GetRawCSSSensorCmd(void);
 CFE_Status_t ADCS_GetRawGYRSensorCmd(void);
 CFE_Status_t ADCS_GetCalibratedGYRSensorCmd(void);
+
+CFE_Status_t ADCS_GetPersistConfigDiagnosticCmd(void);
+CFE_Status_t ADCS_GetCommunicationStatusCmd(void);
+CFE_Status_t ADCS_GetRunModeCmd(void);
+CFE_Status_t ADCS_GetSatelliteConfigCmd(void);
+CFE_Status_t ADCS_GetControllerConfigCmd(void);
+CFE_Status_t ADCS_GetDefaultModeConfigCmd(void);
+CFE_Status_t ADCS_GetMountingConfigCmd(void);
+CFE_Status_t ADCS_GetOperationalStateCmd(void);
+CFE_Status_t ADCS_GetUnsolicitEventMsgSetupCmd(void);
 
 #endif /* ADCS_CMDS_H */

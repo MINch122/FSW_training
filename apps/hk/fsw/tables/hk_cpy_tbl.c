@@ -94,7 +94,7 @@
 #define CFE_MSG_TLM_HDR_SIZE    sizeof(CFE_MSG_TelemetryHeader_t)
 
 /* Beacon Packet */
-#define BCN_OFFSET_0            CFE_MSG_TLM_HDR_SIZE - sizeof(((CFE_MSG_TelemetryHeader_t *)0)->Spare)
+#define BCN_OFFSET_0            (CFE_MSG_TLM_HDR_SIZE - sizeof(((CFE_MSG_TelemetryHeader_t *)0)->Spare))
 #define BCN_OFFSET_1            BCN_OFFSET_0 + sizeof(CFE_SRL_HousekeepingTlm_Payload_t)
 #define BCN_OFFSET_2            BCN_OFFSET_1 + sizeof(RPT_BcnTlm_Payload_t)
 #define BCN_OFFSET_3            BCN_OFFSET_2 + sizeof(SANT_BcnTlm_Payload_t)

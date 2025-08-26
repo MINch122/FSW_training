@@ -161,3 +161,31 @@ void CFE_SRL_ApiPrintRtable(void) {
 int32 CFE_SRL_ApiRparamSaveCSP(uint8 Node, uint32 Timeout, uint8 TableId, uint8 To) {
     return CFE_SRL_RparamSaveCSP(Node, Timeout, TableId, To);
 }
+
+csp_socket_t *CFE_SRL_ApiSocketCSP(uint32_t Option) {
+    return CFE_SRL_SocketCSP(Option);
+}
+
+int CFE_SRL_ApiBindCSP(csp_socket_t *Socket, uint8_t Port) {
+    return CFE_SRL_BindCSP(Socket, Port);
+}
+
+int CFE_SRL_ApiListenCSP(csp_socket_t *Socket, size_t BackLog) {
+    return CFE_SRL_ListenCSP(Socket, BackLog);
+}
+
+csp_conn_t *CFE_SRL_ApiAcceptCSP(csp_socket_t *Socket, uint32_t Timeout) {
+    return CFE_SRL_AcceptCSP(Socket, Timeout);
+}
+
+csp_packet_t *CFE_SRL_ApiReadCSP(csp_conn_t *Connection, uint32_t Timeout) {
+    return CFE_SRL_ReadCSP(Connection, Timeout);
+}
+
+int CFE_SRL_ApiConndPort(csp_conn_t *Connection) {
+    return CFE_SRL_ConndPort(Connection);
+}
+
+void CFE_SRL_ApiBufferFreeCSP(csp_packet_t *Packet) {
+    return CFE_SRL_BufferFreeCSP(Packet);
+}

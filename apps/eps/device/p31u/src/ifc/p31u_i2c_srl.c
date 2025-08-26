@@ -45,6 +45,7 @@ int p31u_transaction(uint8_t port,
     Params.RxData = rxBuf;
     Params.RxSize = totRxLen;
     Params.Addr = EPS_I2C_ADDR;
+    Params.Timeout = 100; // If combined transaction is wanted, delete this
 
     status = CFE_SRL_ApiRead(EPS_AppData.Handle, &Params);
     /**

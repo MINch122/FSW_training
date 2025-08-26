@@ -16,6 +16,8 @@
 #include "sant_msgdefs.h"
 #include "sant_mission_cfg.h"
 
+#include "rpt_interface_cfg.h"
+
 
 /************************************************************************
  *  Command Messages
@@ -137,5 +139,10 @@ typedef struct
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     SANT_BcnTlm_Payload_t Payload;
 } SANT_BcnTlm_t;
+
+typedef struct {
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    RPT_Report_t Report;
+} SANT_ReportTlm_t;
 
 #endif /* SANT_MSGSTRUCT_H */

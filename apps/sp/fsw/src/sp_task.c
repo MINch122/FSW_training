@@ -81,5 +81,10 @@ CFE_Status_t SP_AppInit(void){
         CFE_EVS_SendEvent(SP_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "SP App Successfully Initialized.");
     }
 
+    CFE_SRL_GPIO_Handle_t *In = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
+    status = CFE_SRL_ApiGpioGet(In);
+    SP_AppData.BcnTlm.IsDeploy = (status == 0)? true : false; // `0` indicate Deployed
+    
+
     return status;
 }

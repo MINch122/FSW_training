@@ -266,3 +266,31 @@ void CFE_SRL_PrintRtable(void) {
 int CFE_SRL_RparamSaveCSP(uint8 Node, uint32 Timeout, uint8 TableId, uint8 To) {
     return gs_rparam_save(Node, Timeout, TableId, To);
 }
+
+csp_socket_t *CFE_SRL_SocketCSP(uint32_t Option) {
+    return csp_socket(Option);
+}
+
+int CFE_SRL_BindCSP(csp_socket_t *Socket, uint8_t Port) {
+    return csp_bind(Socket, Port);
+}
+
+int CFE_SRL_ListenCSP(csp_socket_t *Socket, size_t BackLog) {
+    return csp_listen(Socket, BackLog);
+}
+
+csp_conn_t *CFE_SRL_AcceptCSP(csp_socket_t *Socket, uint32_t Timeout) {
+    return csp_accept(Socket, Timeout);
+}
+
+csp_packet_t *CFE_SRL_ReadCSP(csp_conn_t *Connection, uint32_t Timeout) {
+    return csp_read(Connection, Timeout);
+}
+
+int CFE_SRL_ConndPort(csp_conn_t *Connection) {
+    return csp_conn_dport(Connection);
+}
+
+void CFE_SRL_BufferFreeCSP(csp_packet_t *Packet) {
+    return csp_buffer_free((void *)Packet);
+}

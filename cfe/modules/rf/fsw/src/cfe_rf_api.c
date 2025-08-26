@@ -125,6 +125,7 @@ void CFE_RF_CommandIngestTask(void) {
                 }
                 case CFE_RF_UPORT_FTP:
                     break;
+
             }
             csp_close(Connection);
         }

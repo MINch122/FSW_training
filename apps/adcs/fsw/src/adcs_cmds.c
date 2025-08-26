@@ -96,6 +96,9 @@ CFE_Status_t ADCS_NoopCmd(const ADCS_NoopCmd_t *Msg)
 {
     ADCS_AppData.CmdCounter++;
 
+    uint8_t Cmds[2] = {ADCS_AppData.CmdCounter, ADCS_AppData.ErrCounter};
+    ADCS_HandleReport(CFE_SUCCESS, ADCS_NOOP_CC, Cmds, sizeof(Cmds));
+
     CFE_EVS_SendEvent(ADCS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "ADCS: NOOP command received.");
 
     return CFE_SUCCESS;
@@ -112,6 +115,9 @@ CFE_Status_t ADCS_ResetCountersCmd(const ADCS_ResetCountersCmd_t *Msg)
 {
     ADCS_AppData.CmdCounter = 0;
     ADCS_AppData.ErrCounter = 0;
+
+    uint8_t Cmds[2] = {ADCS_AppData.CmdCounter, ADCS_AppData.ErrCounter};
+    ADCS_HandleReport(CFE_SUCCESS, ADCS_RESET_COUNTERS_CC, Cmds, sizeof(Cmds));
 
     CFE_EVS_SendEvent(ADCS_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "ADCS: RESET command");
 
@@ -130,6 +136,8 @@ CFE_Status_t ADCS_EN_HighCmd(void) {
     CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_EN_GPIO_INDEXER);
     status = CFE_SRL_ApiGpioSet(Handle, true);
 
+    ADCS_HandleReport(status, ADCS_GPIO_ENABLE_HIGH_CC, NULL, 0);
+
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Enable Enable pin: 0x%08lx", (unsigned long)status);
@@ -145,6 +153,8 @@ CFE_Status_t ADCS_EN_LowCmd(void){
 
     CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_EN_GPIO_INDEXER);
     status = CFE_SRL_ApiGpioSet(Handle, false);
+
+    ADCS_HandleReport(status, ADCS_GPIO_ENABLE_LOW_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -162,6 +172,8 @@ CFE_Status_t ADCS_Boot_HighCmd(void){
     CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_BOOT_GPIO_INDEXER);
     status = CFE_SRL_ApiGpioSet(Handle, true);
 
+    ADCS_HandleReport(status, ADCS_GPIO_BOOT_HIGH_CC, NULL, 0);
+
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Enable Boot pin: 0x%08lx", (unsigned long)status);
@@ -177,6 +189,8 @@ CFE_Status_t ADCS_Boot_LowCmd(void){
 
     CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_BOOT_GPIO_INDEXER);
     status = CFE_SRL_ApiGpioSet(Handle, false);
+
+    ADCS_HandleReport(status, ADCS_GPIO_BOOT_LOW_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -208,6 +222,8 @@ CFE_Status_t ADCS_SetReset(void){
 
     status = ADCS_Reset();
 
+    ADCS_HandleReport(status, ADCS_SET_RESET_CC, NULL, 0);
+
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Set Reset: 0x%08lx", (unsigned long)status);
@@ -227,11 +243,13 @@ CFE_Status_t ADCS_SetReset(void){
  ********************************************************/
 
 /* Set function */
-CFE_Status_t ADCS_SetCurrentUnixTimeCmd(ADCS_CurrentUnixTimeCmd_t *msg) {
+CFE_Status_t ADCS_SetCurrentUnixTimeCmd(const ADCS_CurrentUnixTimeCmd_t *msg) {
     // ID 2
     CFE_Status_t               status;
 
     status = ADCS_SetCurrentUnixTime(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_CURRENT_UNIX_TIME_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -243,11 +261,13 @@ CFE_Status_t ADCS_SetCurrentUnixTimeCmd(ADCS_CurrentUnixTimeCmd_t *msg) {
     return CFE_SUCCESS;
 }
 
-CFE_Status_t ADCS_SetControlEstimationModeCmd(ADCS_ControlEstimationModeCmd_t *msg) {
+CFE_Status_t ADCS_SetControlEstimationModeCmd(const ADCS_ControlEstimationModeCmd_t *msg) {
     // ID 42
     CFE_Status_t               status;
 
     status = ADCS_SetControlEstimationMode(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_CONTROL_ESTIMATION_MODE_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -259,11 +279,13 @@ CFE_Status_t ADCS_SetControlEstimationModeCmd(ADCS_ControlEstimationModeCmd_t *m
     return CFE_SUCCESS;
 }
 
-CFE_Status_t ADCS_SetReferenceLLHTargetCmd(ADCS_ReferenceLLHTargetCmd_t *msg) {
+CFE_Status_t ADCS_SetReferenceLLHTargetCmd(const ADCS_ReferenceLLHTargetCmd_t *msg) {
     // ID 48
     CFE_Status_t               status;
 
     status = ADCS_SetReferenceLLHTarget(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_REFERENCE_LLH_TARGET_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -275,11 +297,13 @@ CFE_Status_t ADCS_SetReferenceLLHTargetCmd(ADCS_ReferenceLLHTargetCmd_t *msg) {
     return CFE_SUCCESS;
 }
 
-CFE_Status_t ADCS_SetOrbitModeCmd(ADCS_OrbitModeCmd_t *msg) {
-    // ID 48
+CFE_Status_t ADCS_SetOrbitModeCmd(const ADCS_OrbitModeCmd_t *msg) {
+    // ID 51
     CFE_Status_t               status;
 
     status = ADCS_SetOrbitMode(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_ORBIT_MODE_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -291,11 +315,13 @@ CFE_Status_t ADCS_SetOrbitModeCmd(ADCS_OrbitModeCmd_t *msg) {
     return CFE_SUCCESS;
 }
 
-CFE_Status_t ADCS_SetReferenceRPYValuesCmd(ADCS_ReferenceRPYvaluesCmd_t *msg) {
+CFE_Status_t ADCS_SetReferenceRPYValuesCmd(const ADCS_ReferenceRPYvaluesCmd_t *msg) {
     // ID 54
     CFE_Status_t               status;
 
     status = ADCS_SetReferenceRPYValues(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_REFERENCE_RPY_VALUES_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -307,11 +333,13 @@ CFE_Status_t ADCS_SetReferenceRPYValuesCmd(ADCS_ReferenceRPYvaluesCmd_t *msg) {
     return CFE_SUCCESS;
 }
 
-CFE_Status_t ADCS_SetSatOrbitParamConfigCmd(ADCS_SatOrbitParamConfigCmd_t *msg) {
+CFE_Status_t ADCS_SetSatOrbitParamConfigCmd(const ADCS_SatOrbitParamConfigCmd_t *msg) {
     // ID 68
     CFE_Status_t               status;
 
     status = ADCS_SetSatOrbitParamConfig(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_SAT_ORBIT_PARAMS_CONFIG_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -323,13 +351,171 @@ CFE_Status_t ADCS_SetSatOrbitParamConfigCmd(ADCS_SatOrbitParamConfigCmd_t *msg) 
     return CFE_SUCCESS;
 }
 
-/* Get function */
+CFE_Status_t ADCS_SetPersistConfigCmd(const ADCS_PersistConfigCmd_t *msg) {
+    // ID 7
+    CFE_Status_t               status;
+
+    status = ADCS_SetPersistConfig();
+
+    ADCS_HandleReport(status, ADCS_SET_PERSIST_CONFIG_CC, NULL, 0);
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("ADCS cmd Success.");
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_SetPowerStateCmd(const ADCS_PowerStateCmd_t *msg) {
+    // ID 56
+    CFE_Status_t               status;
+
+    status = ADCS_SetPowerState(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_POWER_STATE_CC, NULL, 0);
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("ADCS cmd Success.");
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_SetRunModeCmd(const ADCS_RunModeCmd_t *msg) {
+    // ID 57
+    CFE_Status_t               status;
+
+    status = ADCS_SetRunMode(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_RUN_MODE_CC, NULL, 0);
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("ADCS cmd Success.");
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_SetSatelliteConfigCmd(const ADCS_SatConfigCmd_t *msg) {
+    // ID 61
+    CFE_Status_t               status;
+
+    status = ADCS_SetSatelliteConfig(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_SATELLITE_CONFIG_CC, NULL, 0);
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("ADCS cmd Success.");
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_SetControllerConfigCmd(const ADCS_ControllerConfig_t *msg) {
+    // ID 62
+    CFE_Status_t               status;
+
+    status = ADCS_SetControllerConfig(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_CONTROLLER_CONFIG_CC, NULL, 0);
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("ADCS cmd Success.");
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_SetDefaultModeConfigCmd(const ADCS_DefaultModeConfigCmd_t *msg) {
+    // ID 64
+    CFE_Status_t               status;
+
+    status = ADCS_SetDefaultModeConfig(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_DEFAULT_MODE_CONFIG_CC, NULL, 0);
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("ADCS cmd Success.");
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_SetMountingConfigCmd(const ADCS_MountingConfigCmd_t *msg) {
+    // ID 65
+    CFE_Status_t               status;
+
+    status = ADCS_SetMountingConfig(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_MOUNTING_CONFIG_CC, NULL, 0);
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("ADCS cmd Success.");
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_SetUnsolicitEventMsgSetupCmd(const ADCS_UnsolicitEventMsgSetupCmd_t *msg) {
+    // ID 116
+    CFE_Status_t               status;
+    ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t Payload = {0,};
+
+    if(msg->Payload.Flag) {
+        Payload.InfoCAN = 1;
+        Payload.MinorCAN = 1;
+        Payload.MajorCAN = 1;
+        Payload.CriticalCAN = 1;
+    }
+
+    status = ADCS_SetUnsolicitEventMsgSetup(&Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_UNSOLICIT_EVENT_MSG_SETUP_CC, NULL, 0);
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("ADCS cmd Success.");
+
+    return CFE_SUCCESS;
+}
+
+/********************************************************
+ * 
+ * COSMIC Actual Get Command Function (Get tlm)
+ * 
+ ********************************************************/
 CFE_Status_t ADCS_GetCurrentUnixTimeCmd(void) {
     // ID 133
     CFE_Status_t               status;
     ADCS_CurrentUnixTimeTlm_Payload_t RetVal = {0,};
 
     status = ADCS_GetCurrentUnixTime(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_CURRENT_UNIX_TIME_CC, &RetVal, sizeof(RetVal));
 
     if (status != CFE_SUCCESS)
     {
@@ -349,6 +535,8 @@ CFE_Status_t ADCS_GetControlEstimationModeCmd(void) {
     ADCS_ControlEstimationModeTlm_Payload_t RetVal = {0,};
 
     status = ADCS_GetControlEstimationMode(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_CONTROL_ESTIMATION_MODE_CC, &RetVal, sizeof(RetVal));
 
     if (status != CFE_SUCCESS)
     {
@@ -370,6 +558,8 @@ CFE_Status_t ADCS_GetReferenceLLHTargetCmd(void) {
 
     status = ADCS_GetReferenceLLHTarget(&RetVal);
 
+    ADCS_HandleReport(status, ADCS_GET_REFERENCE_LLH_TARGET_CC, &RetVal, sizeof(RetVal));
+
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Reference LLH Target: 0x%08lx", (unsigned long)status);
@@ -388,6 +578,8 @@ CFE_Status_t ADCS_GetOrbitModeCmd(void) {
     ADCS_OrbitModeTlm_Payload_t RetVal = {0,};
 
     status = ADCS_GetOrbitMode(&RetVal);
+    
+    ADCS_HandleReport(status, ADCS_GET_ORBIT_MODE_CC, &RetVal, sizeof(RetVal));
 
     if (status != CFE_SUCCESS)
     {
@@ -407,6 +599,8 @@ CFE_Status_t ADCS_GetRawCubeSenseSunCmd(void) {
     ADCS_RawCubeSenseSunTlm_Payload_t RetVal = {0,};
 
     status = ADCS_GetRawCubeSenseSun(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_RAW_CUBESENSE_SUN_CC, &RetVal, sizeof(RetVal));
 
     if (status != CFE_SUCCESS)
     {
@@ -432,6 +626,8 @@ CFE_Status_t ADCS_GetPowerStateCmd(void) {
 
     status = ADCS_GetPowerState(&RetVal);
 
+    ADCS_HandleReport(status, ADCS_GET_POWER_STATE_CC, &RetVal, sizeof(RetVal));
+
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Power State: 0x%08lx", (unsigned long)status);
@@ -455,6 +651,8 @@ CFE_Status_t ADCS_GetSatOrbitParamConfigCmd(void) {
 
     status = ADCS_GetSatOrbitParamConfig(&RetVal);
 
+    ADCS_HandleReport(status, ADCS_GET_SAT_ORBIT_PARAM_CONFIG_CC, &RetVal, sizeof(RetVal));
+
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
@@ -473,6 +671,8 @@ CFE_Status_t ADCS_GetRawCSSSensorCmd(void) {
     ADCS_RawCSSSensorTlm_Payload_t RetVal = {0,};
 
     status = ADCS_GetRawCSSSensor(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_RAW_CSS_SENSOR_CC, &RetVal, sizeof(RetVal));
 
     if (status != CFE_SUCCESS)
     {
@@ -494,6 +694,8 @@ CFE_Status_t ADCS_GetRawGYRSensorCmd(void) {
     ADCS_RawGYRSensorTlm_Paylaod_t RetVal = {0,};
 
     status = ADCS_GetRawGYRSensor(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_RAW_GYR_SENSOR_CC, &RetVal, sizeof(RetVal));
 
     if (status != CFE_SUCCESS)
     {
@@ -517,6 +719,8 @@ CFE_Status_t ADCS_GetCalibratedGYRSensorCmd(void) {
 
     status = ADCS_GetCalibratedGYRSensor(&RetVal);
 
+    ADCS_HandleReport(status, ADCS_GET_CALIBRATED_GYR_SENSOR_CC, &RetVal, sizeof(RetVal));
+
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
@@ -530,6 +734,187 @@ CFE_Status_t ADCS_GetCalibratedGYRSensorCmd(void) {
     OS_printf("Ext GYR0 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n", RetVal.ExtGYR0CalibratedRateX, RetVal.ExtGYR0CalibratedRateY, RetVal.ExtGYR0CalibratedRateZ);
     OS_printf("Ext GYR1 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n", RetVal.ExtGYR1CalibratedRateX, RetVal.ExtGYR1CalibratedRateY, RetVal.ExtGYR1CalibratedRateZ);
     OS_printf("Valid flag GYR0 : 0x%02X\n", RetVal.ValidFlag);    
+    
+    return CFE_SUCCESS;
+}
+
+
+CFE_Status_t ADCS_GetPersistConfigDiagnosticCmd(void) {
+    // ID 134
+    CFE_Status_t               status;
+    ADCS_PersistConfigDiagnosticTlm_Payload_t RetVal = {0,};
+
+    status = ADCS_GetPersistConfigDiagnostic(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_PERSIST_CONFIG_DIAGNOSTIC_CC, &RetVal, sizeof(RetVal));
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    
+    // Handling Retval
+    
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_GetCommunicationStatusCmd(void) {
+    // ID 135
+    CFE_Status_t               status;
+    ADCS_CommunicationStatusTlm_Payload_t RetVal = {0,};
+
+    status = ADCS_GetCommunicationStatus(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_COMMUNICATION_STATUS_CC, &RetVal, sizeof(RetVal));
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    
+    // Handling Retval
+    
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_GetRunModeCmd(void) {
+    // ID 184
+    CFE_Status_t               status;
+    ADCS_RunModeTlm_Payload_t RetVal = {0,};
+
+    status = ADCS_GetRunMode(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_RUN_MODE_CC, &RetVal, sizeof(RetVal));
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    
+    // Handling Retval
+    
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_GetSatelliteConfigCmd(void) {
+    // ID 189
+    CFE_Status_t               status;
+    ADCS_SatelliteConfigTlm_Payload_t RetVal = {0,};
+
+    status = ADCS_GetSatelliteConfig(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_SATELLITE_CONFIG_CC, &RetVal, sizeof(RetVal));
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    
+    // Handling Retval
+    
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_GetControllerConfigCmd(void) {
+    // ID 190
+    CFE_Status_t               status;
+    ADCS_ControllerConfigTlm_Payload_t RetVal = {0,};
+
+    status = ADCS_GetControllerConfig(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_CONTROLLER_CONFIG_CC, &RetVal, sizeof(RetVal));
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    
+    // Handling Retval
+    
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_GetDefaultModeConfigCmd(void) {
+    // ID 192
+    CFE_Status_t               status;
+    ADCS_DefaultModeConfigTlm_Payload_t RetVal = {0,};
+
+    status = ADCS_GetDefaultModeConfig(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_DEFAULT_MODE_CONFIG_CC, &RetVal, sizeof(RetVal));
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    
+    // Handling Retval
+    
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_GetMountingConfigCmd(void) {
+    // ID 193
+    CFE_Status_t               status;
+    ADCS_MountingConfigTlm_Payload_t RetVal = {0,};
+
+    status = ADCS_GetMountingConfig(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_MOUNTING_CONFIG_CC, &RetVal, sizeof(RetVal));
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    
+    // Handling Retval
+    
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_GetOperationalStateCmd(void) {
+    // ID 200
+    CFE_Status_t               status;
+    ADCS_OperationalStateTlm_Payload_t RetVal = {0,};
+
+    status = ADCS_GetOperationalState(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_OPERATIONAL_STATE, &RetVal, sizeof(RetVal));
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    
+    // Handling Retval
+    
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_GetUnsolicitEventMsgSetupCmd(void) {
+    // ID 233
+    CFE_Status_t               status;
+    ADCS_UnsolicitEventMsgSetupTlm_Payload_t RetVal = {0,};
+
+    status = ADCS_GetUnsolicitEventMsgSetup(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_UNSOLICIT_EVENT_MSG_SETUP_CC, &RetVal, sizeof(RetVal));
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    
+    // Handling Retval
     
     return CFE_SUCCESS;
 }

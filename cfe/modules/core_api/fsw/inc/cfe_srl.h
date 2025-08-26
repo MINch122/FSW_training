@@ -57,7 +57,7 @@ int32 CFE_SRL_ApiClose(CFE_SRL_IO_Handle_t * Handle);
 int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value);
 
 
-/// @brief Get specified GPIO PIN input value
+/// @brief Get specified GPIO PIN in/out value
 /// @param Handle `CFE_SRL_GPIO_Handle_t` pointer
 /// @return If success, `0` for Low, `1` for High. Anything else is error.
 int32 CFE_SRL_ApiGpioGet(CFE_SRL_GPIO_Handle_t *Handle);
@@ -121,5 +121,17 @@ void CFE_SRL_ApiPrintRtable(void);
 /// @param To Table ID want to save
 /// @return `0` for success. Anything else is error. Refer enum `gs_error_t`
 int32 CFE_SRL_ApiRparamSaveCSP(uint8 Node, uint32 Timeout, uint8 TableId, uint8 To);
+
+
+/**
+ * CSP Listen Task function
+ */
+// csp_socket_t *CFE_SRL_ApiSocketCSP(uint32_t Option);
+// int CFE_SRL_ApiBindCSP(csp_socket_t *Socket, uint8_t Port);
+// int CFE_SRL_ApiListenCSP(csp_socket_t *Socket, size_t BackLog);
+// csp_conn_t *CFE_SRL_ApiAcceptCSP(csp_socket_t *Socket, uint32_t Timeout);
+// csp_packet_t *CFE_SRL_ApiReadCSP(csp_conn_t *Connection, uint32_t Timeout);
+// int CFE_SRL_ApiConndPort(csp_conn_t *Connection);
+// void CFE_SRL_ApiBufferFreeCSP(csp_packet_t *Packet);
 
 #endif /* CFE_SRL_H */

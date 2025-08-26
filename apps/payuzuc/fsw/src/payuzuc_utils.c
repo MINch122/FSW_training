@@ -254,7 +254,7 @@ void PAYUZUC_ConfigurePacket(const void *Payload, void *Packet, uint8 ParamNum, 
 /***********************************************
  * 
  * Download task util function
- * @deprecated
+ * @deprecated not used
  * 
  ***********************************************/
 void PAYUZUC_CreateDownloadTask(void) {

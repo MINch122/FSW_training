@@ -37,6 +37,6 @@
 
 #define EPS_PIPE_NAME  "EPS_PIPE"
 
-#define EPS_I2C_ADDR    2
+#define EPS_I2C_ADDR    0x09u
 
 #endif

@@ -23,6 +23,8 @@ typedef struct{
 
     CFE_SB_PipeId_t CommandPipe;
 
+    CFE_ES_TaskId_t TaskId;
+
 } SP_AppData_t;
 
 extern SP_AppData_t SP_AppData;

@@ -44,4 +44,6 @@
 
 #define GS_GSSB_INTERNAL_USE 1
 
+#define SANT_I2C_ADDR   0x05
+
 #endif

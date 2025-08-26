@@ -190,14 +190,20 @@ CFE_Status_t ADCS_AppInit(void)
                               "Adcs App: Error Subscribing to Commands, RC = 0x%08lX", (unsigned long)status);
         }
     }
+    if (status == CFE_SUCCESS) {
+        // CAN Endpoint init
+        CUBE_EndpointInit();
+        /**
+         * Create CubeADCS Event Listen Task...
+         */
+        status = CFE_ES_CreateChildTask(&ADCS_AppData.TaskId, "ADCS_EVS_TASK",
+                                        ADCS_ListenEventTask, CFE_ES_TASK_STACK_ALLOCATE,
+                                        ADCS_EVS_TASK_STACK_SIZE, ADCS_EVS_TASK_STACK_PRIORITY, 0);
+    }
 
-    // CAN Endpoint init
-    CUBE_EndpointInit();
-
-    // initialization of table
     if (status == CFE_SUCCESS)
     {
-        CFE_EVS_SendEvent(ADCS_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "Adcs App Succesfully Initialized");
+        CFE_EVS_SendEvent(ADCS_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "ADCS App Succesfully Initialized");
     }
 
     return status;

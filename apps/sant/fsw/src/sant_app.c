@@ -149,8 +149,7 @@ CFE_Status_t SANT_AppInit(void)
     else
     {
         /*
-         ** Initialize housekeeping packet (clear user data area). // 헤더 초기화하는 코드
-         자기가 생성하는 메세지에만 하면 됨
+         ** Initialize housekeeping packet
          */
         CFE_MSG_Init(CFE_MSG_PTR(SANT_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(SANT_HK_TLM_MID),
                      sizeof(SANT_Data.HkTlm));
@@ -175,7 +174,8 @@ CFE_Status_t SANT_AppInit(void)
                           "Sensor read failed: driver error code = 0x%X", init_err);
 
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-    } else {
+    }
+    else {
         status = CFE_SUCCESS;
     }
 

@@ -9,4 +9,6 @@ CFE_Status_t SP_NoopCmd(const SP_NoopCmd_t *Msg);
 CFE_Status_t SP_DeployCmd(const SP_DeployCmd_t *Msg);
 CFE_Status_t SP_Get_DeployCmd(const SP_Get_DeployCmd_t *Msg);
 
+void SP_DeployTask(void);
+
 #endif

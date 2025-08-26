@@ -34,6 +34,7 @@
 #include "adcs_cube_typedefs.h"
 #include "adcs_msg.h"
 
+#include <csp/csp.h>
 
 static Handle handle[TYPEDEF__COMMS_ENDPOINT_MAX];
 // static uint8 cspDataBuffer[COMMS_BUFFER_SIZE];
@@ -266,12 +267,13 @@ cleanup:
 }
 
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/*                                                                           */
-/*                     << Telecommand(TC) Functions >>                       */
-/*								ID: 0 ~ 127								     */
-/*                                                                           */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * *  * * * * */
+
+/********************************************************
+ * 
+ * COSMIC Actual Set Command Function
+ * 
+ ********************************************************/
+/* TC Functions, ID: 0 ~ 127 */
 int32 ADCS_Reset(void)
 {
 	// ID 1
@@ -299,12 +301,7 @@ int32 ADCS_Reset(void)
 	return CFE_SUCCESS;
 }
 
-/********************************************************
- * 
- * COSMIC Actual Set Command Function
- * 
- ********************************************************/
-int32 ADCS_SetCurrentUnixTime(ADCS_CurrentUnixTimeCmd_Payload_t *setVal)
+int32 ADCS_SetCurrentUnixTime(const ADCS_CurrentUnixTimeCmd_Payload_t *setVal)
 {	// ID 2
 	
     int32_t status;
@@ -335,7 +332,7 @@ int32 ADCS_SetCurrentUnixTime(ADCS_CurrentUnixTimeCmd_Payload_t *setVal)
 }
 
 
-int32 ADCS_SetControlEstimationMode(ADCS_ControlEstimationModeCmd_Payload_t *setVal)
+int32 ADCS_SetControlEstimationMode(const ADCS_ControlEstimationModeCmd_Payload_t *setVal)
 {	// ID 42
 	
     int32_t status;
@@ -365,7 +362,7 @@ int32 ADCS_SetControlEstimationMode(ADCS_ControlEstimationModeCmd_Payload_t *set
 	return CFE_SUCCESS;
 }
 
-int32 ADCS_SetReferenceLLHTarget(ADCS_ReferenceLLHTargetCmd_Payload_t *setVal)
+int32 ADCS_SetReferenceLLHTarget(const ADCS_ReferenceLLHTargetCmd_Payload_t *setVal)
 {	// ID 48
 	
     int32_t status;
@@ -395,7 +392,7 @@ int32 ADCS_SetReferenceLLHTarget(ADCS_ReferenceLLHTargetCmd_Payload_t *setVal)
 	return CFE_SUCCESS;
 }
 
-int32 ADCS_SetOrbitMode(ADCS_OrbitModeCmd_Payload_t *setVal)
+int32 ADCS_SetOrbitMode(const ADCS_OrbitModeCmd_Payload_t *setVal)
 {	// ID 51
 	
     int32_t status;
@@ -426,7 +423,7 @@ int32 ADCS_SetOrbitMode(ADCS_OrbitModeCmd_Payload_t *setVal)
 }
 
 
-int32 ADCS_SetReferenceRPYValues(ADCS_ReferenceRPYvaluesCmd_Payload_t *setVal)
+int32 ADCS_SetReferenceRPYValues(const ADCS_ReferenceRPYvaluesCmd_Payload_t *setVal)
 {	// ID 54
 	
     int32_t status;
@@ -453,7 +450,7 @@ int32 ADCS_SetReferenceRPYValues(ADCS_ReferenceRPYvaluesCmd_Payload_t *setVal)
 	return CFE_SUCCESS;
 }
 
-int32 ADCS_SetSatOrbitParamConfig(ADCS_SatOrbitParamConfigCmd_Payload_t *setVal)
+int32 ADCS_SetSatOrbitParamConfig(const ADCS_SatOrbitParamConfigCmd_Payload_t *setVal)
 {	// ID 68
 	
     int32_t status;
@@ -469,6 +466,218 @@ int32 ADCS_SetSatOrbitParamConfig(ADCS_SatOrbitParamConfigCmd_Payload_t *setVal)
 	tx_buffer = cubeObc_connect_buffer(&target);
 
 	bufferSizeUsed = sizeof(ADCS_SatOrbitParamConfigCmd_Payload_t);
+	memcpy(tx_buffer, setVal, bufferSizeUsed);
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_SetPersistConfig(void)
+{	// ID 7
+	
+    int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint16_t bufferSizeUsed;
+	
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_SET_PERSIST_CONFIG;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	bufferSizeUsed = 0;
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_SetPowerState(const ADCS_PowerStateCmd_Payload_t *setVal)
+{	// ID 56
+	
+    int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8_t *tx_buffer;
+	uint16_t bufferSizeUsed;
+	
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_SET_POWER_STATE;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	tx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_PowerStateCmd_Payload_t);
+	memcpy(tx_buffer, setVal, bufferSizeUsed);
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_SetRunMode(const ADCS_RunModeCmd_Payload_t *setVal)
+{	// ID 57
+	
+    int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8_t *tx_buffer;
+	uint16_t bufferSizeUsed;
+	
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_SET_RUN_MODE;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	tx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_RunModeCmd_Payload_t);
+	memcpy(tx_buffer, setVal, bufferSizeUsed);
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_SetSatelliteConfig(const ADCS_SatConfigCmd_Payload_t *setVal)
+{	// ID 61
+	
+    int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8_t *tx_buffer;
+	uint16_t bufferSizeUsed;
+	
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_SET_SATELLITE_CONFIG;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	tx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_SatConfigCmd_Payload_t);
+	memcpy(tx_buffer, setVal, bufferSizeUsed);
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_SetControllerConfig(const ADCS_ControllerConfig_Payload_t *setVal)
+{	// ID 62
+	
+    int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8_t *tx_buffer;
+	uint16_t bufferSizeUsed;
+	
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_SET_CONTROLLER_CONFIG;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	tx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_ControllerConfig_Payload_t);
+	memcpy(tx_buffer, setVal, bufferSizeUsed);
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_SetDefaultModeConfig(const ADCS_DefaultModeConfigCmd_Payload_t *setVal)
+{	// ID 64
+	
+    int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8_t *tx_buffer;
+	uint16_t bufferSizeUsed;
+	
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_SET_DEFAULT_MODE_CONFIG;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	tx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_DefaultModeConfigCmd_Payload_t);
+	memcpy(tx_buffer, setVal, bufferSizeUsed);
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_SetMountingConfig(const ADCS_MountingConfigCmd_Payload_t *setVal)
+{	// ID 65
+	
+    int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8_t *tx_buffer;
+	uint16_t bufferSizeUsed;
+	
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_SET_MOUNTING_CONFIG;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	tx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_MountingConfigCmd_Payload_t);
+	memcpy(tx_buffer, setVal, bufferSizeUsed);
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_SetUnsolicitEventMsgSetup(const ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t *setVal)
+{	// ID 116
+	
+    int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8_t *tx_buffer;
+	uint16_t bufferSizeUsed;
+	
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_SET_UNSOLICIT_EVENT_MSG_SETUP;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	tx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t);
 	memcpy(tx_buffer, setVal, bufferSizeUsed);
 
 	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
@@ -496,7 +705,7 @@ int32 ADCS_GetCurrentUnixTime(ADCS_CurrentUnixTimeTlm_Payload_t *returnVal)
 
 	ZERO_VAR(target);
 	
-	target.id = ADCS_ID_GET_CURRENT_UNIX_TIME_TELEMETRY;
+	target.id = ADCS_ID_GET_CURRENT_UNIX_TIME;
 	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
 
 	rx_buffer = cubeObc_connect_buffer(&target);
@@ -801,4 +1010,393 @@ int32 ADCS_GetCalibratedGYRSensor(ADCS_CalibratedGYRSensorTlm_Payload_t *returnV
 	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(ns) : %d\n", returnVal->unixTimeNanoSeconds);
 
 	return CFE_SUCCESS;
+}
+
+int32 ADCS_GetPersistConfigDiagnostic(ADCS_PersistConfigDiagnosticTlm_Payload_t *returnVal)
+{	// ID 134
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_PERSIST_CONFIG_DIAGNOSTIC;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_PersistConfigDiagnosticTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(s) : %d\n", returnVal->unixTimeSeconds);
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(ns) : %d\n", returnVal->unixTimeNanoSeconds);
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_GetCommunicationStatus(ADCS_CommunicationStatusTlm_Payload_t *returnVal)
+{	// ID 135
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_COMMUNICATION_STATUS;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_CommunicationStatusTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(s) : %d\n", returnVal->unixTimeSeconds);
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(ns) : %d\n", returnVal->unixTimeNanoSeconds);
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_GetRunMode(ADCS_RunModeTlm_Payload_t *returnVal)
+{	// ID 184
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_RUN_MODE;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_RunModeTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(s) : %d\n", returnVal->unixTimeSeconds);
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(ns) : %d\n", returnVal->unixTimeNanoSeconds);
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_GetSatelliteConfig(ADCS_SatelliteConfigTlm_Payload_t *returnVal)
+{	// ID 189
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_SATELLITE_CONFIG;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_SatelliteConfigTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(s) : %d\n", returnVal->unixTimeSeconds);
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(ns) : %d\n", returnVal->unixTimeNanoSeconds);
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_GetControllerConfig(ADCS_ControllerConfigTlm_Payload_t *returnVal)
+{	// ID 190
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_CONTROLLER_CONFIG;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_ControllerConfigTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(s) : %d\n", returnVal->unixTimeSeconds);
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(ns) : %d\n", returnVal->unixTimeNanoSeconds);
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_GetDefaultModeConfig(ADCS_DefaultModeConfigTlm_Payload_t *returnVal)
+{	// ID 192
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_DEFAULT_MODE_CONFIG;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_DefaultModeConfigTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(s) : %d\n", returnVal->unixTimeSeconds);
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(ns) : %d\n", returnVal->unixTimeNanoSeconds);
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_GetMountingConfig(ADCS_MountingConfigTlm_Payload_t *returnVal)
+{	// ID 193
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_MOUNTING_CONFIG;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_MountingConfigTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(s) : %d\n", returnVal->unixTimeSeconds);
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(ns) : %d\n", returnVal->unixTimeNanoSeconds);
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_GetOperationalState(ADCS_OperationalStateTlm_Payload_t *returnVal)
+{	// ID 200
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_OPERATIONAL_STATE;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_OperationalStateTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(s) : %d\n", returnVal->unixTimeSeconds);
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(ns) : %d\n", returnVal->unixTimeNanoSeconds);
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_GetUnsolicitEventMsgSetup(ADCS_UnsolicitEventMsgSetupTlm_Payload_t *returnVal)
+{	// ID 233
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_UNSOLICIT_EVENT_MSG_SETUP;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_UnsolicitEventMsgSetupTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(s) : %d\n", returnVal->unixTimeSeconds);
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(ns) : %d\n", returnVal->unixTimeNanoSeconds);
+
+	return CFE_SUCCESS;
+}
+
+
+
+
+/***********************************************
+ * 
+ * Report util function
+ * 
+ **********************************************/
+void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSize) {
+	CFE_SB_Buffer_t *BufPtr = CFE_SB_AllocateMessageBuffer(sizeof(ADCS_ReportTlm_t));
+	if (BufPtr == NULL) return;
+
+	ADCS_ReportTlm_t *Report = (ADCS_ReportTlm_t *)BufPtr;
+	if (CFE_MSG_Init(CFE_MSG_PTR(Report->TelemetryHeader), CFE_SB_ValueToMsgId(ADCS_REPORT_TLM_MID), sizeof(ADCS_ReportTlm_t)) != CFE_SUCCESS) {
+		CFE_SB_ReleaseMessageBuffer(BufPtr);
+		return;
+	}
+
+	Report->Report.MsgID = ADCS_CMD_MID;
+	Report->Report.CommandCode = CC;
+	Report->Report.ReturnType = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_HW;
+	Report->Report.ReturnCode = Status; // `adcs_cube_error_typedefs.h`
+	Report->Report.ReturnDataSize = ReadSize;
+	if (ReadSize && ReadData) {
+		memcpy(Report->Report.ReturnValue, ReadData, ReadSize);
+	}
+
+	CFE_SB_TimeStampMsg((CFE_MSG_PTR(Report->TelemetryHeader)));
+	if (CFE_SB_TransmitBuffer(BufPtr, true) != CFE_SUCCESS) {
+		CFE_SB_ReleaseMessageBuffer(BufPtr);
+		return;
+	}
+	return;
+}
+
+
+/**************************************
+ * CubeADCS EVS listen Task function
+ **************************************/
+void ADCS_HandleEvent(const ADCS_EventEntry_t *Event) {
+	switch (Event->Identifier.EventClass)
+	{
+	case CLASS_CRITICAL:
+		OS_printf("CRRITICAL EventType : %u || EventSource : %u || EventClass : %u\n",
+				Event->Identifier.EventType, Event->Identifier.EventSource,
+				Event->Identifier.EventClass);
+		break;
+	case CLASS_MAJOR_WARNING:
+		OS_printf("MAJOR EventType : %u || EventSource : %u || EventClass : %u\n",
+				Event->Identifier.EventType, Event->Identifier.EventSource,
+				Event->Identifier.EventClass);
+		break;
+	case CLASS_MINOR_WARNING:
+		OS_printf("MINOR EventType : %u || EventSource : %u || EventClass : %u\n",
+				Event->Identifier.EventType, Event->Identifier.EventSource,
+				Event->Identifier.EventClass);
+		break;
+	case CLASS_INFORMATION:
+		OS_printf("INFO EventType : %u || EventSource : %u || EventClass : %u\n",
+				Event->Identifier.EventType, Event->Identifier.EventSource,
+				Event->Identifier.EventClass);
+		
+		switch (Event->Identifier.EventType)
+		{
+		case 142: // Eclipse/sunlight transition occurred
+			OS_printf("Event Data : ");
+			for (uint8_t i=0; i < 8; i++) {
+				OS_printf("0x%02X\t", Event->EventData[i]);
+			}
+			OS_printf("\n");
+			ADCS_AppData.BcnTlm.IsSunlight = Event->EventData[0] ? true : false;
+			break;
+		case 139:
+			
+		default:
+			break;
+		}
+
+		break;
+	/* End of CLASS_INFORMATION */
+
+	default:
+		break;
+	}
+}
+
+void ADCS_ListenEventTask(void) {
+	int Status;
+	csp_socket_t *Sock;
+	csp_conn_t *Conn = NULL;
+	csp_packet_t *Packet = NULL;
+
+	Sock = csp_socket(CSP_O_NONE);
+	if (Sock == NULL) {
+        CFE_ES_WriteToSysLog("%s: csp_socket failed! NO RC\n", __func__);
+        return;  // Revise to `csp_socket failed`
+    }
+
+	Status = csp_bind(Sock, CSP_PORT_EVENT);
+	if (Status != CSP_ERR_NONE) {
+        CFE_ES_WriteToSysLog("%s: csp_bind failed at Port: %d RC=%d\n", __func__, 58, Status);
+        return;
+    }
+
+	Status = csp_listen(Sock, 5);
+	if (Status != CSP_ERR_NONE) {
+        CFE_ES_WriteToSysLog("%s: csp_listen failed! RC=%d\n", __func__, Status);
+        return;
+    }
+
+	for (;;) {
+		Conn = csp_accept(Sock, 10000);
+		if (Conn == NULL) {
+			continue;
+		}
+		while ((Packet = csp_read(Conn, 1000)) != NULL) {
+			int Port = csp_conn_dport(Conn);
+			switch (Port)
+			{
+			case CSP_PORT_EVENT:
+				OS_printf("ADCS Event Comming.\n");
+				ADCS_HandleEvent((const ADCS_EventEntry_t *)Packet);
+
+				/* Free buffer & Remove dangled pointer */
+				csp_buffer_free(Packet);
+				Packet = NULL;
+				break;
+			
+			default:
+				break;
+			}
+		}
+		csp_close(Conn);
+	}
+	
 }

@@ -42,9 +42,9 @@ typedef struct
      *  |Rsv|RWL0|RWL1|RWL2|MAG0|GYRO|FSS0|HSS0|
      *  +--------------------------------------+
      */
-    uint8 PowerState; // 183
+    uint8 PowerState; // ID 183
 
-    uint8 ControlMode; // 185
+    uint8 ControlMode; // ID 185
 
     float GYR0CalibratedRateXComponent;
     float GYR0CalibratedRateYComponent;
@@ -248,6 +248,209 @@ typedef struct { // ID 68
 }__attribute__((packed)) ADCS_SatOrbitParamConfigCmd_Payload_t;
 
 
+// typedef struct { // ID 7 - Noarg
+
+// }
+
+typedef struct {  // ID 56
+    uint8 RWL0;
+    uint8 RWL1;
+    uint8 RWL2;
+    uint8 RWL3;
+    uint8 MAG0;
+    uint8 MAG1;
+    uint8 GYR0;
+    uint8 GYR1;
+    uint8 FSS0;
+    uint8 FSS1;
+    uint8 FSS2;
+    uint8 FSS3;
+    uint8 HSS0;
+    uint8 HSS1;
+    uint8 STR0;
+    uint8 STR1;
+    uint8 ExtSensor0;
+    uint8 ExtSensor1;
+    uint8 ExtGYR0;
+    uint8 ExtGYR1;
+}__attribute__((packed)) ADCS_PowerStateCmd_Payload_t;
+
+typedef struct { // ID 57
+    uint8 RunMode;
+}__attribute__((packed)) ADCS_RunModeCmd_Payload_t;
+
+typedef struct { // ID 61
+    float Ixx;
+    float Iyy;
+    float Izz;
+    float Ixy;
+    float Ixz;
+    float Iyz;
+
+    int16 SunPointingBodyVectorX;
+    int16 SunPointingBodyVectorY;
+    int16 SunPointingBodyVectorZ;
+
+    int16 TargetTrackingBodyVectorX;
+    int16 TargetTrackingBodyVectorY;
+    int16 TargetTrackingBodyVectorZ;
+    
+    int16 SatTrackingBodyVectorX;
+    int16 SatTrackingBodyVectorY;
+    int16 SatTrackingBodyVectorZ;
+}__attribute__((packed)) ADCS_SatConfigCmd_Payload_t;
+
+typedef struct { // ID 62 (GS should sent properly)
+    uint8_t  DefaultControlMode;     // ENUM: Default control mode
+    float    DetumblingDampingGain;  // Kd
+    float    SunSpinGainSunlit;         // KDSun
+    float    SunSpinGainEclipse;     // KDecel
+    float    DetumblingSpinGain;     // Ks
+    float    FastBDotGain;           // Kdf
+    float    YMomentumNutationDampingGain;   // Kn
+    float    YMomentumQuatGain;             // Kq
+    float    XAxisGGQuatGain;               // Kqx
+    float    YAxisGGQuatGain;               // Kqy
+    float    ZAxisGGQuatGain;               // Kqz
+    float    WheelDesaturationGain;         // Kh
+    float    YMomentumProportionalGain;     // Kp1
+    float    YMomentumDerivativeGain;       // Kd1
+    float    RWheelProportionalGain;        // Kp2
+    float    RWheelDerivativeGain;          // Kd2
+    float    TrackingProportionalGain;      // Kp3
+    float    TrackingDerivativeGain;        // Kd3
+    float    TrackingIntegralGain;          // Ki3
+    float    ReferenceSpinRate;             // wy-ref [degps]
+    float    ReferenceWheelMomentum;        // H-ref [Nms]
+    float    YWheelBiasMomentum;            // Hy-bias [Nms]
+    float    ReferenceSpinRateRWspinControl;    // [degps]
+    float    SunKeepOutAngle;               // [deg]
+    float    RollLimitAngle;                // [deg]
+
+    /* 3 one-bit flags + 5-bit reserved packed into 1 byte */
+    struct __attribute__((packed)) {
+        uint8_t YawCompensationForEarthRotation : 1; // BOOL
+        uint8_t EnableSunTrackingInEclipse      : 1; // BOOL
+        uint8_t EnableSunAvoidance              : 1; // BOOL
+        uint8_t Reserved                        : 5; // Padding to match spec
+    } flags;
+}__attribute__((packed)) ADCS_ControllerConfig_Payload_t;
+
+typedef struct { // ID 64
+    uint8_t DefaultRunMode;
+    uint8_t DefaultOperationalState;
+    uint8_t DefaultControlModeInOpStateSafe;
+    uint8_t DefaultControlModeInOpStateAuto;
+}__attribute__((packed)) ADCS_DefaultModeConfigCmd_Payload_t;
+
+typedef struct { // ID 65
+    /* Stack & Actuators (ENUM, 1B each) */
+    uint8 StackX_mounting;      // StackX mounting (Table 43)
+    uint8 StackY_mounting;      // StackY mounting (Table 43)
+    uint8 StackZ_mounting;      // StackZ mounting (Table 43)
+    uint8 MTQ0_mounting;        // MTQ0 mounting (Table 43)
+    uint8 MTQ1_mounting;        // MTQ1 mounting (Table 43)
+    uint8 MTQ2_mounting;        // MTQ2 mounting (Table 43)
+    uint8 Wheel0_mounting;      // Wheel0 mounting (Table 43)
+    uint8 Wheel1_mounting;      // Wheel1 mounting (Table 43)
+    uint8 Wheel2_mounting;      // Wheel2 mounting (Table 43)
+    uint8 Wheel3_mounting;      // Wheel3 mounting (Table 43)
+
+    /* Pyramid RWL angles (INT16; deg = raw/100.0) */
+    int16 PyramidRWL_alpha;   // alpha angle
+    int16 PyramidRWL_beta;    // beta angle
+    int16 PyramidRWL_gamma;   // gamma angle
+
+    /* CSS mounting (ENUM, 1B each) */
+    uint8 CSS0_mounting;
+    uint8 CSS1_mounting;
+    uint8 CSS2_mounting;
+    uint8 CSS3_mounting;
+    uint8 CSS4_mounting;
+    uint8 CSS5_mounting;
+    uint8 CSS6_mounting;
+    uint8 CSS7_mounting;
+    uint8 CSS8_mounting;
+    uint8 CSS9_mounting;
+
+    /* FSS0..3 angles (INT16; deg = raw/100.0) */
+    int16 FSS0_alpha;
+    int16 FSS0_beta;
+    int16 FSS0_gamma;
+    int16 FSS1_alpha;
+    int16 FSS1_beta;
+    int16 FSS1_gamma;
+    int16 FSS2_alpha;
+    int16 FSS2_beta;
+    int16 FSS2_gamma;
+    int16 FSS3_alpha;
+    int16 FSS3_beta;
+    int16 FSS3_gamma;
+
+    /* HSS0..1 angles (INT16; deg = raw/100.0) */
+    int16 HSS0_alpha;
+    int16 HSS0_beta;
+    int16 HSS0_gamma;
+    int16 HSS1_alpha;
+    int16 HSS1_beta;
+    int16 HSS1_gamma;
+
+    /* MAG0..1 angles (INT16; deg = raw/100.0) */
+    int16 MAG0_alpha;
+    int16 MAG0_beta;
+    int16 MAG0_gamma;
+    int16 MAG1_alpha;
+    int16 MAG1_beta;
+    int16 MAG1_gamma;
+
+    /* STR0..1 angles (INT16; deg = raw/100.0) */
+    int16 STR0_alpha;
+    int16 STR0_beta;
+    int16 STR0_gamma;
+    int16 STR1_alpha;
+    int16 STR1_beta;
+    int16 STR1_gamma;
+
+    /* External sensor 0/1 angles (INT16; deg = raw/100.0) */
+    int16 ExtSensor0_alpha;
+    int16 ExtSensor0_beta;
+    int16 ExtSensor0_gamma;
+    int16 ExtSensor1_alpha;
+    int16 ExtSensor1_beta;
+    int16 ExtSensor1_gamma;
+
+    /* External gyro axis mounting (ENUM, 1B each; Table 43) */
+    uint8 ExtGyro0_axis1_mounting;
+    uint8 ExtGyro0_axis2_mounting;
+    uint8 ExtGyro0_axis3_mounting;
+    uint8 ExtGyro1_axis1_mounting;
+    uint8 ExtGyro1_axis2_mounting;
+    uint8 ExtGyro1_axis3_mounting;
+}__attribute__((packed)) ADCS_MountingConfigCmd_Payload_t;
+
+typedef struct { // ID 116
+    uint8 Flag; 
+} ADCS_UnsolicitEventMsgSetupCmd_ExternalPayload_t;
+
+typedef struct { // ID 116
+    uint8_t InfoUART:1;
+    uint8_t MinorUART:1;
+    uint8_t MajorUART:1;
+    uint8_t CriticalUART:1;
+
+    uint8_t InfoUART2:1;
+    uint8_t MinorUART2:1;
+    uint8_t MajorUART2:1;
+    uint8_t CriticalUART2:1;
+
+    uint8_t InfoCAN:1;
+    uint8_t MinorCAN:1;
+    uint8_t MajorCAN:1;
+    uint8_t CriticalCAN:1;
+
+    uint8_t Spare:4; // Explicit declaration
+}__attribute__((packed)) ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t;
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                      ADCS Get Cmd Payload Structures                      */
@@ -392,5 +595,227 @@ typedef struct { // ID 207
     bool ValidFlag; // GYR0, 1, ExtGYR0, 1
 }__attribute__((packed)) ADCS_CalibratedGYRSensorTlm_Payload_t;
 
+typedef struct { // ID 134
+    uint8_t State;
+    uint8_t LastResult;
+    uint32_t Timestamp;
+}__attribute__((packed)) ADCS_PersistConfigDiagnosticTlm_Payload_t;
+
+typedef struct { // ID 135
+    uint16_t UART_TcCnt;
+    uint16_t UART_TlmCnt;
+    uint16_t UART_ErrSW;
+    uint16_t UART_ErrHW;
+
+    uint16_t UART2_TcCnt;
+    uint16_t UART2_TlmCnt;
+    uint16_t UART2_ErrSW;
+    uint16_t UART2_ErrHW;
+
+    uint16_t CAN_TcCnt;
+    uint16_t CAN_TlmCnt;
+    uint16_t CAN_ErrSW;
+    uint16_t CAN_ErrHW;
+
+    uint16_t I2C_TcCnt;
+    uint16_t I2C_TlmCnt;
+    uint16_t I2C_ErrSW;
+    uint16_t I2C_ErrHW;
+}__attribute__((packed)) ADCS_CommunicationStatusTlm_Payload_t;
+
+typedef struct { // ID 184
+    uint8_t RunMode;
+}__attribute__((packed)) ADCS_RunModeTlm_Payload_t;
+
+typedef struct { // ID 189
+    float Ixx;
+    float Iyy;
+    float Izz;
+    float Ixy;
+    float Ixz;
+    float Iyz;
+
+    int16 SunPointingBodyVectorX;
+    int16 SunPointingBodyVectorY;
+    int16 SunPointingBodyVectorZ;
+
+    int16 TargetTrackingBodyVectorX;
+    int16 TargetTrackingBodyVectorY;
+    int16 TargetTrackingBodyVectorZ;
+    
+    int16 SatTrackingBodyVectorX;
+    int16 SatTrackingBodyVectorY;
+    int16 SatTrackingBodyVectorZ;
+}__attribute__((packed)) ADCS_SatelliteConfigTlm_Payload_t;
+
+typedef struct { // ID 190
+    uint8_t DefaultControlMode;          // ENUM (Table 14)
+
+    float DetumblingDampingGain;         // Kd
+    float SunSpinGain_Sunlit;            // KDSun
+    float SunSpinGain_Eclipse;           // KDecel
+    float DetumblingSpinGain;            // Ks
+    float FastBDotGain;                  // Kdf
+    float YMomNutationDampingGain;       // Kn
+    float YMomNutationDampingQuatGain;   // Kq
+    float XGGQuatGain;                   // Kqx
+    float YGGQuatGain;                   // Kqy
+    float ZGGQuatGain;                   // Kqz
+    float WheelDesatControlGain;         // Kh
+    float YMomProportionalGain;          // Kp1
+    float YMomDerivativeGain;            // Kd1
+    float RWheelProportionalGain;        // Kp2
+    float RWheelDerivativeGain;          // Kd2
+    float TrackingProportionalGain;      // Kp3
+    float TrackingDerivativeGain;        // Kd3
+    float TrackingIntegralGain;          // Ki3
+    float ReferenceSpinRate_degps;       // wy-ref [degps]
+    float ReferenceWheelMomentum_Nms;    // H-ref [Nms], must be < 0
+    float YWheelBiasMomentum_Nms;        // Hy-bias [Nms]
+    float RefSpinRate_RW_degps;          // for ConSunYawSpin RW control [degps]
+    float SunKeepOutAngle_deg;           // [deg]
+    float RollLimitAngle_deg;            // [deg]
+
+    /* 3 one-bit flags + 5-bit reserved packed into 1 byte */
+    struct __attribute__((packed)) {
+        uint8_t YawCompensationForEarthRotation : 1; // BOOL
+        uint8_t EnableSunTrackingInEclipse      : 1; // BOOL
+        uint8_t EnableSunAvoidance              : 1; // BOOL
+        uint8_t Reserved                        : 5; // Padding to match spec
+    } flags;
+}__attribute__((packed)) ADCS_ControllerConfigTlm_Payload_t;
+
+typedef struct { // ID 192
+    uint8_t DefaultRunMode;
+    uint8_t DefaultOperationalState;
+    uint8_t DefaultControlModeInOpStateSafe;
+    uint8_t DefaultControlModeInOpStateAuto;
+}__attribute__((packed)) ADCS_DefaultModeConfigTlm_Payload_t;
+
+typedef struct { // ID 193
+        /* Stack & Actuators (ENUM, 1B each) */
+    uint8_t StackX_mounting;      // StackX mounting (Table 43)
+    uint8_t StackY_mounting;      // StackY mounting (Table 43)
+    uint8_t StackZ_mounting;      // StackZ mounting (Table 43)
+    uint8_t MTQ0_mounting;        // MTQ0 mounting (Table 43)
+    uint8_t MTQ1_mounting;        // MTQ1 mounting (Table 43)
+    uint8_t MTQ2_mounting;        // MTQ2 mounting (Table 43)
+    uint8_t Wheel0_mounting;      // Wheel0 mounting (Table 43)
+    uint8_t Wheel1_mounting;      // Wheel1 mounting (Table 43)
+    uint8_t Wheel2_mounting;      // Wheel2 mounting (Table 43)
+    uint8_t Wheel3_mounting;      // Wheel3 mounting (Table 43)
+
+    /* Pyramid RWL angles (INT16; deg = raw/100.0) */
+    int16_t PyramidRWL_alpha;   // alpha angle
+    int16_t PyramidRWL_beta;    // beta angle
+    int16_t PyramidRWL_gamma;   // gamma angle
+
+    /* CSS mounting (ENUM, 1B each) */
+    uint8_t CSS0_mounting;
+    uint8_t CSS1_mounting;
+    uint8_t CSS2_mounting; 
+    uint8_t CSS3_mounting;
+    uint8_t CSS4_mounting;
+    uint8_t CSS5_mounting;
+    uint8_t CSS6_mounting;
+    uint8_t CSS7_mounting;
+    uint8_t CSS8_mounting;
+    uint8_t CSS9_mounting;
+
+    /* FSS0..3 angles (INT16; deg = raw/100.0) */
+    int16_t FSS0_alpha;
+    int16_t FSS0_beta;
+    int16_t FSS0_gamma;
+    int16_t FSS1_alpha;
+    int16_t FSS1_beta;
+    int16_t FSS1_gamma;
+    int16_t FSS2_alpha;
+    int16_t FSS2_beta;
+    int16_t FSS2_gamma;
+    int16_t FSS3_alpha;
+    int16_t FSS3_beta;
+    int16_t FSS3_gamma;
+
+    /* HSS0..1 angles (INT16; deg = raw/100.0) */
+    int16_t HSS0_alpha;
+    int16_t HSS0_beta;
+    int16_t HSS0_gamma;
+    int16_t HSS1_alpha;
+    int16_t HSS1_beta;
+    int16_t HSS1_gamma;
+
+    /* MAG0..1 angles (INT16; deg = raw/100.0) */
+    int16_t MAG0_alpha;
+    int16_t MAG0_beta;
+    int16_t MAG0_gamma;
+    int16_t MAG1_alpha;
+    int16_t MAG1_beta;
+    int16_t MAG1_gamma;
+
+    /* STR0..1 angles (INT16; deg = raw/100.0) */
+    int16_t STR0_alpha;
+    int16_t STR0_beta;
+    int16_t STR0_gamma;
+    int16_t STR1_alpha;
+    int16_t STR1_beta;
+    int16_t STR1_gamma;
+
+    /* External sensor 0/1 angles (INT16; deg = raw/100.0) */
+    int16_t ExtSensor0_alpha;
+    int16_t ExtSensor0_beta;
+    int16_t ExtSensor0_gamma;
+    int16_t ExtSensor1_alpha;
+    int16_t ExtSensor1_beta;
+    int16_t ExtSensor1_gamma;
+
+    /* External gyro axis mounting (ENUM, 1B each; Table 43) */
+    uint8_t ExtGyro0_axis1_mounting;
+    uint8_t ExtGyro0_axis2_mounting;
+    uint8_t ExtGyro0_axis3_mounting;
+    uint8_t ExtGyro1_axis1_mounting;
+    uint8_t ExtGyro1_axis2_mounting;
+    uint8_t ExtGyro1_axis3_mounting;
+}__attribute__((packed)) ADCS_MountingConfigTlm_Payload_t;
+
+typedef struct { // ID 200
+    uint8_t OperationalMode;
+}__attribute__((packed)) ADCS_OperationalStateTlm_Payload_t;
+
+typedef struct { // ID 233
+    uint8_t InfoUART:1;
+    uint8_t MinorUART:1;
+    uint8_t MajorUART:1;
+    uint8_t CriticalUART:1;
+
+    uint8_t InfoUART2:1;
+    uint8_t MinorUART2:1;
+    uint8_t MajorUART2:1;
+    uint8_t CriticalUART2:1;
+
+    uint8_t InfoCAN:1;
+    uint8_t MinorCAN:1;
+    uint8_t MajorCAN:1;
+    uint8_t CriticalCAN:1;
+
+    uint8_t Spare:4; // Explicit declaration
+}__attribute__((packed)) ADCS_UnsolicitEventMsgSetupTlm_Payload_t;
+
+
+
+/*************************************
+ * CubeADCS Event Entry
+ *************************************/
+typedef struct {
+    uint32_t Counter;
+    uint32_t UpTime;
+    uint32_t UnixTime;
+    uint16_t MilliSec;
+    struct __attribute__((packed)) {
+        uint16_t EventType  : 9; 
+        uint8_t EventSource : 5; 
+        uint8_t EventClass  : 2; 
+    } Identifier;
+    uint8_t EventData[8];
+}__attribute__((packed)) ADCS_EventEntry_t;
 
 #endif

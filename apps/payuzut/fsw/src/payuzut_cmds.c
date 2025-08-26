@@ -112,7 +112,7 @@ CFE_Status_t PAYUZUT_ResetCountersCmd(const PAYUZUT_ResetCountersCmd_t *Msg) {
 CFE_Status_t PAYUZUT_GetTempCmd(const PAYUZUT_GetTempCmd_t *Msg) {
     int32 Status1, Status2;
 
-    uint16_t ADC[2] = {0,};
+    uint16_t ADC[2] = {0xFFFF, 0xFFFF};
 
     Status1 = PAYUZUT_GetADCValue(PAYUZUT_ADC_SLAVE_ADDR_1, &ADC[0]);
     if (Status1 != CFE_SUCCESS) PAYUZUT_Data.ErrCounter ++;
