@@ -2,9 +2,9 @@ project(CFE_STRX_APP C)
 
 set(APP_SRC_FILES
   fsw/src/strx_app.c
-  fsw/src/strx_app_cmds.c
-  fsw/src/strx_app_utils.c
-  fsw/src/strx_app_dispatch.c
+  fsw/src/strx_cmds.c
+  fsw/src/strx_utils.c
+  fsw/src/strx_dispatch.c
   device/src/strx.c
 )
 

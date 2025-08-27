@@ -125,7 +125,10 @@
         "rope": "c",
         "*.def": "c",
         "coroutine": "c",
-        "cfe_rf_typedef.h": "c"
+        "cfe_rf_typedef.h": "c",
+        "hk_msgids.h": "c",
+        "adcs_msg.h": "c",
+        "sc_msgids.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

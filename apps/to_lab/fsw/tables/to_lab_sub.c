@@ -62,8 +62,12 @@
 #include "payuzuc_msgids.h"
 #include "rpt_msgids.h"
 
+#include "hk_msgids.h"
+
 TO_LAB_Subs_t TO_LAB_Subs = {.Subs = {/* CFS App Subscriptions */
-                                      {CFE_SB_MSGID_WRAP_VALUE(TO_LAB_HK_TLM_MID), {0, 0}, 4},
+                                      {CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID), {0, 0}, 4},
+                                    //   {CFE_SB_MSGID_WRAP_VALUE(TO_LAB_HK_TLM_MID), {0, 0}, 4},
+                                      
                                     //   {CFE_SB_MSGID_WRAP_VALUE(TO_LAB_DATA_TYPES_MID), {0, 0}, 4},
                                     //   {CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_HK_TLM_MID), {0, 0}, 4},
                                     //   {CFE_SB_MSGID_WRAP_VALUE(RPT_REPORT_TLM_MID), {0, 0}, 4},
@@ -83,25 +87,25 @@ TO_LAB_Subs_t TO_LAB_Subs = {.Subs = {/* CFS App Subscriptions */
                                     //   {CFE_SB_MSGID_WRAP_VALUE(CFE_ES_MEMSTATS_TLM_MID), {0, 0}, 4},
 
 #ifdef HAVE_CI_LAB
-                                      {CFE_SB_MSGID_WRAP_VALUE(CI_LAB_HK_TLM_MID), {0, 0}, 4},
+                                      // {CFE_SB_MSGID_WRAP_VALUE(CI_LAB_HK_TLM_MID), {0, 0}, 4},
 #endif
 #ifdef HAVE_SAMPLE_APP
-                                      {CFE_SB_MSGID_WRAP_VALUE(SAMPLE_APP_HK_TLM_MID), {0, 0}, 4},
+                                      // {CFE_SB_MSGID_WRAP_VALUE(SAMPLE_APP_HK_TLM_MID), {0, 0}, 4},
 #endif
 #ifdef HAVE_HS
-                                      {CFE_SB_MSGID_WRAP_VALUE(HS_HK_TLM_MID), {0, 0}, 4},
+                                      // {CFE_SB_MSGID_WRAP_VALUE(HS_HK_TLM_MID), {0, 0}, 4},
 #endif
 #ifdef HAVE_FM
-                                      {CFE_SB_MSGID_WRAP_VALUE(FM_HK_TLM_MID), {0, 0}, 4},
+                                      // {CFE_SB_MSGID_WRAP_VALUE(FM_HK_TLM_MID), {0, 0}, 4},
 #endif
 #ifdef HAVE_SC
-                                      {CFE_SB_MSGID_WRAP_VALUE(SC_HK_TLM_MID), {0, 0}, 4},
+                                      // {CFE_SB_MSGID_WRAP_VALUE(SC_HK_TLM_MID), {0, 0}, 4},
 #endif
 #ifdef HAVE_DS
-                                      {CFE_SB_MSGID_WRAP_VALUE(DS_HK_TLM_MID), {0, 0}, 4},
+                                      // {CFE_SB_MSGID_WRAP_VALUE(DS_HK_TLM_MID), {0, 0}, 4},
 #endif
 #ifdef HAVE_LC
-                                      {CFE_SB_MSGID_WRAP_VALUE(LC_HK_TLM_MID), {0, 0}, 4},
+                                      // {CFE_SB_MSGID_WRAP_VALUE(LC_HK_TLM_MID), {0, 0}, 4},
 #endif
 
                                       /* CFE_SB_MSGID_RESERVED entry to mark the end of valid MsgIds */

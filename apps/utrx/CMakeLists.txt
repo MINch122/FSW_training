@@ -2,9 +2,9 @@ project(CFE_UTRX_APP C)
 
 set(APP_SRC_FILES
   fsw/src/utrx_app.c
-  fsw/src/utrx_app_cmds.c
-  fsw/src/utrx_app_dispatch.c
-  fsw/src/utrx_app_utils.c
+  fsw/src/utrx_cmds.c
+  fsw/src/utrx_dispatch.c
+  fsw/src/utrx_utils.c
   fsw/src/utrx_cmds_ax100.c
   device/src/utrx.c
 )

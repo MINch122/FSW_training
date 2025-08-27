@@ -2,9 +2,9 @@
 #include <csp/csp_endian.h> // CSP_PRIO_HIGH
 #include <gs/param/rparam.h>
 
-#include <cfe.h>
-#include <utrx.h>
-#include <utrx_app_eventids.h>
+#include "cfe.h"
+#include "utrx.h"
+#include "utrx_eventids.h"
 
 
 

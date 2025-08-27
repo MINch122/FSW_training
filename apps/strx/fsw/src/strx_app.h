@@ -31,12 +31,12 @@
 #include "cfe.h"
 #include "cfe_config.h"
 
-#include "strx_app_mission_cfg.h"
-#include "strx_app_platform_cfg.h"
+#include "strx_mission_cfg.h"
+#include "strx_platform_cfg.h"
 
-#include "strx_app_perfids.h"
-#include "strx_app_msgids.h"
-#include "strx_app_msg.h"
+#include "strx_perfids.h"
+#include "strx_msgids.h"
+#include "strx_msg.h"
 
 /************************************************************************
 ** Type Definitions
@@ -71,12 +71,12 @@ typedef struct
     char   PipeName[CFE_MISSION_MAX_API_LEN];
     uint16 PipeDepth;
 
-} STRX_APP_Data_t;
+} STRX_AppData_t;
 
 /*
 ** Global data structure
 */
-extern STRX_APP_Data_t STRX_APP_Data;
+extern STRX_AppData_t STRX_AppData;
 
 /****************************************************************************/
 /*
@@ -85,7 +85,7 @@ extern STRX_APP_Data_t STRX_APP_Data;
 ** Note: Except for the entry point (STRX_APP_Main), these
 **       functions are not called from any other source module.
 */
-void         STRX_APP_Main(void);
-CFE_Status_t STRX_APP_Init(void);
+void         STRX_AppMain(void);
+CFE_Status_t STRX_AppInit(void);
 
 #endif /* STRX_APP_H */

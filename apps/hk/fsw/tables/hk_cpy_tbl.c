@@ -47,11 +47,11 @@
 /*********************
  * COMS Header 
  ********************/
-#include "strx_app_msgids.h"
-#include "strx_app_msg.h"
+#include "strx_msgids.h"
+#include "strx_msg.h"
 
-#include "utrx_app_msgids.h"
-#include "utrx_app_msg.h"
+#include "utrx_msgids.h"
+#include "utrx_msg.h"
 
 #include "sant_msgids.h"
 #include "sant_msg.h"
@@ -157,7 +157,7 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
     },
     /*   3 : STRX   */
     {
-        CFE_SB_MSGID_WRAP_VALUE(STRX_APP_BCN_TLM_MID),
+        CFE_SB_MSGID_WRAP_VALUE(STRX_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
         BCN_OFFSET_3,
@@ -174,7 +174,7 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
 
     /*   5 : UTRX   */
     {
-        CFE_SB_MSGID_WRAP_VALUE(UTRX_APP_BCN_TLM_MID),
+        CFE_SB_MSGID_WRAP_VALUE(UTRX_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
         BCN_OFFSET_5,

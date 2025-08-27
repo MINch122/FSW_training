@@ -1,7 +1,7 @@
 #ifndef _UTRX_H_
 #define _UTRX_H_
 
-#include <cfe.h>
+#include "cfe.h"
 // #include <utrx_app/utrx_tlm.h>
 #include "utrx_conf.h"
 #include "utrx_app.h"

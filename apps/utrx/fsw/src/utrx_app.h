@@ -31,12 +31,12 @@
 #include "cfe.h"
 #include "cfe_config.h"
 
-#include "utrx_app_mission_cfg.h"
-#include "utrx_app_platform_cfg.h"
+#include "utrx_mission_cfg.h"
+#include "utrx_platform_cfg.h"
 
-#include "utrx_app_perfids.h"
-#include "utrx_app_msgids.h"
-#include "utrx_app_msg.h"
+#include "utrx_perfids.h"
+#include "utrx_msgids.h"
+#include "utrx_msg.h"
 #include "utrx.h"
 
 /************************************************************************
@@ -79,12 +79,12 @@ typedef struct
     char   PipeName[CFE_MISSION_MAX_API_LEN];
     uint16 PipeDepth;
 
-} UTRX_APP_Data_t;
+} UTRX_AppData_t;
 
 /*
 ** Global data structure
 */
-extern UTRX_APP_Data_t UTRX_APP_Data;
+extern UTRX_AppData_t UTRX_AppData;
 
 /****************************************************************************/
 /*
@@ -93,7 +93,7 @@ extern UTRX_APP_Data_t UTRX_APP_Data;
 ** Note: Except for the entry point (UTRX_APP_Main), these
 **       functions are not called from any other source module.
 */
-void         UTRX_APP_Main(void);
-CFE_Status_t UTRX_APP_Init(void);
+void         UTRX_AppMain(void);
+CFE_Status_t UTRX_AppInit(void);
 
 #endif /* UTRX_APP_H */

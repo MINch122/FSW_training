@@ -55,7 +55,62 @@
 #include "lc_msgids.h"
 #endif
 
+
+/**
+ * Include the hdr `*_msgids.h` of each app
+ */
+/*********************
+ * FSW Header 
+ ********************/
+#include "cfe_srl_msg.h"
+#include "rpt_msgids.h"
+#include "rpt_msg.h"
+/* End of FSW Header */
+
+/*********************
+ * COMS Header 
+ ********************/
+#include "strx_msgids.h"
+#include "strx_msg.h"
+
+#include "utrx_msgids.h"
+#include "utrx_msg.h"
+
+#include "sant_msgids.h"
+#include "sant_msg.h"
+
+#include "uant_msgids.h"
+#include "uant_msg.h"
+/* End of COMS Header */
+
+/*********************
+ * EPS Header 
+ ********************/
+#include "eps_msgids.h"
+#include "eps_msg.h"
+
+#include "sp_msgids.h"
+#include "sp_msg.h"
+/* End of EPS Header */
+
+/*********************
+ * ADCS Header 
+ ********************/
+#include "adcs_msgids.h"
+#include "adcs_msg.h"
+/* End of ADCS Header */
+
+/*********************
+ * PAYLOAD Header 
+ ********************/
+// include PAY UEL...
 #include "payuzuc_msgids.h"
+#include "payuzuc_msg.h"
+
+#include "payuzut_msgids.h"
+#include "payuzut_msg.h"
+/* End of PAYLOAD Header */
+
 #include "sc_msgids.h"
 
 /*
@@ -68,8 +123,19 @@
 */
 
 SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
-    .TickRate = 10,
+    .TickRate = 10, // This TickRate value is equivalent to 1 sec. If `TickRate` is `10`, `10` tick is `1` sec 
     .Config   = {
+        {CFE_SB_MSGID_WRAP_VALUE(CFE_SRL_SEND_HK_MID), 10*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(RPT_SEND_BCN_MID), 10*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(SANT_SEND_BCN_MID), 10*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(STRX_SEND_BCN_MID), 10*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(UANT_SEND_BCN_MID), 10*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(UTRX_SEND_BCN_MID), 10*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), 10*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), 10*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), 10*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_SEND_HK_MID), 10*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(PAYUZUT_SEND_BCN_MID), 10*30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_ES_SEND_HK_MID), 100, 0}, /* Example of a 1hz packet */
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_TBL_SEND_HK_MID), 50, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_TIME_SEND_HK_MID), 98, 0},

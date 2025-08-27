@@ -6,7 +6,7 @@
 
 #include "strx.h"
 #include "strx_conf.h"
-#include "strx_app_eventids.h"
+#include "strx_eventids.h"
 
 
 

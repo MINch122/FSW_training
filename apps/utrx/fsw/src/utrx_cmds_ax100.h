@@ -2,12 +2,12 @@
 #define UTRX_AX100_CMDS_H
 
 #include "utrx_app.h"
-#include "utrx_app_dispatch.h"
-#include "utrx_app_cmds.h"
-#include "utrx_app_eventids.h"
-#include "utrx_app_msgids.h"
-#include "utrx_app_msg.h"
-#include "utrx_app_fcncodes.h"
+#include "utrx_dispatch.h"
+#include "utrx_cmds.h"
+#include "utrx_eventids.h"
+#include "utrx_msgids.h"
+#include "utrx_msg.h"
+#include "utrx_fcncodes.h"
 #include <gs/param/rparam.h>
 
 // Wrapping Set function
@@ -47,11 +47,11 @@ void UTRX_AX100_TLM_GetTotRxBytesCmd   (const UTRX_AX100_GetTotRxBytesCmd_t   *M
 
 static inline void UTRX_CountFromReport(void)
 {
-    CmdErrCounter(&UTRX_APP_Data.CmdCounter,
-                  &UTRX_APP_Data.AppErrCounter,
-                  &UTRX_APP_Data.DeviceErrCounter,
-                  UTRX_APP_Data.RptPkt.Report.ReturnType,
-                  UTRX_APP_Data.RptPkt.Report.ReturnCode);
+    CmdErrCounter(&UTRX_AppData.CmdCounter,
+                  &UTRX_AppData.AppErrCounter,
+                  &UTRX_AppData.DeviceErrCounter,
+                  UTRX_AppData.RptPkt.Report.ReturnType,
+                  UTRX_AppData.RptPkt.Report.ReturnCode);
 }
 
 
