@@ -136,6 +136,10 @@ CFE_ES_ObjectTable_t CFE_ES_ObjectTable[CFE_PLATFORM_ES_OBJECT_TABLE_SIZE] = {
     ** Spare entries
     */
     //{.ObjectType = CFE_ES_NULL_ENTRY},
-    {.ObjectType = CFE_ES_NULL_ENTRY},
+    {.ObjectType               = CFE_ES_CORE_TASK,
+     .ObjectName               = "CFE_SRL",
+     .FuncPtrUnion.MainTaskPtr = CFE_SRL_TaskMain,
+     .ObjectPriority           = CFE_PLATFORM_SRL_START_TASK_PRIORITY,
+     .ObjectSize               = CFE_PLATFORM_SRL_START_TASK_STACK_SIZE},
     {.ObjectType = CFE_ES_NULL_ENTRY},
     {.ObjectType = CFE_ES_NULL_ENTRY}};

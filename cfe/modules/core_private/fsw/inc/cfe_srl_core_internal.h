@@ -13,6 +13,19 @@
 
 /*****************************************************************************/
 /**
+** \brief Entry Point for cFE Core Application
+**
+** \par Description
+**        This is the entry point to the cFE SRL Core Application.
+**
+** \par Assumptions, External Events, and Notes:
+**          None
+**
+******************************************************************************/
+void CFE_SRL_TaskMain(void);
+
+/*****************************************************************************/
+/**
 ** \brief Initializes the cFE core module SRL API Library
 **
 ** \par Description

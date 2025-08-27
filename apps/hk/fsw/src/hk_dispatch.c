@@ -101,6 +101,7 @@ void HK_SendCombinedPktVerifyDispatch(const CFE_SB_Buffer_t *BufPtr)
 {
     if (HK_VerifyMsgLength(BufPtr, sizeof(HK_SendCombinedPktCmd_t)) == HK_SUCCESS)
     {
+        OS_printf("Requested MID: 0x%06X\n", ((const HK_SendCombinedPktCmd_t *)BufPtr)->Payload.OutMsgToSend.Value);
         HK_SendCombinedPktCmd(BufPtr);
     }
 }

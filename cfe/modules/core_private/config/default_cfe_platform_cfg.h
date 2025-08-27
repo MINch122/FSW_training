@@ -41,4 +41,6 @@
 #include "cfe_tbl_platform_cfg.h"
 #include "cfe_time_platform_cfg.h"
 
+#include "cfe_srl_platform_cfg.h"
+
 #endif /* CFE_PLATFORM_CFG_H */

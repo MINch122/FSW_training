@@ -107,8 +107,8 @@ CFE_Status_t PAYUZUT_Init(void) {
         /**
          * Initialize Beacon packet (clear user data area)
          */
-        CFE_MSG_Init(CFE_MSG_PTR(PAYUZUT_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUT_BCN_TLM_MID),
-                        sizeof(PAYUZUT_Data.HkTlm));
+        CFE_MSG_Init(CFE_MSG_PTR(PAYUZUT_Data.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUT_BCN_TLM_MID),
+                        sizeof(PAYUZUT_Data.BcnTlm));
 
         /**
          * Create SB message pipe

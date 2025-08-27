@@ -113,6 +113,9 @@
 
 #include "sc_msgids.h"
 
+#include "hk_msgids.h"
+#include "hk_msg.h"
+
 /*
 ** SCH Lab schedule table
 ** When populating this table:
@@ -136,6 +139,7 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
         {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), 10*30, 0},
         {CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_SEND_HK_MID), 10*30, 0},
         {CFE_SB_MSGID_WRAP_VALUE(PAYUZUT_SEND_BCN_MID), 10*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), 10*30, 0, sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_ES_SEND_HK_MID), 100, 0}, /* Example of a 1hz packet */
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_TBL_SEND_HK_MID), 50, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_TIME_SEND_HK_MID), 98, 0},

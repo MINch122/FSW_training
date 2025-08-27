@@ -67,6 +67,7 @@ void CFE_SRL_TaskMain(void) {
         **  currently CFE Child tasks and the cFE core tasks do not
         **  use the RunLoop call.
         */
+       OS_printf("hello\n");
         CFE_ES_IncrementTaskCounter();
         // OS_printf("SRL TaskMain Loop %u\n", (unsigned int)sizeof(CFE_SRL_IO_Handle_t));
         /*

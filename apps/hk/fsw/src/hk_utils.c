@@ -417,7 +417,8 @@ void HK_SendCombinedHkPacket(CFE_SB_MsgId_t WhichMidToSend)
                 else /* This clause is only exclusive if discarding incomplete packets */
 #endif
                 {
-                    /* Send the combined housekeeping telemetry packet...        */
+                    /* Send the combined housekeeping telemetry packet... */
+                    OS_printf("Header: MID 0x%02X%02X || Length 0x%02X%02X ", OutBuffer->Msg.CCSDS.Pri.StreamId[0], OutBuffer->Msg.CCSDS.Pri.StreamId[1], OutBuffer->Msg.CCSDS.Pri.Length[0], OutBuffer->Msg.CCSDS.Pri.Length[1]);
                     CFE_SB_TimeStampMsg(&OutBuffer->Msg);
                     CFE_SB_TransmitMsg(&OutBuffer->Msg, true);
 

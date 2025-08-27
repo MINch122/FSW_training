@@ -141,6 +141,12 @@ CFE_Status_t ADCS_AppInit(void)
                      sizeof(ADCS_AppData.HkTlm));
 
         /*
+         ** Initialize housekeeping packet (clear user data area).
+         */
+        CFE_MSG_Init(CFE_MSG_PTR(ADCS_AppData.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(ADCS_BCN_TLM_MID),
+                     sizeof(ADCS_AppData.BcnTlm));
+
+        /*
          ** Create Software Bus message pipe.
          */
         status = CFE_SB_CreatePipe(&ADCS_AppData.CommandPipe, ADCS_AppData.PipeDepth, ADCS_AppData.PipeName);
