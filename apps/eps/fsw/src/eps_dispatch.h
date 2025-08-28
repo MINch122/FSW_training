@@ -33,7 +33,6 @@
 
 void EPS_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr);
 void EPS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr);
-void EPS_ProcessDeviceCommand(const CFE_SB_Buffer_t *SBBufPtr);
 bool EPS_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength);
 
 #endif

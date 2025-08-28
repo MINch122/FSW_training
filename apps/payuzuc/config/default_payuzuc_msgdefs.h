@@ -134,7 +134,7 @@ typedef struct PAYUZUC_Mosaic_Payload {
  * 
  ************************************************/
 typedef struct PAYUZUC_BcnTlm_Payload {
-    
+    uint8 Mode;
     /**
      * `0` : Image Download Not-Started
      * `1` : Image Download On-going

@@ -21,8 +21,8 @@
  *   Specification for the EPS command and telemetry
  *   message constant definitions.
  */
-#ifndef DEFAULT_EPS_MSGDEFS_H
-#define DEFAULT_EPS_MSGDEFS_H
+#ifndef EPS_MSGDEFS_H
+#define EPS_MSGDEFS_H
 
 #include "common_types.h"
 #include "eps_fcncodes.h"
@@ -108,11 +108,40 @@ typedef struct {
 /*
 ** Type definition (EPS housekeeping)
 */
+
+/**
+ * @brief EPS housekeeping packet payload.
+ */
 typedef struct {
-    uint16 something; //todo
+    uint16 vbatt;
+    uint8  output[8];
+    uint16 curout[6];
+    uint8  latchup[6];
+    uint16 curin[3];
+    uint16 cursun;
+    uint16 cursys;
+    uint16 counter_boot;
+    uint32 wdt_gnd_time_left;
+    int16  temp[3];  /* TEMP1, BP4a, BP4b */
+    uint8  bootcause;
+    uint8  battmode;
 } EPS_HkTlm_Payload_t;
 
-typedef struct {
-    uint16 something; //todo
+/**
+ * @brief EPS beacon packet payload.
+ *        Packed attribute is mandatory due to the uint32 member.
+ *        (2-byte tail padding with natural alignment)
+ */
+typedef struct __attribute__((packed)) {
+    uint16 vbatt;
+    uint8  output[8];
+    uint16 curout[6];
+    uint16 curin[3];
+    uint16 cursys;
+    uint16 counter_boot;
+    uint32 wdt_gnd_time_left;
+    uint8  bootcause;
+    uint8  battmode;
 } EPS_BcnTlm_Payload_t;
+
 #endif

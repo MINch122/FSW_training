@@ -267,7 +267,7 @@ static int32 CFE_SRL_PrepareI2C(CFE_SRL_IO_Handle_t *Handle, uint32_t Addr, uint
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Addr, uint32_t Timeout, ssize_t *Read) {
+int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Addr, uint32_t Timeout, uint32_t Delay, ssize_t *Read) {
     int32 Status;
     CFE_SRL_DevType_t DevType;
 
@@ -280,9 +280,9 @@ int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    if (Timeout) {
+    if (Timeout || Delay) {
         /**
-         * If `Timeout` Parameter is uesd, do atomic transaction
+         * If `Timeout` or `Interval` Parameter is uesd, do atomic transaction
          */
         Status = CFE_SRL_PrepareI2C(Handle, Addr, Timeout);
         if (Status != CFE_SUCCESS) goto error;
@@ -293,19 +293,24 @@ int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
             Status = CFE_SRL_Write(Handle, TxData, TxSize);
             if (Status != CFE_SUCCESS) goto error;
         }
+        // Sleep for specific time interval
+        OS_printf("Delay : %u\n",Delay);
+        Sleep_us(Delay);
 
         // Read
         ssize_t N = CFE_SRL_BasicRead(Handle->FD, RxData, RxSize);
         if (N < 0) {
             Handle->__errno = errno;
+            *Read = 0;
             Status = CFE_SRL_READ_ERR;
             goto error;
         }
         else if ((size_t)N != RxSize) {
+            *Read = N;
             Status = CFE_SRL_PARTIAL_READ_ERR;
             goto error;
         }
-        else Status = CFE_SUCCESS;
+        else {*Read = N; Status = CFE_SUCCESS;}
     }
     else {
         /**
@@ -328,7 +333,7 @@ error:
 }
 
 int32 CFE_SRL_ReadGenericI2C(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_ReadI2C(Handle, Params->TxData, Params->TxSize, Params->RxData, Params->RxSize, Params->Addr, Params->Timeout, &Params->ReadBytes);
+    return CFE_SRL_ReadI2C(Handle, Params->TxData, Params->TxSize, Params->RxData, Params->RxSize, Params->Addr, Params->Timeout, Params->Interval, &Params->ReadBytes);
 }
 
 /*----------------------------------------------------------------

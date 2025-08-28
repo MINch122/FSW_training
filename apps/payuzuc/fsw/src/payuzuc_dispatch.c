@@ -207,6 +207,10 @@ void PAYUZUC_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
         PAYUZUC_SendHkCmd((const PAYUZUC_SendHkCmd_t *)SBBufPtr);
         break;
 
+    case PAYUZUC_SEND_BCN_MID:
+        PAYUZUC_SendBcnCmd((const PAYUZUC_SendBcnCmd_t *)SBBufPtr);
+        break;
+
     default:
         CFE_EVS_SendEvent(PAYUZUC_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                             "PAYUZUC: Invalid command packet, MID = 0x%X",

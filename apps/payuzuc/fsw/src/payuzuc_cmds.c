@@ -37,12 +37,46 @@
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 CFE_Status_t PAYUZUC_SendHkCmd(const PAYUZUC_SendHkCmd_t *Msg) {
 
+    PAYUZUC_Cmd_t Cmd = {0,};
+    uint8 RxBuf[PAYUZUC_PING_TLM_SIZE] = {0,};
+    uint8_t PingArg = 0;
+
+    PAYUZUC_ConfigurePacket(&PingArg, &Cmd, PAYUZUC_PING_PARAM_SIZE, PAYUZUC_PING_CMD_CODE);
+
+    PAYUZUC_Transaction(&Cmd, RxBuf, PAYUZUC_PING_CC);
+
+    PAYUZUC_Data.BcnTlm.Payload.Mode = RxBuf[2];
+
     for (uint8_t i = 0; i < PAYUZUC_MEMORY_SLOT; i++) {
-        PAYUZUC_Data.HkTlm.Payload.MemoryState[i] = PAYUZUC_Data.MemSlotStatus.Entry[i].MemoryState;
-        PAYUZUC_Data.HkTlm.Payload.LastImgIdx[i] = PAYUZUC_Data.MemSlotStatus.Entry[i].LastImgIdx;
+        PAYUZUC_Data.BcnTlm.Payload.MemoryState[i] = PAYUZUC_Data.MemSlotStatus.Entry[i].MemoryState;
+        PAYUZUC_Data.BcnTlm.Payload.LastImgIdx[i] = PAYUZUC_Data.MemSlotStatus.Entry[i].LastImgIdx;
     }
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(PAYUZUC_Data.HkTlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(PAYUZUC_Data.HkTlm.TelemetryHeader), true);
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(PAYUZUC_Data.BcnTlm.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(PAYUZUC_Data.BcnTlm.TelemetryHeader), true);
+
+    // CFE_EVS_SendEvent(PAYUZUC_SEND_HK_INF_EID, CFE_EVS_EventType_INFORMATION, "PAYUZUC Send HK Cmd Received.");
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t PAYUZUC_SendBcnCmd(const PAYUZUC_SendBcnCmd_t *Msg) {
+
+    PAYUZUC_Cmd_t Cmd = {0,};
+    uint8 RxBuf[PAYUZUC_PING_TLM_SIZE] = {0,};
+    uint8_t PingArg = 0;
+
+    PAYUZUC_ConfigurePacket(&PingArg, &Cmd, PAYUZUC_PING_PARAM_SIZE, PAYUZUC_PING_CMD_CODE);
+
+    PAYUZUC_Transaction(&Cmd, RxBuf, PAYUZUC_PING_CC);
+
+    PAYUZUC_Data.BcnTlm.Payload.Mode = RxBuf[2];
+
+    for (uint8_t i = 0; i < PAYUZUC_MEMORY_SLOT; i++) {
+        PAYUZUC_Data.BcnTlm.Payload.MemoryState[i] = PAYUZUC_Data.MemSlotStatus.Entry[i].MemoryState;
+        PAYUZUC_Data.BcnTlm.Payload.LastImgIdx[i] = PAYUZUC_Data.MemSlotStatus.Entry[i].LastImgIdx;
+    }
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(PAYUZUC_Data.BcnTlm.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(PAYUZUC_Data.BcnTlm.TelemetryHeader), true);
 
     // CFE_EVS_SendEvent(PAYUZUC_SEND_HK_INF_EID, CFE_EVS_EventType_INFORMATION, "PAYUZUC Send HK Cmd Received.");
 

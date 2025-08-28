@@ -31,6 +31,7 @@
 #include "eps_msg.h"
 
 CFE_Status_t EPS_SendHkCmd(const EPS_SendHkCmd_t *Msg);
+CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg);
 CFE_Status_t EPS_ResetCountersCmd(const EPS_ResetCountersCmd_t *Msg);
 CFE_Status_t EPS_NoopCmd(const EPS_NoopCmd_t *Msg);
 

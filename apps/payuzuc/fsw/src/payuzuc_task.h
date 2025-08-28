@@ -35,7 +35,7 @@ typedef struct {
     /**
      * Houskeeping telemetry packet
      */
-    PAYUZUC_BcnTlm_t HkTlm;
+    PAYUZUC_BcnTlm_t BcnTlm;
 
     /*
     ** Run Status variable used in the main processing loop

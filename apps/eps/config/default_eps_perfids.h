@@ -20,8 +20,8 @@
  * @file
  *   Define EPS Performance IDs
  */
-#ifndef DEFAULT_EPS_PERFIDS_H
-#define DEFAULT_EPS_PERFIDS_H
+#ifndef EPS_PERFIDS_H
+#define EPS_PERFIDS_H
 
 #define EPS_PERF_ID 91
 

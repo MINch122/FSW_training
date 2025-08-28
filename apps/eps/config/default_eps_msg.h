@@ -28,8 +28,8 @@
  * either by overriding this header or by generating definitions from a command/data
  * dictionary tool.
  */
-#ifndef DEFAULT_EPS_MSG_H
-#define DEFAULT_EPS_MSG_H
+#ifndef EPS_MSG_H
+#define EPS_MSG_H
 
 #include "eps_mission_cfg.h"
 #include "eps_msgdefs.h"

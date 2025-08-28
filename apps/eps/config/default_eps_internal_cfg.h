@@ -37,6 +37,12 @@
 
 #define EPS_PIPE_NAME  "EPS_PIPE"
 
+#define EPS_NUMBER_OF_TABLES 1 /* Number of Example Table(s) */
+
+#define EPS_TABLE_OUT_OF_RANGE_ERR_CODE -1
+
+#define EPS_TBL_ELEMENT_1_MAX 10
+
 #define EPS_I2C_ADDR    0x09u
 
 #endif

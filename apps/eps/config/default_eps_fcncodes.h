@@ -25,8 +25,8 @@
  *   macro definitions.  Other definitions such as enums, typedefs, or other
  *   macros should be placed in the msgdefs.h or msg.h files.
  */
-#ifndef DEFAULT_EPS_FCNCODES_H
-#define DEFAULT_EPS_FCNCODES_H
+#ifndef EPS_FCNCODES_H
+#define EPS_FCNCODES_H
 
 /************************************************************************
  * Macro Definitions
@@ -39,6 +39,7 @@
 #define EPS_RESET_COUNTERS_CC       1
 #define EPS_GET_COUNTERS_CC         2
 #define EPS_GET_APPDATA_CC          3
+#define EPS_REPORT_APPDATA_CC       4
 
 /*
 ** P31u device & channel control

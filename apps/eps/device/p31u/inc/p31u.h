@@ -51,7 +51,7 @@ typedef enum {
  * P31u command ports.
  */
 typedef enum {
-/*  Mnemonic                      Port    Request (req)    Reply            */
+/*  Mnemonic                      Port    Request          Reply            */
     P31U_PORT_HK                =  8,  /* none             p31u_hkparam_t   */
                                        /* u8 type = 0      p31u_hk_t        */
                                        /* u8 type = 1      p31u_hk_vi_t     */

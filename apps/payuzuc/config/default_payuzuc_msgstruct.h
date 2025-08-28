@@ -136,6 +136,8 @@ typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
 } PAYUZUC_SendHkCmd_t;
 
+typedef PAYUZUC_SendHkCmd_t PAYUZUC_SendBcnCmd_t;
+
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     PAYUZUC_BcnTlm_Payload_t Payload;

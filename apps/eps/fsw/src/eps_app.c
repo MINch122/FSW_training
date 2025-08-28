@@ -174,7 +174,7 @@ CFE_Status_t EPS_Init(void)
     /**
      * I2C1 Handle Init
      */
-    // EPS_AppData.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_I2C1_HANDLE_INDEXER);
+    EPS_AppData.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_I2C1_HANDLE_INDEXER);
 
     return status;
 }

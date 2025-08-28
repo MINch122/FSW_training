@@ -109,8 +109,8 @@ CFE_Status_t PAYUZUC_Init(void) {
         /**
          * Initialize housekeeping packet (clear user data area)
          */
-        CFE_MSG_Init(CFE_MSG_PTR(PAYUZUC_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUC_HK_TLM_MID),
-                        sizeof(PAYUZUC_Data.HkTlm));
+        CFE_MSG_Init(CFE_MSG_PTR(PAYUZUC_Data.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUC_BCN_TLM_MID),
+                        sizeof(PAYUZUC_Data.BcnTlm));
 
         /**
          * Create SB message pipe
@@ -154,7 +154,7 @@ CFE_Status_t PAYUZUC_Init(void) {
     /**
      * Get Serial Handle pointer
      */
-    PAYUZUC_Data.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_SOCAT_HANDLE_INDEXER);
+    PAYUZUC_Data.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_RS422_HANDLE_INDEXER);
     CFE_ES_WriteToSysLog("%s: IO Handle Ptr: %p", __func__, (void *)PAYUZUC_Data.Handle);
 
     /**

@@ -25,8 +25,8 @@
  *   Constants and enumerated types related to these message structures
  *   are defined in cosmos_eps_msgdefs.h.
  */
-#ifndef DEFAULT_EPS_MSGSTRUCT_H
-#define DEFAULT_EPS_MSGSTRUCT_H
+#ifndef EPS_MSGSTRUCT_H
+#define EPS_MSGSTRUCT_H
 
 /************************************************************************
  * Includes
@@ -49,8 +49,7 @@ typedef struct {
 
 typedef EPS_NoArgCmd_t  EPS_NoopCmd_t;
 typedef EPS_NoArgCmd_t  EPS_ResetCountersCmd_t;
-typedef EPS_NoArgCmd_t  EPS_GetCountersCmd_t;
-typedef EPS_NoArgCmd_t  EPS_GetAppDataCmd_t;
+typedef EPS_NoArgCmd_t  EPS_ReportAppDataCmd_t;
 
 typedef EPS_NoArgCmd_t  EPS_P31U_ResetCountersCmd_t;
 typedef EPS_NoArgCmd_t  EPS_P31U_ResetWdtCmd_t;
@@ -133,12 +132,12 @@ typedef struct {
 ** Type definition (EPS housekeeping)
 */
 typedef EPS_NoArgCmd_t  EPS_SendHkCmd_t;
+typedef EPS_NoArgCmd_t  EPS_SendBcnCmd_t;
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     RPT_Report_t Payload;
 } EPS_ReportTlm_t;
-
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader;

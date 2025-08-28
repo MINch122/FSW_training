@@ -2,28 +2,28 @@
     "interfaces" : [
         {
             "type": "i2c",
-            "ready": false,
+            "ready": true,
             "name": "I2C0",
             "DevName": "/dev/i2c-0",
             "MutexID": 0
         },
         {
             "type": "i2c",
-            "ready": false,
+            "ready": true,
             "name": "I2C1",
             "DevName": "/dev/i2c-1",
             "MutexID": 1
         },
         {
             "type": "i2c",
-            "ready": false,
+            "ready": true,
             "name": "I2C2",
             "DevName": "/dev/i2c-2",
             "MutexID": 1
         },
         {
             "type": "uart",
-            "ready": false,
+            "ready": true,
             "name": "UART",
             "DevName": "/dev/ttyS0",
             "MutexID": 2,
@@ -31,7 +31,7 @@
         },
         {
             "type": "uart",
-            "ready": false,
+            "ready": true,
             "name": "RS422",
             "DevName": "/dev/ttyS1",
             "MutexID": 3,
@@ -39,7 +39,7 @@
         },
         {
             "type": "uart",
-            "ready": true,
+            "ready": false,
             "name": "socat",
             "DevName": "/dev/pts/2",
             "baudrate": 115200

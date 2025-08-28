@@ -45,18 +45,26 @@
 /*
 ** Global Data
 */
+
+typedef struct {
+    uint32 CmdCounter;
+    uint32 ErrCounter;
+    uint32 GetHkErrCounter;
+    uint32 GetBcnErrCounter;
+} EPS_AppData_Counters_t;
+
 typedef struct
 {
     /*
     ** Command interface counters...
     */
-    uint8 CmdCounter;
-    uint8 ErrCounter;
+    EPS_AppData_Counters_t Counters;
 
     /*
     ** Housekeeping telemetry packet...
     */
     EPS_HkTlm_t HkTlm;
+    EPS_BcnTlm_t BcnTlm;
 
     /*
     ** Run Status variable used in the main processing loop
@@ -64,12 +72,11 @@ typedef struct
     uint32 RunStatus;
 
     EPS_ReportTlm_t Report;
-    
-    CFE_SB_PipeId_t CommandPipe;
 
     /*
     ** Operational data (not reported in housekeeping)...
     */
+    CFE_SB_PipeId_t CommandPipe;
 
     CFE_SRL_IO_Handle_t *Handle;
 

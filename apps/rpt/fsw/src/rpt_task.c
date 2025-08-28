@@ -160,10 +160,10 @@ CFE_Status_t RPT_Init(void) {
     RPT_Data.CmdPipeName[sizeof(RPT_Data.CmdPipeName) - 1] = 0;
 
     strncpy(RPT_Data.RptPipeName, "RPT_RPT_PIPE", sizeof(RPT_Data.RptPipeName));
-    RPT_Data.RptPipeName[sizeof(RPT_Data.RptPipeName - 1)] = 0;
+    RPT_Data.RptPipeName[sizeof(RPT_Data.RptPipeName) - 1] = 0;
 
     strncpy(RPT_Data.CritPipeName, "RPT_CRITICAL_PIPE", sizeof(RPT_Data.CritPipeName));
-    RPT_Data.CritPipeName[sizeof(RPT_Data.CritPipeName - 1)] = 0;
+    RPT_Data.CritPipeName[sizeof(RPT_Data.CritPipeName) - 1] = 0;
 
     /**
      * Register the events

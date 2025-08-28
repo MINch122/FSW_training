@@ -12,6 +12,7 @@
 #include "payuzuc_msg.h"
 
 CFE_Status_t PAYUZUC_SendHkCmd(const PAYUZUC_SendHkCmd_t *Msg);
+CFE_Status_t PAYUZUC_SendBcnCmd(const PAYUZUC_SendBcnCmd_t *Msg);
 
 CFE_Status_t PAYUZUC_NoopCmd(const PAYUZUC_NoopCmd_t *Msg);
 CFE_Status_t PAYUZUC_ResetCountersCmd(const PAYUZUC_ResetCountersCmd_t *Msg);

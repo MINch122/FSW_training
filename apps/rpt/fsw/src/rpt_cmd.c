@@ -16,8 +16,10 @@ CFE_Status_t RPT_SendHKCmd(void) {
 
 CFE_Status_t RPT_SendBeaconCmd(void) {
 
+    
     RPT_Data.HkTlm.Payload.CmdCounter = RPT_Data.CmdCounter;
     RPT_Data.HkTlm.Payload.CmdErrCounter = RPT_Data.ErrCounter;
+
 
     OS_MutSemTake(RPT_Data.ReportMutexID);
     RPT_Data.HkTlm.Payload.ReportQueueCnt = RPT_Data.RptQueue.Count;
@@ -59,6 +61,8 @@ CFE_Status_t RPT_ReportCmd(const RPT_ReportCmd_t *Msg) {
     int32 Status;
     RPT_Report_Payload_t Payload = Msg->Payload;
 
+    RPT_Data.CmdCounter ++;
+
     if (Payload.IsCritical) Status = RPT_MultipleCritical(Payload.StartIdx, Payload.TotalNumber);
     else Status = RPT_MultipleReport(Payload.StartIdx, Payload.TotalNumber);
     
@@ -68,6 +72,8 @@ CFE_Status_t RPT_ReportCmd(const RPT_ReportCmd_t *Msg) {
 }
 
 CFE_Status_t RPT_ClearQueueCmd(const RPT_ClearQueueCmd_t *Msg) {
+    
+    RPT_Data.CmdCounter ++;
 
     if (Msg->Payload.IsCritical) {
         OS_MutSemTake(RPT_Data.CritMutexID);
