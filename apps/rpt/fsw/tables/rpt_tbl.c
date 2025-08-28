@@ -5,12 +5,15 @@
 /**************************
  * Add More `*_msgids.h`
  **************************/
+#include "adcs_msgids.h"
+#include "eps_msgids.h"
 #include "payuzuc_msgids.h"
-
-
-
-
-
+#include "payuzut_msgids.h"
+#include "sant_msgids.h"
+#include "sp_msgids.h"
+#include "strx_msgids.h"
+#include "uant_msgids.h"
+#include "utrx_msgids.h"
 
 
 
@@ -23,43 +26,43 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 1 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(ADCS_REPORT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 2 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(EPS_REPORT_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
         
     /* Entry 3 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(PAYUZUT_REPORT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 4 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(SANT_REPORT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
     
     /* Entry 5 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(SP_REPORT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 6 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(STRX_RPT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 7 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(UANT_RPT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 8 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(UTRX_RPT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
         
     /* Entry 9 */

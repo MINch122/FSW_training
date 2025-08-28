@@ -43,7 +43,7 @@ void CFE_SRL_ConfigHost(csp_conf_t *Conf) {
 	Conf->conn_max = 10;
 	Conf->conn_queue_length = 10;
 	Conf->fifo_length = 25;
-	Conf->port_max_bind = 32;
+	Conf->port_max_bind = 62;
 	Conf->rdp_max_window = 20;
 	Conf->buffers = 10;
 	Conf->buffer_data_size = 256;

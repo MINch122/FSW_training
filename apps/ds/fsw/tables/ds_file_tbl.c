@@ -55,9 +55,9 @@
 **       when creating ground system database entries that require
 **       file index numbers for command arguments.
 */
-#define FILE_ALL_EVENTS 0
+// #define FILE_ALL_EVENTS 0
 
-#define FILE_ALL_APP_HK_PKTS  1
+#define FILE_ALL_APP_BCN_PKTS  0
 #define FILE_ALL_APP_TLM_PKTS 2
 
 #define FILE_ALL_HW_TLM_PKTS 3
@@ -75,14 +75,14 @@ DS_DestFileTable_t DS_DestFileTable = {
         /* File Index 00 -- event packets only */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ "set_by_cmd_b4_enable",
-            /* .Basename      = */ "events",
+            /* .Pathname      = */ "/cf/sdcard",
+            /* .Basename      = */ "beacon",
             /* .Extension     = */ ".dat",
 
             /* .FileNameType  = */ DS_BY_COUNT,
             /* .EnableState   = */ DS_ENABLED,
-            /* .MaxFileSize   = */ (1024 * 32), /* 32 K-bytes */
-            /* .MaxFileAge    = */ (60 * 45),   /* 45 minutes */
+            /* .MaxFileSize   = */ (143 * 10), /* 1430 bytes == 10 beacon packets*/
+            /* .MaxFileAge    = */ (30 * 10),   /* 5 minutes */
             /* .SequenceCount = */ 1000,
         },
         /* File Index 01 -- application housekeeping packets */

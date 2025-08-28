@@ -44,7 +44,7 @@ static void EPS_SendReport(const void* cmd,
     CFE_MSG_GetFcnCode(cmd, &cmdCode);
 
     CFE_MSG_Init(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader),
-                 CFE_SB_ValueToMsgId(EPS_HK_TLM_MID), // todo: define eps report mid.
+                 CFE_SB_ValueToMsgId(EPS_REPORT_MID), // todo: define eps report mid.
                  sizeof(EPS_AppData.Report) + dataSize);
     EPS_AppData.Report.Payload.MsgID = CFE_SB_MsgIdToValue(cmdMid);
     EPS_AppData.Report.Payload.CommandCode = cmdCode;

@@ -322,12 +322,12 @@ void TO_LAB_forward_telemetry(void)
                     /*****************************
                      * RT Telemetry Out
                      ****************************/
-                    CfeStatus = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, 13); /* Eliminate `const` attr */
-                    OS_printf("Status : %d\n", CfeStatus);
-                    if (CfeStatus != 1) { // `1` is Success status. Refer the comments in `CFE_RF_TelemetryEmit`
-                        CFE_EVS_SendErr(TO_LAB_TLMOUTSTOP_ERR_EID, "%s: RF emit error. RC=0x%08X\n", __func__, CfeStatus);
-                        CfeStatus = CFE_SUCCESS; // Forcing to loop
-                    }
+                    // CfeStatus = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, 13); /* Eliminate `const` attr */
+                    // OS_printf("Status : %d\n", CfeStatus);
+                    // if (CfeStatus != 1) { // `1` is Success status. Refer the comments in `CFE_RF_TelemetryEmit`
+                    //     CFE_EVS_SendErr(TO_LAB_TLMOUTSTOP_ERR_EID, "%s: RF emit error. RC=0x%08X\n", __func__, CfeStatus);
+                    //     CfeStatus = CFE_SUCCESS; // Forcing to loop
+                    // }
                 }
 
                 CFE_ES_PerfLogExit(TO_LAB_SOCKET_SEND_PERF_ID);
