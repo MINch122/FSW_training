@@ -75,7 +75,7 @@ DS_DestFileTable_t DS_DestFileTable = {
         /* File Index 00 -- event packets only */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ "/cf/sdcard",
+            /* .Pathname      = */ "/cf/sdcard/beacon",
             /* .Basename      = */ "beacon",
             /* .Extension     = */ ".dat",
 
@@ -88,15 +88,15 @@ DS_DestFileTable_t DS_DestFileTable = {
         /* File Index 01 -- application housekeeping packets */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ "set_by_cmd_b4_enable",
-            /* .Basename      = */ "app",
-            /* .Extension     = */ ".hk",
+            /* .Pathname      = */ "/cf/sdcard/report",
+            /* .Basename      = */ "report",
+            /* .Extension     = */ ".dat",
 
-            /* .FileNameType  = */ DS_BY_TIME,
-            /* .EnableState   = */ DS_DISABLED,
-            /* .MaxFileSize   = */ (1024 * 1024 * 2), /* 2 M-bytes */
-            /* .MaxFileAge    = */ (60 * 60 * 2),     /* 2 hours */
-            /* .SequenceCount = */ DS_UNUSED,
+            /* .FileNameType  = */ DS_BY_COUNT,
+            /* .EnableState   = */ DS_ENABLED,
+            /* .MaxFileSize   = */ (540 * 10), /* 2 M-bytes */
+            /* .MaxFileAge    = */ (60 * 60),     /* 1 hours */
+            /* .SequenceCount = */ 1000,
         },
         /* File Index 02 -- application telemetry packets */
         {

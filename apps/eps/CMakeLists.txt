@@ -2,8 +2,10 @@ project(CFE_EPS_APP C)
 
 set(APP_SRC_FILES
   fsw/src/eps_app.c
-  fsw/src/eps_cmds.c
   fsw/src/eps_cmds_p31u.c
+  fsw/src/eps_cmds.c
+  fsw/src/eps_device_p31u.c
+  fsw/src/eps_dispatch.c
 )
 
 list(APPEND APP_SRC_FILES
