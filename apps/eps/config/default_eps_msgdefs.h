@@ -142,6 +142,18 @@ typedef struct __attribute__((packed)) {
     uint32 wdt_gnd_time_left;
     uint8  bootcause;
     uint8  battmode;
+
+    /**
+     * Indicate battery heater control mode (`Auto = 1` or `Manual = 0`)
+     */
+    uint8  battheater_mode;
+
+    /**
+     * Battery Temperature
+     * [0] : BP4 temperature
+     * [1] : Onboard temperature
+     */
+    int16  bp4_temp[2];
 } EPS_BcnTlm_Payload_t;
 
 #endif

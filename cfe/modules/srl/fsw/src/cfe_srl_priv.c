@@ -287,7 +287,6 @@ int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
         Status = CFE_SRL_PrepareI2C(Handle, Addr, Timeout);
         if (Status != CFE_SUCCESS) goto error;
         
-        OS_printf("I2C Atomic Transaction.\n");
         if (TxData != NULL) {
             // Write
             Status = CFE_SRL_Write(Handle, TxData, TxSize);
@@ -316,7 +315,6 @@ int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
         /**
          * If `Timeout` Parameter is not used, do combined transaction
          */
-        OS_printf("I2C Combined Transaction.\n");
         Status = CFE_SRL_TransactionI2C(Handle, TxData, TxSize, RxData, RxSize, Addr);
         if (Status != CFE_SUCCESS) goto error;
     }

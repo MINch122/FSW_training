@@ -23,6 +23,6 @@
 #ifndef STRX_PERFIDS_H
 #define STRX_PERFIDS_H
 
-#define STRX_PERF_ID 91
+#define STRX_PERF_ID 42
 
 #endif

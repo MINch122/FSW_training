@@ -54,6 +54,8 @@
 #define SC_START_RTS2_CKSUM (0x04)
 #endif
 
+#define SC_ENABLE_RTS8_CKSUM (0x0D)
+
 /* Custom table structure, modify as needed to add desired commands */
 typedef struct
 {
@@ -84,8 +86,8 @@ SC_RtsTable001_t SC_Rts001 = {
     /* 2 */
     .rts.hdr2.WakeupCount = 5,
     .rts.cmd2.CommandHeader =
-        CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd2), SC_ENABLE_RTS_CC, SC_ENABLE_RTS2_CKSUM),
-    .rts.cmd2.Payload.RtsNum = SC_RTS_NUM_INITIALIZER(2),
+        CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd2), SC_ENABLE_RTS_CC, SC_ENABLE_RTS8_CKSUM),
+    .rts.cmd2.Payload.RtsNum = SC_RTS_NUM_INITIALIZER(8),
 
     /* 3 */
     .rts.hdr3.WakeupCount = 5,

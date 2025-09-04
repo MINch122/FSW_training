@@ -370,7 +370,7 @@
  * \par Limits:
  *       Must be a valid RTS ID or 0
  */
-#define RTS_ID_AUTO_PROCESSOR 2
+#define RTS_ID_AUTO_PROCESSOR 1
 
 /**
  * \brief Mission specific version number for SC application

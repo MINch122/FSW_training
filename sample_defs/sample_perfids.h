@@ -44,17 +44,17 @@
 #define CFE_MISSION_TBL_MAIN_PERF_ID      3  /**< \brief Performance ID for Table Services Task */
 #define CFE_MISSION_SB_MAIN_PERF_ID       4  /**< \brief Performance ID for Software Bus Services Task */
 #define CFE_MISSION_SB_MSG_LIM_PERF_ID    5  /**< \brief Performance ID for Software Bus Msg Limit Errors */
-#define CFE_MISSION_SB_PIPE_OFLOW_PERF_ID 27 /**< \brief Performance ID for Software Bus Pipe Overflow Errors */
+#define CFE_MISSION_SB_PIPE_OFLOW_PERF_ID 6 /**< \brief Performance ID for Software Bus Pipe Overflow Errors */
 
-#define CFE_MISSION_TIME_MAIN_PERF_ID        6 /**< \brief Performance ID for Time Services Task */
-#define CFE_MISSION_TIME_TONE1HZISR_PERF_ID  7 /**< \brief Performance ID for 1 Hz Tone ISR */
+#define CFE_MISSION_TIME_MAIN_PERF_ID        7 /**< \brief Performance ID for Time Services Task */
+#define CFE_MISSION_TIME_TONE1HZISR_PERF_ID  8 /**< \brief Performance ID for 1 Hz Tone ISR */
 #define CFE_MISSION_TIME_LOCAL1HZISR_PERF_ID 8 /**< \brief Performance ID for 1 Hz Local ISR */
 
-#define CFE_MISSION_TIME_SENDMET_PERF_ID      9  /**< \brief Performance ID for Time ToneSendMET */
-#define CFE_MISSION_TIME_LOCAL1HZTASK_PERF_ID 10 /**< \brief Performance ID for 1 Hz Local Task */
-#define CFE_MISSION_TIME_TONE1HZTASK_PERF_ID  11 /**< \brief Performance ID for 1 Hz Tone Task */
+#define CFE_MISSION_TIME_SENDMET_PERF_ID      10  /**< \brief Performance ID for Time ToneSendMET */
+#define CFE_MISSION_TIME_LOCAL1HZTASK_PERF_ID 11 /**< \brief Performance ID for 1 Hz Local Task */
+#define CFE_MISSION_TIME_TONE1HZTASK_PERF_ID  12 /**< \brief Performance ID for 1 Hz Tone Task */
 
-#define CFE_MISSION_SRL_MAIN_PERF_ID        488
+#define CFE_MISSION_SRL_MAIN_PERF_ID          23 /**< \brief Performance ID for Serial Services Task */
 /** \} */
 
 #endif /* SAMPLE_PERFIDS_H */

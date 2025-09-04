@@ -136,6 +136,18 @@ CFE_Status_t PAYUZUC_Init(void) {
 
     if (Status == CFE_SUCCESS) {
         /**
+         * Subscribe to beacon request commands
+         */
+        Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(PAYUZUC_SEND_BCN_MID), PAYUZUC_Data.CommandPipe);
+        if (Status != CFE_SUCCESS) {
+            CFE_EVS_SendEvent(PAYUZUC_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
+                                "%s: Error Subscribing to HK request, RC = 0x%08lX", 
+                                __func__, (unsigned long)Status);
+        }
+    }
+
+    if (Status == CFE_SUCCESS) {
+        /**
          * Subscribe to ground command packets
          */
         Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(PAYUZUC_CMD_MID), PAYUZUC_Data.CommandPipe);

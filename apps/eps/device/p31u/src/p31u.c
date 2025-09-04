@@ -12,6 +12,10 @@
   #include <arpa/inet.h>
 #endif
 
+int p31u_ping(uint8_t *tx, uint8_t *rx) {
+    return p31u_transaction(P31U_PORT_PING, tx, sizeof(uint8_t), rx, sizeof(uint8_t));
+}
+
 int p31u_set(uint8_t port,
              const void* data,
              int size)

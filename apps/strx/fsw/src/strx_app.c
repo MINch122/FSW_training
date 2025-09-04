@@ -155,17 +155,6 @@ CFE_Status_t STRX_AppInit(void)
                               "Strx App: Error Subscribing to HK request, RC = 0x%08lX", (unsigned long)status);
         }
     }
-
-    if (status == CFE_SUCCESS)
-    {
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(STRX_OIF_MID), STRX_AppData.CommandPipe);
-        if (status != CFE_SUCCESS)
-        {
-           CFE_EVS_SendEvent(STRX_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "Strx App: Error Subscribing to OIF MID, RC = 0x%08lX", (unsigned long)status);
-        }
-    }
-
   
     if (status == CFE_SUCCESS)
     {

@@ -60,6 +60,24 @@ static void EPS_SendReport(const void* cmd,
    CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader), true);
 }
 
+
+void EPS_P31U_PingCmd(const EPS_P31U_PingCmd_t *Msg) {
+
+    EPS_AppData.Counters.CmdCounter++;
+
+    uint8_t tx = 0x55;
+    uint8_t rx = 0x00;
+    int ret = p31u_ping(&tx, &rx);
+
+    if (ret == P31U_OK && rx == 0x55) {
+        OS_printf("Ping Success.\n");
+    }
+    else if (ret == P31U_OK && rx != 0x55) {
+        OS_printf("Ping Failed.\n");
+    }
+}
+
+
 void EPS_P31U_SetOutputSingleCmd(const EPS_P31U_SetOutputSingleCmd_t *Msg)
 {
     int ret;

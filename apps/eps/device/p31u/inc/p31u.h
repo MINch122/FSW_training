@@ -52,6 +52,7 @@ typedef enum {
  */
 typedef enum {
 /*  Mnemonic                      Port    Request          Reply            */
+    P31U_PORT_PING              =  1,  /* u8 0x55          size2 0x55 0x??  */
     P31U_PORT_HK                =  8,  /* none             p31u_hkparam_t   */
                                        /* u8 type = 0      p31u_hk_t        */
                                        /* u8 type = 1      p31u_hk_vi_t     */
@@ -222,6 +223,8 @@ typedef struct __attribute__((packed)) {
 #endif
 
 
+
+int p31u_ping(uint8_t *tx, uint8_t *rx);
 /**
  * @brief Performs a generic write-read transaction.
  * 

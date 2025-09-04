@@ -28,8 +28,8 @@
  * \ingroup cfslcmissioncfg
  * \{
  */
-#define LC_APPMAIN_PERF_ID    28 /**< \brief Main task performance ID */
-#define LC_WDT_SEARCH_PERF_ID 43 /**< \brief Watchpoing definition table search performance ID */
+#define LC_APPMAIN_PERF_ID    33 /**< \brief Main task performance ID */
+#define LC_WDT_SEARCH_PERF_ID 34 /**< \brief Watchpoing definition table search performance ID */
 /**\}*/
 
 #endif

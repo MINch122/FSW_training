@@ -131,14 +131,15 @@ void UTRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
            break;
 
         case UTRX_RESET_DEVICE_CMD_COUNTERS_CC:
-           if (UTRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(UTRX_ResetDeviceCmdCountersCmd_t))) 
-           {
-              UTRX_ResetDeviceCmdCountersCmd((const UTRX_ResetDeviceCmdCountersCmd_t *)SBBufPtr);
+            if (UTRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(UTRX_ResetDeviceCmdCountersCmd_t))) 
+            {
+               UTRX_ResetDeviceCmdCountersCmd((const UTRX_ResetDeviceCmdCountersCmd_t *)SBBufPtr);
              
-           }
-           break;
-
-///////////////////////////////////////////////////////////////////////////////////////////////
+            }
+            break;
+        /**********************************************************************************
+         * AX100 Device Set Command
+        **********************************************************************************/
         case UTRX_GNDWDT_CLEAR_CC:
             if (UTRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(UTRX_AX100_GndwdtClear_t))) {
                 UTRX_AX100_GndwdtClearCmd((const UTRX_AX100_GndwdtClear_t *)SBBufPtr);
@@ -204,82 +205,9 @@ void UTRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
                 UTRX_AX100_CheckStatePingCmd((const UTRX_AX100_CheckStatePingCmd_t *)SBBufPtr);
             }
             break;
-
-        default:
-           CFE_EVS_SendEvent(UTRX_CC_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "UTRX App: Invalid command code %d", CommandCode);
-
-            memset(UTRX_AppData.RptPkt.Report.ReturnValue, 0, sizeof(UTRX_AppData.RptPkt.Report.ReturnValue));
-            UTRX_AppData.RptPkt.Report.CommandCode    = (uint8_t)CommandCode;
-
-
-            UTRX_AppData.RptPkt.Report.ReturnCode = CFE_STATUS_BAD_COMMAND_CODE;
-            UTRX_AppData.RptPkt.Report.ReturnType = CMD_RETCODE_TYPE_APP;
-            UTRX_AppData.RptPkt.Report.ReturnDataSize = 0;
-            UTRX_CountFromReport();
-
-            
-            break;
-    }
-
-      CFE_MSG_Init(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader),
-                     CFE_SB_ValueToMsgId(UTRX_RPT_TLM_MID),
-                     sizeof(UTRX_ReportTlm_t));
-        CFE_SB_TimeStampMsg(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader));
-        CFE_SB_TransmitMsg(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader), true);
-
-    return;
-}
-/*************************ProcessRequestedTelemetry ***************************/
-// MaxBuffer is used to send only the specific data requested by a command.
-
-void UTRX_ProcessRequestedTelemetry(const CFE_SB_Buffer_t *SBBufPtr){
-     CFE_MSG_FcnCode_t CommandCode = 0;
-
-    CFE_Status_t rc = CFE_MSG_GetFcnCode(&SBBufPtr->Msg, &CommandCode);
-
-    if (rc != CFE_SUCCESS) {
-        CFE_EVS_SendEvent(UTRX_GETFCN_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "UTRX: Failed to get command code from message (rc=%d)", (int32)rc);
-
-        /* 실패 경로: 데이터 비우고 앱 에러로 기록 */
-        memset(UTRX_AppData.RptPkt.Report.ReturnValue, 0, sizeof(UTRX_AppData.RptPkt.Report.ReturnValue));
-        UTRX_AppData.RptPkt.Report.ReturnDataSize = 0;
-        UTRX_AppData.RptPkt.Report.ReturnType = CMD_RETCODE_TYPE_APP;
-        UTRX_AppData.RptPkt.Report.ReturnCode = rc;
-        UTRX_CountFromReport();
-
-        CFE_MSG_Init(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader),
-                     CFE_SB_ValueToMsgId(UTRX_RPT_TLM_MID),
-                     sizeof(UTRX_ReportTlm_t));
-        CFE_SB_TimeStampMsg(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader));
-        CFE_SB_TransmitMsg(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader), true);
-        return;
-    }
-
-
-
-    switch (CommandCode)
-    {
-        // case UTRX_GET_STATUS_CONFIGURATION_CC:
-        // {
-        //     if (UTRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(UTRX_AX100_GetStatusConfigurationCmd_t)))
-        //     {
-        //         UTRX_Tlm_t *conf_buf = (UTRX_Tlm_t *)&ReportMsg->Data.MaxBuffer;
-        //         status = UTRX_GetStatusConfiguration(conf_buf);
-        //         ReportMsg->Report.DataSize = sizeof(UTRX_Tlm_t);
-        //         OS_printf("[UTRX] active_conf: %u\n", conf_buf->active_conf);
-        //         OS_printf("[UTRX] rx_guard   : %u\n", conf_buf->rx_guard);
-        //         OS_printf("[UTRX] rx_baudrate: %u\n", conf_buf->rx_baudrate);
-        //         OS_printf("[UTRX] tx_baudrate: %u\n", conf_buf->tx_baudrate);
-
-                
-        //         statusType = CMD_RETCODE_TYPE_DRIVER;
-        //     }
-        //     break;
-
-        // }
-
+        /**********************************************************************************
+         * AX100 Device Get Command
+        **********************************************************************************/
        case UTRX_RXCONF_GET_BAUD_CC:
             if (UTRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(UTRX_AX100_GetRxBaudCmd_t))) {
                 UTRX_AX100_RXCONF_GetBaudCmd((const UTRX_AX100_GetRxBaudCmd_t *)SBBufPtr);
@@ -367,7 +295,7 @@ void UTRX_ProcessRequestedTelemetry(const CFE_SB_Buffer_t *SBBufPtr){
             break;
 
         default:
-            CFE_EVS_SendEvent(UTRX_CC_ERR_EID, CFE_EVS_EventType_ERROR,
+           CFE_EVS_SendEvent(UTRX_CC_ERR_EID, CFE_EVS_EventType_ERROR,
                               "UTRX App: Invalid command code %d", CommandCode);
 
             memset(UTRX_AppData.RptPkt.Report.ReturnValue, 0, sizeof(UTRX_AppData.RptPkt.Report.ReturnValue));
@@ -378,23 +306,12 @@ void UTRX_ProcessRequestedTelemetry(const CFE_SB_Buffer_t *SBBufPtr){
             UTRX_AppData.RptPkt.Report.ReturnType = CMD_RETCODE_TYPE_APP;
             UTRX_AppData.RptPkt.Report.ReturnDataSize = 0;
             UTRX_CountFromReport();
+
+            
             break;
-
-
     }
-
-     CFE_MSG_Init(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader),
-                     CFE_SB_ValueToMsgId(UTRX_RPT_TLM_MID),
-                     sizeof(UTRX_ReportTlm_t));
-        CFE_SB_TimeStampMsg(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader));
-        CFE_SB_TransmitMsg(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader), true);
-
     return;
-
-        
 }
-
-
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
@@ -407,59 +324,26 @@ void UTRX_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 {
     CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
 
-    CFE_Status_t   rc    = CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
-
-    if (rc != CFE_SUCCESS) {
-        CFE_EVS_SendEvent(UTRX_MID_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "UTRX: Failed to get MsgId (rc=%d)", (int32)rc);
-
-        
-        memset(UTRX_AppData.RptPkt.Report.ReturnValue, 0, sizeof(UTRX_AppData.RptPkt.Report.ReturnValue));
-        UTRX_AppData.RptPkt.Report.ReturnDataSize = 0;
-        UTRX_AppData.RptPkt.Report.MsgID      = CFE_SB_MsgIdToValue(MsgId); 
-        UTRX_AppData.RptPkt.Report.CommandCode= 0;                          
-        UTRX_AppData.RptPkt.Report.ReturnType = CMD_RETCODE_TYPE_APP;
-        UTRX_AppData.RptPkt.Report.ReturnCode = rc;
-        UTRX_CountFromReport();
-        return;
-    }
-
-    uint32 mid = CFE_SB_MsgIdToValue(MsgId);
-
-    UTRX_AppData.RptPkt.Report.MsgID = mid;
-
-
     switch (CFE_SB_MsgIdToValue(MsgId))
     {
         case UTRX_CMD_MID:
-        CFE_EVS_SendEvent(UTRX_MID_ERR_EID, CFE_EVS_EventType_ERROR, "UTRX: Call ProcessGround Telemetery MID = 0x%x",
+            CFE_EVS_SendEvent(UTRX_MID_ERR_EID, CFE_EVS_EventType_ERROR, "UTRX: Call ProcessGround Telemetery MID = 0x%x",
                               (unsigned int)CFE_SB_MsgIdToValue(MsgId));
             UTRX_ProcessGroundCommand(SBBufPtr);
             break;
 
-        case UTRX_OIF_MID:
-        CFE_EVS_SendEvent(UTRX_MID_ERR_EID, CFE_EVS_EventType_ERROR, "UTRX: Call ProcessRequested Telemetry MID = 0x%x",
-                              (unsigned int)CFE_SB_MsgIdToValue(MsgId));
-                              
-            UTRX_ProcessRequestedTelemetry(SBBufPtr);
-            break;
-
         case UTRX_SEND_HK_MID:
-
-        CFE_EVS_SendEvent(UTRX_MID_ERR_EID, CFE_EVS_EventType_ERROR, "UTRX: Call Send HK MID = 0x%x",
+            CFE_EVS_SendEvent(UTRX_MID_ERR_EID, CFE_EVS_EventType_ERROR, "UTRX: Call Send HK MID = 0x%x",
                               (unsigned int)CFE_SB_MsgIdToValue(MsgId));
             UTRX_ReportHousekeeping();
             break;
 
         case UTRX_SEND_BCN_MID:
-
-        CFE_EVS_SendEvent(UTRX_MID_ERR_EID, CFE_EVS_EventType_ERROR, "UTRX: Call Sendbcn Mid = 0x%x",
+            CFE_EVS_SendEvent(UTRX_MID_ERR_EID, CFE_EVS_EventType_ERROR, "UTRX: Call Sendbcn Mid = 0x%x",
                               (unsigned int)CFE_SB_MsgIdToValue(MsgId));
-       
             UTRX_ReportBeacon();
             break;
         
-
         default:
             CFE_EVS_SendEvent(UTRX_MID_ERR_EID, CFE_EVS_EventType_ERROR, "UTRX: invalid command packet,MID = 0x%x",
                               (unsigned int)CFE_SB_MsgIdToValue(MsgId));

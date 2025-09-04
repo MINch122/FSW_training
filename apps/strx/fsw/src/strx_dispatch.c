@@ -85,7 +85,7 @@ void STRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
                           "STRX: Failed to get command code from message");
         STRX_AppData.AppCnt.AppErrCounter ++;
         return;
-    } // Get Msg from Buffer
+    }
 
     /*
     ** Process STRX app ground commands
@@ -260,49 +260,8 @@ void STRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
                 csp_checkstate_pingCmd();
             }
             break;
-
         }
-   
-        /* default case already found during FC vs length test */
-        default:
-            CFE_EVS_SendEvent(STRX_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
-                              CommandCode);
 
-            memset(STRX_AppData.RptPkt.Report.ReturnValue, 0, sizeof(STRX_AppData.RptPkt.Report.ReturnValue));
-            STRX_AppData.RptPkt.Report.CommandCode    = (uint8_t)CommandCode;
-
-            STRX_AppData.RptPkt.Report.ReturnCode = CFE_STATUS_BAD_COMMAND_CODE;
-            STRX_AppData.RptPkt.Report.ReturnType = CMD_RETCODE_TYPE_APP;
-            STRX_AppData.RptPkt.Report.ReturnDataSize = 0;
-            STRX_CountFromReport();
-
-            CFE_MSG_Init(CFE_MSG_PTR(STRX_AppData.RptPkt.TelemetryHeader),
-                            CFE_SB_ValueToMsgId(STRX_RPT_TLM_MID),
-                            sizeof(STRX_ReportTlm_t));
-            CFE_SB_TimeStampMsg(CFE_MSG_PTR(STRX_AppData.RptPkt.TelemetryHeader));
-            CFE_SB_TransmitMsg(CFE_MSG_PTR(STRX_AppData.RptPkt.TelemetryHeader), true);
-
-            break;
-    }
-    
-}
-/*************************ProcessRequestedTelemetry ***************************/
-// MaxBuffer is used to send only the specific data requested by a command.
-
-void STRX_ProcessRequestedTelemetry(const CFE_SB_Buffer_t *SBBufPtr){
-    CFE_MSG_FcnCode_t CommandCode = 0;
-
-    if (CFE_MSG_GetFcnCode(&SBBufPtr->Msg, &CommandCode) != CFE_SUCCESS)
-    {
-        CFE_EVS_SendEvent(STRX_GETFCN_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "STRX: Failed to get command code from message");
-        STRX_AppData.AppCnt.AppErrCounter ++;
-        return;
-    } // Get Msg from Buffer
-
-
-    switch (CommandCode)
-    {
         case STRX_RXCONF_GET_BAUD_CC: //Using for Request Telemetry
         {
 
@@ -473,7 +432,8 @@ void STRX_ProcessRequestedTelemetry(const CFE_SB_Buffer_t *SBBufPtr){
             }
             break;
         }
-
+   
+        /* default case already found during FC vs length test */
         default:
             CFE_EVS_SendEvent(STRX_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
                               CommandCode);
@@ -493,12 +453,9 @@ void STRX_ProcessRequestedTelemetry(const CFE_SB_Buffer_t *SBBufPtr){
             CFE_SB_TransmitMsg(CFE_MSG_PTR(STRX_AppData.RptPkt.TelemetryHeader), true);
 
             break;
-
     }
-
-    return;     
+    
 }
-
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
@@ -511,18 +468,11 @@ void STRX_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 {
     CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
     CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
-
-    STRX_AppData.AppCnt.AppCmdCounter ++;
-
     
     switch (CFE_SB_MsgIdToValue(MsgId))
     {
         case STRX_CMD_MID:
             STRX_ProcessGroundCommand(SBBufPtr);
-            break;
-
-        case STRX_OIF_MID:
-            STRX_ProcessRequestedTelemetry(SBBufPtr);
             break;
 
         case STRX_SEND_HK_MID:

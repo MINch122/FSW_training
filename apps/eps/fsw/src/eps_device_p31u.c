@@ -5,6 +5,9 @@
 void EPS_P31U_GetDeviceHkData(EPS_HkTlm_Payload_t* Payload)
 {
     p31u_hk_t hk;
+
+    memset(Payload, 0, sizeof(*Payload));
+
     if (p31u_gethk_all(&hk) == P31U_OK) {
         Payload->vbatt = hk.vbatt;
         for (int i = 0; i < 8; ++i)
@@ -33,7 +36,14 @@ void EPS_P31U_GetDeviceHkData(EPS_HkTlm_Payload_t* Payload)
 void EPS_P31U_GetDeviceBcnData(EPS_BcnTlm_Payload_t* Payload)
 {
     p31u_hk_t hk;
-    if (p31u_gethk_all(&hk) == P31U_OK) {
+    p31u_config_t conf;
+    int ret;
+    bool err = false;
+
+    memset(Payload, 0, sizeof(*Payload));
+
+    ret = p31u_gethk_all(&hk);
+    if (ret == P31U_OK) {
         Payload->vbatt = hk.vbatt;
         for (int i = 0; i < 8; ++i)
             Payload->output[i] = hk.output[i];
@@ -48,7 +58,20 @@ void EPS_P31U_GetDeviceBcnData(EPS_BcnTlm_Payload_t* Payload)
         Payload->wdt_gnd_time_left = hk.wdt_gnd_time_left;
         Payload->bootcause = hk.bootcause;
         Payload->battmode = hk.battmode;
+        Payload->bp4_temp[0] = hk.temp[4];
+        Payload->bp4_temp[1] = hk.temp[5];
     }
     else
-        EPS_AppData.Counters.GetBcnErrCounter++;
+        err = true;
+
+    ret = p31u_get_config(&conf);
+    
+    if (ret == P31U_OK) {
+        Payload->battheater_mode = conf.battheater_mode;
+    }
+    else
+        err = true;
+
+    if (err) EPS_AppData.Counters.GetBcnErrCounter++;
 }
+

@@ -51,6 +51,7 @@ typedef EPS_NoArgCmd_t  EPS_NoopCmd_t;
 typedef EPS_NoArgCmd_t  EPS_ResetCountersCmd_t;
 typedef EPS_NoArgCmd_t  EPS_ReportAppDataCmd_t;
 
+typedef EPS_NoArgCmd_t  EPS_P31U_PingCmd_t;
 typedef EPS_NoArgCmd_t  EPS_P31U_ResetCountersCmd_t;
 typedef EPS_NoArgCmd_t  EPS_P31U_ResetWdtCmd_t;
 typedef EPS_NoArgCmd_t  EPS_P31U_HardResetCmd_t;

@@ -29,7 +29,7 @@
  * \{
  */
 
-#define HS_APPMAIN_PERF_ID  40 /**< \brief Main task performance ID */
+#define HS_APPMAIN_PERF_ID  32 /**< \brief Main task performance ID */
 
 /**\}*/
 

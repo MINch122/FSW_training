@@ -36,11 +36,12 @@
 #include "sc_utils.h"
 #include "sc_dispatch.h"
 #include "sc_loads.h"
-#include "../inc/sc_events.h"
+#include "sc_events.h"
 #include "sc_msgids.h"
 #include "sc_perfids.h"
 #include "sc_version.h"
 #include "sc_verify.h"
+#include "sc_rtsrq.h"
 #include <string.h>
 
 /**************************************************************************
@@ -235,6 +236,30 @@ CFE_Status_t SC_AppInit(void)
     {
         return Result;
     }
+
+    
+    /* Auto start the specific RTS which defined in `default_sc_internal_cfg.h` */
+    SC_RtsInfoEntry_t *RtsInfoPtr;
+
+    /* set during init to power on or processor reset auto-exec RTS */
+    if (SC_RtsNumIsValid(SC_AppData.AutoStartRTS))
+    {
+        RtsInfoPtr = SC_GetRtsInfoObject(SC_RtsNumToIndex(SC_AppData.AutoStartRTS));
+
+        /* make sure the selected auto-exec RTS is enabled */
+        if (RtsInfoPtr->RtsStatus == SC_Status_LOADED)
+        {
+            RtsInfoPtr->DisabledFlag = false;
+        }
+
+        /* send ground cmd to have SC start the RTS */
+        SC_AutoStartRts(SC_AppData.AutoStartRTS);
+
+        /* only start it once */
+        SC_AppData.AutoStartRTS = SC_RTS_NUM_NULL;
+    }
+    /* End of Auto start RTS */
+
 
     /* Send application startup event */
     CFE_EVS_SendEvent(SC_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "SC Initialized. Version %d.%d.%d.%d",

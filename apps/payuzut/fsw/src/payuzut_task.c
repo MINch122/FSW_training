@@ -153,8 +153,8 @@ CFE_Status_t PAYUZUT_Init(void) {
      * Get Serial Handle pointer
      * I2C1. For temperature
      */
-    // PAYUZUT_Data.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_I2C1_HANDLE_INDEXER);
-    // CFE_ES_WriteToSysLog("%s: IO Handle Ptr: %p", __func__, (void *)PAYUZUT_Data.Handle);
+    PAYUZUT_Data.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_I2C1_HANDLE_INDEXER);
+    CFE_ES_WriteToSysLog("%s: IO Handle Ptr: %p", __func__, (void *)PAYUZUT_Data.Handle);
 
     /**
      * Get GPIO Handle Pointer

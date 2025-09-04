@@ -29,8 +29,8 @@
  * \{
  */
 
-#define FM_APPMAIN_PERF_ID    39 /**< \brief Main application performance ID */
-#define FM_CHILD_TASK_PERF_ID 44 /**< \brief Child task performance ID */
+#define FM_APPMAIN_PERF_ID    29 /**< \brief Main application performance ID */
+#define FM_CHILD_TASK_PERF_ID 30 /**< \brief Child task performance ID */
 
 /**\}*/
 

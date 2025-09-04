@@ -40,8 +40,6 @@
 #define STRX_RESET_COUNTERS_CC        1  //set
 #define STRX_RESET_APP_CMD_COUNTERS_CC    2  //set
 #define STRX_RESET_DEVICE_CMD_COUNTERS_CC 3  //set
-// #define STRX_PROCESS_CC               4 //set
-// #define STRX_DISPLAY_PARAM_CC         5 //set
 #define STRX_GNDWDT_CLEAR_CC              6 //set
 #define STRX_REBOOT_CC                    7 //set
 #define STRX_RXCONF_SET_BAUD_CC           8 //set
@@ -52,8 +50,6 @@
 #define STRX_RPARAM_SAVE_ALL_CC           13 //set
 #define STRX_RXCONF_SET_FREQ_CC           14 //set
 #define STRX_TXCONF_SET_FREQ_CC           15 //set
-#define STRX_CHECK_STATE_PING_CC          32 //set
-
 
 #define STRX_RXCONF_GET_BAUD_CC           16 //get
 #define STRX_RXCONF_GET_GUARD_CC          17 //get
@@ -80,5 +76,7 @@
 
 #define STRX_RPARAM_SAVE_0_CC             39 //set
 #define STRX_RPARAM_SAVE_4_CC             40 //set
+
+#define STRX_CHECK_STATE_PING_CC          41 //set
 
 #endif

@@ -198,7 +198,7 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
     },
     /*   8 : ADCS   */
     {
-        CFE_SB_MSGID_RESERVED,
+        CFE_SB_MSGID_WRAP_VALUE(ADCS_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
         BCN_OFFSET_8,

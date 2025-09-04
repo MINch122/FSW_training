@@ -29,7 +29,7 @@
  * \{
  */
 
-#define HK_APPMAIN_PERF_ID 25 /**< \brief Main application performance ID */
+#define HK_APPMAIN_PERF_ID 31 /**< \brief Main application performance ID */
 
 /**\}*/
 

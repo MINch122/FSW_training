@@ -141,7 +141,7 @@ CFE_Status_t ADCS_AppInit(void)
                      sizeof(ADCS_AppData.HkTlm));
 
         /*
-         ** Initialize housekeeping packet (clear user data area).
+         ** Initialize beacon packet (clear user data area).
          */
         CFE_MSG_Init(CFE_MSG_PTR(ADCS_AppData.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(ADCS_BCN_TLM_MID),
                      sizeof(ADCS_AppData.BcnTlm));
@@ -174,13 +174,13 @@ CFE_Status_t ADCS_AppInit(void)
     if (status == CFE_SUCCESS)
     {
         /*
-        ** Subscribe to ADCS BEACON COMMAND
+        ** Subscribe to ADCS beacon command
         */
         status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(ADCS_SEND_BCN_MID), ADCS_AppData.CommandPipe);
         if (status != CFE_SUCCESS)
         {
             CFE_EVS_SendEvent(ADCS_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "Adcs App: Error Subscribing to HK request, RC = 0x%08lX", (unsigned long)status);
+                              "Adcs App: Error Subscribing to BCN request, RC = 0x%08lX", (unsigned long)status);
         }
     }
 

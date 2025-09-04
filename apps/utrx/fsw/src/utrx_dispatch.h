@@ -33,7 +33,6 @@
 
 void UTRX_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr);
 void UTRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr);
-void UTRX_ProcessRequestedTelemetry(const CFE_SB_Buffer_t *SBBufPtr);
 bool UTRX_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength);
 
 

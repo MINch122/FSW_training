@@ -23,6 +23,6 @@
 #ifndef UANT_PERFIDS_H
 #define UANT_PERFIDS_H
 
-#define UANT_PERF_ID 87
+#define UANT_PERF_ID 45
 
 #endif

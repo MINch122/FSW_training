@@ -29,7 +29,7 @@
  * \{
  */
 
-#define DS_APPMAIN_PERF_ID 38 /**< \brief Main application performance ID */
+#define DS_APPMAIN_PERF_ID 27 /**< \brief Main application performance ID */
 
 /**\}*/
 

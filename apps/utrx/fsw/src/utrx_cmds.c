@@ -154,13 +154,6 @@ void UTRX_ReportHousekeeping(void)
         return;
     }
 
-    /* Check the alive signal via PING */
-    int32 ping_rc = csp_checkstate_ping(CSP_NODE_UTRX);
-    if (ping_rc < 0) {
-        OS_printf("[UTRX][HK] radio ping failed, skip HK (rc=%d)\n", (int)ping_rc);
-        return;
-    }
-
     UTRX_HkTlm_Payload_t *hk = &BufPtr->Payload;
 
     uint32 errmask = 0;
@@ -208,13 +201,6 @@ void UTRX_ReportBeacon(void)
         return;
     }
 
-    /* Check the alive signal via PING */
-    int32 ping_rc = csp_checkstate_ping(CSP_NODE_UTRX);
-     if (ping_rc < 0) {
-        OS_printf("[UTRX][BCN] radio ping failed, skip beacon (rc=%d)\n", (int)ping_rc);
-        return;
-    }
-
     UTRX_BcnTlm_Payload_t *bcn = &BufPtr->Payload;
 
     uint8 errmask = 0;
@@ -227,9 +213,6 @@ void UTRX_ReportBeacon(void)
     if (CFE_PUT_VALUE_TO_STRUCT(uint32, &bcn->BootCause, UTRX_TLM_GetBootCause, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
         errmask |= (1u << 2);
     }
-    // if (UTRX_TLM_GetActiveConf(&bcn->ActiveConf) != DEVICE_SUCCESS) errmask |= (1u << 0);
-    // if (UTRX_TLM_GetBootCount(&bcn->BootCount)   != DEVICE_SUCCESS) errmask |= (1u << 1);
-    // if (UTRX_TLM_GetBootCause(&bcn->BootCause)   != DEVICE_SUCCESS) errmask |= (1u << 2);
 
   if (errmask != 0u) {
     OS_printf("[UTRX][BCN] collected with errors mask=0x%02X\n",

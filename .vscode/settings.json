@@ -134,7 +134,9 @@
         "cfe_time_core_internal.h": "c",
         "cfe_tbl_core_internal.h": "c",
         "cfe_es_extern_typedefs.h": "c",
-        "eps_cmds.h": "c"
+        "eps_cmds.h": "c",
+        "log.h": "c",
+        "eps_device_p31u.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

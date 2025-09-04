@@ -335,6 +335,7 @@ void SC_ProcessRtpCommand(void)
             /* If header update is NOT enabled, confirm this table entry has a valid checksum already */
             CFE_MSG_ValidateChecksum(CFE_MSG_PTR(EntryPtr->Msg), &ChecksumValid);
         }
+        // if (ChecksumValid || ChecksumValid == 0x00)
         if (ChecksumValid)
         {
             /*
