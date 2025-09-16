@@ -9,7 +9,7 @@
         "conn_max": 10,
         "conn_queue_length": 10,
         "fifo_length": 25,
-        "port_max_bind": 62,
+        "port_max_bind": 58,
         "rdp_max_window": 20,
         "buffers": 10,
         "buffer_data_size": 256,

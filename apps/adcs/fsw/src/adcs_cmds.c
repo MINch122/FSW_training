@@ -503,6 +503,24 @@ CFE_Status_t ADCS_SetUnsolicitEventMsgSetupCmd(const ADCS_UnsolicitEventMsgSetup
     return CFE_SUCCESS;
 }
 
+CFE_Status_t ADCS_SetInitiateEventLogTransferCmd(const ADCS_InitiateEventLogTransferCmd_t *msg) {
+    // ID 120
+    CFE_Status_t               status;
+
+    status = ADCS_SetInitiateEventLogTransfer(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_INITIATE_EVENT_LOG_TRANSFER_CC, NULL, 0);
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("ADCS cmd Success.");
+
+    return CFE_SUCCESS;
+}
+
 /********************************************************
  * 
  * COSMIC Actual Get Command Function (Get tlm)

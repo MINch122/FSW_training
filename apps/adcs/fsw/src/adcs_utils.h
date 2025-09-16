@@ -111,6 +111,7 @@ int32 ADCS_SetControllerConfig(const ADCS_ControllerConfig_Payload_t *setVal);
 int32 ADCS_SetDefaultModeConfig(const ADCS_DefaultModeConfigCmd_Payload_t *setVal);
 int32 ADCS_SetMountingConfig(const ADCS_MountingConfigCmd_Payload_t *setVal);
 int32 ADCS_SetUnsolicitEventMsgSetup(const ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t *setVal);
+int32 ADCS_SetInitiateEventLogTransfer(const ADCS_InitiateEventLogTransferCmd_Payload_t *setVal);
 
 /********************************************************
  * 

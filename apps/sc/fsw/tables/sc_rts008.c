@@ -225,13 +225,13 @@ SC_RtsTable008_t SC_Rts008 = {
     /**
      *  11 STRX
      * */
-    .rts.hdr11.WakeupCount       = 10, // 5 sec
+    .rts.hdr11.WakeupCount       = 1, // 5 sec
     .rts.cmd11.CommandHeader = CFE_MSG_CMD_HDR_INIT(STRX_SEND_BCN_MID, SC_MEMBER_SIZE(cmd11), 0, 0x71),
 
     /**
      *  12 HK send combined
      * */
-    .rts.hdr12.WakeupCount       = 10, // 5 sec
+    .rts.hdr12.WakeupCount       = 2, // 5 sec
     .rts.cmd12.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd12), 0, 0x29),
     .rts.cmd12.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID)
 

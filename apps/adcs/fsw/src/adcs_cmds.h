@@ -66,6 +66,7 @@ CFE_Status_t ADCS_SetControllerConfigCmd(const ADCS_ControllerConfig_t *msg);
 CFE_Status_t ADCS_SetDefaultModeConfigCmd(const ADCS_DefaultModeConfigCmd_t *msg);
 CFE_Status_t ADCS_SetMountingConfigCmd(const ADCS_MountingConfigCmd_t *msg);
 CFE_Status_t ADCS_SetUnsolicitEventMsgSetupCmd(const ADCS_UnsolicitEventMsgSetupCmd_t *msg);
+CFE_Status_t ADCS_SetInitiateEventLogTransferCmd(const ADCS_InitiateEventLogTransferCmd_t *msg);
 
 /* Get function */
 CFE_Status_t ADCS_GetCurrentUnixTimeCmd(void);

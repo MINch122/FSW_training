@@ -92,7 +92,7 @@ int CFE_SRL_Read(CFE_SRL_IO_Handle_t *Handle, void *Data, size_t Size, uint32_t 
 }
 
 /**
- * This function has speccial functionality for handling TxSize
+ * This function has special functionality for handling TxSize
  * This is required because of the limitation of first Tx buffer size
  * If Combined transaction (which use Sr, i.e. Repeated start) is used,
  * AT91 limit the first write size for `4`

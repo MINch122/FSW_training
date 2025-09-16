@@ -139,8 +139,7 @@ int CFE_SRL_BasicSetUART(CFE_SRL_IO_Handle_t *Handle, uint32_t BaudRate) {
     Termios2.c_iflag &= ~(ICRNL | INLCR | IGNCR); // input `\r` <-> `\n` off, ignore `\r` off
 
     // Output Flag - Applied to OBC's output data
-    Termios2.c_oflag &= ~(OPOST | ONLCR | OCRNL); // Post Process off & output `\r` <-> `\n` off
-    Termios2.c_oflag |= OCRNL;
+    Termios2.c_oflag &= ~(OCRNL | ONLCR | ONOCR | ONLRET | OPOST); // Post Process off & output `\r` <-> `\n` off
 
     Status = CFE_SRL_BasicIOCTL(Handle->FD, TCSETS2, &Termios2);
     if (Status == -1) {

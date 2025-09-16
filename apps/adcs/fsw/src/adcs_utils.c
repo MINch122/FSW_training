@@ -689,6 +689,33 @@ int32 ADCS_SetUnsolicitEventMsgSetup(const ADCS_UnsolicitEventMsgSetupCmd_Intern
 	return CFE_SUCCESS;
 }
 
+int32 ADCS_SetInitiateEventLogTransfer(const ADCS_InitiateEventLogTransferCmd_Payload_t *setVal)
+{	// ID 120
+
+	int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8_t *tx_buffer;
+	uint16_t bufferSizeUsed;
+	
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_SET_INITIATE_EVENT_LOG_TRANSGER;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	tx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_InitiateEventLogTransferCmd_Payload_t);
+	memcpy(tx_buffer, setVal, bufferSizeUsed);
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
+
 
 /********************************************************
  * 

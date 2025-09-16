@@ -451,6 +451,39 @@ typedef struct { // ID 116
     uint8_t Spare:4; // Explicit declaration
 }__attribute__((packed)) ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t;
 
+typedef struct { // ID 120
+    uint8_t FilterType;
+    uint32_t UnixStartTime;
+    uint32_t UnixEndTime;
+    uint32_t NumberOfEntry;
+    uint32_t WriteCounter;
+
+    struct __attribute__((packed)) {
+        uint8_t IncludeCriticalEVS : 1;
+        uint8_t IncludeMajorWarningEVS : 1;
+        uint8_t IncludeMinorWarningEVS : 1;
+        uint8_t IncludeInfoEVS : 1;
+        uint8_t IncludeCubeCom : 1;
+        uint8_t IncludeRWL0 : 1;
+        uint8_t IncludeRWL1 : 1;
+        uint8_t IncludeRWL2 : 1;
+        uint8_t IncludeRWL3 : 1;
+        uint8_t IncludeFSS0 : 1;
+        uint8_t IncludeFSS1 : 1;
+        uint8_t IncludeFSS2 : 1;
+        uint8_t IncludeFSS3 : 1;
+        uint8_t IncludeHSS0 : 1;
+        uint8_t IncludeHSS1 : 1;
+        uint8_t IncludeSTR0 : 1;
+        uint8_t IncludeSTR1 : 1;
+        uint8_t IncludeMAG0 : 1;
+        uint8_t IncludeMAG1 : 1;
+        uint8_t IncludeExt0 : 1;
+        uint8_t IncludeExt1 : 1;
+        uint8_t Padding     : 3;
+    } flags;
+}__attribute__((packed)) ADCS_InitiateEventLogTransferCmd_Payload_t;
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                      ADCS Get Cmd Payload Structures                      */

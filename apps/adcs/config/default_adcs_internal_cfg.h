@@ -58,6 +58,7 @@
 #define ADCS_ID_SET_DEFAULT_MODE_CONFIG             64
 #define ADCS_ID_SET_MOUNTING_CONFIG                 65
 #define ADCS_ID_SET_UNSOLICIT_EVENT_MSG_SETUP       116
+#define ADCS_ID_SET_INITIATE_EVENT_LOG_TRANSGER     120
 
 /* Get fucntion : ID 128 ~ 244 */
 #define	ADCS_ID_GET_CURRENT_UNIX_TIME               133

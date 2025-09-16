@@ -264,6 +264,13 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
                 ADCS_SetUnsolicitEventMsgSetupCmd((const ADCS_UnsolicitEventMsgSetupCmd_t *)SBBufPtr);
             }
             break;
+
+        case ADCS_SET_INITIATE_EVENT_LOG_TRANSFER_CC:
+            // ID 120
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_InitiateEventLogTransferCmd_t))) {
+                ADCS_SetInitiateEventLogTransferCmd((const ADCS_InitiateEventLogTransferCmd_t *)SBBufPtr);
+            }
+            break;
         
         /* 
         * Process Requested Telemetry

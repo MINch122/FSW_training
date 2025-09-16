@@ -162,10 +162,15 @@ typedef struct { // ID 65
     ADCS_MountingConfigCmd_Payload_t Payload;
 } ADCS_MountingConfigCmd_t;
 
-typedef struct {
+typedef struct { // ID 116
     CFE_MSG_CommandHeader_t CommandHeader;
     ADCS_UnsolicitEventMsgSetupCmd_ExternalPayload_t Payload;
 } ADCS_UnsolicitEventMsgSetupCmd_t;
+
+typedef struct { // ID 120
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_InitiateEventLogTransferCmd_Payload_t Payload;
+} ADCS_InitiateEventLogTransferCmd_t;
 
 /********************************************************
  * 

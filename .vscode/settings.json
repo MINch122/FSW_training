@@ -136,7 +136,11 @@
         "cfe_es_extern_typedefs.h": "c",
         "eps_cmds.h": "c",
         "log.h": "c",
-        "eps_device_p31u.h": "c"
+        "eps_device_p31u.h": "c",
+        "csp_time.h": "c",
+        "csp_init.h": "c",
+        "csp_platform.h": "c",
+        "csp_types.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }
