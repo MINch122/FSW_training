@@ -833,7 +833,20 @@ typedef struct { // ID 233
     uint8_t Spare:4; // Explicit declaration
 }__attribute__((packed)) ADCS_UnsolicitEventMsgSetupTlm_Payload_t;
 
-
+typedef struct { // ID 235
+    uint16_t NumQueuedEntry;
+    uint16_t NumBufferedEntry;
+    uint32_t NumEntry;
+    uint32_t NumEmptyEntry;
+    uint32_t OldEntryUnixTime;
+    uint32_t LastEntryUnixTime;
+    uint32_t NumCriticalEVS;
+    uint32_t NumMajorWarningEVS;
+    uint32_t NumMinorWarningEVS;
+    uint32_t NumInfoEVS;
+    uint32_t WriteCnt;
+    uint8_t ReadQueState;
+}__attribute__((packed)) ADCS_EventLogStatusResponseTlm_Payload_t;
 
 /*************************************
  * CubeADCS Event Entry

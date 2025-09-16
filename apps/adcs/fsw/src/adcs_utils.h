@@ -139,6 +139,7 @@ int32 ADCS_GetDefaultModeConfig(ADCS_DefaultModeConfigTlm_Payload_t *returnVal);
 int32 ADCS_GetMountingConfig(ADCS_MountingConfigTlm_Payload_t *returnVal);
 int32 ADCS_GetOperationalState(ADCS_OperationalStateTlm_Payload_t *returnVal);
 int32 ADCS_GetUnsolicitEventMsgSetup(ADCS_UnsolicitEventMsgSetupTlm_Payload_t *returnVal);
+int32 ADCS_GetEventLogStatusResponse(ADCS_EventLogStatusResponseTlm_Payload_t *returnVal);
 
 
 /**

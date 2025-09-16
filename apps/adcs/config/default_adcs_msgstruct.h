@@ -254,6 +254,11 @@ typedef struct{ // ID 233
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_GetUnsolicitEventMsgSetupCmd_t;
 
+typedef struct { // ID 235
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetEventLogStatusReponseCmd_t;
+
+
 /********************************************************
  * 
  * ADCS Telemetry Msg structure

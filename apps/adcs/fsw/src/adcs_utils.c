@@ -1291,6 +1291,34 @@ int32 ADCS_GetUnsolicitEventMsgSetup(ADCS_UnsolicitEventMsgSetupTlm_Payload_t *r
 	return CFE_SUCCESS;
 }
 
+int32 ADCS_GetEventLogStatusResponse(ADCS_EventLogStatusResponseTlm_Payload_t *returnVal)
+{	// ID 235
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_EVENT_LOG_STATUS_RESPONSE;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_EventLogStatusResponseTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(s) : %d\n", returnVal->unixTimeSeconds);
+	// CFE_EVS_SendEve, CFE_EVS_INFORMATION, "CUBESENSE - Current Unix Time(ns) : %d\n", returnVal->unixTimeNanoSeconds);
+
+	return CFE_SUCCESS;
+}
+
 
 
 

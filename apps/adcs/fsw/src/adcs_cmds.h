@@ -89,5 +89,6 @@ CFE_Status_t ADCS_GetDefaultModeConfigCmd(void);
 CFE_Status_t ADCS_GetMountingConfigCmd(void);
 CFE_Status_t ADCS_GetOperationalStateCmd(void);
 CFE_Status_t ADCS_GetUnsolicitEventMsgSetupCmd(void);
+CFE_Status_t ADCS_GetEventLogStatusResponseCmd(void);
 
 #endif /* ADCS_CMDS_H */

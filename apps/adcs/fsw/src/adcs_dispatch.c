@@ -408,6 +408,13 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case ADCS_GET_EVENT_LOG_STATUS_RESPONSE_CC:
+            // ID 235
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetEventLogStatusReponseCmd_t))) {
+                ADCS_GetEventLogStatusResponseCmd();
+            }
+            break;
+
         /* default case already found during FC vs length test */
         default:
             CFE_EVS_SendEvent(ADCS_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",

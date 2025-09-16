@@ -936,3 +936,23 @@ CFE_Status_t ADCS_GetUnsolicitEventMsgSetupCmd(void) {
     
     return CFE_SUCCESS;
 }
+
+CFE_Status_t ADCS_GetEventLogStatusResponseCmd(void) {
+    // ID 235
+    CFE_Status_t               status;
+    ADCS_EventLogStatusResponseTlm_Payload_t RetVal = {0,};
+
+    status = ADCS_GetEventLogStatusResponse(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_EVENT_LOG_STATUS_RESPONSE_CC, &RetVal, sizeof(RetVal));
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    
+    // Handling Retval
+    
+    return CFE_SUCCESS;
+}

@@ -82,6 +82,7 @@
 #define ADCS_ID_GET_MOUNTING_CONFIG                 193
 #define ADCS_ID_GET_OPERATIONAL_STATE               200
 #define ADCS_ID_GET_UNSOLICIT_EVENT_MSG_SETUP       233
+#define ADCS_ID_GET_EVENT_LOG_STATUS_RESPONSE       235
 /* End of EndPoint ID */
 
 #endif
