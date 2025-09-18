@@ -4,25 +4,21 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#include "cfe_srl_basic.h"
+#include "cfe_srl_module_all.h"
 
 typedef struct {
-    pthread_mutex_t Mutex;
+    // Index : `MutexIdx`
+    osal_id_t MutexId;
     bool Isinit;
 } CFE_SRL_IO_Handle_Mutex_t;
-
-
-extern pthread_mutex_t GlobalHandleMutex;
-// Index : `MutexID`
-extern CFE_SRL_IO_Handle_Mutex_t IOMutex[CFE_SRL_GNRL_DEVICE_NUM];
 
 
 int CFE_SRL_GlobalHandleMutexInit(void);
 int CFE_SRL_GlobalHandleMutexLock(void);
 int CFE_SRL_GlobalHandleMutexUnlock(void);
 
-int CFE_SRL_SetHandleMutexID(CFE_SRL_IO_Handle_t *Handle, uint8_t MutexID);
-int CFE_SRL_HandleMutexInit(CFE_SRL_IO_Handle_t *Handle, uint8_t MutexID);
+int CFE_SRL_SetHandleMutexID(CFE_SRL_IO_Handle_t *Handle, uint8_t MutexIdx);
+int CFE_SRL_HandleMutexInit(CFE_SRL_IO_Handle_t *Handle, uint8_t MutexIdx, const char *Name);
 
 int CFE_SRL_MutexLock(CFE_SRL_IO_Handle_t *Handle);
 int CFE_SRL_MutexUnlock(CFE_SRL_IO_Handle_t *Handle);

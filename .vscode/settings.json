@@ -140,7 +140,18 @@
         "csp_time.h": "c",
         "csp_init.h": "c",
         "csp_platform.h": "c",
-        "csp_types.h": "c"
+        "csp_types.h": "c",
+        "iodriver_serial_io.h": "c",
+        "iodriver_base.h": "c",
+        "cfe_srl_mutex.h": "c",
+        "cfe_srl_basic_types.h": "c",
+        "cfe_platform_cfg.h": "c",
+        "fcntl.h": "c",
+        "cfe_version.h": "c",
+        "cfe_es_api_typedefs.h": "c",
+        "cfe_msg_api_typedefs.h": "c",
+        "cfe_resourceid_api_typedefs.h": "c",
+        "cfe_tbl.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

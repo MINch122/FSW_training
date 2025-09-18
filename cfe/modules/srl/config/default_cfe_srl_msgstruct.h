@@ -77,6 +77,14 @@ typedef struct {
 
 } CFE_SRL_InitHandleCmd_t;
 
+typedef struct {
+
+    CFE_MSG_CommandHeader_t CommandHeader;
+
+    CFE_SRL_ConfigHandleCmd_Payload_t Payload;
+
+} CFE_SRL_ConfigHandleCmd_t;
+
 
 /****************************
 **  SB Telemetry Formats   **

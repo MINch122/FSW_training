@@ -130,7 +130,7 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
     .TickRate = 10, // This TickRate value is equivalent to 1 sec. If `TickRate` is `10`, `10` tick is `1` sec 
     .Config   = {
         {CFE_SB_MSGID_WRAP_VALUE(SC_CMD_MID), 10 * 30, SC_START_RTS_CC, sizeof(SC_RtsCmd_Payload_t), {8, 0}}, // Trigger the Bcn RTS for 40 seconds
-        // {CFE_SB_MSGID_WRAP_VALUE(CFE_SRL_SEND_HK_MID), 10*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(CFE_SRL_SEND_HK_MID), 10*10, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(RPT_SEND_BCN_MID), 10*30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(SANT_SEND_BCN_MID), 10*30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(STRX_SEND_BCN_MID), 10*30, 0},

@@ -1370,7 +1370,7 @@ char *CFE_ES_StatusToString(CFE_Status_t status, CFE_StatusString_t *status_stri
 */
 
 /**
- * General Err + Handle Err : 1 ~ 20
+ * General Err + Handle Err : 1 ~ 19
  * UART Err : 20 ~ 29
  * GPIO Err : 30 ~ 39
  * CSP Err : 40 ~ 49
@@ -1381,7 +1381,7 @@ char *CFE_ES_StatusToString(CFE_Status_t status, CFE_StatusString_t *status_stri
  * Early Init Err : 90 ~ 109 -> defined in `cfe_srl_error.h`
  * 
  */
-#define CFE_SRL_ERR                     CFE_SERIAL_ERROR(1)
+#define CFE_SRL_ERR                     CFE_SERIAL_ERROR(1) // General error for unknown cause
 #define CFE_SRL_BAD_ARGUMENT            CFE_SERIAL_ERROR(2)
 #define CFE_SRL_TIMEOUT                 CFE_SERIAL_ERROR(3)
 #define CFE_SRL_INVALID_TYPE            CFE_SERIAL_ERROR(4)
@@ -1395,18 +1395,62 @@ char *CFE_ES_StatusToString(CFE_Status_t status, CFE_StatusString_t *status_stri
 #define CFE_SRL_NAME_LEN_OVERFLOW_ERR   CFE_SERIAL_ERROR(12)
 #define CFE_SRL_ALREADY_EXIST           CFE_SERIAL_INFORMATION(13)
 #define CFE_SRL_FULL_ERR                CFE_SERIAL_ERROR(14)
-#define CFE_SRL_UART_SET_ERR           CFE_SERIAL_ERROR(15)
 
-#define CFE_SRL_INVALID_BAUD            CFE_SERIAL_ERROR(20)
-#define CFE_SRL_UART_GET_ATTR_ERR       CFE_SERIAL_ERROR(21)
-#define CFE_SRL_UART_SET_ATTR_ERR       CFE_SERIAL_ERROR(22)
-#define CFE_SRL_UART_SET_ISPEED_ERR     CFE_SERIAL_ERROR(23)
-#define CFE_SRL_UART_SET_OSPEED_ERR     CFE_SERIAL_ERROR(24)
+// #define CFE_SRL_UART_SET_ERR            CFE_SERIAL_ERROR(20)
+// #define CFE_SRL_INVALID_BAUD            CFE_SERIAL_ERROR(21)
+// #define CFE_SRL_UART_GET_ATTR_ERR       CFE_SERIAL_ERROR(22)
+// #define CFE_SRL_UART_SET_ATTR_ERR       CFE_SERIAL_ERROR(23)
+// #define CFE_SRL_UART_SET_ISPEED_ERR     CFE_SERIAL_ERROR(24)
+// #define CFE_SRL_UART_SET_OSPEED_ERR     CFE_SERIAL_ERROR(25)
 
-#define CFE_SRL_GPIO_CHIP_OPEN_ERR      CFE_SERIAL_ERROR(30)
-#define CFE_SRL_GPIO_GET_LINE_ERR       CFE_SERIAL_ERROR(31)
-#define CFE_SRL_GPIO_SET_OUTPUT_ERR     CFE_SERIAL_ERROR(32)
-#define CFE_SRL_GPIO_SET_VALUE_ERR      CFE_SERIAL_ERROR(33)
+/**
+ * @brief Uart Configuration Fail
+ *
+ *  UART termios2 configuration failed.
+ *  Internally, Uart config function calls PSP iodriver's linux-serial
+ *  module which call the `ioctl()`
+ *  That is, Uart config fail may imply the `ioctl()` fail.
+ *
+ */
+#define CFE_SRL_UART_CONFIG_FAIL_ERR    CFE_SERIAL_ERROR(20)
+
+// #define CFE_SRL_GPIO_CHIP_OPEN_ERR      CFE_SERIAL_ERROR(30)
+// #define CFE_SRL_GPIO_GET_LINE_ERR       CFE_SERIAL_ERROR(31)
+// #define CFE_SRL_GPIO_SET_OUTPUT_ERR     CFE_SERIAL_ERROR(32)
+// #define CFE_SRL_GPIO_SET_VALUE_ERR      CFE_SERIAL_ERROR(33)
+
+/**
+ * @brief GPIO Configuration Fail
+ *
+ *  GPIO configuration failed.
+ *  Internally, GPIO config function calls PSP iodriver's linux-gpio
+ *  module which call the `gpiod_*()` library
+ *  That is, GPIO config fail may imply the `gpiod_*()` fail.
+ *
+ */
+#define CFE_SRL_GPIO_CONFIG_FAIL_ERR    CFE_SERIAL_ERROR(30)
+
+/**
+ * @brief GPIO Set Fail
+ *
+ *  GPIO configuration failed.
+ *  Internally, GPIO function calls PSP iodriver's linux-gpio
+ *  module which call the `gpiod_*()` library
+ *  That is, GPIO set/get fail may imply the `gpiod_*()` fail.
+ *
+ */
+#define CFE_SRL_GPIO_SET_VALUE_ERR      CFE_SERIAL_ERROR(31)
+
+/**
+ * @brief GPIO Get Fail
+ *
+ *  GPIO configuration failed.
+ *  Internally, GPIO function calls PSP iodriver's linux-gpio
+ *  module which call the `gpiod_*()` library
+ *  That is, GPIO set/get fail may imply the `gpiod_*()` fail.
+ *
+ */
+#define CFE_SRL_GPIO_GET_VALUE_ERR      CFE_SERIAL_ERROR(32)
 
 #define CFE_SRL_CSP_CAN_INIT_ERR        CFE_SERIAL_ERROR(40)
 #define CFE_SRL_CSP_I2C_INIT_ERR        CFE_SERIAL_ERROR(41)
@@ -1419,24 +1463,51 @@ char *CFE_ES_StatusToString(CFE_Status_t status, CFE_StatusString_t *status_stri
 #define CFE_SRL_GET_RPARAM_ERR          CFE_SERIAL_ERROR(48)
 #define CFE_SRL_SET_RPARAM_ERR          CFE_SERIAL_ERROR(49)
 
-#define CFE_SRL_WRITE_ERR               CFE_SERIAL_ERROR(50)
-#define CFE_SRL_PARTIAL_WRITE_ERR       CFE_SERIAL_ERROR(51)
-#define CFE_SRL_READ_ERR                CFE_SERIAL_ERROR(52)
-#define CFE_SRL_PARTIAL_READ_ERR        CFE_SERIAL_ERROR(53)
-#define CFE_SRL_CLOSE_ERR               CFE_SERIAL_ERROR(54)
-#define CFE_SRL_IOCTL_ERR               CFE_SERIAL_ERROR(55)
+/**
+ * @brief General I/O Error
+ *
+ *  General I/O function failed.
+ *  Internally, SRL calls the PSP iodriver linux-serial module
+ *  which calls the kernel system call.
+ *  It is quite useful to distinguish the specific I/O error.
+ *  These error is one-to-one corresponded to linux-serial error
+ *
+ */
+#define CFE_SRL_OPEN_ERR                CFE_SERIAL_ERROR(50)
+#define CFE_SRL_WRITE_ERR               CFE_SERIAL_ERROR(51)
+#define CFE_SRL_PARTIAL_WRITE_ERR       CFE_SERIAL_ERROR(52)
+#define CFE_SRL_READ_ERR                CFE_SERIAL_ERROR(53)
+#define CFE_SRL_PARTIAL_READ_ERR        CFE_SERIAL_ERROR(54)
+#define CFE_SRL_CLOSE_ERR               CFE_SERIAL_ERROR(55)
+#define CFE_SRL_IOCTL_ERR               CFE_SERIAL_ERROR(56)
 
+/**
+ * @brief socket CAN Initialization Error
+ *
+ *  Socket CAN init error.
+ *  socket CAN has complicate initialization steps,
+ *  so it is quite useful to distinguish the error step by step
+ *
+ */
 #define CFE_SRL_CAN_OPEN_SOCKET_ERR     CFE_SERIAL_ERROR(60)
 #define CFE_SRL_CAN_SIOCGIFINDEX_ERR    CFE_SERIAL_ERROR(61)
 #define CFE_SRL_CAN_BIND_ERR            CFE_SERIAL_ERROR(62)
+#define CFE_SRL_CAN_CONFIG_FAIL_ERR     CFE_SERIAL_ERROR(63)
 
-#define CFE_SRL_MUTEX_ATTR_INIT_ERR     CFE_SERIAL_ERROR(70)
-#define CFE_SRL_MUTEX_INIT_ERR          CFE_SERIAL_ERROR(71)
-#define CFE_SRL_MUTEX_LOCK_ERR          CFE_SERIAL_ERROR(72)
-#define CFE_SRL_MUTEX_UNLOCK_ERR        CFE_SERIAL_ERROR(73)
-#define CFE_SRL_MUTEX_SET_PROTOCOL_ERR  CFE_SERIAL_ERROR(74)
-#define CFE_SRL_MUTEX_DESTROY_ERR       CFE_SERIAL_ERROR(75)
+/**
+ * @brief Mutex Error
+ * @deprecated Use `CFE_STATUS_EXTERNAL_RESOURCE_FAIL` instead
+ *
+ */
+#define CFE_SRL_MUTEX_ERR                  CFE_SERIAL_ERROR(70)
+// #define CFE_SRL_MUTEX_INIT_ERR          CFE_SERIAL_ERROR(71)
+// #define CFE_SRL_MUTEX_LOCK_ERR          CFE_SERIAL_ERROR(72)
+// #define CFE_SRL_MUTEX_UNLOCK_ERR        CFE_SERIAL_ERROR(73)
+// #define CFE_SRL_MUTEX_SET_PROTOCOL_ERR  CFE_SERIAL_ERROR(74)
+// #define CFE_SRL_MUTEX_DESTROY_ERR       CFE_SERIAL_ERROR(75)
 
-#define CFE_SRL_I2C_ADDR_ERR            CFE_SERIAL_ERROR(80)
+#define CFE_SRL_I2C_CONFIG_FAIL_ERR        CFE_SERIAL_ERROR(80)
+
+#define CFE_SRL_SPI_CONFIG_FAIL_ERR        CFE_SERIAL_ERROR(81)
 
 #endif /* CFE_ERROR_H */

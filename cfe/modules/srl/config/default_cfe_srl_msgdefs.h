@@ -14,6 +14,9 @@
 #include "cfe_srl_mission_cfg.h"
 #include "cfe_srl_interface_cfg.h"
 
+#include "iodriver_discrete_io.h"
+#include "iodriver_serial_io.h"
+
 typedef struct CFE_SRL_ResetHandleCounterCmd_Payload {
 
     CFE_SRL_Handle_Indexer_t Indexer;
@@ -56,22 +59,22 @@ typedef struct CFE_SRL_HandleInitCmd_Payload {
      */
     uint8_t DevType;
 
-    uint8_t Padding[3];
-
     /**
-     * Only need UART series init
+     * IOdriver Serial config struct
      */
-    uint32_t BaudRate;
-
-    /**
-     * Only need SPI init
-     */
-    uint8_t SPIMode;
-
-    uint8_t Padding2[3];
+    CFE_SRL_IO_Config_t Config;
     
 } CFE_SRL_HandleInitCmd_Payload_t;
 
+typedef struct CFE_SRL_ConfigHandleCmd_Payload {
+    /**
+     * Determine Handle itself & MutexID
+     */
+    CFE_SRL_Handle_Indexer_t Indexer;
+
+    CFE_SRL_IO_Config_t Config;
+
+} CFE_SRL_ConfigHandleCmd_Payload_t;
 
 typedef struct CFE_SRL_HousekeepingTlm_Payload {
     uint8 CommandCounter;

@@ -82,9 +82,10 @@ CFE_Status_t SP_AppInit(void){
     }
 
     CFE_SRL_GPIO_Handle_t *In = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
-    int Ret = CFE_SRL_ApiGpioGet(In);
-    SP_AppData.BcnTlm.IsDeploy = (Ret == 0)? true : false; // `0` indicate Deployed
-    
+    bool IsDeploy;
+    status = CFE_SRL_ApiGpioGet(In, &IsDeploy);
+    if (status == CFE_SUCCESS)
+        SP_AppData.BcnTlm.IsDeploy = IsDeploy; // `0` indicate Deployed
 
     return status;
 }

@@ -20,16 +20,15 @@
 /**
  * @file
  *   CFS Stored Command (SC) RTS table 8
- *   Solar Panel Deploy Halt RTS
+ *   Beacon collection and Send combined beacon packet
  *
  * This source file creates a RTS table that contains only
  * the following commands that are scheduled as follows:
  *
  * ------------ RTS #8 ------------
- *   SP     GPIO out to `LOW`
- *   LC     Deploy ActionPoint to Active
  * 
- * Total 2 commands
+ * 
+ * Total 12 commands
  * 
  */
 

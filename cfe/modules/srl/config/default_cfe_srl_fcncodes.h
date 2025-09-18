@@ -18,5 +18,6 @@
 #define CFE_SRL_GET_HANDLE_STATUS_CC        3
 #define CFE_SRL_INIT_HANDLE_CC              4
 #define CFE_SRL_CLOSE_HANDLE_CC             5
+#define CFE_SRL_CONFIG_HANDLE_CC            6
 
 #endif /* CFE_SRL_FCNCODES_H */

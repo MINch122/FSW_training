@@ -36,8 +36,8 @@
 ** Strx App command codes
 */
 
-#define STRX_NOOP_CC                  0  //set
-#define STRX_RESET_COUNTERS_CC        1  //set
+#define STRX_NOOP_CC                      0  //set
+#define STRX_RESET_COUNTERS_CC            1  //set
 #define STRX_RESET_APP_CMD_COUNTERS_CC    2  //set
 #define STRX_RESET_DEVICE_CMD_COUNTERS_CC 3  //set
 #define STRX_GNDWDT_CLEAR_CC              6 //set

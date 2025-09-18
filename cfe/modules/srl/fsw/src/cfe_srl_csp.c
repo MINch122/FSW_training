@@ -1,4 +1,4 @@
-#include "cfe_srl_csp.h"
+#include "cfe_srl_module_all.h"
 
 const char *SatName = "COSMIC"; // Revise name according to specific misison
 

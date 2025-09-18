@@ -91,7 +91,7 @@ void UTRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
         UTRX_AppData.RptPkt.Report.ReturnCode = rc;
         UTRX_CountFromReport();
 
-          CFE_MSG_Init(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader),
+        CFE_MSG_Init(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader),
                      CFE_SB_ValueToMsgId(UTRX_RPT_TLM_MID),
                      sizeof(UTRX_ReportTlm_t));
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader));
@@ -108,8 +108,6 @@ void UTRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             if (UTRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(UTRX_NoopCmd_t)))
             {
                 UTRX_NoopCmd((const UTRX_NoopCmd_t *)SBBufPtr);
-
-                
             }
             break;
 
@@ -117,24 +115,20 @@ void UTRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             if (UTRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(UTRX_ResetCountersCmd_t)))
             {
                 UTRX_ResetCountersCmd((const UTRX_ResetCountersCmd_t *)SBBufPtr);
-               
-
             }
             break;
 
        case UTRX_RESET_APP_CMD_COUNTERS_CC:
            if (UTRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(UTRX_ResetAppCmdCountersCmd_t))) 
-           {
-              UTRX_ResetAppCmdCountersCmd((const UTRX_ResetAppCmdCountersCmd_t *)SBBufPtr);
-             
-           }
+            {
+                UTRX_ResetAppCmdCountersCmd((const UTRX_ResetAppCmdCountersCmd_t *)SBBufPtr);
+            }
            break;
 
         case UTRX_RESET_DEVICE_CMD_COUNTERS_CC:
             if (UTRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(UTRX_ResetDeviceCmdCountersCmd_t))) 
             {
-               UTRX_ResetDeviceCmdCountersCmd((const UTRX_ResetDeviceCmdCountersCmd_t *)SBBufPtr);
-             
+                UTRX_ResetDeviceCmdCountersCmd((const UTRX_ResetDeviceCmdCountersCmd_t *)SBBufPtr);
             }
             break;
         /**********************************************************************************
@@ -306,8 +300,6 @@ void UTRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             UTRX_AppData.RptPkt.Report.ReturnType = CMD_RETCODE_TYPE_APP;
             UTRX_AppData.RptPkt.Report.ReturnDataSize = 0;
             UTRX_CountFromReport();
-
-            
             break;
     }
     return;

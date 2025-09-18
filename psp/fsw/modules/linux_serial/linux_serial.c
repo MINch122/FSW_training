@@ -51,6 +51,26 @@
 #define GETFD(cfg) cfg->FD
 #define GETCFG(protocol) cfg->cfg.protocol
 
+/**
+ * Counter table size
+ * Each entry store the various I/O counters
+ * If data interface (i.e. file descriptor) want to be counted
+ * is too many, enlarge this value
+ */ 
+#define LINUX_SERIAL_COUNTER_TABLE_SIZE     20
+#define LINUX_SERIAL_COUNTER_ENTRY_NOT_USED ((int)-1)
+
+/* Counter entry enum for distinguish member */
+typedef enum {
+    LINUX_SERIAL_COUNTER_TABLE_TXOPS,
+    LINUX_SERIAL_COUNTER_TABLE_RXOPS,
+    LINUX_SERIAL_COUNTER_TABLE_TXCNT,
+    LINUX_SERIAL_COUNTER_TABLE_RXCNT,
+    LINUX_SERIAL_COUNTER_TABLE_TXERR,       /* \brief Error during write */
+    LINUX_SERIAL_COUNTER_TABLE_RXERR,       /* \brief Error during read */
+    LINUX_SERIAL_COUNTER_TABLE_SETUPERR,    /* <\brief Error during setup phase */
+} linux_serial_cnt_mem_t;
+
 /* Mutex definition */
 #define LINUX_SERIAL_NO_MUTEX_HASH     ((int32_t)-1)
 
@@ -86,23 +106,143 @@ CFE_PSP_IODriver_API_t linux_serial_DevApi = {.DeviceCommand = linux_serial_DevC
 
 CFE_PSP_MODULE_DECLARE_IODEVICEDRIVER(linux_serial);
 
+
+
+static CFE_PSP_IODriver_Serial_cnt_t counter_table[LINUX_SERIAL_COUNTER_TABLE_SIZE];
+
 /***********************************************************************
  * Global Functions
  ***********************************************************************/
 void linux_serial_Init(uint32_t local_module_id) {
-    /* Do nothing right now. */
+    /* Initialize the counter table */
+    for (uint8_t i = 0; i < LINUX_SERIAL_COUNTER_TABLE_SIZE; i++) {
+        /* `FD == -1` indicate that this entry is currently not used */
+        counter_table[i].FD = LINUX_SERIAL_COUNTER_ENTRY_NOT_USED;
+        memset(&counter_table[i].cnts, 0, sizeof(CFE_PSP_IODriver_Serial_cnt_t));
+    }
     return;
 }
 /***********************************************************************
  * Util Functions
  ***********************************************************************/
+/*--------------------Counter table handling function-----------------------*/
+static void linux_serial_allocate_cnt_entry(int FD) {
+    for (uint8_t i = 0; i < LINUX_SERIAL_COUNTER_TABLE_SIZE; i++) {
+        if (counter_table[i].FD == LINUX_SERIAL_COUNTER_ENTRY_NOT_USED) {
+            counter_table[i].FD = FD;
+            return;
+        }
+    }
+    return;
+}
+
+static CFE_PSP_IODriver_Serial_cnt_t *linux_serial_get_cnt_entry(int FD) {
+    for (uint8_t i = 0; i < LINUX_SERIAL_COUNTER_TABLE_SIZE; i++) {
+        if (counter_table[i].FD == FD)
+            return &counter_table[i];
+    }
+    return NULL;
+}
+
+static void linux_serial_increase_cnt(int FD, linux_serial_cnt_mem_t member, int val) {
+    CFE_PSP_IODriver_Serial_cnt_t *entry = linux_serial_get_cnt_entry(FD);
+    if (entry == NULL) return;
+
+    switch (member)
+    {
+        case LINUX_SERIAL_COUNTER_TABLE_TXOPS:
+            entry->cnts.TxOps += val;
+            break;
+        case LINUX_SERIAL_COUNTER_TABLE_RXOPS:
+            entry->cnts.RxOps += val;
+            break;
+        case LINUX_SERIAL_COUNTER_TABLE_TXCNT:
+            entry->cnts.TxCnt += val;
+            break;
+        case LINUX_SERIAL_COUNTER_TABLE_RXCNT:
+            entry->cnts.RxCnt += val;
+            break;
+        case LINUX_SERIAL_COUNTER_TABLE_TXERR:
+            entry->cnts.TxErr += val;
+            break;
+        case LINUX_SERIAL_COUNTER_TABLE_RXERR:
+            entry->cnts.RxErr += val;
+            break;
+        case LINUX_SERIAL_COUNTER_TABLE_SETUPERR:
+            entry->cnts.SetupErr += val;
+            break;
+        default:
+            break;
+    }
+    entry->cnts.__errno = errno;
+}
+#define LINUX_SERIAL_INCREASE_TXOPS(FD) \
+    linux_serial_increase_cnt(FD, LINUX_SERIAL_COUNTER_TABLE_TXOPS, 1)
+#define LINUX_SERIAL_INCREASE_RXOPS(FD) \
+    linux_serial_increase_cnt(FD, LINUX_SERIAL_COUNTER_TABLE_RXOPS, 1)
+#define LINUX_SERIAL_INCREASE_TXCNT(FD, bytes) \
+    linux_serial_increase_cnt(FD, LINUX_SERIAL_COUNTER_TABLE_TXCNT, bytes)
+#define LINUX_SERIAL_INCREASE_RXCNT(FD, bytes) \
+    linux_serial_increase_cnt(FD, LINUX_SERIAL_COUNTER_TABLE_RXCNT, bytes)
+#define LINUX_SERIAL_INCREASE_TXERR(FD) \
+    linux_serial_increase_cnt(FD, LINUX_SERIAL_COUNTER_TABLE_TXERR, 1)
+#define LINUX_SERIAL_INCREASE_RXERR(FD) \
+    linux_serial_increase_cnt(FD, LINUX_SERIAL_COUNTER_TABLE_RXERR, 1)
+#define LINUX_SERIAL_INCREASE_SETUPERR(FD) \
+    linux_serial_increase_cnt(FD, LINUX_SERIAL_COUNTER_TABLE_SETUPERR, 1)
+
+static void linux_serial_free_cnt_entry(int FD) {
+    for (uint8_t i = 0; i < LINUX_SERIAL_COUNTER_TABLE_SIZE; i++) {
+        if (counter_table[i].FD == FD) {
+            counter_table[i].FD = LINUX_SERIAL_COUNTER_ENTRY_NOT_USED;
+            memset(&counter_table[i].cnts, 0, sizeof(CFE_PSP_IODriver_Serial_cnt_Payload_t));
+            return;
+        }
+    }
+    return;
+}
+
+static void linux_serial_clear_cnt_entry(int FD) {
+    for (uint8_t i = 0; i < LINUX_SERIAL_COUNTER_TABLE_SIZE; i++) {
+        if (counter_table[i].FD == FD) {
+            memset(&counter_table[i].cnts, 0, sizeof(CFE_PSP_IODriver_Serial_cnt_Payload_t));
+            return;
+        }
+    }
+    return;
+}
+
+/**
+ * \brief Return the counter (and recent errno) of specific file descriptor
+ * \param arg [in, out] member `FD` is input. Counters and errno of specific FD.
+ * Caller should substitute the struct to `const`
+ * \return StatusCode. Only `0`(`CFE_PSP_SUCCESS`) is success.
+ */
+static int32 linux_serial_return_counter(void *arg) {
+    CFE_PSP_IODriver_Serial_cnt_t *cnt = (CFE_PSP_IODriver_Serial_cnt_t *)arg;
+    for (uint8_t i = 0; i < LINUX_SERIAL_COUNTER_TABLE_SIZE; i++) {
+        if (counter_table[i].FD == cnt->FD) {
+            cnt->cnts = counter_table[i].cnts;
+            return CFE_PSP_SUCCESS;
+        }
+    }
+    OS_printf("failed.\n");
+    return CFE_PSP_IODriver_SERIAL_ERROR;
+}
+/*------------------End of Counter table handling function--------------------*/
+
+/*-----------------------------Basic I/O function-----------------------------*/
 int32 linux_serial_write(int FD, void *data, size_t size) {
     ssize_t wrbyte;
 
     wrbyte = write(FD, data, size);
-    if (wrbyte < 0) return CFE_PSP_IODriver_SERIAL_WRITE_ERROR;
+    if (wrbyte < 0) {
+        return CFE_PSP_IODriver_SERIAL_WRITE_ERROR;
+    }
     
-    else if (wrbyte != size) return CFE_PSP_IODriver_SERIAL_PARTIAL_WRITE_ERROR;
+    else if (wrbyte != size) {
+        return CFE_PSP_IODriver_SERIAL_PARTIAL_WRITE_ERROR;
+    }
     
     return CFE_PSP_SUCCESS;
 }
@@ -110,9 +250,13 @@ int32 linux_serial_read(int FD, void *data, size_t size) {
     ssize_t rdbyte;
 
     rdbyte = read(FD, data, size);
-    if (rdbyte < 0) return CFE_PSP_IODriver_SERIAL_READ_ERROR;
+    if (rdbyte < 0) {
+        return CFE_PSP_IODriver_SERIAL_READ_ERROR;
+    }
     
-    else if (rdbyte != size) return CFE_PSP_IODriver_SERIAL_PARTIAL_READ_ERROR;
+    else if (rdbyte != size) {
+        return CFE_PSP_IODriver_SERIAL_PARTIAL_READ_ERROR;
+    }
 
     return CFE_PSP_SUCCESS;
 }
@@ -138,19 +282,21 @@ int32 linux_serial_poll_read(int FD, void *Data, size_t size, uint32_t Timeout) 
         return CFE_PSP_IODriver_SERIAL_ERROR; // error
     
     else return CFE_PSP_IODriver_SERIAL_ERROR; // error
-
 }
 int32 linux_serial_close(int FD) {
     int32 StatusCode;
 
     StatusCode = close(FD);
     if (StatusCode == 0) {
+        linux_serial_free_cnt_entry(FD);
         StatusCode = CFE_PSP_SUCCESS;
     }
     else StatusCode = CFE_PSP_IODriver_SERIAL_CLOSE_ERROR;
 
     return StatusCode;
 }
+/*--------------------------End of Basic I/O function--------------------------*/
+
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 /*    linux_serial_open()                                 */
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -161,6 +307,7 @@ int32 linux_serial_open(const char *dev, int opt) {
     if (StatusCode < 0) {
         StatusCode = CFE_PSP_IODriver_SERIAL_OPEN_ERROR;
     }
+    linux_serial_allocate_cnt_entry(StatusCode);
 
     return StatusCode; // return file descriptor
 }
@@ -192,6 +339,8 @@ int32 linux_serial_opensocket(const char *dev) {
     }
 
     // If there is no error, return socket descriptor
+    linux_serial_allocate_cnt_entry(StatusCode);
+
     return sock;
 }
 int32_t linux_serial_open_dispatch(uint16_t SubchannelId, const char *Arg) {
@@ -225,12 +374,25 @@ int32_t linux_serial_write_i2c(CFE_PSP_IODriver_SerialXfer_t *arg) {
 
     if (size > LINUX_SERIAL_AT91_MAX_TX_SIZE) {
         StatusCode = ioctl(arg->FD, I2C_SLAVE, arg->Params.Addr);
-        if (StatusCode < 0) return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        if (StatusCode < 0) {
+            LINUX_SERIAL_INCREASE_SETUPERR(arg->FD);
+            return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        }
 
         StatusCode = ioctl(arg->FD, I2C_TIMEOUT, (arg->Params.Timeout + 9)/10u);
-        if (StatusCode < 0) return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        if (StatusCode < 0) {
+            LINUX_SERIAL_INCREASE_SETUPERR(arg->FD);
+            return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        }
 
         StatusCode = linux_serial_write(arg->FD, arg->Params.TxData, arg->Params.TxSize);
+        if (StatusCode != CFE_PSP_SUCCESS) {
+            LINUX_SERIAL_INCREASE_TXERR(arg->FD);
+        }
+        else {
+            LINUX_SERIAL_INCREASE_TXOPS(arg->FD);
+            LINUX_SERIAL_INCREASE_TXCNT(arg->FD, arg->Params.TxSize);
+        }
     }
     else {
         struct i2c_msg msg[1] = {0,};
@@ -244,8 +406,15 @@ int32_t linux_serial_write_i2c(CFE_PSP_IODriver_SerialXfer_t *arg) {
         };
 
         StatusCode = ioctl(arg->FD, I2C_RDWR, &pkt);
-        if (StatusCode < 0) StatusCode = CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
-        else StatusCode = CFE_PSP_SUCCESS; // explicit substitution
+        if (StatusCode < 0) {
+            LINUX_SERIAL_INCREASE_TXERR(arg->FD);
+            StatusCode = CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        }
+        else {
+            LINUX_SERIAL_INCREASE_TXOPS(arg->FD);
+            LINUX_SERIAL_INCREASE_TXCNT(arg->FD, arg->Params.TxSize);
+            StatusCode = CFE_PSP_SUCCESS; // explicit substitution
+        }
     }
 
     return StatusCode;
@@ -260,8 +429,15 @@ int32_t linux_serial_write_spi(CFE_PSP_IODriver_SerialXfer_t *arg) {
     nmsg ++;
 
     StatusCode = ioctl(arg->FD, SPI_IOC_MESSAGE(nmsg), xfer);
-    if (StatusCode < 0) StatusCode = CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
-    else StatusCode = CFE_PSP_SUCCESS;
+    if (StatusCode < 0) {
+        LINUX_SERIAL_INCREASE_TXERR(arg->FD);
+        StatusCode = CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+    }
+    else {
+        LINUX_SERIAL_INCREASE_TXOPS(arg->FD);
+        LINUX_SERIAL_INCREASE_TXCNT(arg->FD, arg->Params.TxSize);
+        StatusCode = CFE_PSP_SUCCESS;
+    }
 
     return StatusCode;
 }
@@ -281,10 +457,14 @@ int32_t linux_serial_write_can(CFE_PSP_IODriver_SerialXfer_t *arg) {
 
         // Write
         StatusCode = linux_serial_write(arg->FD, &frame, sizeof(frame));
-        if (StatusCode != CFE_PSP_SUCCESS)
+        if (StatusCode != CFE_PSP_SUCCESS) {
+            LINUX_SERIAL_INCREASE_TXERR(arg->FD);
             return StatusCode;
+        }
         TotBytes += WrBytes;
     }
+    LINUX_SERIAL_INCREASE_TXOPS(arg->FD);
+    LINUX_SERIAL_INCREASE_TXCNT(arg->FD, arg->Params.TxSize);
 
     return StatusCode;
 }
@@ -292,6 +472,12 @@ int32_t linux_serial_write_uart(CFE_PSP_IODriver_SerialXfer_t *arg) {
     int32_t StatusCode;
 
     StatusCode = linux_serial_write(arg->FD, arg->Params.TxData, arg->Params.TxSize);
+    if (StatusCode != CFE_PSP_SUCCESS)
+        LINUX_SERIAL_INCREASE_TXERR(arg->FD);
+    else {
+        LINUX_SERIAL_INCREASE_TXOPS(arg->FD);
+        LINUX_SERIAL_INCREASE_TXCNT(arg->FD, arg->Params.TxSize);
+    }
     return StatusCode;
 }
 
@@ -321,6 +507,7 @@ int32_t linux_serial_write_dispatch(uint16_t SubchannelId, void *Arg) {
         StatusCode = CFE_PSP_IODriver_SERIAL_INVALID_TYPE_ERROR; // Higher layer should handle this
         break;
     }
+
     return StatusCode;
 }
 
@@ -332,17 +519,34 @@ int32_t linux_serial_read_i2c(CFE_PSP_IODriver_SerialXfer_t *Arg) {
 
     if (Arg->Params.Interval) { // If interval param used, do atomic transaction
         StatusCode = ioctl(Arg->FD, I2C_SLAVE, Arg->Params.Addr);
-        if (StatusCode < 0) return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        if (StatusCode < 0) {
+            LINUX_SERIAL_INCREASE_SETUPERR(Arg->FD);
+            return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        }
 
         StatusCode = ioctl(Arg->FD, I2C_TIMEOUT, (Arg->Params.Timeout + 9)/10u);
-        if (StatusCode < 0) return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        if (StatusCode < 0) {
+            LINUX_SERIAL_INCREASE_SETUPERR(Arg->FD);
+            return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        }
 
         StatusCode = linux_serial_write(Arg->FD, Arg->Params.TxData, Arg->Params.TxSize);
-        if (StatusCode != CFE_PSP_SUCCESS)
+        if (StatusCode != CFE_PSP_SUCCESS) {
+            LINUX_SERIAL_INCREASE_TXERR(Arg->FD);
             return StatusCode;
+        }
+        LINUX_SERIAL_INCREASE_TXOPS(Arg->FD);
+        LINUX_SERIAL_INCREASE_TXCNT(Arg->FD, Arg->Params.TxSize);
         OS_TaskDelay(Arg->Params.Interval);
 
         StatusCode = linux_serial_read(Arg->FD, Arg->Params.RxData, Arg->Params.RxSize);
+        if (StatusCode != CFE_PSP_SUCCESS) {
+            LINUX_SERIAL_INCREASE_RXERR(Arg->FD);
+            return StatusCode;
+        }
+        LINUX_SERIAL_INCREASE_RXOPS(Arg->FD);
+        LINUX_SERIAL_INCREASE_RXCNT(Arg->FD, Arg->Params.RxSize);
+        
     }
     else { // If interval param not used, do combined transaction
         struct i2c_msg msg[2] = {0,};
@@ -376,8 +580,19 @@ int32_t linux_serial_read_i2c(CFE_PSP_IODriver_SerialXfer_t *Arg) {
         do {
             StatusCode = ioctl(Arg->FD, I2C_RDWR, &pkt);
         } while (StatusCode < 0 && errno == EINTR);
-        if (StatusCode < 0) return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
-        else return CFE_PSP_SUCCESS;
+
+        if (StatusCode < 0) {
+            LINUX_SERIAL_INCREASE_TXERR(Arg->FD);
+            LINUX_SERIAL_INCREASE_RXERR(Arg->FD);
+            return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        }
+        else {
+            LINUX_SERIAL_INCREASE_TXOPS(Arg->FD);
+            LINUX_SERIAL_INCREASE_TXCNT(Arg->FD, Arg->Params.TxSize);
+            LINUX_SERIAL_INCREASE_RXOPS(Arg->FD);
+            LINUX_SERIAL_INCREASE_RXCNT(Arg->FD, Arg->Params.RxSize);
+            return CFE_PSP_SUCCESS;
+        }
     }
 
     return StatusCode;
@@ -399,8 +614,18 @@ int32_t linux_serial_read_spi(CFE_PSP_IODriver_SerialXfer_t *Arg) {
     }
 
     StatusCode = ioctl(Arg->FD, SPI_IOC_MESSAGE(nmsg), xfer);
-    if (StatusCode < 0) return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
-    else return CFE_PSP_SUCCESS;
+    if (StatusCode < 0) {
+        LINUX_SERIAL_INCREASE_TXERR(Arg->FD);
+        LINUX_SERIAL_INCREASE_RXERR(Arg->FD);
+        return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+    }
+    else {
+        LINUX_SERIAL_INCREASE_TXOPS(Arg->FD);
+        LINUX_SERIAL_INCREASE_TXCNT(Arg->FD, Arg->Params.TxSize);
+        LINUX_SERIAL_INCREASE_RXOPS(Arg->FD);
+        LINUX_SERIAL_INCREASE_RXCNT(Arg->FD, Arg->Params.RxSize);
+        return CFE_PSP_SUCCESS;
+    }
 
     return StatusCode;
 }
@@ -411,7 +636,10 @@ int32_t linux_serial_read_can(CFE_PSP_IODriver_SerialXfer_t *Arg) {
 
     if (Arg->Params.TxData && Arg->Params.TxSize) {
         StatusCode = linux_serial_write_can(Arg);
-        if (StatusCode != CFE_PSP_SUCCESS) return StatusCode;
+        if (StatusCode != CFE_PSP_SUCCESS) {
+            return StatusCode;
+        }
+        /* At this step, there is no need to increase counter. `write_can` already do */
         OS_TaskDelay(Arg->Params.Interval);
     }
 
@@ -421,7 +649,10 @@ int32_t linux_serial_read_can(CFE_PSP_IODriver_SerialXfer_t *Arg) {
         RdBytes = (size - TotBytes >= CAN_MAX_DLEN) ? CAN_MAX_DLEN : (size - TotBytes);
         // Poll Read
         StatusCode = linux_serial_poll_read(Arg->FD, &frame, sizeof(struct can_frame), Arg->Params.Timeout);
-        if (StatusCode != CFE_PSP_SUCCESS) return StatusCode;
+        if (StatusCode != CFE_PSP_SUCCESS) {
+            LINUX_SERIAL_INCREASE_RXERR(Arg->FD);
+            return StatusCode;
+        }
 
         uint32_t RxID = 0;
         if (frame.can_id & CAN_EFF_FLAG) RxID = frame.can_id & CAN_EFF_MASK;
@@ -434,24 +665,39 @@ int32_t linux_serial_read_can(CFE_PSP_IODriver_SerialXfer_t *Arg) {
         memcpy((uint8_t *)Arg->Params.RxData + TotBytes, frame.data, RdBytes);
         TotBytes += RdBytes;
     }
+    LINUX_SERIAL_INCREASE_RXOPS(Arg->FD);
+    LINUX_SERIAL_INCREASE_RXCNT(Arg->FD, Arg->Params.RxSize);
 
-    return StatusCode;
+    return StatusCode; // Guaranteed to `CFE_PSP_SUCCESS`
 }
 int32_t linux_serial_read_uart(CFE_PSP_IODriver_SerialXfer_t *Arg) {
     int32 StatusCode;
     
     if (Arg->Params.TxData && Arg->Params.TxSize) {
         StatusCode = ioctl(Arg->FD, TCFLSH, TCIOFLUSH);
-        if (StatusCode < 0) return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        if (StatusCode < 0) {
+            LINUX_SERIAL_INCREASE_SETUPERR(Arg->FD);
+            return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        }
 
         StatusCode = linux_serial_write(Arg->FD, Arg->Params.TxData, Arg->Params.TxSize);
-        if (StatusCode != CFE_PSP_SUCCESS) return StatusCode;
-
+        if (StatusCode != CFE_PSP_SUCCESS) {
+            LINUX_SERIAL_INCREASE_TXERR(Arg->FD);
+            return StatusCode;
+        }
+        LINUX_SERIAL_INCREASE_TXOPS(Arg->FD);
+        LINUX_SERIAL_INCREASE_TXCNT(Arg->FD, Arg->Params.TxSize);
         OS_TaskDelay(Arg->Params.Interval);
     }
 
     StatusCode = linux_serial_poll_read(Arg->FD, Arg->Params.RxData, Arg->Params.RxSize, Arg->Params.Timeout);
-
+    if (StatusCode != CFE_PSP_SUCCESS) {
+        LINUX_SERIAL_INCREASE_RXERR(Arg->FD);
+    }
+    else {
+        LINUX_SERIAL_INCREASE_RXOPS(Arg->FD);
+        LINUX_SERIAL_INCREASE_RXCNT(Arg->FD, Arg->Params.TxSize);
+    }
     return StatusCode;
 }
 
@@ -479,9 +725,10 @@ int32_t linux_serial_read_dispatch(uint16_t SubchannelId, void *Arg) {
         break;
     default:
         /* Unsupported type */
-        StatusCode = CFE_PSP_IODriver_SERIAL_INVALID_TYPE_ERROR; // Higher layer should handle this
+        StatusCode = CFE_PSP_IODriver_SERIAL_INVALID_TYPE_ERROR;
         break;
     }
+
     return StatusCode;
 }
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -683,6 +930,9 @@ int32_t linux_serial_config_dispatch(uint16_t SubchannelId, void *Arg) {
         StatusCode = CFE_PSP_IODriver_SERIAL_INVALID_TYPE_ERROR;
         break;
     }
+    if (StatusCode != CFE_PSP_SUCCESS) {
+        LINUX_SERIAL_INCREASE_SETUPERR(cfg->FD);
+    }
 
     return StatusCode;
 }
@@ -756,8 +1006,25 @@ int32_t linux_serial_DevCmd(uint32_t CommandCode, uint16_t SubsystemId, uint16_t
             StatusCode = linux_serial_read_dispatch(SubchannelId, Arg.Vptr);
             break;
         case LINUX_SERIAL_CONFIG_SUBSYS:
-            /* invoke `ioctl()` or `termios kind` */
-            StatusCode = linux_serial_config_dispatch(SubchannelId, Arg.Vptr);
+            switch (CommandCode)
+            {
+                case CFE_PSP_IODriver_SET_CONFIGURATION:
+                    /* invoke `ioctl()` or `termios kind` */
+                    StatusCode = linux_serial_config_dispatch(SubchannelId, Arg.Vptr);
+                    break;
+                case CFE_PSP_IODriver_SERIAL_IO_GET_CNTS:
+                    /* invoke counter collect function */
+                    StatusCode = linux_serial_return_counter(Arg.Vptr);
+                    break;
+                case CFE_PSP_IODriver_SERIAL_IO_CLEAR_CNTS:
+                    /* invoke counters clear function */
+                    linux_serial_clear_cnt_entry((int)Arg.U32);
+                    StatusCode = CFE_PSP_SUCCESS;
+                default:
+                    /* do nothing */
+                    StatusCode = CFE_PSP_IODriver_SERIAL_INVALID_TYPE_ERROR;
+                    break;
+            }
             break;
         case LINUX_SERIAL_CLOSE_SUBSYS:
             /* invoke `close()` */
@@ -803,8 +1070,14 @@ int32_t linux_serial_DevMutex(uint32_t CommandCode, uint16_t SubsystemId, uint16
     /* Other Subsystem need lock, hash is calculated by FD val */
     else if (Arg.Vptr) {
         if (SubsystemId == LINUX_SERIAL_CONFIG_SUBSYS) {
-            const CFE_PSP_IODriver_Serial_cfg_t *cfg = (CFE_PSP_IODriver_Serial_cfg_t *)Arg.Vptr;
-            hash = CFE_PSP_IODriver_HashMutex(hash, cfg->FD);    
+            if (CommandCode == CFE_PSP_IODriver_SET_CONFIGURATION) {
+                const CFE_PSP_IODriver_Serial_cfg_t *cfg = (CFE_PSP_IODriver_Serial_cfg_t *)Arg.Vptr;
+                hash = CFE_PSP_IODriver_HashMutex(hash, cfg->FD);    
+            }
+            else {
+                const CFE_PSP_IODriver_Serial_cnt_t *cnt = (CFE_PSP_IODriver_Serial_cnt_t *)Arg.Vptr;
+                hash = CFE_PSP_IODriver_HashMutex(hash, cnt->FD);    
+            }
         }
         else {
             const CFE_PSP_IODriver_SerialXfer_t *x = (CFE_PSP_IODriver_SerialXfer_t *)Arg.Vptr;

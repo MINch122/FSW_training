@@ -35,9 +35,8 @@
 /*
 ** Utrx App command codes
 */
-
-#define UTRX_NOOP_CC                  0  //set
-#define UTRX_RESET_COUNTERS_CC        1  //set
+#define UTRX_NOOP_CC                      0  //set
+#define UTRX_RESET_COUNTERS_CC            1  //set
 #define UTRX_RESET_APP_CMD_COUNTERS_CC    2  //set
 #define UTRX_RESET_DEVICE_CMD_COUNTERS_CC 3  //set
 #define UTRX_GNDWDT_CLEAR_CC              6 //set
@@ -50,23 +49,22 @@
 #define UTRX_RPARAM_SAVE_ALL_CC           13 //set
 #define UTRX_RXCONF_SET_FREQ_CC           14 //set
 #define UTRX_TXCONF_SET_FREQ_CC           15 //set
-#define UTRX_CHECK_STATE_PING_CC          32 //set
+#define UTRX_CHECK_STATE_PING_CC          16 //set
 
 
-#define UTRX_RXCONF_GET_BAUD_CC           16 //get
-#define UTRX_RXCONF_GET_GUARD_CC          17 //get
-#define UTRX_TXCONF_GET_BAUD_CC           18 //get
-#define UTRX_TLM_GET_TEMP_BRD_CC          19 //get
-#define UTRX_TLM_GET_LAST_RSSI_CC         20 //get
-#define UTRX_TLM_GET_LAST_RFERR_CC        21 //get
-#define UTRX_TLM_GET_ACTIVE_CONF_CC       22 //get
-#define UTRX_TLM_GET_BOOT_COUNT_CC        23 //get
-#define UTRX_TLM_GET_BOOT_CAUSE_CC        24 //get
-#define UTRX_TLM_GET_LAST_CONTACT_CC      25 //get
-#define UTRX_TLM_GET_TOT_TX_BYTES_CC      26 //get
-#define UTRX_TLM_GET_TOT_RX_BYTES_CC      27 //get
-#define UTRX_GET_STATUS_CONFIGURATION_CC  28 //get // 사용 보류중 //
-#define UTRX_RXCONF_GET_FREQ_CC           29 //get
-#define UTRX_TXCONF_GET_FREQ_CC           30 //get
+#define UTRX_RXCONF_GET_BAUD_CC           20 //get
+#define UTRX_RXCONF_GET_GUARD_CC          21 //get
+#define UTRX_TXCONF_GET_BAUD_CC           22 //get
+#define UTRX_TLM_GET_TEMP_BRD_CC          23 //get
+#define UTRX_TLM_GET_LAST_RSSI_CC         24 //get
+#define UTRX_TLM_GET_LAST_RFERR_CC        25 //get
+#define UTRX_TLM_GET_ACTIVE_CONF_CC       26 //get
+#define UTRX_TLM_GET_BOOT_COUNT_CC        27 //get
+#define UTRX_TLM_GET_BOOT_CAUSE_CC        28 //get
+#define UTRX_TLM_GET_LAST_CONTACT_CC      29 //get
+#define UTRX_TLM_GET_TOT_TX_BYTES_CC      30 //get
+#define UTRX_TLM_GET_TOT_RX_BYTES_CC      31 //get
+#define UTRX_RXCONF_GET_FREQ_CC           32 //get
+#define UTRX_TXCONF_GET_FREQ_CC           33 //get
 
-#endif
+#endif /* UTRX_FCNCODES_H */

@@ -32,4 +32,21 @@
 /* Max Handle name length */
 #define CFE_SRL_HANDLE_NAME_LENGTH  16
 
+typedef enum {
+    SRL_DEVTYPE_I2C = 1,
+    SRL_DEVTYPE_SPI,
+    SRL_DEVTYPE_CAN,
+    SRL_DEVTYPE_UART,
+    SRL_DEVTYPE_RS422
+} CFE_SRL_DevType_t;
+
+
+typedef enum {
+    CFE_SRL_HANDLE_STATUS_NONE = 0x00,
+    CFE_SRL_HANDLE_STATUS_ALLOCATE = 0x01,
+    CFE_SRL_HANDLE_STATUS_FD_INIT = 0x02,
+    CFE_SRL_HANDLE_STATUS_MUTEX_INIT = 0x04,
+    CFE_SRL_HANDLE_STATUS_ALL = 0x07
+} CFE_SRL_Handle_Status_t;
+
 #endif /* CFE_SRL_INTERFACE_CFG_H */

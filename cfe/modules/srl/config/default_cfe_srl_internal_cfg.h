@@ -14,7 +14,6 @@
 #ifndef CFE_SRL_INTERNAL_CFG_H
 #define CFE_SRL_INTERNAL_CFG_H
 
-
 /**
  * Define SRL Task Priority
  */
@@ -24,5 +23,11 @@
  * Define SRL Task Stack Size
  */
 #define CFE_PLATFORM_SRL_START_TASK_STACK_SIZE  CFE_PLATFORM_ES_DEFAULT_STACK_SIZE
+
+/**
+ * PSP iodriver driver module name
+ */
+#define CFE_SRL_SERIAL_DRIVER       "linux_serial"
+#define CFE_SRL_DISCRETE_DRIVER     "linux_gpio"
 
 #endif /* CFE_SRL_INTERNAL_CFG_H */

@@ -5,12 +5,18 @@
  * 
  * Purpose : Serial Comm. Core Module's API Initialization
  ************************************************************************/
-
-#define _GNU_SOURCE // For `nanosleep`
 /**
  * Required header files
 */
 #include "cfe_srl_module_all.h"
+
+/**
+ * Private function definition
+ */
+#define CFE_SRL_HANDLE_PSP_SERIAL_ERR(psp_status) \
+    CFE_SRL_TRxErrHandling(__func__, psp_status)
+#define CFE_SRL_HANDLE_PSP_GPIO_ERR(psp_status) \
+    CFE_SRL_GpioErrHandling(__func__, psp_status)
 
 /**
  * Global data
@@ -24,16 +30,16 @@ extern CFE_SRL_GPIO_Handle_t GPIO[CFE_SRL_TOT_GPIO_NUM];
 /**
  * Private Sleep function
  */
-void Sleep_us(uint32_t Delay_us) {
-    struct timespec Req;
+// void Sleep_us(uint32_t Delay_us) {
+//     struct timespec Req;
 
-    Req.tv_sec = Delay_us / 1000000;
-    Req.tv_nsec = (Delay_us % 1000000) * 1000;
+//     Req.tv_sec = Delay_us / 1000000;
+//     Req.tv_nsec = (Delay_us % 1000000) * 1000;
     
-    while(nanosleep(&Req, &Req) == -1 && errno == EINTR);
+//     while(nanosleep(&Req, &Req) == -1 && errno == EINTR);
 
-    return;
-}
+//     return;
+// }
 
 
 /**
@@ -53,22 +59,127 @@ CFE_SRL_GPIO_Handle_t *CFE_SRL_GetGpioHandle(CFE_SRL_GPIO_Indexer_t Index) {
     return &GPIO[Index];
 }
 
+/** 
+ * \brief Private Error Handling function 
+ * \param PspStatus [in] PSP StatusCode returned by iodriver linux-serial
+ * \return SRL Status code correponed to PSP StatusCode
+ * \warning Do not call this function directily.
+ *  Use `CFE_SRL_HANDLE_PSP_SERIAL_ERR` macro instead.
+ */
+static int32 CFE_SRL_TRxErrHandling(const char *func, int32 PspStatus) {
+    int32 Status;
+    switch (PspStatus)
+    {
+    case CFE_PSP_IODriver_SERIAL_WRITE_ERROR:
+        Status = CFE_SRL_WRITE_ERR;
+        break;
+    case CFE_PSP_IODriver_SERIAL_PARTIAL_WRITE_ERROR:
+        Status = CFE_SRL_PARTIAL_WRITE_ERR;
+        break;
+    case CFE_PSP_IODriver_SERIAL_IOCTL_ERROR:
+        Status = CFE_SRL_IOCTL_ERR;
+        break;
+    case CFE_PSP_IODriver_SERIAL_READ_ERROR:
+        Status = CFE_SRL_READ_ERR;
+        break;
+    case CFE_PSP_IODriver_SERIAL_PARTIAL_READ_ERROR:
+        Status = CFE_SRL_PARTIAL_READ_ERR;
+        break;
+    case CFE_PSP_IODriver_SERIAL_TIMEOUT_ERROR:
+        Status = CFE_SRL_TIMEOUT;
+        break;
+    case CFE_PSP_IODriver_SERIAL_ERROR:
+        Status = CFE_SRL_ERR;
+        break;
+    case CFE_PSP_IODriver_SERIAL_INVALID_TYPE_ERROR:
+        Status = CFE_SRL_BAD_ARGUMENT;
+        break;
+    case CFE_PSP_IODriver_SERIAL_CLOSE_ERROR:
+        Status = CFE_SRL_CLOSE_ERR;
+        break;
+    case CFE_PSP_IODriver_SERIAL_OPEN_ERROR:
+        Status = CFE_SRL_OPEN_ERR;
+        break;
+    case CFE_PSP_IODriver_SERIAL_SOCKET_ERROR:
+        Status = CFE_SRL_CAN_OPEN_SOCKET_ERR;
+        break;
+    case CFE_PSP_IODriver_SERIAL_BIND_ERROR:
+        Status = CFE_SRL_CAN_BIND_ERR;
+        break;
+    default:
+        Status = CFE_SRL_ERR;
+        break;
+    }
+
+    if (Status != CFE_SUCCESS)
+        CFE_ES_WriteToSysLog("%s: Operation not succeed. PSP RC = %d\n", func, PspStatus);
+    
+    return Status;
+}
+
+/** 
+ * \brief Private Error Handling function.
+ * \param PspStatus [in] PSP StatusCode returned by iodriver linux-gpio
+ * \return SRL Status code correponed to PSP StatusCode
+ * \warning Do not call this function directily.
+ *  Use `CFE_SRL_HANDLE_PSP_GPIO_ERR` macro instead.
+ */
+static int32 CFE_SRL_GpioErrHandling(const char *func, int32 PspStatus) {
+    int32 Status;
+    switch (PspStatus)
+    {
+    case CFE_PSP_IODriver_DISCRETE_IO_TABLE_FULL_ERROR:
+        Status = CFE_SRL_FULL_ERR;
+        break;
+    case CFE_PSP_IODriver_DISCRETE_IO_CHIP_OPEN_ERROR:
+        Status = CFE_SRL_OPEN_ERR;
+        break;
+    case CFE_PSP_IODriver_DISCRETE_IO_GET_LINE_ERROR:
+    case CFE_PSP_IODriver_DISCRETE_IO_REQUEST_OUTPUT_ERROR:
+    case CFE_PSP_IODriver_DISCRETE_IO_REQUEST_INPUT_ERROR:
+        Status = CFE_SRL_GPIO_CONFIG_FAIL_ERR;
+        break;
+    case CFE_PSP_IODriver_DISCRETE_IO_NOT_OPEN_ERROR:
+        Status = CFE_SRL_NOT_OPEN_ERR;
+        break;
+    case CFE_PSP_IODriver_DISCRETE_IO_INVALID_DIRECTION_ERROR:
+    case CFE_PSP_IODriver_DISCRETE_IO_INVALID_HANDLE:
+        Status = CFE_SRL_BAD_ARGUMENT;
+        break;
+    case CFE_PSP_IODriver_DISCRETE_IO_SET_ERROR:
+        Status = CFE_SRL_GPIO_SET_VALUE_ERR;
+        break;
+    case CFE_PSP_IODriver_DISCRETE_IO_GET_ERROR:
+        Status = CFE_SRL_GPIO_GET_VALUE_ERR;
+        break;
+    
+    default:
+        Status = CFE_SRL_ERR;
+        break;
+    }
+
+    if (Status != CFE_SUCCESS)
+        CFE_ES_WriteToSysLog("%s: Operation not succeed. PSP RC = %d\n", func, PspStatus);
+    
+    return Status;
+}
 /**
  * Private Write function
  */
-
 /*----------------------------------------------------------------
  *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_WriteI2C(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Size, uint8_t Addr) {
+int32 CFE_SRL_WriteI2C(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
     int32 Status;
     CFE_SRL_DevType_t DevType;
+    CFE_PSP_IODriver_Location_t Location;
+    CFE_PSP_IODriver_SerialXfer_t Xfer = {0};
 
-    if (Handle == NULL || Data == NULL) return CFE_SRL_BAD_ARGUMENT;
-    if (Addr > 128) return CFE_SRL_I2C_ADDR_ERR;
+    if (Handle == NULL || Params == NULL) return CFE_SRL_BAD_ARGUMENT;
+    // if (Params->Addr > 128) return CFE_SRL_I2C_ADDR_ERR;
 
     // Check dev type
     DevType = CFE_SRL_GetHandleDevType(Handle);
@@ -78,17 +189,18 @@ int32 CFE_SRL_WriteI2C(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Siz
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    // Set Slave Addr
-    Status = ioctl(Handle->FD, I2C_SLAVE, Addr);
+    Location.PspModuleId = CFE_SRL_Global.IOdriverSerialModuleId;
+    Location.SubsystemId = CFE_PSP_IODriver_WRITE_SUBSYSTEM;
+    Location.SubchannelId = CFE_PSP_IODriver_SERIAL_I2C_SUBCH;
+    
+    Xfer.FD = Handle->FD;
+    Xfer.Params = *Params;
+
+    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Xfer));
     if (Status < 0) {
-        Handle->__errno = errno;
-        Status = CFE_SRL_IOCTL_ERR;
+        Status = CFE_SRL_HANDLE_PSP_SERIAL_ERR(Status);
         goto error;
     }
-
-    // Write
-    Status = CFE_SRL_Write(Handle, Data, Size);
-    if (Status != CFE_SUCCESS) goto error;
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
@@ -102,7 +214,7 @@ error:
 }
 
 int32 CFE_SRL_WriteGenericI2C(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_WriteI2C(Handle, Params->TxData, Params->TxSize, (uint8_t)Params->Addr);
+    return CFE_SRL_WriteI2C(Handle, Params);
 }
 
 /*----------------------------------------------------------------
@@ -111,10 +223,13 @@ int32 CFE_SRL_WriteGenericI2C(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *P
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_WriteUART(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Size) {
+int32 CFE_SRL_WriteUART(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
     int32 Status;
     CFE_SRL_DevType_t DevType;
-    if (Handle == NULL || Data == NULL) return CFE_SRL_BAD_ARGUMENT;
+    CFE_PSP_IODriver_Location_t Location;
+    CFE_PSP_IODriver_SerialXfer_t Xfer = {0};
+
+    if (Handle == NULL || Params == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     DevType = CFE_SRL_GetHandleDevType(Handle);
     if (DevType != SRL_DEVTYPE_UART && DevType != SRL_DEVTYPE_RS422) return CFE_SRL_INVALID_TYPE;
@@ -123,9 +238,18 @@ int32 CFE_SRL_WriteUART(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Si
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    // Write
-    Status = CFE_SRL_Write(Handle, Data, Size);
-    if (Status != CFE_SUCCESS) goto error;
+    Location.PspModuleId = CFE_SRL_Global.IOdriverSerialModuleId;
+    Location.SubsystemId = CFE_PSP_IODriver_WRITE_SUBSYSTEM;
+    Location.SubchannelId = CFE_PSP_IODriver_SERIAL_UART_SUBCH;
+
+    Xfer.FD = Handle->FD;
+    Xfer.Params = *Params;
+    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Xfer));
+    if (Status < 0) {
+        Status = CFE_SRL_HANDLE_PSP_SERIAL_ERR(Status);
+        goto error;
+    }
+    OS_printf("Write Success.\n");
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
@@ -139,7 +263,7 @@ error:
 }
 
 int32 CFE_SRL_WriteGenericUART(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_WriteUART(Handle, Params->TxData, Params->TxSize);
+    return CFE_SRL_WriteUART(Handle, Params);
 }
 
 /*----------------------------------------------------------------
@@ -148,38 +272,32 @@ int32 CFE_SRL_WriteGenericUART(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_WriteCAN(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Size, uint32_t Addr) {
+int32 CFE_SRL_WriteCAN(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
     int32 Status;
     CFE_SRL_DevType_t DevType;
-    struct can_frame Frame;
+    CFE_PSP_IODriver_Location_t Location;
+    CFE_PSP_IODriver_SerialXfer_t Xfer = {0};
 
-    if (Handle == NULL || Data == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || Params == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     DevType = CFE_SRL_GetHandleDevType(Handle);
     if (DevType != SRL_DEVTYPE_CAN) return CFE_SRL_INVALID_TYPE;
-
-    // if (Addr > 128) return -1; // Revise to `CAN_ADDR_ERR`, 128 to 29 bits max num
-
 
     // Mutex Lock
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    size_t TotBytes = 0; // Total Tx bytes till now
-    size_t WrBytes; // Write bytes at this very time
-    while (TotBytes < Size) {
+    Location.PspModuleId = CFE_SRL_Global.IOdriverSerialModuleId;
+    Location.SubsystemId = CFE_PSP_IODriver_WRITE_SUBSYSTEM;
+    Location.SubchannelId = CFE_PSP_IODriver_SERIAL_CAN_SUBCH;
 
-        // Configure Frame
-        WrBytes = (Size - TotBytes >= CAN_MAX_DLEN) ? CAN_MAX_DLEN : (Size - TotBytes);
-        Frame.can_id = Addr | CAN_EFF_FLAG;
-        Frame.can_dlc = WrBytes;
-        memcpy(Frame.data, ((uint8_t *)Data) + TotBytes, WrBytes);
+    Xfer.FD = Handle->FD;
+    Xfer.Params = *Params;
 
-        // Write
-        Status = CFE_SRL_Write(Handle, &Frame, sizeof(Frame));
-        if (Status != CFE_SUCCESS) goto error;
-
-        TotBytes += WrBytes;
+    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Xfer));
+    if (Status < 0) {
+        Status = CFE_SRL_HANDLE_PSP_SERIAL_ERR(Status);
+        goto error;
     }
 
     // Mutex Unlock
@@ -194,7 +312,7 @@ error:
 }
 
 int32 CFE_SRL_WriteGenericCAN(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_WriteCAN(Handle, Params->TxData, Params->TxSize, Params->Addr);
+    return CFE_SRL_WriteCAN(Handle, Params);
 }
 
 /*----------------------------------------------------------------
@@ -203,13 +321,13 @@ int32 CFE_SRL_WriteGenericCAN(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *P
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_WriteSPI(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Size) {
+int32 CFE_SRL_WriteSPI(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
     int32 Status;
     CFE_SRL_DevType_t DevType;
-    struct spi_ioc_transfer Xfer[1];
-    memset(Xfer, 0, sizeof(Xfer));
+    CFE_PSP_IODriver_Location_t Location;
+    CFE_PSP_IODriver_SerialXfer_t Xfer = {0};
 
-    if (Handle == NULL || Data == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || Params == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     DevType = CFE_SRL_GetHandleDevType(Handle);
     if (DevType != SRL_DEVTYPE_SPI) return CFE_SRL_INVALID_TYPE;
@@ -218,13 +336,16 @@ int32 CFE_SRL_WriteSPI(CFE_SRL_IO_Handle_t *Handle, const void *Data, size_t Siz
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    Xfer[0].tx_buf = (uint64_t)(uintptr_t)Data;
-    Xfer[0].len = Size;
+    Location.PspModuleId = CFE_SRL_Global.IOdriverSerialModuleId;
+    Location.SubsystemId = CFE_PSP_IODriver_WRITE_SUBSYSTEM;
+    Location.SubchannelId = CFE_PSP_IODriver_SERIAL_SPI_SUBCH;
 
-    Status = ioctl(Handle->FD, SPI_IOC_MESSAGE(1), Xfer);
+    Xfer.FD = Handle->FD;
+    Xfer.Params = *Params;
+
+    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Xfer));
     if (Status < 0) {
-        Handle->__errno = errno;
-        Status = CFE_SRL_IOCTL_ERR;
+        Status = CFE_SRL_HANDLE_PSP_SERIAL_ERR(Status);
         goto error;
     }
 
@@ -239,7 +360,7 @@ error:
     return Status;
 }
 int32 CFE_SRL_WriteGenericSPI(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_WriteSPI(Handle, Params->TxData, Params->TxSize);
+    return CFE_SRL_WriteSPI(Handle, Params);
 }
 
 
@@ -247,31 +368,19 @@ int32 CFE_SRL_WriteGenericSPI(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *P
  * Private Read function
  */
 
-
-static int32 CFE_SRL_PrepareI2C(CFE_SRL_IO_Handle_t *Handle, uint32_t Addr, uint32_t Timeout) {
-    int32 Status;
-
-    if (Addr > 128) return CFE_SRL_I2C_ADDR_ERR;
-
-    Status = ioctl(Handle->FD, I2C_SLAVE, Addr);
-    if (Status < 0) {Handle->__errno = errno; Status = CFE_SRL_IOCTL_ERR; return Status;}
-    Status = ioctl(Handle->FD, I2C_TIMEOUT, (Timeout + 9)/10u);
-    if (Status < 0) {Handle->__errno = errno; Status = CFE_SRL_IOCTL_ERR; return Status;}
-
-    return CFE_SUCCESS;
-}
-
 /*----------------------------------------------------------------
  *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Addr, uint32_t Timeout, uint32_t Delay, ssize_t *Read) {
+int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
     int32 Status;
     CFE_SRL_DevType_t DevType;
+    CFE_PSP_IODriver_Location_t Location;
+    CFE_PSP_IODriver_SerialXfer_t Xfer = {0};
 
-    if (Handle == NULL || RxData == NULL || TxData == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || Params == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     DevType = CFE_SRL_GetHandleDevType(Handle);
     if (DevType != SRL_DEVTYPE_I2C) return CFE_SRL_INVALID_TYPE;
@@ -280,45 +389,19 @@ int32 CFE_SRL_ReadI2C(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    if (Timeout || Delay) {
-        /**
-         * If `Timeout` or `Interval` Parameter is uesd, do atomic transaction
-         */
-        Status = CFE_SRL_PrepareI2C(Handle, Addr, Timeout);
-        if (Status != CFE_SUCCESS) goto error;
-        
-        if (TxData != NULL) {
-            // Write
-            Status = CFE_SRL_Write(Handle, TxData, TxSize);
-            if (Status != CFE_SUCCESS) goto error;
-        }
-        // Sleep for specific time interval
-        OS_printf("Delay : %u\n",Delay);
-        Sleep_us(Delay);
+    Location.PspModuleId = CFE_SRL_Global.IOdriverSerialModuleId;
+    Location.SubsystemId = CFE_PSP_IODriver_READ_SUBSYSTEM;
+    Location.SubchannelId = CFE_PSP_IODriver_SERIAL_I2C_SUBCH;
 
-        // Read
-        ssize_t N = CFE_SRL_BasicRead(Handle->FD, RxData, RxSize);
-        if (N < 0) {
-            Handle->__errno = errno;
-            *Read = 0;
-            Status = CFE_SRL_READ_ERR;
-            goto error;
-        }
-        else if ((size_t)N != RxSize) {
-            *Read = N;
-            Status = CFE_SRL_PARTIAL_READ_ERR;
-            goto error;
-        }
-        else {*Read = N; Status = CFE_SUCCESS;}
+    Xfer.FD = Handle->FD;
+    Xfer.Params = *Params;
+
+    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Xfer));
+    if (Status < 0) {
+        Status = CFE_SRL_HANDLE_PSP_SERIAL_ERR(Status);
+        goto error;
     }
-    else {
-        /**
-         * If `Timeout` Parameter is not used, do combined transaction
-         */
-        Status = CFE_SRL_TransactionI2C(Handle, TxData, TxSize, RxData, RxSize, Addr);
-        if (Status != CFE_SUCCESS) goto error;
-    }
-    
+
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
     if (Status != CFE_SUCCESS) goto error;
@@ -331,7 +414,7 @@ error:
 }
 
 int32 CFE_SRL_ReadGenericI2C(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_ReadI2C(Handle, Params->TxData, Params->TxSize, Params->RxData, Params->RxSize, Params->Addr, Params->Timeout, Params->Interval, &Params->ReadBytes);
+    return CFE_SRL_ReadI2C(Handle, Params);
 }
 
 /*----------------------------------------------------------------
@@ -340,12 +423,14 @@ int32 CFE_SRL_ReadGenericI2C(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Pa
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Timeout, uint32_t Delay, ssize_t *Read) {
+int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
     // write -> poll read
     int Status;
     CFE_SRL_DevType_t DevType;
+    CFE_PSP_IODriver_Location_t Location;
+    CFE_PSP_IODriver_SerialXfer_t Xfer = {0};
 
-    if (Handle == NULL || RxData == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || Params == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     DevType = CFE_SRL_GetHandleDevType(Handle);
     if (DevType != SRL_DEVTYPE_UART && DevType != SRL_DEVTYPE_RS422) return CFE_SRL_INVALID_TYPE;
@@ -354,23 +439,18 @@ int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t T
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    if (TxData != NULL && TxSize > 0) {
-        /**
-         * If something is written, cleanup the TRx buffer before write
-         * Unless, do nothing
-         */
-        ioctl(Handle->FD, TCFLSH, TCIOFLUSH);
-        // Write
-        Status = CFE_SRL_Write(Handle, TxData, TxSize);
-        if (Status != CFE_SUCCESS) goto error;
-    }
-    // Sleep for specific time interval
-    OS_printf("Delay : %u\n",Delay);
-    Sleep_us(Delay);
+    Location.PspModuleId = CFE_SRL_Global.IOdriverSerialModuleId;
+    Location.SubsystemId = CFE_PSP_IODriver_READ_SUBSYSTEM;
+    Location.SubchannelId = CFE_PSP_IODriver_SERIAL_UART_SUBCH;
 
-    // Poll Read
-    Status = CFE_SRL_Read(Handle, RxData, RxSize, Timeout, Read);
-    if (Status != CFE_SUCCESS) goto error;
+    Xfer.FD = Handle->FD;
+    Xfer.Params = *Params;
+
+    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Xfer));
+    if (Status < 0) {
+        Status = CFE_SRL_HANDLE_PSP_SERIAL_ERR(Status);
+        goto error;
+    }
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
@@ -384,7 +464,7 @@ error:
 }
 
 int32 CFE_SRL_ReadGenericUART(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_ReadUART(Handle, Params->TxData, Params->TxSize, Params->RxData, Params->RxSize, Params->Timeout, Params->Interval, &Params->ReadBytes);
+    return CFE_SRL_ReadUART(Handle, Params);
 }
 
 /*----------------------------------------------------------------
@@ -393,12 +473,13 @@ int32 CFE_SRL_ReadGenericUART(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *P
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_ReadCAN(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize, uint32_t Timeout, uint32_t Addr, uint32_t Delay, ssize_t *Read) {
+int32 CFE_SRL_ReadCAN(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
     int32 Status;
     CFE_SRL_DevType_t DevType;
-    struct can_frame Frame = {0,};
+    CFE_PSP_IODriver_Location_t Location;
+    CFE_PSP_IODriver_SerialXfer_t Xfer = {0};
 
-    if (Handle == NULL || RxData == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || Params == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     DevType = CFE_SRL_GetHandleDevType(Handle);
     if(DevType != SRL_DEVTYPE_CAN) return CFE_SRL_INVALID_TYPE;
@@ -407,35 +488,18 @@ int32 CFE_SRL_ReadCAN(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    if (TxData != NULL) {
-        // Write
-        Status = CFE_SRL_WriteCAN(Handle, TxData, TxSize, Addr);
-        if (Status != CFE_SUCCESS) return Status;
+    Location.PspModuleId = CFE_SRL_Global.IOdriverSerialModuleId;
+    Location.SubsystemId = CFE_PSP_IODriver_READ_SUBSYSTEM;
+    Location.SubchannelId = CFE_PSP_IODriver_SERIAL_CAN_SUBCH;
 
-        // Sleep for specific time interval
-        Sleep_us(Delay);
+    Xfer.FD = Handle->FD;
+    Xfer.Params = *Params;
+
+    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Xfer));
+    if (Status < 0) {
+        Status = CFE_SRL_HANDLE_PSP_SERIAL_ERR(Status);
+        goto error;
     }
-
-    size_t TotBytes = 0; // Total Rx bytes till now
-    size_t RdBytes; // Read bytes at this very time
-    while (TotBytes < RxSize) {
-        RdBytes = (RxSize - TotBytes >= CAN_MAX_DLEN) ? CAN_MAX_DLEN : (RxSize - TotBytes);
-        // Poll Read
-        Status = CFE_SRL_Read(Handle, &Frame, sizeof(struct can_frame), Timeout, NULL);
-        if (Status != CFE_SUCCESS) goto error;
-
-        uint32_t RxID = 0;
-        if (Frame.can_id & CAN_EFF_FLAG) RxID = Frame.can_id & CAN_EFF_MASK;
-        else RxID = Frame.can_id & CAN_SFF_MASK;
-        OS_printf("InComing CAN Frame ID: %u\n", RxID);
-
-        if (RdBytes != Frame.can_dlc) {
-            OS_printf("%s: CAN read length NOT matched!\n", __func__);
-        }
-        memcpy((uint8_t *)RxData + TotBytes, Frame.data, RdBytes);
-        TotBytes += RdBytes;
-    }
-    if (Read) *Read = TotBytes;
 
     // Mutex Unlock
     Status = CFE_SRL_MutexUnlock(Handle);
@@ -449,7 +513,7 @@ error:
 }
 
 int32 CFE_SRL_ReadGenericCAN(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_ReadCAN(Handle, Params->TxData, Params->TxSize, Params->RxData, Params->RxSize, Params->Timeout, Params->Addr, Params->Interval, &Params->ReadBytes);
+    return CFE_SRL_ReadCAN(Handle, Params);
 }
 
 /*----------------------------------------------------------------
@@ -458,13 +522,13 @@ int32 CFE_SRL_ReadGenericCAN(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Pa
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_ReadSPI(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t TxSize, void *RxData, size_t RxSize) {
+int32 CFE_SRL_ReadSPI(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
     int32 Status;
     CFE_SRL_DevType_t DevType;
-    struct spi_ioc_transfer Xfer[2];
-    memset(Xfer, 0, sizeof(Xfer));
+    CFE_PSP_IODriver_Location_t Location;
+    CFE_PSP_IODriver_SerialXfer_t Xfer = {0};
 
-    if (Handle == NULL || TxData == NULL || RxData == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || Params == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     DevType = CFE_SRL_GetHandleDevType(Handle);
     if (DevType != SRL_DEVTYPE_SPI) return CFE_SRL_INVALID_TYPE;
@@ -472,16 +536,16 @@ int32 CFE_SRL_ReadSPI(CFE_SRL_IO_Handle_t *Handle, const void *TxData, size_t Tx
     Status = CFE_SRL_MutexLock(Handle);
     if (Status != CFE_SUCCESS) return Status;
 
-    Xfer[0].tx_buf = (uint64_t)(uintptr_t)TxData;
-    Xfer[0].len = TxSize;
+    Location.PspModuleId = CFE_SRL_Global.IOdriverSerialModuleId;
+    Location.SubsystemId = CFE_PSP_IODriver_READ_SUBSYSTEM;
+    Location.SubchannelId = CFE_PSP_IODriver_SERIAL_SPI_SUBCH;
 
-    Xfer[1].rx_buf = (uint64_t)(uintptr_t)RxData;
-    Xfer[1].len = RxSize;
+    Xfer.FD = Handle->FD;
+    Xfer.Params = *Params;
 
-    Status = ioctl(Handle->FD, SPI_IOC_MESSAGE(2), Xfer);
+    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Xfer));
     if (Status < 0) {
-        Handle->__errno = errno;
-        Status = CFE_SRL_IOCTL_ERR;
+        Status = CFE_SRL_HANDLE_PSP_SERIAL_ERR(Status);
         goto error;
     }
 
@@ -496,5 +560,76 @@ error:
 }
 
 int32 CFE_SRL_ReadGenericSPI(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) {
-    return CFE_SRL_ReadSPI(Handle, Params->TxData, Params->TxSize, Params->RxData, Params->RxSize);
+    return CFE_SRL_ReadSPI(Handle, Params);
+}
+
+/* GPIO private function */
+/*----------------------------------------------------------------
+ *
+ * Implemented per public API
+ * See description in header file for argument/return detail
+ *
+ *-----------------------------------------------------------------*/
+int32 CFE_SRL_GpioSetValue(CFE_SRL_GPIO_Handle_t *Handle, bool Value) {
+    int32 Status;
+    CFE_PSP_IODriver_Location_t Location;
+    CFE_PSP_IODriver_GpioVal_t Val = {0,};
+
+    if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
+
+    Location.PspModuleId = CFE_SRL_Global.IOdriverGpioModuleId;
+    Location.SubsystemId = CFE_PSP_IODriver_WRITE_SUBSYSTEM;
+    
+    Val.handle = Handle->Handle;
+    Val.level = Value ? 1 : 0;
+
+    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Val));
+    if (Status < 0) {
+        Status = CFE_SRL_HANDLE_PSP_GPIO_ERR(Status);
+        return Status;
+    }
+
+    return CFE_SUCCESS;
+    
+}
+/*----------------------------------------------------------------
+ *
+ * Implemented per public API
+ * See description in header file for argument/return detail
+ *
+ *-----------------------------------------------------------------*/
+int32 CFE_SRL_GpioGetValue(CFE_SRL_GPIO_Handle_t *Handle, bool *Value) {
+    int32 Status;
+    CFE_PSP_IODriver_Location_t Location;
+    CFE_PSP_IODriver_GpioVal_t Val = {0};
+
+    if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
+
+    Location.PspModuleId = CFE_SRL_Global.IOdriverGpioModuleId;
+    Location.SubsystemId = CFE_PSP_IODriver_READ_SUBSYSTEM;
+
+    Val.handle = Handle->Handle;
+
+    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Val));
+    if (Status < 0) {
+        Status = CFE_SRL_HANDLE_PSP_GPIO_ERR(Status);
+        return Status;
+    }
+
+    *Value = Val.level ? true : false;
+
+    return CFE_SUCCESS;
+}
+
+/* Handle counter function */
+int32 CFE_SRL_UpdateHandleCounters(CFE_SRL_IO_Handle_t *Handle) {
+    int32 Status;
+    CFE_PSP_IODriver_Location_t Location;
+    Location.PspModuleId = CFE_SRL_Global.IOdriverSerialModuleId;
+    Location.SubsystemId = CFE_PSP_IODriver_CONFIG_SUBSYSTEM;
+    Location.SubchannelId = 0; // meaningless
+
+    Status = CFE_PSP_IODriver_Command(&Location, CFE_PSP_IODriver_SERIAL_IO_GET_CNTS, CFE_PSP_IODriver_VPARG(Handle));
+    if (Status != CFE_PSP_SUCCESS) return CFE_SRL_ERR;
+    else return CFE_SUCCESS;
 }

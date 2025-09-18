@@ -136,6 +136,7 @@ enum
     CFE_PSP_IODriver_PACKET_IO_CLASS_BASE   = 0x00030000, /**< Opcodes for packet/datagram-oriented devices */
     CFE_PSP_IODriver_MEMORY_IO_CLASS_BASE   = 0x00040000, /**< Opcodes for memory/register oriented devices */
     CFE_PSP_IODriver_STREAM_IO_CLASS_BASE   = 0x00050000, /**< Opcodes for data stream oriented devices */
+    CFE_PSP_IODriver_SERIAL_IO_CLASS_BASE   = 0x00060000, /**< Opcodes for data serial oriented devices */
 
     /**
      * Placeholder for extended opcodes that may be very specific to a single device/device type.
@@ -145,6 +146,22 @@ enum
 
 };
 
+/**
+ * Some common values for the device subsystems.
+ * These are some VERY basic subsystems that many devices may support in some way.
+ * Any subsystem code that is not implemented should return CFE_PSP_ERROR_NOT_IMPLEMENTED
+ * If any other subsystem required, this enum can be extended.
+ * Negative return values indicate an error of some type, while return values >= 0 indicate success
+ */
+enum {
+    CFE_PSP_IODriver_OPEN_SUBSYSTEM = 0,
+    CFE_PSP_IODriver_WRITE_SUBSYSTEM,
+    CFE_PSP_IODriver_READ_SUBSYSTEM,
+    CFE_PSP_IODriver_CONFIG_SUBSYSTEM,
+    CFE_PSP_IODriver_CLOSE_SUBSYSTEM,
+
+    CFE_PSP_IODriver_SUBSYSTEM_MAX,
+};
 /* ------------------------------------------------------------- */
 /**
  * @brief Find an IO device module ID by name

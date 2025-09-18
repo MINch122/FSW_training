@@ -12,13 +12,21 @@
 /*
 ** Includes
 */
-#include "cfe_srl_eventids.h"
-#include "cfe_srl_handle.h"
-#include "cfe_srl_priv.h"
-#include "cfe_srl_csp.h"
+#include "cfe.h"
+#include "cfe_platform_cfg.h"
 
-#include "cfe_perfids.h"
-#include "cfe_srl_dispatch.h"
 #include "cfe_msgids.h"
+#include "cfe_perfids.h"
+
+#include "cfe_srl_core_internal.h"
+
+#include "cfe_srl_csp.h"
+#include "cfe_srl_dispatch.h"
+#include "cfe_srl_handle.h"
+#include "cfe_srl_mutex.h"
+#include "cfe_srl_priv.h"
+#include "cfe_srl_task.h"
+
+#include "cfe_srl_eventids.h"
 
 #endif /* CFE_SRL_MODULE_ALL_H*/

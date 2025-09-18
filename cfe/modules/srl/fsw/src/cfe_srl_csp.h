@@ -1,8 +1,9 @@
 #ifndef CFE_SRL_CSP_H
 #define CFE_SRL_CSP_H
 
-// #include "cfe.h"
+#include "cfe.h"
 
+#include "common_types.h"
 #include <csp/csp.h>
 #include <csp/csp_endian.h>
 #include <csp/arch/csp_thread.h>
@@ -15,8 +16,9 @@
 #include <gs/param/rparam.h>
 
 #include <gs/csp/drivers/i2c/i2c.h>
-
-#include "cfe_srl_basic.h"
+#include "cfe_srl_extern_typedefs.h"
+#include "cfe_srl_internal_cfg.h"
+#include "cfe_srl_mission_cfg.h"
 #include <gs/param/types.h>
 
 #define CSP_TASK_STACK_SIZE(x)      (x)*1024
@@ -31,21 +33,15 @@
  * SANT is GomSpace but, doesn't need CSP
  * Consider CubeSpace's ADCS Solution.
  */
-// typedef enum {
-//     CSP_NODE_EPS = 2,   // EPS Dock p31u Node
-//     CSP_NODE_OBC = 3,
-//     CSP_NODE_UTRX = 5,
-//     CSP_NODE_STRX = 6,
-//     CSP_NODE_GS_KISS = 8,
-//     CSP_NODE_GSTRX = 20,
-//     // CSP_NODE_ADCS = 24
-// } CFE_SRL_CSP_Node_t;
 
-// typedef struct {
-//     uint8_t Priority;
-//     uint32_t Timeout;
-//     uint32_t Options;
-// } CFE_SRL_CSP_Node_Config_t;
+/**
+ * Module internal CSP node configuration sturcture
+ */
+typedef struct {
+    uint8_t Priority;
+    uint32_t Timeout;
+    uint32_t Options;
+} CFE_SRL_CSP_Node_Config_t;
 
 
 

@@ -131,9 +131,13 @@ with open('../../cfe/modules/core_api/fsw/inc/cfe_srl_error.h', 'w') as f:
 
 # Generate EarlyInit function
 with open('../../cfe/modules/srl/fsw/src/cfe_srl_init.c', 'w') as f:
-    f.write("/* Auto-Generated file. Never change this code! */\n")
-    f.write("/**\n * Required header files\n*/\n")
-    f.write('#include "cfe_srl_module_all.h"\n\n')
+    f.write("/* Auto-Generated file. Never change this code! */\n\n")
+    f.write("/**\n * Required header files\n */\n")
+    f.write('#include "cfe_srl_module_all.h"\n')
+    f.write('#include "cfe_psp.h"\n')
+    f.write('#include "iodriver_base.h"\n')
+    f.write('#include "iodriver_discrete_io.h"\n')
+    f.write('#include "iodriver_serial_io.h"\n\n')
     f.write("/**\n * Global data\n*/\n")
     f.write('CFE_SRL_IO_Handle_t *Handles[CFE_SRL_GNRL_DEVICE_NUM];\n')
     f.write("/**************************************************\n * Index of Each device\n")
@@ -153,9 +157,10 @@ with open('../../cfe/modules/srl/fsw/src/cfe_srl_init.c', 'w') as f:
     f.write(" ************************************************************************/\n")
     f.write('int32 CFE_SRL_EarlyInit(void) {\n')
     f.write('\tint32 Status;\n\n')
+    f.write('\tCFE_PSP_IODriver_Serial_cfg_t Config = {0};\t// FD will be inserted in `CFE_SRL_HandleInit()`\n\n')
     f.write('\tStatus = CFE_SRL_PriorInit();\n')
     f.write('\tif(Status != CFE_SUCCESS) return Status;\n')
-    f.write('\tCFE_ES_WriteToSysLog("%s: Prior Initialized.", __func__);\n')
+    f.write('\tCFE_ES_WriteToSysLog("%s: Prior Initialized.", __func__);\n\n')
     f.write("\t/**************************************************\n")
     f.write("\t * Serial Comm. Init\n \t * Only `ready == true` interface is initialized\n")
     f.write("\t **************************************************/\n")
@@ -172,7 +177,7 @@ with open('../../cfe/modules/srl/fsw/src/cfe_srl_init.c', 'w') as f:
         elif iface['type'] == 'can':
             Write_can_handle_init(f, iface)
         elif iface['type'] == 'socat':
-            Write_socat_handle_init(f, iface)
+            Write_uart_handle_init(f, iface)
 
         if iface['type'] == 'gpio':
             Write_gpio_init(f, iface)

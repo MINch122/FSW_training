@@ -10,14 +10,14 @@
 CFE_Status_t SP_SendBcnCmd(const SP_SendBcnCmd_t *Msg) {
     int32 Status;
     CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
+    bool IsDeploy = false;
 
-    Status = CFE_SRL_ApiGpioGet(Handle);
-    if (Status == 0 || Status == 1) {
-        SP_AppData.BcnTlm.Payload.DeployStatus = (uint8_t)Status;
-        SP_AppData.BcnTlm.IsDeploy = Status ? false : true; // `1` indicate Not deployed
+    Status = CFE_SRL_ApiGpioGet(Handle, &IsDeploy);
+    if (Status == CFE_SUCCESS) {
+        SP_AppData.BcnTlm.Payload.DeployStatus = IsDeploy;
+        SP_AppData.BcnTlm.IsDeploy = IsDeploy; // `1` indicate Not deployed
     }
-
-    /* If Error, put other value which is not `0` or `1` */
+    /* If Error, put other value(0xFF) which is not `0` or `1` */
     else SP_AppData.BcnTlm.Payload.DeployStatus = 0xFF;
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(SP_AppData.BcnTlm.TelemetryHeader));
@@ -78,15 +78,13 @@ CFE_Status_t SP_Get_DeployCmd(const SP_Get_DeployCmd_t *Msg){
     SP_AppData.CmdCounter++;
     
     int32 Status;
-    uint8_t Deploy = 0xFF;
-
     CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
+    bool IsDeploy = false;
     
-    Status = CFE_SRL_ApiGpioGet(Handle);
+    Status = CFE_SRL_ApiGpioGet(Handle, &IsDeploy);
 
-    if (Status == 0 || Status == 1) {
-        Deploy = Status; // Success
-        SP_AppData.BcnTlm.IsDeploy = Status ? false : true; // `1` indicate Not deployed
+    if (Status == CFE_SUCCESS) {
+        SP_AppData.BcnTlm.IsDeploy = IsDeploy; // `1` indicate Not deployed
     }
     else { // Fail
         SP_AppData.ErrCounter++;
@@ -96,9 +94,9 @@ CFE_Status_t SP_Get_DeployCmd(const SP_Get_DeployCmd_t *Msg){
     /**
      * Transmit Msg to RPT
      */
-    SP_HandleReport((Deploy == 0xFF) ? Status : CFE_SUCCESS, SP_GET_DEPLOY_CC, &Deploy, sizeof(Deploy));
+    SP_HandleReport(Status, SP_GET_DEPLOY_CC, &IsDeploy, sizeof(IsDeploy));
 
-    CFE_EVS_SendEvent(SP_DEPLOY_INF_EID, CFE_EVS_EventType_INFORMATION, "SP: Deploy command: feedback value: 0x%02X \n", Status);
+    CFE_EVS_SendEvent(SP_DEPLOY_INF_EID, CFE_EVS_EventType_INFORMATION, "SP: Deploy command: feedback value: 0x%02X \n", IsDeploy);
     
     return CFE_SUCCESS;
 }
@@ -124,19 +122,22 @@ void SP_DeployTask(void) {
     CFE_SRL_GPIO_Handle_t *Out = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_OUT_GPIO_INDEXER);
     CFE_SRL_GPIO_Handle_t *In = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
     int32 Status;
+    bool OutLevel;
+    bool IsDeploy = false;
 
     CFE_SRL_ApiGpioSet(Out, true);
 
     do { // Watch the input value, during the Output is `HIGH`
-        Status = CFE_SRL_ApiGpioGet(In);
-        if (Status == 0)  {
+        Status = CFE_SRL_ApiGpioGet(In, &IsDeploy);
+        if (Status == CFE_SUCCESS && IsDeploy == false)  { // `0`(`false`) means Deployed
             // If deployed, stop burn & break the loof
             SP_AppData.BcnTlm.IsDeploy = true;
             CFE_SRL_ApiGpioSet(Out, false);
-            break; 
+            break;
         }
+        CFE_SRL_ApiGpioGet(Out, &OutLevel); // Get Output Level. If out level is low, stop the loop.
         OS_TaskDelay(SP_DEPLOY_TASK_DELAY);
-    } while (CFE_SRL_ApiGpioGet(Out) == 1);
+    } while (OutLevel == true && IsDeploy == true); // `1`(`true`) means NOT Deployed
     /**
      * If GPIO lines changed to low, stop the loop
      * By Halt RTS or GS command

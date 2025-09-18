@@ -108,21 +108,20 @@ void STRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 
        case STRX_RESET_APP_CMD_COUNTERS_CC:
            if (STRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STRX_ResetAppCmdCountersCmd_t))) 
-           {
-              STRX_ResetAppCmdCountersCmd((const STRX_ResetAppCmdCountersCmd_t *)SBBufPtr);
-           }
+            {
+                STRX_ResetAppCmdCountersCmd((const STRX_ResetAppCmdCountersCmd_t *)SBBufPtr);
+            }
            break;
 
         case STRX_RESET_DEVICE_CMD_COUNTERS_CC:
            if (STRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STRX_ResetDeviceCmdCountersCmd_t))) 
-           {
-              STRX_ResetDeviceCmdCountersCmd((const STRX_ResetDeviceCmdCountersCmd_t *)SBBufPtr);
-           }
+            {
+                STRX_ResetDeviceCmdCountersCmd((const STRX_ResetDeviceCmdCountersCmd_t *)SBBufPtr);
+            }
            break;
 
         case STRX_GNDWDT_CLEAR_CC:
         {
-
             if (STRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STRX_NoArgsCmd_t)))
             {
                 STRX_GndwdtClearCmd();
@@ -132,7 +131,6 @@ void STRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 
         case STRX_REBOOT_CC:
         {
-
             if (STRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STRX_NoArgsCmd_t)))
             {
                 STRX_RebootCmd();
@@ -158,7 +156,7 @@ void STRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             break;
         }
 
-          case STRX_RXCONF_SET_FREQ_CC:
+        case STRX_RXCONF_SET_FREQ_CC:
         {
 
             if (STRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STRX_U32ArgsCmd_t)))
@@ -168,7 +166,7 @@ void STRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             break;
         }
 
-          case STRX_TXCONF_SET_FREQ_CC:
+        case STRX_TXCONF_SET_FREQ_CC:
         {
 
             if (STRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STRX_U32ArgsCmd_t)))
@@ -300,7 +298,7 @@ void STRX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 
         }
 
-          case STRX_TXCONF_GET_FREQ_CC:
+        case STRX_TXCONF_GET_FREQ_CC:
         {
 
             if (STRX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STRX_NoArgsCmd_t)))
@@ -500,9 +498,6 @@ void STRX_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
                             sizeof(STRX_ReportTlm_t));
             CFE_SB_TimeStampMsg(CFE_MSG_PTR(STRX_AppData.RptPkt.TelemetryHeader));
             CFE_SB_TransmitMsg(CFE_MSG_PTR(STRX_AppData.RptPkt.TelemetryHeader), true);
-
-            break;
-
 
             break;
     }

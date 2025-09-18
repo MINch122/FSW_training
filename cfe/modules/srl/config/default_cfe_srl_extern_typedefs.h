@@ -6,86 +6,21 @@
  *
  * Declarations and prototypes for cfe_srl_extern_typedefs module
  */
-
 #include "common_types.h"
 #include "cfe_mission_cfg.h"
 
-/* Foward declaration of struct */
-typedef struct CFE_SRL_IO_Handle_s    CFE_SRL_IO_Handle_t;
-typedef struct CFE_SRL_IO_Param_s     CFE_SRL_IO_Param_t;
-
-typedef int32 (*CFE_SRL_Write_Function_t)(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Param);
-typedef int32 (*CFE_SRL_Read_Function_t)(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Param);
-
-typedef struct {
-    CFE_SRL_Write_Function_t TxFunc;
-    CFE_SRL_Read_Function_t RxFunc;
-} CFE_SRL_Function_t;
-
-
-struct CFE_SRL_IO_Handle_s {
-    int FD;
-    int __errno;
-    uint16_t TxCount;
-    uint16_t RxCount;
-    uint8_t TxErrCnt;
-    uint8_t RxErrCnt;
-    /**
-     * I/O function for each handle
-     */
-    CFE_SRL_Function_t Func;
-};
-
-struct CFE_SRL_IO_Param_s {
-    /* Pointer of Tx Data buffer */
-    void *TxData;
-    /* Size of Tx Data */
-    size_t TxSize;
-    /* Pointer of Rx Data buffer - No need for Write */
-    void *RxData;
-    /* Size of Rx Size - No need for Write */
-    size_t RxSize;
-    /**
-     * Used for ApiRead - Not used in I2C, SPI
-     * Unit : milli-second
-     */
-    uint32_t Timeout;
-    /**
-     * Used for I2C, CAN
-     * I2C : Slave Addr
-     * CAN : CAN frame ID
-     */
-    uint32_t Addr;
-    /**
-     * Used for ApiRead - Not used in I2C, SPI
-     * The parameter determine the **time interval** between `Write` -> `Read`
-     * Unit : micro-second
-     */
-    uint32_t Interval;
-
-    /**
-     * Read Bytes from ApiRead - Not used in I2C, SPI
-     */
-    ssize_t ReadBytes;
-};
-
-
-
-typedef struct {
-    struct gpiod_chip *Chip;
-    struct gpiod_line *Line;
-    bool IsInit;
-} CFE_SRL_GPIO_Handle_t;
-
+#include "iodriver_serial_io.h"
 
 /**
- * Module internal CSP node configuration sturcture
+ * Re-definition of PSP iodriver serial transfer param struct
+ * Higher layer should use the "re-defined" struct (i.e. `CFE_SRL_IO_Param_t`)
  */
-typedef struct {
-    uint8_t Priority;
-    uint32_t Timeout;
-    uint32_t Options;
-} CFE_SRL_CSP_Node_Config_t;
+typedef CFE_PSP_IODriver_SerialXferParam_t    CFE_SRL_IO_Param_t;
 
+/**
+ * Re-definition of PSP iodriver serial config struct
+ * Higher Layer should use the "re-defined" struct 
+ */
+typedef CFE_PSP_IODriver_Serial_cfg_t         CFE_SRL_IO_Config_t;
 
 #endif /* CFE_SRL_EXTERN_TYPEDEF_H */

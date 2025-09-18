@@ -14,9 +14,8 @@
 #ifndef CFE_SRL_H
 #define CFE_SRL_H
 
+#include "common_types.h"
 #include "cfe_srl_api_typedefs.h"
-#include "cfe_srl_mission_cfg.h"
-
 
 /// @brief Get IO Handle pointer. **Use returned handle pointer to other API function**
 /// @param Index Index of Handle table (Refer enum `CFE_SRL_Handle_Indexer_t`)
@@ -51,16 +50,17 @@ int32 CFE_SRL_ApiClose(CFE_SRL_IO_Handle_t * Handle);
 
 
 /// @brief Set specified GPIO PIN to HIGH or LOW
-/// @param Handle `CFE_SRL_GPIO_Handle_t` pointer
-/// @param Value `true` for HIGH, `false` for LOW
+/// @param Handle [in]`CFE_SRL_GPIO_Handle_t` pointer
+/// @param Value [in]`true` for HIGH, `false` for LOW
 /// @return Only `CFE_SUCCESS`(which is `0`) is success.
 int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value);
 
 
-/// @brief Get specified GPIO PIN in/out value
-/// @param Handle `CFE_SRL_GPIO_Handle_t` pointer
-/// @return If success, `0` for Low, `1` for High. Anything else is error.
-int32 CFE_SRL_ApiGpioGet(CFE_SRL_GPIO_Handle_t *Handle);
+/// @brief Get specified GPIO PIN input value
+/// @param Handle [in]`CFE_SRL_GPIO_Handle_t` pointer
+/// @param Value [out] `0` for Low, `1` for High. This value is only valid in success.
+/// @return Only `CFE_SUCCESS`(which is `0`) is success. Anything else is error.
+int32 CFE_SRL_ApiGpioGet(CFE_SRL_GPIO_Handle_t *Handle, bool *Value);
 
 
 /// @brief CSP Transaction API function via CSP CAN
