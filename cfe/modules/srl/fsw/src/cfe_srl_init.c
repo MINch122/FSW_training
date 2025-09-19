@@ -4,7 +4,6 @@
  * Required header files
  */
 #include "cfe_srl_module_all.h"
-
 #include "cfe_psp.h"
 #include "iodriver_base.h"
 #include "iodriver_discrete_io.h"
@@ -104,16 +103,16 @@ int32 CFE_SRL_EarlyInit(void) {
 	CFE_ES_WriteToSysLog("%s: RS422 Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_RS422_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_RS422_HANDLE_INDEXER])->DevName);
 
 	/* socat Init */
-	Config.cfg.uart = (CFE_PSP_UART_cfg_t) {.baud = 115200,
-            							    .databits = 8,
-            							    .parity = 0,
-            							    .stopbits = 1};
-	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_SOCAT_HANDLE_INDEXER], "socat", "/dev/pts/5", SRL_DEVTYPE_UART, CFE_SRL_SOCAT_HANDLE_INDEXER, &Config);
-	if (Status != CFE_SUCCESS) {
-		CFE_ES_WriteToSysLog("%s: socat Initialization failed! RC=%d\n", __func__, Status);
-		return CFE_SRL_SOCAT_INIT_ERR;
-	}
-	CFE_ES_WriteToSysLog("%s: socat Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_SOCAT_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_SOCAT_HANDLE_INDEXER])->DevName);
+	// Config.cfg.uart = (CFE_PSP_UART_cfg_t) {.baud = 115200,
+    //         							    .databits = 8,
+    //         							    .parity = 0,
+    //         							    .stopbits = 1};
+	// Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_SOCAT_HANDLE_INDEXER], "socat", "/dev/pts/5", SRL_DEVTYPE_UART, CFE_SRL_SOCAT_HANDLE_INDEXER, &Config);
+	// if (Status != CFE_SUCCESS) {
+	// 	CFE_ES_WriteToSysLog("%s: socat Initialization failed! RC=%d\n", __func__, Status);
+	// 	// return CFE_SRL_SOCAT_INIT_ERR;
+	// }
+	// CFE_ES_WriteToSysLog("%s: socat Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_SOCAT_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_SOCAT_HANDLE_INDEXER])->DevName);
 
 	/* GPIO SP_IN Init */
 	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_SP_IN_GPIO_INDEXER], "/dev/gpiochip2", 4, "SP_IN", 0, false);
@@ -122,11 +121,18 @@ int32 CFE_SRL_EarlyInit(void) {
 		// return CFE_SRL_SP_IN_INIT_ERR;
 	}
 
-	/* GPIO SP_OUT Init */
-	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_SP_OUT_GPIO_INDEXER], "/dev/gpiochip2", 3, "SP_OUT", 0, true);
+	/* GPIO SP_OUT1 Init */
+	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_SP_OUT1_GPIO_INDEXER], "/dev/gpiochip2", 3, "SP_OUT1", 0, true);
 	if (Status != CFE_SUCCESS) {
-		CFE_ES_WriteToSysLog("%s: GPIO SP_OUT Initialization failed! RC=%d\n", __func__, Status);
-		// return CFE_SRL_SP_OUT_INIT_ERR;
+		CFE_ES_WriteToSysLog("%s: GPIO SP_OUT1 Initialization failed! RC=%d\n", __func__, Status);
+		// return CFE_SRL_SP_OUT1_INIT_ERR;
+	}
+
+	/* GPIO SP_OUT2 Init */
+	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_SP_OUT2_GPIO_INDEXER], "/dev/gpiochip0", 28, "SP_OUT2", 0, true);
+	if (Status != CFE_SUCCESS) {
+		CFE_ES_WriteToSysLog("%s: GPIO SP_OUT2 Initialization failed! RC=%d\n", __func__, Status);
+		// return CFE_SRL_SP_OUT2_INIT_ERR;
 	}
 
 	/* GPIO ADCS_EN Init */
@@ -134,13 +140,6 @@ int32 CFE_SRL_EarlyInit(void) {
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: GPIO ADCS_EN Initialization failed! RC=%d\n", __func__, Status);
 		// return CFE_SRL_ADCS_EN_INIT_ERR;
-	}
-
-	/* GPIO ADCS_BOOT Init */
-	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_ADCS_BOOT_GPIO_INDEXER], "/dev/gpiochip0", 28, "ADCS_BOOT", 0, true);
-	if (Status != CFE_SUCCESS) {
-		CFE_ES_WriteToSysLog("%s: GPIO ADCS_BOOT Initialization failed! RC=%d\n", __func__, Status);
-		// return CFE_SRL_ADCS_BOOT_INIT_ERR;
 	}
 
 	/* GPIO THRUSTER Init */

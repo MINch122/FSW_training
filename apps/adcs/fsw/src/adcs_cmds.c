@@ -167,37 +167,37 @@ CFE_Status_t ADCS_EN_LowCmd(void){
 }
 
 CFE_Status_t ADCS_Boot_HighCmd(void){
-    CFE_Status_t               status;
+    // CFE_Status_t               status;
 
-    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_BOOT_GPIO_INDEXER);
-    status = CFE_SRL_ApiGpioSet(Handle, true);
+    // CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_BOOT_GPIO_INDEXER);
+    // status = CFE_SRL_ApiGpioSet(Handle, true);
 
-    ADCS_HandleReport(status, ADCS_GPIO_BOOT_HIGH_CC, NULL, 0);
+    // ADCS_HandleReport(status, ADCS_GPIO_BOOT_HIGH_CC, NULL, 0);
 
-    if (status != CFE_SUCCESS)
-    {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Enable Boot pin: 0x%08lx", (unsigned long)status);
-        return status;
-    }
-    OS_printf("GPIO BOOT high success.\n");
+    // if (status != CFE_SUCCESS)
+    // {
+    //     CFE_ES_WriteToSysLog("Adcs App: Fail to Enable Boot pin: 0x%08lx", (unsigned long)status);
+    //     return status;
+    // }
+    // OS_printf("GPIO BOOT high success.\n");
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t ADCS_Boot_LowCmd(void){
-    CFE_Status_t               status;
+    // CFE_Status_t               status;
 
-    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_BOOT_GPIO_INDEXER);
-    status = CFE_SRL_ApiGpioSet(Handle, false);
+    // CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_BOOT_GPIO_INDEXER);
+    // status = CFE_SRL_ApiGpioSet(Handle, false);
 
-    ADCS_HandleReport(status, ADCS_GPIO_BOOT_LOW_CC, NULL, 0);
+    // ADCS_HandleReport(status, ADCS_GPIO_BOOT_LOW_CC, NULL, 0);
 
-    if (status != CFE_SUCCESS)
-    {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Disable Boot pin: 0x%08lx", (unsigned long)status);
-        return status;
-    }
-    OS_printf("GPIO BOOT Low success.\n");
+    // if (status != CFE_SUCCESS)
+    // {
+    //     CFE_ES_WriteToSysLog("Adcs App: Fail to Disable Boot pin: 0x%08lx", (unsigned long)status);
+    //     return status;
+    // }
+    // OS_printf("GPIO BOOT Low success.\n");
 
     return CFE_SUCCESS;
 }

@@ -130,6 +130,12 @@ CFE_Status_t EPS_Init(void)
                      sizeof(EPS_AppData.HkTlm));
 
         /*
+         ** Initialize housekeeping packet (clear user data area).
+         */
+        CFE_MSG_Init(CFE_MSG_PTR(EPS_AppData.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(EPS_BCN_TLM_MID),
+                     sizeof(EPS_AppData.BcnTlm));
+
+        /*
          ** Create Software Bus message pipe.
          */
         status = CFE_SB_CreatePipe(&EPS_AppData.CommandPipe, EPS_PIPE_DEPTH, EPS_PIPE_NAME);
@@ -146,6 +152,19 @@ CFE_Status_t EPS_Init(void)
         ** Subscribe to Housekeeping request commands
         */
         status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(EPS_SEND_HK_MID), EPS_AppData.CommandPipe);
+        if (status != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(EPS_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "EPS: Error Subscribing to HK request, RC = 0x%08lX", (unsigned long)status);
+        }
+    }
+
+        if (status == CFE_SUCCESS)
+    {
+        /*
+        ** Subscribe to Housekeeping request commands
+        */
+        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(EPS_SEND_BCN_MID), EPS_AppData.CommandPipe);
         if (status != CFE_SUCCESS)
         {
             CFE_EVS_SendEvent(EPS_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,

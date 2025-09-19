@@ -73,54 +73,6 @@
             "speed": 8000000,
             "bitperword": 8
         },
-
-
-
-        {
-            "type": "gpio", 
-            "ready": true, 
-            "name":"SP_IN",
-            "DevName": "/dev/gpiochip2",
-            "line": 4,
-            "default": 0,
-            "direction": "in"
-        },
-        {
-            "type": "gpio", 
-            "ready": true, 
-            "name":"SP_OUT",
-            "DevName": "/dev/gpiochip2",
-            "line": 3,
-            "default": 0,
-            "direction": "out"
-        },
-        {
-            "type": "gpio", 
-            "ready": true, 
-            "name":"ADCS_EN",
-            "DevName": "/dev/gpiochip0",
-            "line": 29,
-            "default": 0,
-            "direction": "out"
-        },
-        {
-            "type": "gpio", 
-            "ready": true, 
-            "name":"ADCS_BOOT",
-            "DevName": "/dev/gpiochip0",
-            "line": 28,
-            "default": 0,
-            "direction": "out"
-        },
-        {
-            "type": "gpio", 
-            "ready": true, 
-            "name":"THRUSTER",
-            "DevName": "/dev/gpiochip2",
-            "line": 5,
-            "default": 0,
-            "direction": "out"
-        },
         {
             "type": "can",
             "ready": false,
@@ -143,6 +95,54 @@
             "loopback_en": false,
             "recv_own_msgs": false,
             "recv_err_frame": false
+        },
+
+
+        {
+            "type": "gpio", 
+            "ready": true, 
+            "name":"SP_IN",
+            "DevName": "/dev/gpiochip2",
+            "line": 4,
+            "default": 0,
+            "direction": "in"
+        },
+        {
+            "type": "gpio", 
+            "ready": true, 
+            "name":"SP_OUT1",
+            "DevName": "/dev/gpiochip2",
+            "line": 3,
+            "default": 0,
+            "direction": "out"
+        },
+        {
+            "type": "gpio", 
+            "ready": true, 
+            "name":"SP_OUT2",
+            "DevName": "/dev/gpiochip0",
+            "line": 28,
+            "default": 0,
+            "direction": "out"
+        },
+        {
+            "type": "gpio", 
+            "ready": true, 
+            "name":"ADCS_EN",
+            "DevName": "/dev/gpiochip0",
+            "line": 29,
+            "default": 0,
+            "direction": "out"
+        },
+        {
+            "type": "gpio", 
+            "ready": true, 
+            "name":"THRUSTER",
+            "DevName": "/dev/gpiochip2",
+            "line": 5,
+            "default": 0,
+            "direction": "out",
+            "discription": "this pin will be also used to ADCS BOOT"
         }
 
     ]

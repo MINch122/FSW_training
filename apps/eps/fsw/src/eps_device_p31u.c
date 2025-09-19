@@ -58,8 +58,12 @@ void EPS_P31U_GetDeviceBcnData(EPS_BcnTlm_Payload_t* Payload)
         Payload->wdt_gnd_time_left = hk.wdt_gnd_time_left;
         Payload->bootcause = hk.bootcause;
         Payload->battmode = hk.battmode;
-        Payload->bp4_temp[0] = hk.temp[4];
-        Payload->bp4_temp[1] = hk.temp[5];
+        Payload->bp4_temp[0] = hk.temp[4]; // add batt temp
+        Payload->bp4_temp[1] = hk.temp[5]; // add batt temp
+        OS_printf("%s Temp1 : %d || Temp2 %d\n", __func__, Payload->bp4_temp[0], Payload->bp4_temp[1]);
+        printf("output:       %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d\n",
+            Payload->output[0], Payload->output[1], Payload->output[2], Payload->output[3],
+            Payload->output[4], Payload->output[5], Payload->output[6], Payload->output[7]);
     }
     else
         err = true;
@@ -67,11 +71,13 @@ void EPS_P31U_GetDeviceBcnData(EPS_BcnTlm_Payload_t* Payload)
     ret = p31u_get_config(&conf);
     
     if (ret == P31U_OK) {
-        Payload->battheater_mode = conf.battheater_mode;
+        Payload->battheater_mode = conf.battheater_mode; // add. Indicate Auto or Manual
+        OS_printf("Battheater mode : %u\n", Payload->battheater_mode);
     }
     else
         err = true;
 
-    if (err) EPS_AppData.Counters.GetBcnErrCounter++;
+    if (err) {OS_printf("%s Fail.\n", __func__); EPS_AppData.Counters.GetBcnErrCounter++;}
 }
+
 

@@ -31,6 +31,54 @@
 
 #include "p31u.h"
 
+static void print_hk_all(const void* all)
+{
+    const p31u_hk_t* hk = all;
+    printf("vboost[mV]:   %4d, %4d, %4d\n",
+            hk->vboost[0], hk->vboost[1], hk->vboost[2]);
+    printf("vbatt[mV]:    %4d\n", hk->vbatt);
+    printf("curin[mA]:    %4d, %4d, %4d\n",
+            hk->curin[0], hk->curin[1], hk->curin[2]);
+    printf("cursun[mA]:   %4d\n", hk->cursun);
+    printf("cursys[mA]:   %4d\n", hk->cursys);
+    printf("reserved1:    %4d\n", hk->reserved1);
+    printf("curout[mA]:   %4d, %4d, %4d, %4d, %4d, %4d\n",
+            hk->curout[0], hk->curout[1], hk->curout[2],
+            hk->curout[3], hk->curout[4], hk->curout[5]);
+    printf("output:       %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d\n",
+            hk->output[0], hk->output[1], hk->output[2], hk->output[3],
+            hk->output[4], hk->output[5], hk->output[6], hk->output[7]);
+    printf("out_on_delta[s]: %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d\n", 
+            hk->output_on_delta[0], hk->output_on_delta[1],
+            hk->output_on_delta[2], hk->output_on_delta[3],
+            hk->output_on_delta[4], hk->output_on_delta[5],
+            hk->output_on_delta[6], hk->output_on_delta[7]);
+    printf("out_off_delta[s]:  %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d\n",
+            hk->output_off_delta[0], hk->output_off_delta[1],
+            hk->output_off_delta[2], hk->output_off_delta[3],
+            hk->output_off_delta[4], hk->output_off_delta[5],
+            hk->output_off_delta[6], hk->output_off_delta[7]);
+    printf("latchup:      %4d, %4d, %4d, %4d, %4d, %4d\n",
+            hk->latchup[0], hk->latchup[1], hk->latchup[2],
+            hk->latchup[3], hk->latchup[4], hk->latchup[5]);
+    printf("wdt_i2c_time_left[s]: %4u\n", hk->wdt_i2c_time_left);
+    printf("wdt_gnd_time_left[s]: %4u\n", hk->wdt_gnd_time_left);
+    printf("wdt_csp_pings_left:   %4d, %4d\n",
+            hk->wdt_csp_pings_left[0], hk->wdt_csp_pings_left[1]);
+    printf("counter_wdt_i2c:      %4u\n", hk->counter_wdt_i2c);
+    printf("counter_wdt_gnd:      %4u\n", hk->counter_wdt_gnd);
+    printf("counter_wdt_csp:      %4u, %4u\n",
+            hk->counter_wdt_csp[0], hk->counter_wdt_csp[1]);
+    printf("counter_boot:         %4u\n", hk->counter_boot);
+    printf("temp[degC]:   %2d, %2d, %2d, %2d, %2d, %2d\n",
+            hk->temp[0], hk->temp[1], hk->temp[2],
+            hk->temp[3],hk->temp[4], hk->temp[5]);
+    printf("bootcause:    %4d\n", hk->bootcause);
+    printf("battmode:     %4d\n", hk->battmode);
+    printf("pptmode:      %4d\n", hk->pptmode);
+}
+
+
 static void EPS_SendReport(const void* cmd,
                            const void* data,
                            uint16 dataSize,
@@ -45,7 +93,7 @@ static void EPS_SendReport(const void* cmd,
 
     CFE_MSG_Init(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader),
                  CFE_SB_ValueToMsgId(EPS_REPORT_MID), // todo: define eps report mid.
-                 sizeof(EPS_AppData.Report) + dataSize);
+                 sizeof(EPS_AppData.Report));
     EPS_AppData.Report.Payload.MsgID = CFE_SB_MsgIdToValue(cmdMid);
     EPS_AppData.Report.Payload.CommandCode = cmdCode;
     EPS_AppData.Report.Payload.ReturnType = retType;
@@ -152,6 +200,7 @@ void EPS_P31U_GetHkAllCmd(const EPS_P31U_GetHkAllCmd_t *Msg)
     ret = p31u_gethk_all(&hk);
     if (ret != P31U_OK)
         EPS_AppData.Counters.ErrCounter++;
+    print_hk_all(&hk);
 
     EPS_SendReport(Msg, &hk, sizeof(hk), ret, RPT_RETTYPE_HW);
 }

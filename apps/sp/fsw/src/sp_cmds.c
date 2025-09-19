@@ -56,7 +56,7 @@ CFE_Status_t SP_DeployCmd(const SP_DeployCmd_t *Msg){
 
     int32 Status;
     
-    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_OUT_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(Msg->Payload.SP ? CFE_SRL_SP_OUT1_GPIO_INDEXER : CFE_SRL_SP_OUT2_GPIO_INDEXER);
 
     Status = CFE_SRL_ApiGpioSet(Handle, Msg->Payload.deploy);
     if (Status != CFE_SUCCESS){
@@ -114,12 +114,17 @@ CFE_Status_t SP_StartDeployTaskCmd(const SP_StartDeployTaskCmd_t *Msg) {
 
 
 void SP_DeployTask(void) {
+    /**
+     * To Do
+     * SP output line becomes two.
+     * Deploy task should be modified to control each output line.
+     */
     SP_AppData.BcnTlm.IsRunning = true;
     SP_AppData.BcnTlm.MaxTry ++;
 
 
 /*------------------Start of Task-------------------*/
-    CFE_SRL_GPIO_Handle_t *Out = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_OUT_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *Out = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_OUT1_GPIO_INDEXER);
     CFE_SRL_GPIO_Handle_t *In = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
     int32 Status;
     bool OutLevel;
