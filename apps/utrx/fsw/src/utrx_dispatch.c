@@ -316,6 +316,8 @@ void UTRX_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 {
     CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
 
+    CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
+
     switch (CFE_SB_MsgIdToValue(MsgId))
     {
         case UTRX_CMD_MID:

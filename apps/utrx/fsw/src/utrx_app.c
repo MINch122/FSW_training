@@ -146,6 +146,19 @@ CFE_Status_t UTRX_AppInit(void)
     if (status == CFE_SUCCESS)
     {
         /*
+        ** Subscribe to Beacon request commands
+        */
+        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(UTRX_SEND_BCN_MID), UTRX_AppData.CommandPipe);
+        if (status != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(UTRX_SUB_BCN_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "Utrx App: Error Subscribing to BCN request, RC = 0x%08lX", (unsigned long)status);
+        }
+    }
+
+    if (status == CFE_SUCCESS)
+    {
+        /*
         ** Subscribe to Housekeeping request commands
         */
         status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(UTRX_SEND_HK_MID), UTRX_AppData.CommandPipe);

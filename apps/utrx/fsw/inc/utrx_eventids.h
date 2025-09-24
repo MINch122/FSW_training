@@ -39,6 +39,7 @@ typedef enum{
     UTRX_PIPE_ERR_EID      ,
     UTRX_VALUE_INF_EID     ,
     UTRX_CR_PIPE_ERR_EID   ,
+    UTRX_SUB_BCN_ERR_EID   ,
     UTRX_SUB_HK_ERR_EID    ,
     UTRX_SUB_CMD_ERR_EID   ,
     UTRX_TABLE_REG_ERR_EID ,

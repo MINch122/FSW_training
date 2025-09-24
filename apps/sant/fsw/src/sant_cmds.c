@@ -240,6 +240,8 @@ CFE_Status_t SANT_GetStatusCmd(const SANT_GetStatusCmd_t *Msg)
                           "Get release status failed, gs_err=0x%02X", gs_st);
         SANT_Data.ErrCounter++;
     }
+    else OS_printf("State: %u || Status: %u || Burn time left: %u || Burn tries: %u\n",
+                    release_status.state, release_status.status, release_status.burn_time_left, release_status.burn_tries);
 
     return gs_st;
 }
