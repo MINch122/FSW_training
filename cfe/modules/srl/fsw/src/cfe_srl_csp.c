@@ -103,6 +103,12 @@ int CFE_SRL_InitCSP(void) {
     // };
     csp_conf_t CspConfig;
     CFE_SRL_ConfigHost(&CspConfig);
+
+    /**
+     * Register Node Configuration to each Node.
+     * If Node appended(or revised), insert(or revise) the function.
+     */
+    CFE_SRL_AllNodeConfigCSP();
     
     Status = csp_init(&CspConfig);
     if (Status != CSP_ERR_NONE) {
@@ -119,12 +125,6 @@ int CFE_SRL_InitCSP(void) {
         return CFE_SRL_CSP_ROUTE_INIT_ERR;
     }
 
-
-    /**
-     * Register Node Configuration to each Node.
-     * If Node appended(or revised), insert(or revise) the function.
-     */
-    CFE_SRL_AllNodeConfigCSP();
     // CFE_SRL_NodeConfigCSP(CSP_NODE_EPS, CSP_PRIO_NORM, CSP_TIMEOUT(1), CSP_O_CRC32);
     // CFE_SRL_NodeConfigCSP(CSP_NODE_UTRX, CSP_PRIO_NORM, CSP_TIMEOUT(1), CSP_O_CRC32);
     // CFE_SRL_NodeConfigCSP(CSP_NODE_STRX, CSP_PRIO_NORM, CSP_TIMEOUT(1), CSP_O_CRC32);

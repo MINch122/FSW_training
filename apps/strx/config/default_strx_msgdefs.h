@@ -77,6 +77,7 @@ typedef struct
     uint8_t rxmode;
     uint16_t gnd_wdt_cnt;
     uint32_t gnd_wdt_left;
+    int16 TempBrd;
     
 }__attribute__((packed)) STRX_BcnTlm_Payload_t;
 

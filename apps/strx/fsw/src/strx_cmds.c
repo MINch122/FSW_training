@@ -186,6 +186,9 @@ void STRX_ReportBeacon(void)
     if (CFE_PUT_VALUE_TO_STRUCT(uint32, &bcn->gnd_wdt_left, STRX_TLM_GET_GND_WDT_LEFT, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
         STRX_AppData.AppCnt.DeviceErrCounter++;
     }
+    if (CFE_PUT_VALUE_TO_STRUCT(int16, &bcn->TempBrd, STRX_TLM_GetTempBrd, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
+        STRX_AppData.AppCnt.DeviceErrCounter++;
+    }
     // if (STRX_TLM_GetLastRssi(&bcn->LastRssi)      != DEVICE_SUCCESS) STRX_AppData.AppCnt.DeviceErrCounter++;
     // if (STRX_TLM_GetBootCount(&bcn->BootCount)    != DEVICE_SUCCESS) STRX_AppData.AppCnt.DeviceErrCounter++;
     // if (STRX_TLM_GetBootCause(&bcn->BootCause)    != DEVICE_SUCCESS) STRX_AppData.AppCnt.DeviceErrCounter++;

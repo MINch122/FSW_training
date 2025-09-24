@@ -213,6 +213,9 @@ void UTRX_ReportBeacon(void)
     if (CFE_PUT_VALUE_TO_STRUCT(uint32, &bcn->BootCause, UTRX_TLM_GetBootCause, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
         errmask |= (1u << 2);
     }
+    if (CFE_PUT_VALUE_TO_STRUCT(int16, &bcn->TempBrd, UTRX_TLM_GetTempBrd, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
+        errmask |= (1u << 3);
+    }
 
   if (errmask != 0u) {
     OS_printf("[UTRX][BCN] collected with errors mask=0x%02X\n",

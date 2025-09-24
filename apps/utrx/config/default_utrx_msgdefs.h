@@ -54,6 +54,7 @@ typedef struct
     uint8 ActiveConf; //0x0018
     uint16 BootCount; //0x0020
     uint32 BootCause; //0x0024
+    int16 TempBrd;
     
 }__attribute__((packed)) UTRX_BcnTlm_Payload_t;
 
