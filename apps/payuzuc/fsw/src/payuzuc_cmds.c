@@ -494,7 +494,7 @@ CFE_Status_t PAYUZUC_DownloadAllCmd(const PAYUZUC_DownloadAllCmd_t *Msg) {
         Params.RxData = &RxBuf;
         Params.RxSize = Msg->Payload.PRE ? PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE : PAYUZUC_DOWNLOAD_TLM_SIZE;
         Params.Timeout = 200;
-        Params.Interval = 1000*70; // Empirical value
+        Params.Interval = 80; // Empirical value 70ms, Margin for stability
 
         Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
         if (Status != CFE_SUCCESS) {

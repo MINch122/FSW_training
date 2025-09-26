@@ -277,7 +277,7 @@ void PAYUZUC_Transaction(void *Tx, void *Rx, uint8_t CC) {
     Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
     Params.RxData = Rx;
     Params.RxSize = 3; // Read Start byte, Ack, Mode
-    Params.Timeout = 100;
+    Params.Timeout = 1000;
 
     // Read Start byte, Ack, Mode
     Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);

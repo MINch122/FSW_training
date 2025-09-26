@@ -666,6 +666,7 @@ CFE_Status_t UANT_GetDeploymentStatus(const UANT_ISIS_ReportDeploymentStatusCmd_
     }
     else
     {
+        OS_printf("Status : 0x%04X\n", deploy_status);
         UANT_Data.CmdCounter++;
         
     }
