@@ -155,6 +155,19 @@ CFE_Status_t STRX_AppInit(void)
                               "Strx App: Error Subscribing to HK request, RC = 0x%08lX", (unsigned long)status);
         }
     }
+
+    if (status == CFE_SUCCESS)
+    {
+        /*
+        ** Subscribe to Housekeeping request commands
+        */
+        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(STRX_SEND_BCN_MID), STRX_AppData.CommandPipe);
+        if (status != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(STRX_SUB_BCN_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "Strx App: Error Subscribing to BCN request, RC = 0x%08lX", (unsigned long)status);
+        }
+    }
   
     if (status == CFE_SUCCESS)
     {

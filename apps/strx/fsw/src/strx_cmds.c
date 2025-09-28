@@ -189,13 +189,6 @@ void STRX_ReportBeacon(void)
     if (CFE_PUT_VALUE_TO_STRUCT(int16, &bcn->TempBrd, STRX_TLM_GetTempBrd, DEVICE_SUCCESS) != DEVICE_SUCCESS) {
         STRX_AppData.AppCnt.DeviceErrCounter++;
     }
-    // if (STRX_TLM_GetLastRssi(&bcn->LastRssi)      != DEVICE_SUCCESS) STRX_AppData.AppCnt.DeviceErrCounter++;
-    // if (STRX_TLM_GetBootCount(&bcn->BootCount)    != DEVICE_SUCCESS) STRX_AppData.AppCnt.DeviceErrCounter++;
-    // if (STRX_TLM_GetBootCause(&bcn->BootCause)    != DEVICE_SUCCESS) STRX_AppData.AppCnt.DeviceErrCounter++;
-    // if (STRX_TLM_GET_RXMODE(&bcn->rxmode)         != DEVICE_SUCCESS) STRX_AppData.AppCnt.DeviceErrCounter++;
-    // if (STRX_TLM_GET_GND_WDT_CNT(&bcn->gnd_wdt_cnt)   != DEVICE_SUCCESS) STRX_AppData.AppCnt.DeviceErrCounter++;
-    // if (STRX_TLM_GET_GND_WDT_LEFT(&bcn->gnd_wdt_left) != DEVICE_SUCCESS) STRX_AppData.AppCnt.DeviceErrCounter++;
-
 
     OS_printf("[STRX] RX FREQ: %u\n", bcn->BootCount);
     OS_printf("[STRX] TX FREQ: %u\n", bcn->BootCause);
