@@ -15,6 +15,8 @@
 #include "uant_msgids.h"
 #include "utrx_msgids.h"
 
+#include "ftp_msgids.h"
+
 
 
 
@@ -66,8 +68,8 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
         .Entry.IsCritical = RPT_NOT_CRITICAL},
         
     /* Entry 9 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(FTP_REPORT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 10 */

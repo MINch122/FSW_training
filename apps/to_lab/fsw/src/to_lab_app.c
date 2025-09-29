@@ -67,7 +67,7 @@ void TO_LAB_AppMain(void)
     {
         CFE_ES_PerfLogExit(TO_LAB_MAIN_TASK_PERF_ID);
 
-        OS_TaskDelay(TO_LAB_TASK_MSEC);
+        OS_TaskDelay(10);
 
         CFE_ES_PerfLogEntry(TO_LAB_MAIN_TASK_PERF_ID);
 

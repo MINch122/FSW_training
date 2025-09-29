@@ -34,5 +34,7 @@
 #../../../../apps/utrx/config/default_utrx_msgstruct.h
 #../../../../apps/adcs/config/default_adcs_fcncodes.h
 #../../../../apps/adcs/config/default_adcs_msgdefs.h
-../../../../apps/strx/config/default_strx_fcncodes.h
-../../../../apps/strx/config/default_strx_msgstruct.h
+#../../../../apps/strx/config/default_strx_fcncodes.h
+#../../../../apps/strx/config/default_strx_msgstruct.h
+../../../../apps/ftp/config/default_ftp_fcncodes.h
+../../../../apps/ftp/config/default_ftp_msgdefs.h

@@ -152,7 +152,11 @@
         "cfe_msg_api_typedefs.h": "c",
         "cfe_resourceid_api_typedefs.h": "c",
         "cfe_tbl.h": "c",
-        "raw.h": "c"
+        "raw.h": "c",
+        "fm_msgids.h": "c",
+        "osapi-filesys.h": "c",
+        "ftp_utils.h": "c",
+        "ftp_task.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }
