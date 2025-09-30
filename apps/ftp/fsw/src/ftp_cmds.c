@@ -89,7 +89,8 @@ CFE_Status_t FTP_SendFileCmd(const FTP_SendFileCmd_t *Msg) {
     OS_printf("Open Success.\n");
 
     OsStatus = OS_lseek(FTP_Data.FileId, Payload.StartByte, OS_SEEK_SET);
-    if (OsStatus != OS_SUCCESS) {
+    if (OsStatus < OS_SUCCESS) {
+        OS_printf("Os Status: %d\n", OsStatus);
         FTP_HandleReport(OsStatus, RPT_RETTYPE_OSAL, FTP_SEND_FILE_CC, NULL, 0);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
@@ -130,7 +131,7 @@ CFE_Status_t FTP_SendFileCmd(const FTP_SendFileCmd_t *Msg) {
             return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
         }
         else {
-            OS_printf("Read Success. Read Bytes: %d\n", BytesRead);
+            OS_printf("Sequence Count: %u || BytesRead: %d\n", SeqCnt, BytesRead);
             /* Send data to GS */
             if (SeqCnt == 0) {
                 CFE_MSG_SetSegmentationFlag(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), CFE_MSG_SegFlag_First);
@@ -145,18 +146,17 @@ CFE_Status_t FTP_SendFileCmd(const FTP_SendFileCmd_t *Msg) {
 
             /* Test using TO Lab */
             CFE_SB_TimeStampMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader));
-            CFE_SB_TransmitMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), true);
+            CFE_SB_TransmitMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), false);
             /* End of To test */
 
             CFE_SRL_ApiTransactionCSP(CSP_NODE_GS_KISS, 14, &FTP_Data.Chunk, sizeof(FTP_Data.Chunk), NULL, 0);
+            
+            memset(RdBuf, 0, sizeof(RdBuf));
+            SeqCnt ++;
         }
-        memset(RdBuf, 0, sizeof(RdBuf));
-        SeqCnt ++;
         OS_TaskDelay(FTP_CHUNK_SLEEP_MS);
 
         SendBytes += BytesRead;
-
-        OS_printf("Sequence Count: %u || BytesRead: %d\n", SeqCnt, BytesRead);
     }
     CFE_MSG_SetSegmentationFlag(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), CFE_MSG_SegFlag_Last);
     CFE_MSG_SetSequenceCount(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), SeqCnt);
@@ -164,7 +164,7 @@ CFE_Status_t FTP_SendFileCmd(const FTP_SendFileCmd_t *Msg) {
 
     /* Test using TO Lab */
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), true);
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), false);
     /* End of To test */
 
     CFE_SRL_ApiTransactionCSP(CSP_NODE_GS_KISS, 14, &FTP_Data.Chunk, sizeof(FTP_Data.Chunk), NULL, 0);
