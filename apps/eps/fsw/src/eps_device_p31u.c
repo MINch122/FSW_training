@@ -61,7 +61,7 @@ void EPS_P31U_GetDeviceBcnData(EPS_BcnTlm_Payload_t* Payload)
         Payload->bp4_temp[0] = hk.temp[4]; // add batt temp
         Payload->bp4_temp[1] = hk.temp[5]; // add batt temp
         OS_printf("%s Temp1 : %d || Temp2 %d\n", __func__, Payload->bp4_temp[0], Payload->bp4_temp[1]);
-        printf("output:       %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d\n",
+        OS_printf("output:       %2d, %2d, %2d, %2d, %2d, %2d, %2d, %2d\n",
             Payload->output[0], Payload->output[1], Payload->output[2], Payload->output[3],
             Payload->output[4], Payload->output[5], Payload->output[6], Payload->output[7]);
     }

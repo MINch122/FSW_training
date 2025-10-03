@@ -37,20 +37,21 @@
 #define SANT_VALUE_INF_EID     8
 #define SANT_CR_PIPE_ERR_EID   9
 #define SANT_SUB_HK_ERR_EID    10
-#define SANT_SUB_CMD_ERR_EID   11
-#define SANT_TABLE_REG_ERR_EID 12
+#define SANT_SUB_BCN_ERR_EID   11
+#define SANT_SUB_CMD_ERR_EID   12
+#define SANT_TABLE_REG_ERR_EID 13
 
 /* ───── Error Events: Command Execution Failures ───── */
-#define SANT_I2C_XFER_ERR_EID      13  /* I2C 트랜잭션 실패 */
-#define SANT_BURN_ERR_EID          14  /* Burn 명령 실패 */
-#define SANT_STOP_BURN_ERR_EID     15  /* Stop-burn 실패 */
-#define SANT_GET_BOARD_ERR_EID     16  /* Board-status 조회 실패 */
-#define SANT_GET_TEMP_ERR_EID      17  /* Temperature 조회 실패 */
-#define SANT_GET_STATUS_ERR_EID    18  /* Release-status 조회 실패 */
-#define SANT_GET_BACKUP_ERR_EID    19  /* Backup-status 조회 실패 */
-#define SANT_GET_SETTINGS_ERR_EID  20  /* Backup-settings 읽기 실패 */
-#define SANT_SET_SETTINGS_ERR_EID  21  /* Backup-settings 쓰기 실패 */
-#define SANT_I2C_INIT_ERR_EID      22
+#define SANT_I2C_XFER_ERR_EID      14  /* I2C 트랜잭션 실패 */
+#define SANT_BURN_ERR_EID          15  /* Burn 명령 실패 */
+#define SANT_STOP_BURN_ERR_EID     16  /* Stop-burn 실패 */
+#define SANT_GET_BOARD_ERR_EID     17  /* Board-status 조회 실패 */
+#define SANT_GET_TEMP_ERR_EID      18  /* Temperature 조회 실패 */
+#define SANT_GET_STATUS_ERR_EID    19  /* Release-status 조회 실패 */
+#define SANT_GET_BACKUP_ERR_EID    20  /* Backup-status 조회 실패 */
+#define SANT_GET_SETTINGS_ERR_EID  21  /* Backup-settings 읽기 실패 */
+#define SANT_SET_SETTINGS_ERR_EID  22  /* Backup-settings 쓰기 실패 */
+#define SANT_I2C_INIT_ERR_EID      23
 
 
 #endif /* SANT_EVENTS_H */

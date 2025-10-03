@@ -207,7 +207,7 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
 
     /*   9 : PAYUZUC    */
     {
-        CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_HK_TLM_MID),
+        CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
         BCN_OFFSET_9,

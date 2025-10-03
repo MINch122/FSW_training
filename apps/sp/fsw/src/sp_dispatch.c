@@ -84,7 +84,7 @@ void SP_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr){
             break;
 
         case SP_SEND_BCN_MID:
-        
+            SP_SendBcnCmd((const SP_SendBcnCmd_t *)SBBufPtr);
             break;
             
         default :

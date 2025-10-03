@@ -7,14 +7,14 @@ cfg = Get_Serial_module_cfg("../../cfe/modules/srl/config/default_cfe_srl_interf
 max_handle = int(cfg["CFE_SRL_GLOBAL_HANDLE_NUM"])
 max_csp = int(cfg["CFE_SRL_CSP_MAX_DEVICE_NUM"])
 
-with open('../../sample_defs/Interface_config.json') as fp:
+with open('../../cosmic_defs/Interface_config.json') as fp:
     config = json.load(fp)
 interfaces = config['interfaces']    
 namearr = Get_general_srl_namearr(interfaces)
 if (len(namearr) > max_handle):
     raise Exception(f"General Device is too many. Max: {max_handle} || Input: {len(namearr)}.\nEnlarge the Maximum number in the srl interface config header.")
 
-with open("../../sample_defs/csp_config.json") as fp:
+with open("../../cosmic_defs/csp_config.json") as fp:
     cspcfg = json.load(fp)
 csp_host = cspcfg['host'] # host config -> dict
 csp_node = cspcfg['external'] # extgernal gomspace config -> 'list' of dict

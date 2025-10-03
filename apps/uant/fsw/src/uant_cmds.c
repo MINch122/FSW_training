@@ -135,7 +135,7 @@ CFE_Status_t UANT_SendBcnCmd(const UANT_SendBcnCmd_t *Msg)
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(UANT_Data.bcn.TelemetryHeader));
         CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.bcn.TelemetryHeader), true);
         UANT_Data.CmdCounter++;
-        OS_printf("0x%04X\n", UANT_Data.bcn.Payload.deploystatus);
+        OS_printf("UANT Deploy Staus: 0x%04X\n", UANT_Data.bcn.Payload.deploystatus);
     }
 
     
@@ -666,9 +666,8 @@ CFE_Status_t UANT_GetDeploymentStatus(const UANT_ISIS_ReportDeploymentStatusCmd_
     }
     else
     {
-        OS_printf("Status : 0x%04X\n", deploy_status);
+        OS_printf("UANT Deploy Status : 0x%04X\n", deploy_status);
         UANT_Data.CmdCounter++;
-        
     }
 
     return status;
@@ -690,6 +689,8 @@ CFE_Status_t UANT_MeasureAntSystemTemperature(const UANT_ISIS_MeasureSystemTempe
     }
     else
     {
+        OS_printf("UANT System temperature: %u\n", raw);
+        
         RPT_Report_t report = (RPT_Report_t){0};
         report.MsgID        = UANT_CMD_MID;               
         report.CommandCode  = UANT_MEASURE_SYSTEM_TEMPERATURE_CC; 
@@ -703,7 +704,7 @@ CFE_Status_t UANT_MeasureAntSystemTemperature(const UANT_ISIS_MeasureSystemTempe
 
         UANT_Data.rpt.Payload = report;
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader));
-        (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader), true);
+        CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader), true);
 
         UANT_Data.CmdCounter++;
     }
@@ -728,6 +729,8 @@ CFE_Status_t UANT_ReportAntActivationCnt(const UANT_ISIS_ReportAntActivationCntC
     }
     else
     {
+        OS_printf("Ant%u Activation count: %u\n", ant, count);
+
         RPT_Report_t report = (RPT_Report_t){0};
         report.MsgID        = UANT_CMD_MID;
         report.CommandCode  = UANT_REPORT_ANT_ACTIVATION_CNT_CC;
@@ -742,7 +745,7 @@ CFE_Status_t UANT_ReportAntActivationCnt(const UANT_ISIS_ReportAntActivationCntC
         
         UANT_Data.rpt.Payload = report;
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader));
-        (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader), true);
+        CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader), true);
 
         UANT_Data.CmdCounter++;
     }
@@ -763,7 +766,10 @@ CFE_Status_t UANT_ReportAntActivationTime(const UANT_ISIS_ReportAntActivationTim
                           "UANT: Failed to report activation time for ANT-%d, status = 0x%08X",
                           ant, (unsigned)status);
         UANT_Data.ErrCounter++;
-    } else {
+    }
+    else {
+        OS_printf("Ant%u Activation time: %u\n", ant, time);
+
         RPT_Report_t report = (RPT_Report_t){0};
         report.MsgID        = UANT_CMD_MID;
         report.CommandCode  = UANT_REPORT_ANT_ACTIVATION_TIME_CC;
@@ -777,7 +783,7 @@ CFE_Status_t UANT_ReportAntActivationTime(const UANT_ISIS_ReportAntActivationTim
         
         UANT_Data.rpt.Payload = report;
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader));
-        (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader), true);
+        CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader), true);
 
         UANT_Data.CmdCounter++;
     }

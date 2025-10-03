@@ -26,7 +26,7 @@ CFE_Status_t SP_SendBcnCmd(const SP_SendBcnCmd_t *Msg) {
     return CFE_SUCCESS;
 }
 
-CFE_Status_t SP_NoopCmd(const SP_NoopCmd_t *Msg){
+CFE_Status_t SP_NoopCmd(const SP_NoopCmd_t *Msg) {
     SP_AppData.CmdCounter++;
 
     uint8 Cmds[2] = {SP_AppData.CmdCounter, SP_AppData.ErrCounter};
@@ -38,7 +38,7 @@ CFE_Status_t SP_NoopCmd(const SP_NoopCmd_t *Msg){
     return CFE_SUCCESS;
 }
 
-CFE_Status_t SP_ResetCounterCmd(const SP_ResetCountersCmd_t *Msg){
+CFE_Status_t SP_ResetCounterCmd(const SP_ResetCountersCmd_t *Msg) {
     SP_AppData.CmdCounter = 0;
     SP_AppData.ErrCounter = 0;
 
@@ -51,30 +51,34 @@ CFE_Status_t SP_ResetCounterCmd(const SP_ResetCountersCmd_t *Msg){
     return CFE_SUCCESS;
 }
 
-CFE_Status_t SP_DeployCmd(const SP_DeployCmd_t *Msg){
+CFE_Status_t SP_DeployCmd(const SP_DeployCmd_t *Msg) {
     SP_AppData.CmdCounter++;
 
     int32 Status;
     
-    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(Msg->Payload.SP ? CFE_SRL_SP_OUT1_GPIO_INDEXER : CFE_SRL_SP_OUT2_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(!Msg->Payload.SP ? CFE_SRL_SP_OUT1_GPIO_INDEXER : CFE_SRL_SP_OUT2_GPIO_INDEXER);
 
     Status = CFE_SRL_ApiGpioSet(Handle, Msg->Payload.deploy);
-    if (Status != CFE_SUCCESS){
+    if (Status != CFE_SUCCESS) {
         SP_AppData.ErrCounter++;
         CFE_ES_WriteToSysLog("SP: Fail to set value via GPIO : 0x%08X", Status);
     }
+
+    /* For debug */
+    else OS_printf("%s: %s GPIO %s Success.\n", __func__,
+                    Msg->Payload.SP ? "PA28" : "PC3", Msg->Payload.deploy ? "High" : "Low");
 
     /**
      * Transmit Msg to RPT
      */
     SP_HandleReport(Status, SP_DEPLOY_CC, NULL, 0);
 
-    CFE_EVS_SendEvent(SP_DEPLOY_CMD_INF_EID, CFE_EVS_EventType_INFORMATION, "SP : Deply Command Status: 0x%02x \n", Status);
+    CFE_EVS_SendEvent(SP_DEPLOY_CMD_INF_EID, CFE_EVS_EventType_INFORMATION, "SP : Deply Command Status: 0x%08X \n", Status);
     
     return CFE_SUCCESS;
 }
 
-CFE_Status_t SP_Get_DeployCmd(const SP_Get_DeployCmd_t *Msg){
+CFE_Status_t SP_Get_DeployCmd(const SP_Get_DeployCmd_t *Msg) {
     SP_AppData.CmdCounter++;
     
     int32 Status;

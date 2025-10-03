@@ -153,7 +153,17 @@ CFE_Status_t SANT_AppInit(void)
          */
         CFE_MSG_Init(CFE_MSG_PTR(SANT_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(SANT_HK_TLM_MID),
                      sizeof(SANT_Data.HkTlm));
-        // OP_TLM_MID는 dispatch 에서 초기화
+        /*
+         ** Initialize Beacon packet
+         */
+        CFE_MSG_Init(CFE_MSG_PTR(SANT_Data.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(SANT_BCN_TLM_MID),
+                     sizeof(SANT_Data.BcnTlm));
+        /*
+         ** Initialize Operation data packet - Used for LC WDT
+         */
+        CFE_MSG_Init(CFE_MSG_PTR(SANT_Data.OperationTlm.TelemetryHeader), CFE_SB_ValueToMsgId(SANT_OP_TLM_MID),
+                     sizeof(SANT_Data.OperationTlm));
+        
 
         /*
          ** Create Software Bus message pipe.
@@ -195,6 +205,19 @@ CFE_Status_t SANT_AppInit(void)
     if (status == CFE_SUCCESS)
     {
         /*
+        ** Subscribe to Housekeeping request commands
+        */
+        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(SANT_SEND_BCN_MID), SANT_Data.CommandPipe);
+        if (status != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(SANT_SUB_BCN_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "SANT App: Error Subscribing to BCN request, RC = 0x%08lX", (unsigned long)status);
+        }
+    }
+
+    if (status == CFE_SUCCESS)
+    {
+        /*
         ** Subscribe to ground command packets
         */
         status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(SANT_CMD_MID), SANT_Data.CommandPipe);
@@ -205,7 +228,7 @@ CFE_Status_t SANT_AppInit(void)
         }
     }
 
-        if (status == CFE_SUCCESS)
+    if (status == CFE_SUCCESS)
     {
         /*
         ** Subscribe to ground command packets
@@ -214,7 +237,7 @@ CFE_Status_t SANT_AppInit(void)
         if (status != CFE_SUCCESS)
         {
             CFE_EVS_SendEvent(SANT_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "SANT App: Error Subscribing to Commands, RC = 0x%08lX", (unsigned long)status);
+                              "SANT App: Error Subscribing to Operation, RC = 0x%08lX", (unsigned long)status);
         }
     }
 

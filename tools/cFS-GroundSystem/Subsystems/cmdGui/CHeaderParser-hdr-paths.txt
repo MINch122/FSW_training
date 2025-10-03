@@ -26,8 +26,8 @@
 #../../../../apps/payuzuc/config/default_payuzuc_msgdefs.h
 #../../../../apps/payuzuc/config/default_payuzuc_msgstruct.h
 #../../../../apps/payuzuc/config/default_payuzuc_fcncodes.h
-#../../../../apps/sp/config/default_sp_fcncodes.h
-#../../../../apps/sp/config/default_sp_msgdefs.h
+../../../../apps/sp/config/default_sp_fcncodes.h
+../../../../apps/sp/config/default_sp_msgdefs.h
 #../../../../apps/payuzut/config/default_payuzut_fcncodes.h
 #../../../../apps/payuzut/config/default_payuzut_msgdefs.h
 #../../../../apps/utrx/config/default_utrx_fcncodes.h
@@ -36,5 +36,5 @@
 #../../../../apps/adcs/config/default_adcs_msgdefs.h
 #../../../../apps/strx/config/default_strx_fcncodes.h
 #../../../../apps/strx/config/default_strx_msgstruct.h
-../../../../apps/ftp/config/default_ftp_fcncodes.h
-../../../../apps/ftp/config/default_ftp_msgdefs.h
+#../../../../apps/ftp/config/default_ftp_fcncodes.h
+#../../../../apps/ftp/config/default_ftp_msgdefs.h

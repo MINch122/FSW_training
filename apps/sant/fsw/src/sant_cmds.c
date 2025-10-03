@@ -60,9 +60,16 @@ CFE_Status_t SANT_SendHkCmd(const SANT_SendHkCmd_t *Msg)
 
 CFE_Status_t SANT_SendBcnCmd(const SANT_SendBcnCmd_t *Msg)
 {
-    /*
-    ** Send housekeeping telemetry packet...
-    */
+    /**
+     * Send beacon telemetry packet...
+     */
+    gs_gssb_ar6_release_status_t Reply;
+
+    if(gs_gssb_ar6_get_release_status(SANT_I2C_ADDR, SANT_I2C_TIMEOUT_MS, &Reply) != GS_OK) {
+        SANT_Data.BcnTlm.Payload.DeployStatus = 0xFF; /* Error Indicator */
+    }
+    else SANT_Data.BcnTlm.Payload.DeployStatus = Reply.status;
+
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(SANT_Data.BcnTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(SANT_Data.BcnTlm.TelemetryHeader), true);
 
