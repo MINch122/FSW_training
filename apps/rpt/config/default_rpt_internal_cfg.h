@@ -13,12 +13,12 @@
 /**
  * RPT Operation data file path
  */
-#define RPT_OPS_DATA_PATH       "./cf/ops.bin" /* Internal FLASH */
-#define RPT_OPS_BACKUP_PATH     "./cf/sdcard/ops/" /* External SD */
+#define RPT_OPS_DATA_PATH       "/cf/ops.bin" /* Internal FLASH */
+#define RPT_OPS_BACKUP_PATH     "/cf/sdcard/ops/" /* External SD */
 
 #define RPT_OPS_STORE_BACKUP_COUNT  20 /* Second */
 
-#define RPT_CRITICAL_DATA_PATH  "./cf/critical.bin" /* Internal FLASH */
+#define RPT_CRITICAL_DATA_PATH  "/cf/critical.bin" /* Internal FLASH */
 
 typedef struct {
     RPT_Report_t Entry[RPT_REPORT_QUEUE_LEN];

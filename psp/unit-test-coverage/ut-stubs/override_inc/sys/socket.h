@@ -73,4 +73,7 @@
 #define AF_INET      PCS_AF_INET
 #define SOCK_RAW     PCS_SOCK_RAW
 
+#define PF_CAN       PCS_PF_CAN
+#define AF_CAN       PCS_AF_CAN
+
 #endif /* OVERRIDE_SYS_SOCKET_H */

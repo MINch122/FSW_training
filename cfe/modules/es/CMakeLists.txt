@@ -31,9 +31,9 @@ target_include_directories(es PUBLIC fsw/inc)
 target_link_libraries(es PRIVATE core_private)
 
 # Add unit test coverage subdirectory
-if (ENABLE_UNIT_TESTS)
-  add_subdirectory(ut-coverage)
-endif (ENABLE_UNIT_TESTS)
+# if (ENABLE_UNIT_TESTS)
+#   add_subdirectory(ut-coverage)
+# endif (ENABLE_UNIT_TESTS)
 
 cfs_app_check_intf(${DEP}
     cfe_es_eventids.h

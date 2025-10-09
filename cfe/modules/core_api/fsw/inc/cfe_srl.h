@@ -1,16 +1,23 @@
-/******************************************************************************
-** File: cfe_srl.h
-**
-** Purpose:
-**      This file contains the definitions of cFE Serial communication
-**      Application Programmer's Interface
-**
-**
-** Author:   HyeokJin Kweon
-**
-** P.S.: Source code of functions is located at
-**       `cfe/modules/srl/fsw/src/cfe_srl_api.c`
-******************************************************************************/
+/***********************************************************************
+ *  Copyright (c) 2025, Yonsei University as represented by the
+ *  Department of Satellite Systems (DSS) & Astrodynamics & Control Lab (ACL)
+ *  All rights reserved. This software was created at DSS
+ *************************************************************************/
+
+/** 
+ * @file: cfe_srl.h
+ *
+ * Purpose:
+ *      This file contains the definitions of cFE Serial communication
+ *      Application Programmer's Interface
+ *
+ *
+ * Author:   HyeokJin Kweon
+ *
+ * P.S.: Source code of functions is located at
+ *       `cfe/modules/srl/fsw/src/cfe_srl_api.c`
+ */
+
 #ifndef CFE_SRL_H
 #define CFE_SRL_H
 

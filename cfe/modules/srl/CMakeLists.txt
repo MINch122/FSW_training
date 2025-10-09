@@ -9,7 +9,7 @@ project (CFE_SRL C)
 message(STATUS "srl cmake start")
 
 # Serial Comm. source files
-set(SRL_SOURCE
+set(srl_SOURCES
     fsw/src/cfe_srl_api.c
     fsw/src/cfe_srl_csp_config.c
     fsw/src/cfe_srl_csp.c
@@ -21,7 +21,7 @@ set(SRL_SOURCE
     fsw/src/cfe_srl_task.c
 )
 
-add_library(srl STATIC ${SRL_SOURCE})
+add_library(srl STATIC ${srl_SOURCES})
 
 target_include_directories(srl PUBLIC fsw/inc)
 target_link_libraries(srl PRIVATE core_private)
@@ -47,7 +47,7 @@ include_directories(../../../submodules/libgscsp/lib/librgosh_client/include)
 include_directories(../../../submodules/libgscsp/lib/libutil/include)
 include_directories(../../../submodules/libgscsp/build/lib/libgscsp/lib/libcsp/include)
 
-target_compile_options(srl PRIVATE -Wno-pedantic -Wno-error=pedantic)
+target_compile_options(srl PUBLIC -Wno-pedantic -Wno-error=pedantic)
 
 message(STATUS "Processor = ${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
@@ -66,4 +66,7 @@ else ()
     target_link_libraries(srl PRIVATE ${PROJECT_SOURCE_DIR}/../../../submodules/libgscsp/build/cpu1/lib/libcsp-client.a)
 endif()
 
-message(STATUS "srl cmake end")
+# Add unit test coverage subdirectory
+# if (ENABLE_UNIT_TESTS)
+#     add_subdirectory(ut-coverage)
+# endif(ENABLE_UNIT_TESTS)

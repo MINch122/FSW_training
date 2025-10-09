@@ -72,6 +72,7 @@ add_library(ut_psp_libc_stubs STATIC EXCLUDE_FROM_ALL
     src/PCS_sysApi_stubs.c
     src/PCS_sysLib_handlers.c
     src/PCS_sysLib_stubs.c
+    src/PCS_sys_ioctl_stubs.c
     src/PCS_sys_mman_stubs.c
     src/PCS_sys_select_stubs.c
     src/PCS_sys_socket_handlers.c

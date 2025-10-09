@@ -32,4 +32,18 @@
 /* mappings for declarations in poll.h */
 /* ----------------------------------------- */
 
+/* Value */
+#define POLLIN      OCS_POLLIN
+
+#define POLLERR     OCS_POLLERR
+#define POLLHUP     OCS_POLLHUP
+#define POLLNVAL    OCS_POLLNVAL
+
+/* Struct */
+#define pollfd      OCS_pollfd_t
+#define nfds_t      OCS_nfds_t
+
+/* function */
+#define poll        OCS_poll
+
 #endif /* OVERRIDE_POLL_H */

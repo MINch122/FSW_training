@@ -155,7 +155,7 @@ int32 CFE_SRL_ApiChangeVia(uint8_t Via) {
 }
 
 void CFE_SRL_ApiPrintRtable(void) {
-    return CFE_SRL_PrintRtable();
+    CFE_SRL_PrintRtable();
 }
 
 int32 CFE_SRL_ApiRparamSaveCSP(uint8 Node, uint32 Timeout, uint8 TableId, uint8 To) {
@@ -187,5 +187,5 @@ int CFE_SRL_ApiConndPort(csp_conn_t *Connection) {
 }
 
 void CFE_SRL_ApiBufferFreeCSP(csp_packet_t *Packet) {
-    return CFE_SRL_BufferFreeCSP(Packet);
+    CFE_SRL_BufferFreeCSP(Packet);
 }

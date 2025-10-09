@@ -16,14 +16,20 @@
  * limitations under the License.
  ************************************************************************/
 
-/* PSP coverage stub replacement for ioLib.h */
-#ifndef OVERRIDE_IOLIB_H
-#define OVERRIDE_IOLIB_H
+/*
+** File: ut_srl_stubs.c
+**
+** Purpose:
+** Unit test stubs for Serial service routines
+**
+** Notes:
+** Minimal work is done, only what is required for unit testing
+**
+*/
 
-#include "PCS_ioLib.h"
+/**
+ * Includes
+ */
+#include "cfe_srl.h"
+#include "utstubs.h"
 
-/* ----------------------------------------- */
-/* mappings for declarations in ioLib.h */
-/* ----------------------------------------- */
-
-#endif

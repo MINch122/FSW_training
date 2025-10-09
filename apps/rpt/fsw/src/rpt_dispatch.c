@@ -90,47 +90,11 @@ void RPT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
         
 
     default:
-        CFE_EVS_SendEvent(RPT_CC_ERR_EID, CFE_EVS_EventType_ERROR, "RPT: Invalid command code. CC = %d", CC);
+        RPT_Data.ErrCounter ++;    
+        CFE_EVS_SendEvent(RPT_CC_ERR_EID, CFE_EVS_EventType_ERROR, "RPT: Invalid command code. CC = %d", CC);    
         break;
     }
 }
-
-
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-/*                                                                            */
-/* RPT Update Operation Data                                                  */
-/*                                                                            */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-void RPT_UpdateOperationData(void) {
-
-    CFE_TIME_SysTime_t Time = CFE_TIME_GetTime();
-
-    OS_MutSemTake(RPT_Data.OpsMutexID);
-
-    RPT_Data.OpsData.TimeSec = Time.Seconds;
-    RPT_Data.OpsData.TimeSubsec = Time.Subseconds;
-    RPT_Data.OpsData.CRC = RPT_CalculateCRC(&RPT_Data.OpsData, sizeof(RPT_OperationData_t) - sizeof(uint32_t));
-
-    RPT_WriteToFile(RPT_Data.OpsDataHandle, &RPT_Data.OpsData, sizeof(RPT_OperationData_t));
-    
-    RPT_Data.OpsCount ++;
-
-    if (RPT_Data.OpsCount == RPT_OPS_STORE_BACKUP_COUNT) {
-        /* Write Back up data to External SD */
-        int FD;
-        FD = RPT_OpenOpsFile(true);
-        RPT_WriteToFile(FD, &RPT_Data.OpsData, sizeof(RPT_OperationData_t));
-        RPT_CloseFile(FD);
-
-        RPT_Data.OpsData.Sequence ++;
-        RPT_Data.OpsCount = 0;
-    }
-    
-    OS_MutSemGive(RPT_Data.OpsMutexID);
-}
-
-
 
 
 void RPT_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {

@@ -29,6 +29,8 @@ typedef enum {
 /* CSP Node  Configuration */
 typedef enum {
 	CSP_NODE_OBC = 3,
+	CSP_NODE_UEL_OBC = 1,
+	CSP_NODE_UEL_PI = 2,
 	CSP_NODE_ADCS = 4,
 	CSP_NODE_UTRX = 5,
 	CSP_NODE_STRX = 6,

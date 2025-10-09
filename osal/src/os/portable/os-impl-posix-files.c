@@ -98,9 +98,9 @@ int32 OS_FileOpen_Impl(const OS_object_token_t *token, const char *local_path, i
     {
         os_perm |= O_TRUNC;
     }
-    if (flags & OS_FILE_FLAG_APPEND) {
-        os_perm |= O_APPEND;
-    }
+    // if (flags & OS_FILE_FLAG_APPEND) {
+    //     os_perm |= O_APPEND;
+    // }
 
     os_perm |= OS_IMPL_REGULAR_FILE_FLAGS;
 

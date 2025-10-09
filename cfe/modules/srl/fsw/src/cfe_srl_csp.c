@@ -292,5 +292,5 @@ int CFE_SRL_ConndPort(csp_conn_t *Connection) {
 }
 
 void CFE_SRL_BufferFreeCSP(csp_packet_t *Packet) {
-    return csp_buffer_free((void *)Packet);
+    csp_buffer_free((void *)Packet);
 }

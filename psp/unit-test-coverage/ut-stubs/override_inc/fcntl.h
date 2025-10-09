@@ -53,6 +53,8 @@
 #define O_TRUNC    PCS_O_TRUNC
 #define O_NONBLOCK PCS_O_NONBLOCK
 
+#define O_NOCTTY   PCS_O_NOCTTY
+
 #define fcntl PCS_fcntl
 #define open  PCS_open
 #define creat PCS_creat

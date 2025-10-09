@@ -81,4 +81,5 @@ add_subdirectory(eeprom_mmap_file)
 add_subdirectory(eeprom_direct)
 add_subdirectory(iodriver)
 add_subdirectory(soft_timebase)
+add_subdirectory(linux_serial)
 

@@ -1,3 +1,8 @@
+/***********************************************************************
+ *  Copyright (c) 2025, Yonsei University as represented by the
+ *  Department of Satellite Systems (DSS) & Astrodynamics & Control Lab (ACL)
+ *  All rights reserved. This software was created at DSS
+ ************************************************************************/
 /**
  * @file
  *

@@ -45,4 +45,6 @@ extern void              PCS_free(void *ptr);
 extern void              PCS_abort(void);
 extern int               PCS_abs(int value);
 
+extern void *            PCS_calloc(size_t memb, size_t sz);
+
 #endif

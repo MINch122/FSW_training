@@ -215,15 +215,10 @@ int32 CFE_SRL_InitHandleCmd(const CFE_SRL_InitHandleCmd_t *Cmd) {
     int32 Status;
     
     Status = CFE_SRL_HandleInit(&Handles[Cmd->Payload.Indexer], Cmd->Payload.Name, Cmd->Payload.DevName, Cmd->Payload.DevType, Cmd->Payload.Indexer, (CFE_PSP_IODriver_Serial_cfg_t *)&Cmd->Payload.Config);
-    if (Status == CFE_SUCCESS) {
+    if (Status == CFE_SUCCESS)
         CFE_EVS_SendEvent(CFE_SRL_INIT_HANDLE_INF_EID, CFE_EVS_EventType_INFORMATION, "SRL Init Handle Cmd Success.");
-    }
-    else {
-        CFE_StatusString_t String;
-
-        CFE_ES_StatusToString(Status, &String);
-        CFE_EVS_SendEvent(CFE_SRL_INIT_HANDLE_INF_EID, CFE_EVS_EventType_ERROR, "SRL Init Handle Cmd failed. RC=%s", String);
-    }
+    else
+        CFE_EVS_SendEvent(CFE_SRL_INIT_HANDLE_INF_EID, CFE_EVS_EventType_ERROR, "SRL Init Handle Cmd failed. RC=0x%08X", Status);
     
     return CFE_SUCCESS;
 }
@@ -237,10 +232,7 @@ int32 CFE_SRL_CloseHandleCmd(const CFE_SRL_CloseHandleCmd_t *Cmd) {
         CFE_EVS_SendEvent(CFE_SRL_CLOSE_HANDLE_INF_EID, CFE_EVS_EventType_INFORMATION, "SRL Close Handle Cmd Success.");
     }
     else {
-        CFE_StatusString_t String;
-
-        CFE_ES_StatusToString(Status, &String);
-        CFE_EVS_SendEvent(CFE_SRL_CLOSE_HANDLE_INF_EID, CFE_EVS_EventType_ERROR, "SRL Close Handle failed. RC=%s", String);
+        CFE_EVS_SendEvent(CFE_SRL_CLOSE_HANDLE_INF_EID, CFE_EVS_EventType_ERROR, "SRL Close Handle failed. RC=0x%08X", Status);
     }
 
     return CFE_SUCCESS;
@@ -251,6 +243,10 @@ int32 CFE_SRL_ConfigHandleCmd(const CFE_SRL_ConfigHandleCmd_t *Cmd) {
     CFE_SRL_DevType_t DevType;
 
     /* Validataion */
+    if (Handles[Cmd->Payload.Indexer] == NULL) {
+        CFE_EVS_SendErr(CFE_SRL_CONFIG_HANDLE_INF_EID, "SRL Config failed. Not initialized FD.");
+        return CFE_SUCCESS;
+    }
     if (Handles[Cmd->Payload.Indexer]->FD != Cmd->Payload.Config.FD) {
         CFE_EVS_SendErr(CFE_SRL_CONFIG_HANDLE_INF_EID, "SRL Config failed. Wrong FD.");
         return CFE_SUCCESS;
@@ -264,10 +260,7 @@ int32 CFE_SRL_ConfigHandleCmd(const CFE_SRL_ConfigHandleCmd_t *Cmd) {
         CFE_EVS_SendEvent(CFE_SRL_CONFIG_HANDLE_INF_EID, CFE_EVS_EventType_INFORMATION, "SRL Config Handle Cmd Success.");
     }
     else {
-        CFE_StatusString_t String;
-
-        CFE_ES_StatusToString(Status, &String);
-        CFE_EVS_SendEvent(CFE_SRL_CONFIG_HANDLE_INF_EID, CFE_EVS_EventType_ERROR, "SRL Config Handle failed. RC=%s", String);
+        CFE_EVS_SendEvent(CFE_SRL_CONFIG_HANDLE_INF_EID, CFE_EVS_EventType_ERROR, "SRL Config Handle failed. RC=0x%08X", Status);
     }
 
     return CFE_SUCCESS;

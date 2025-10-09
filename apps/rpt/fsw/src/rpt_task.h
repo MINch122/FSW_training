@@ -59,12 +59,12 @@ typedef struct {
      * RPT Critical Queue
      */
     RPT_CriticalQueue_t CritQueue;
-    int CritDataHandle;
+    osal_id_t CritDataHandle;
 
     /**
      * RPT Operation data
      */
-    int OpsDataHandle;
+    osal_id_t OpsDataHandle;
     RPT_OperationData_t OpsData;
     uint8 OpsCount; /* If this count reached to `RPT_OPS_STORE_BACKUP_COUNT`, store backup data */
 
@@ -95,8 +95,6 @@ extern RPT_Data_t RPT_Data;
 */
 void RPT_Main(void);
 CFE_Status_t RPT_Init(void);
-CFE_Status_t RPT_OpsDataInit(void);
-CFE_Status_t RPT_CriticalQInit(void);
 
 void RPT_ForwardReport(void);
 void RPT_FowardCritical(void);

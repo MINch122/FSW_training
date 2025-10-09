@@ -17,7 +17,6 @@
  * Includes
  ************************************************************************/
 #include <fcntl.h>
-#include <sys/select.h>
 #include <poll.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -214,7 +213,7 @@ static void linux_serial_clear_cnt_entry(int FD) {
 
 /**
  * \brief Return the counter (and recent errno) of specific file descriptor
- * \param arg [in, out] member `FD` is input. Counters and errno of specific FD.
+ * \param arg [in, out] Will be casted to `CFE_PSP_IODriver_Serial_cnt_t`. Member `FD` is input. Counters and errno of specific FD.
  * Caller should substitute the struct to `const`
  * \return StatusCode. Only `0`(`CFE_PSP_SUCCESS`) is success.
  */

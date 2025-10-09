@@ -16,22 +16,17 @@
  * limitations under the License.
  ************************************************************************/
 
-/* PSP coverage stub replacement for ioLib.h */
-#ifndef PCS_IOLIB_H
-#define PCS_IOLIB_H
+/* OSAL coverage stub replacement for poll.h */
+#include <string.h>
+#include <stdlib.h>
+#include "utstubs.h"
 
-#include "PCS_basetypes.h"
+#include "OCS_poll.h"
 
-/* ----------------------------------------- */
-/* constants normally defined in ioLib.h */
-/* ----------------------------------------- */
+int OCS_poll(OCS_pollfd_t fds, OCS_nfds_t nfds, int timeout) {
+    int32 Status;
 
-/* ----------------------------------------- */
-/* types normally defined in ioLib.h */
-/* ----------------------------------------- */
+    Status = UT_DEFAULT_IMPL(OCS_poll);
 
-/* ----------------------------------------- */
-/* prototypes normally declared in ioLib.h */
-/* ----------------------------------------- */
-
-#endif
+    return Status;
+}

@@ -1,3 +1,9 @@
+/**
+ * @file
+ *
+ * Main header file for the RPT util function
+ */
+
 #ifndef RPT_UTILS_H
 #define RPT_UTILS_H
 
@@ -28,7 +34,10 @@ typedef struct {
 } RPT_MultipleCriticalTlm_t;
 
 
-int32 RPT_PriorInit(void);
+
+void RPT_Subscribe(void);
+void RPT_Enqueue(const RPT_Report_t *Report, bool IsCritical);
+
 int32 RPT_Report(const RPT_Report_t *Report, bool IsCritical);
 
 /// @brief Get multiple report from Report Queue
@@ -45,12 +54,12 @@ int32 RPT_MultipleCritical(uint8_t StartIdx, uint8_t TotNum);
 
 bool RPT_VerifyReportLength(const CFE_MSG_Message_t *MsgPtr);
 
-int RPT_OpenOpsFile(uint8_t IsBackup);
-int32 RPT_WriteToFile(int FD, const void *Data, size_t Size);
-int32 RPT_ReadFromFile(int FD, void *Data, size_t Size);
-int32 RPT_CloseFile(int FD);
+osal_id_t RPT_OpenOpsFile(uint8_t IsBackup);
+int32 RPT_WriteToFile(osal_id_t FD, const void *Data, size_t Size);
+int32 RPT_ReadFromFile(osal_id_t FD, void *Data, size_t Size);
+int32 RPT_CloseFile(osal_id_t FD);
 
-int RPT_OpenCriticalFile(void);
+osal_id_t RPT_OpenCriticalFile(void);
 
 uint32 RPT_CalculateCRC(const void *Data, size_t Size);
 

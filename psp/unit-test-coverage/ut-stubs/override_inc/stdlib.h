@@ -36,4 +36,6 @@
 #define abort        PCS_abort
 #define abs          PCS_abs
 
+#define calloc       PCS_calloc
+
 #endif

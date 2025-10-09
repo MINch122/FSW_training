@@ -86,6 +86,9 @@ enum
     PCS_IPPROTO_ICMP = 1,
     PCS_AF_INET,
     PCS_SOCK_RAW,
+    
+    PCS_PF_CAN,
+    PCS_AF_CAN,
 };
 
 /* ----------------------------------------- */

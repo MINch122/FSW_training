@@ -58,6 +58,23 @@ int PCS_abs(int value)
 
 /*
  * ----------------------------------------------------
+ * Generated stub function for PCS_calloc()
+ * ----------------------------------------------------
+ */
+void *PCS_calloc(size_t memb, size_t sz)
+{
+    UT_GenStub_SetupReturnBuffer(PCS_calloc, void *);
+
+    UT_GenStub_AddParam(PCS_calloc, size_t, memb);
+    UT_GenStub_AddParam(PCS_calloc, size_t, sz);
+
+    UT_GenStub_Execute(PCS_calloc, Basic, NULL);
+
+    return UT_GenStub_GetReturnValue(PCS_calloc, void *);
+}
+
+/*
+ * ----------------------------------------------------
  * Generated stub function for PCS_exit()
  * ----------------------------------------------------
  */

@@ -261,7 +261,8 @@ char *PCS_strncpy(char *dest, const char *src, size_t n)
     UT_GenStub_AddParam(PCS_strncpy, const char *, src);
     UT_GenStub_AddParam(PCS_strncpy, size_t, n);
 
-    UT_GenStub_Execute(PCS_strncpy, Basic, UT_DefaultHandler_PCS_strncpy);
+    // UT_GenStub_Execute(PCS_strncpy, Basic, UT_DefaultHandler_PCS_strncpy);
+    UT_GenStub_Execute(PCS_strncpy, Basic, NULL);
 
     return UT_GenStub_GetReturnValue(PCS_strncpy, char *);
 }

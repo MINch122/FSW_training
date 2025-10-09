@@ -92,6 +92,8 @@
 #define PCS_O_TRUNC    0x1508
 #define PCS_O_NONBLOCK 0x1510
 
+#define PCS_O_NOCTTY    0x1515
+
 #define PCS_F_GETFL 0x1D01
 #define PCS_F_SETFL 0x1D02
 #define PCS_F_GETFD 0x1D03

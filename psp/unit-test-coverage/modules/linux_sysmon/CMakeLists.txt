@@ -7,6 +7,6 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/inc")
 include_directories("${CFEPSP_SOURCE_DIR}/fsw/modules/iodriver/inc")
 include_directories("${CFEPSP_SOURCE_DIR}/fsw/modules/linux_sysmon")
 
-add_psp_covtest(linux_sysmon src/coveragetest-linux_sysmon.c
+add_psp_covtest(linux_sysmon coveragetest-linux_sysmon.c
     ${CFEPSP_SOURCE_DIR}/fsw/modules/linux_sysmon/linux_sysmon.c
 )

@@ -27,17 +27,38 @@
 #define OCS_POLL_H
 
 #include "OCS_basetypes.h"
+// #include <poll.h>
 
 /* ----------------------------------------- */
 /* constants normally defined in poll.h */
 /* ----------------------------------------- */
+#define OCS_POLLIN  0x488
+
+#define OCS_POLLERR 0x491
+#define OCS_POLLHUP 0x334
+#define OCS_POLLNVAL 0x287
+
 
 /* ----------------------------------------- */
 /* types normally defined in poll.h */
 /* ----------------------------------------- */
+struct OCS_pollfd {
+    int fd;
+    short int events;
+    short int revents;
+};
+
+struct OCS_nfds {
+    int nfds;
+};
+
+typedef struct OCS_pollfd   OCS_pollfd_t;
+typedef struct OCS_nfds     OCS_nfds_t;
+
 
 /* ----------------------------------------- */
 /* prototypes normally declared in poll.h */
 /* ----------------------------------------- */
+extern int OCS_poll(OCS_pollfd_t fds, OCS_nfds_t nfds, int timeout);
 
 #endif /* OCS_POLL_H */

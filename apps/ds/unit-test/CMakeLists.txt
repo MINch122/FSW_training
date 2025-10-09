@@ -45,6 +45,7 @@ foreach(SRCFILE ${APP_SRC_FILES})
     set(TESTS_SOURCE_FILE "${PROJECT_SOURCE_DIR}/unit-test/${TESTS_NAME}.c")
 
     # Create the coverage test executable
+    message(STATUS "CFS_DS_SOURCE_DIR = ${CFS_DS_SOURCE_DIR}/${SRCFILE}")
     add_cfe_coverage_test(ds "${UNIT_NAME}" "${TESTS_SOURCE_FILE}" "${CFS_DS_SOURCE_DIR}/${SRCFILE}")
 
     # Add dependency to utilities and internal stubs

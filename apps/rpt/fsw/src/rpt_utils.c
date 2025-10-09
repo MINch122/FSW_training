@@ -8,26 +8,43 @@
 #include "rpt_msgids.h"
 #include "rpt_utils.h"
 #include "rpt_mission_cfg.h"
-#include "../inc/rpt_eventids.h"
+#include "rpt_eventids.h"
+#include "cfe_msgids.h"
 
 #include <unistd.h>
 #include <fcntl.h>
 
-void RPT_FIFO_Init(void) {
 
-    RPT_Data.CritQueue.Head = 0;
-    RPT_Data.CritQueue.Count = 0;
+void RPT_Subscribe(void) {
+    CFE_Status_t Status;
 
-    RPT_Data.CritQueue.Head = 0;
-    RPT_Data.CritQueue.Count = 0;
+    /* Subscription */
+    for (uint8_t i = 0; i < RPT_MAX_TBL_ENTRY; i ++) {
+        if (RPT_Data.SubsTblPtr->UsedState == RPT_DISABLED) {RPT_Data.SubsTblPtr ++; continue;}
+
+        if (CFE_SB_IsValidMsgId(RPT_Data.SubsTblPtr->Entry.MessageID) == false) {RPT_Data.SubsTblPtr ++; continue;}
+
+        /**
+         * Subscribe each entry
+         */
+        if (RPT_Data.SubsTblPtr->Entry.IsCritical) {
+            Status = CFE_SB_SubscribeEx(RPT_Data.SubsTblPtr->Entry.MessageID, 
+                                        RPT_Data.CritPipe, CFE_SB_DEFAULT_QOS, RPT_CRITICAL_MSG_DEPTH);
+        }
+        else {
+            Status = CFE_SB_SubscribeEx(RPT_Data.SubsTblPtr->Entry.MessageID,
+                                        RPT_Data.RptPipe, CFE_SB_DEFAULT_QOS, RPT_REPORT_MSG_DEPTH);
+        }
+
+        if (Status != CFE_SUCCESS) {
+            CFE_EVS_SendEvent(RPT_REPORT_SUB_ERR_EID, CFE_EVS_EventType_ERROR,
+                                "L%d RPT Can't subscribe to stream 0x%X status %i", __LINE__,
+                                (unsigned int)CFE_SB_MsgIdToValue(RPT_Data.SubsTblPtr->Entry.MessageID), (int)Status);
+        }
+        RPT_Data.SubsTblPtr ++;
+    }
 }
 
-int32 RPT_PriorInit(void) {
-
-    RPT_FIFO_Init();
-
-    return CFE_SUCCESS;
-}
 
 void RPT_Enqueue(const RPT_Report_t *Report, bool IsCritical) {
 
@@ -37,11 +54,11 @@ void RPT_Enqueue(const RPT_Report_t *Report, bool IsCritical) {
 
         RPT_Data.CritQueue.Entry[RPT_Data.CritQueue.Head].Report = *Report;
         RPT_Data.CritQueue.Head = (RPT_Data.CritQueue.Head + 1) % RPT_CRITICAL_QUEUE_LEN;
-
+        OS_printf("Critical Q Head: %u || Count: %u\n", RPT_Data.CritQueue.Head, RPT_Data.CritQueue.Count);
+        
         /**
          * Append Time info - Only for critical
          */
-        
         RPT_Data.CritQueue.Entry[RPT_Data.CritQueue.Head].Time.Seconds = RPT_Data.OpsData.TimeSec;
         RPT_Data.CritQueue.Entry[RPT_Data.CritQueue.Head].Time.Subseconds = RPT_Data.OpsData.TimeSubsec;
 
@@ -64,11 +81,12 @@ void RPT_Enqueue(const RPT_Report_t *Report, bool IsCritical) {
 
         RPT_Data.RptQueue.Entry[RPT_Data.RptQueue.Head] = *Report;
         RPT_Data.RptQueue.Head = (RPT_Data.RptQueue.Head +1) % RPT_REPORT_QUEUE_LEN;
-
+        OS_printf("Report Q Head: %u || Count:%u\n", RPT_Data.CritQueue.Head, RPT_Data.RptQueue.Count);
         if (RPT_Data.RptQueue.Count < RPT_REPORT_QUEUE_LEN) RPT_Data.RptQueue.Count ++;
         
         OS_MutSemGive(RPT_Data.ReportMutexID);
     }
+    CFE_ES_WriteToSysLog("%s: Report Enqueued. MID: 0x%04X || CC: %u\n", __func__, Report->MsgID, Report->CommandCode);
 
 }
 
@@ -105,7 +123,6 @@ int32 RPT_Report(const RPT_Report_t *Report, bool IsCritical) {
     }
     
     RPT_Enqueue(Report, IsCritical);
-    OS_printf("Enqueue Done.\n");
 
     return Status;
 }
@@ -125,7 +142,10 @@ int32 RPT_MultipleReport(uint8_t StartIdx, uint8_t TotNum) {
     /**
      * Parameter validation
      */
-    if (TotNum == 0) goto cleanup;
+    if (TotNum == 0) {
+        Status = CFE_STATUS_VALIDATION_FAILURE;
+        goto cleanup;
+    }
 
     if (StartIdx > RPT_Data.RptQueue.Count) {
         OS_printf("Invalid StartIdx.\n");
@@ -189,7 +209,10 @@ int32 RPT_MultipleCritical(uint8_t StartIdx, uint8_t TotNum) {
     /**
      * Parameter validation
      */
-    if (TotNum == 0) goto cleanup;
+    if (TotNum == 0) {
+        Status = CFE_STATUS_VALIDATION_FAILURE;
+        goto cleanup;
+    }
 
     if (StartIdx > RPT_Data.CritQueue.Count) StartIdx = 0;
     if (TotNum > RPT_Data.CritQueue.Count) {
@@ -201,7 +224,7 @@ int32 RPT_MultipleCritical(uint8_t StartIdx, uint8_t TotNum) {
     BufPtr = CFE_SB_AllocateMessageBuffer(TlmSize);
     RPT_MultipleCriticalTlm_t *RPT_MultipleTlm = (RPT_MultipleCriticalTlm_t *)BufPtr;
     if (RPT_MultipleTlm == NULL) {
-        Status = -1; // Revise Later
+        Status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
         goto cleanup;
     }
 
@@ -251,8 +274,9 @@ bool RPT_VerifyReportLength(const CFE_MSG_Message_t *MsgPtr) {
  * Operation Data function
  * 
  **********************************/
-int RPT_OpenOpsFile(uint8_t IsBackup) {
-    int FD;
+osal_id_t RPT_OpenOpsFile(uint8_t IsBackup) {
+    osal_id_t FD = OS_OBJECT_ID_UNDEFINED;
+    int32 OsStatus;
     char Path[64] = {0,};
     
     if (!IsBackup) strcpy(Path, RPT_OPS_DATA_PATH);
@@ -260,10 +284,13 @@ int RPT_OpenOpsFile(uint8_t IsBackup) {
                 RPT_OPS_BACKUP_PATH, 
                 RPT_Data.OpsData.Sequence);
 
-    FD = open(Path, O_CREAT | O_RDWR, 0666);
+    // FD = open(Path, O_CREAT | O_RDWR, 0666);
+    OsStatus = OS_OpenCreate(&FD, RPT_OPS_DATA_PATH, OS_FILE_FLAG_CREATE, OS_READ_WRITE);
     OS_printf("RPT Ops FD: %d\n", FD);
 
-    // If, error occur, return -1
+    /* If, error occur, return 0  NOTE: `osal_id_t` is unsigned */ 
+    if (OsStatus != OS_SUCCESS) return OS_OBJECT_ID_UNDEFINED;
+
     return FD;
 }
 
@@ -272,27 +299,36 @@ int RPT_OpenOpsFile(uint8_t IsBackup) {
  * Data is guaranteed to `RPT_OperationData_t`
  * Size is guaranteed to `sizeof(RPT_OperationData_t)`
  */
-int32 RPT_WriteToFile(int FD, const void *Data, size_t Size) {
+int32 RPT_WriteToFile(osal_id_t FD, const void *Data, size_t Size) {
 
-    int32 Status;
+    int32 OsStatus;
     
-    lseek(FD, 0, SEEK_SET);
+    OsStatus = OS_lseek(FD, 0, OS_SEEK_SET);
+    if (OsStatus < OS_SUCCESS) return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
 
-    Status = write(FD, Data, Size);
-    if (Status != Size) return -1;
-
-    Status = fsync(FD);
-    if (Status != 0) return -2;
+    OsStatus = OS_write(FD, Data, Size);
+    if (OsStatus != Size) return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
 
     return CFE_SUCCESS;
 }
 
-int32 RPT_ReadFromFile(int FD, void *Data, size_t Size) {
-    return read(FD, Data, Size);
+int32 RPT_ReadFromFile(osal_id_t FD, void *Data, size_t Size) {
+    int32 OsStatus;
+
+    OsStatus = OS_read(FD, Data, Size);
+    if (OsStatus < OS_SUCCESS) return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    
+    /* Size of readed data */
+    return OsStatus;
 }
 
-int32 RPT_CloseFile(int FD) {
-    return close(FD);
+int32 RPT_CloseFile(osal_id_t FD) {
+    int32 OsStatus;
+
+    OsStatus = OS_close(FD);
+    if (OsStatus != OS_SUCCESS) return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+
+    return CFE_SUCCESS;
 }
 
 
@@ -301,13 +337,16 @@ int32 RPT_CloseFile(int FD) {
  * Critical Queue function
  * 
  **********************************/
-int RPT_OpenCriticalFile(void) {
-    int FD;
-
-    FD = open(RPT_CRITICAL_DATA_PATH, O_CREAT | O_RDWR, 0666);
+osal_id_t RPT_OpenCriticalFile(void) {
+    osal_id_t FD = OS_OBJECT_ID_UNDEFINED;
+    int32 OsStatus;
+    
+    OsStatus = OS_OpenCreate(&FD, RPT_CRITICAL_DATA_PATH, OS_FILE_FLAG_CREATE, OS_READ_WRITE);
     OS_printf("RPT Critical FD: %d\n", FD);
-
-    // If, error occur, return -1
+    
+    /* If, error occur, return 0  NOTE: `osal_id_t` is unsigned */ 
+    if (OsStatus != OS_SUCCESS) return OS_OBJECT_ID_UNDEFINED;
+    
     return FD;
 }
 

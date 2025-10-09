@@ -5,6 +5,12 @@
 int CFE_SRL_RtableCSP(csp_iface_t *Iface) {
 	int Status;
 
+	Status = csp_rtable_set(CSP_NODE_UEL_OBC, CSP_ID_HOST_SIZE, Iface, CSP_NO_VIA_ADDRESS);
+	if (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;
+
+	Status = csp_rtable_set(CSP_NODE_UEL_PI, CSP_ID_HOST_SIZE, Iface, CSP_NO_VIA_ADDRESS);
+	if (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;
+
 	Status = csp_rtable_set(CSP_NODE_ADCS, CSP_ID_HOST_SIZE, Iface, CSP_NO_VIA_ADDRESS);
 	if (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;
 
@@ -25,6 +31,8 @@ int CFE_SRL_RtableCSP(csp_iface_t *Iface) {
 
 int CFE_SRL_AllNodeConfigCSP(void) {
 
+	CFE_SRL_NodeConfigCSP(CSP_NODE_UEL_OBC, CSP_PRIO_NORM, CSP_TIMEOUT(1), CSP_O_NONE);
+	CFE_SRL_NodeConfigCSP(CSP_NODE_UEL_PI, CSP_PRIO_NORM, CSP_TIMEOUT(5), CSP_O_NONE);
 	CFE_SRL_NodeConfigCSP(CSP_NODE_ADCS, CSP_PRIO_NORM, CSP_TIMEOUT(1), CSP_O_NONE);
 	CFE_SRL_NodeConfigCSP(CSP_NODE_UTRX, CSP_PRIO_NORM, CSP_TIMEOUT(1), CSP_O_CRC32);
 	CFE_SRL_NodeConfigCSP(CSP_NODE_STRX, CSP_PRIO_NORM, CSP_TIMEOUT(1), CSP_O_CRC32);
