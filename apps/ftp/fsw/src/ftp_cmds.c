@@ -141,7 +141,7 @@ CFE_Status_t FTP_SendFileCmd(const FTP_SendFileCmd_t *Msg) {
             }
 
             CFE_MSG_SetSequenceCount(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), SeqCnt);
-            CFE_MSG_SetSize(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), sizeof(FTP_Data.Chunk.TelemetryHeader) + BytesRead - 7);
+            CFE_MSG_SetSize(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), sizeof(FTP_Data.Chunk.TelemetryHeader) + BytesRead);
             memcpy(FTP_Data.Chunk.Payload.Bytes, RdBuf, BytesRead);
 
             /* Test using TO Lab */
@@ -160,14 +160,14 @@ CFE_Status_t FTP_SendFileCmd(const FTP_SendFileCmd_t *Msg) {
     }
     CFE_MSG_SetSegmentationFlag(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), CFE_MSG_SegFlag_Last);
     CFE_MSG_SetSequenceCount(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), SeqCnt);
-    CFE_MSG_SetSize(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), sizeof(FTP_Data.Chunk.TelemetryHeader) - 7);
+    CFE_MSG_SetSize(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), sizeof(FTP_Data.Chunk.TelemetryHeader));
 
     /* Test using TO Lab */
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), false);
     /* End of To test */
 
-    CFE_SRL_ApiTransactionCSP(CSP_NODE_GS_KISS, 14, &FTP_Data.Chunk, sizeof(FTP_Data.Chunk), NULL, 0);
+    CFE_SRL_ApiTransactionCSP(CSP_NODE_GS_KISS, 14, &FTP_Data.Chunk.TelemetryHeader, sizeof(FTP_Data.Chunk.TelemetryHeader), NULL, 0);
     
     OS_TaskDelay(1000);
 

@@ -31,6 +31,10 @@
 #include "PCS_stdlib.h"
 #include "PCS_string.h"
 
+#include <sys/socket.h>
+#include <linux/can.h>
+#include <linux/can/raw.h>
+#include <linux/if.h>
 
 /*
  * Macro to add a test case to the list of tests to execute
@@ -58,8 +62,78 @@ extern int32_t linux_serial_write_dispatch(uint16_t SubchannelId, void *Arg);
 
 extern int32_t linux_serial_read_i2c(CFE_PSP_IODriver_SerialXfer_t *Arg);
 extern int32_t linux_serial_read_spi(CFE_PSP_IODriver_SerialXfer_t *Arg);
-extern int32_t linux_serial_read_can(CFE_PSP_IODriver_SerialXfer_t *Arg);
-extern int32_t linux_serial_read_uart(CFE_PSP_IODriver_SerialXfer_t *Arg);
+int32_t linux_serial_read_can2(CFE_PSP_IODriver_SerialXfer_t *Arg) {
+    int32 StatusCode;
+    struct can_frame frame;
+    size_t size = Arg->Params.RxSize;
+
+    if (Arg->Params.TxData && Arg->Params.TxSize) {
+        StatusCode = linux_serial_write_can(Arg);
+        if (StatusCode != CFE_PSP_SUCCESS) {
+            return StatusCode;
+        }
+        /* At this step, there is no need to increase counter. `write_can` already do */
+        OS_TaskDelay(Arg->Params.Interval);
+    }
+
+    size_t TotBytes = 0; // Total Rx bytes till now
+    size_t RdBytes; // Read bytes at this very time
+    while (TotBytes < size) {
+        RdBytes = (size - TotBytes >= CAN_MAX_DLEN) ? CAN_MAX_DLEN : (size - TotBytes);
+        // Poll Read
+        StatusCode = linux_serial_read(Arg->FD, &frame, sizeof(struct can_frame));
+        if (StatusCode != CFE_PSP_SUCCESS) {
+            // LINUX_SERIAL_INCREASE_RXERR(Arg->FD);
+            return StatusCode;
+        }
+
+        uint32_t RxID = 0;
+        if (frame.can_id & CAN_EFF_FLAG) RxID = frame.can_id & CAN_EFF_MASK;
+        else RxID = frame.can_id & CAN_SFF_MASK;
+        OS_printf("InComing CAN Frame ID: %u\n", RxID);
+
+        if (RdBytes != frame.can_dlc) {
+            OS_printf("%s: CAN read length NOT matched!\n", __func__);
+        }
+        memcpy((uint8_t *)Arg->Params.RxData + TotBytes, frame.data, RdBytes);
+        TotBytes += RdBytes;
+    }
+    // LINUX_SERIAL_INCREASE_RXOPS(Arg->FD);
+    // LINUX_SERIAL_INCREASE_RXCNT(Arg->FD, Arg->Params.RxSize);
+
+    return StatusCode; // Guaranteed to `CFE_PSP_SUCCESS`
+}
+int32_t linux_serial_read_uart2(CFE_PSP_IODriver_SerialXfer_t *Arg) {
+    int32 StatusCode;
+    
+    if (Arg->Params.TxData && Arg->Params.TxSize) {
+        StatusCode = PCS_ioctl(Arg->FD, PCS_TCFLSH, 2);
+        if (StatusCode < 0) {
+            // LINUX_SERIAL_INCREASE_SETUPERR(Arg->FD);
+            return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
+        }
+
+        StatusCode = linux_serial_write(Arg->FD, Arg->Params.TxData, Arg->Params.TxSize);
+        if (StatusCode != CFE_PSP_SUCCESS) {
+            // LINUX_SERIAL_INCREASE_TXERR(Arg->FD);
+            return StatusCode;
+        }
+        // LINUX_SERIAL_INCREASE_TXOPS(Arg->FD);
+        // LINUX_SERIAL_INCREASE_TXCNT(Arg->FD, Arg->Params.TxSize);
+        OS_TaskDelay(Arg->Params.Interval);
+    }
+
+    StatusCode = linux_serial_read(Arg->FD, Arg->Params.RxData, Arg->Params.RxSize);
+    if (StatusCode != CFE_PSP_SUCCESS) {
+        // LINUX_SERIAL_INCREASE_RXERR(Arg->FD);
+    }
+    else {
+        // LINUX_SERIAL_INCREASE_RXOPS(Arg->FD);
+        // LINUX_SERIAL_INCREASE_RXCNT(Arg->FD, Arg->Params.TxSize);
+    }
+    return StatusCode;
+    
+}
 extern int32_t linux_serial_read_dispatch(uint16_t SubchannelId, void *Arg);
 
 extern int32_t linux_serial_config_i2c(CFE_PSP_IODriver_Serial_cfg_t *cfg);
@@ -330,32 +404,77 @@ void Test_linux_serial_read_spi(void) {
     UtAssert_STUB_COUNT(PCS_ioctl, 2);
 }
 
-// void Test_linux_serial_read_can(void) {
-//     CFE_PSP_IODriver_SerialXfer_t can_Xfer = {.FD = 3,
-//                                         .Params.TxData = &TempTxBuf,
-//                                         .Params.TxSize = sizeof(TempTxBuf),
-//                                         .Params.RxData = &TempRxBuf,
-//                                         .Params.RxSize = sizeof(TempRxBuf),
-//                                         .Params.Addr = 0x23,
-//                                         .Params.Timeout = 100,
-//                                         .Params.Interval = 100};
-//     /* Nominal case */
-//     UT_SetDeferredRetcode(UT_KEY(PCS_write), 1, can_Xfer.Params.TxSize);
-//     UT_SetDeferredRetcode(UT_KEY(PCS_read), 1, can_Xfer.Params.RxSize);
-//     UtAssert_INT32_EQ(linux_serial_read_can(&can_Xfer), CFE_PSP_SUCCESS);
-//     UtAssert_STUB_COUNT(PCS_write, 1);
-//     UtAssert_STUB_COUNT(PCS_read, 1);
-//     UtAssert_STUB_COUNT(OS_TaskDelay, 1);
+void Test_linux_serial_read_can(void) {
+    CFE_PSP_IODriver_SerialXfer_t can_Xfer = {.FD = 3,
+                                        .Params.TxData = &TempTxBuf,
+                                        .Params.TxSize = sizeof(TempTxBuf),
+                                        .Params.RxData = &TempRxBuf,
+                                        .Params.RxSize = sizeof(TempRxBuf),
+                                        .Params.Addr = 0x23,
+                                        .Params.Timeout = 100,
+                                        .Params.Interval = 100};
+    /* Nominal case */
+    UT_SetDeferredRetcode(UT_KEY(PCS_write), 1, sizeof(struct can_frame));
+    UT_SetDeferredRetcode(UT_KEY(PCS_read), 1, sizeof(struct can_frame));
+    UtAssert_INT32_EQ(linux_serial_read_can2(&can_Xfer), CFE_PSP_SUCCESS);
+    UtAssert_STUB_COUNT(PCS_write, 1);
+    UtAssert_STUB_COUNT(PCS_read, 1);
+    UtAssert_STUB_COUNT(OS_TaskDelay, 1);
 
-//     /* Error in write */
-//     UtAssert_INT32_EQ(linux_serial_read_can(&can_Xfer), CFE_PSP_IODriver_SERIAL_PARTIAL_WRITE_ERROR);
-//     UtAssert_STUB_COUNT(PCS_write, 1);
-//     UtAssert_STUB_COUNT(PCS_read, 0);
-//     UtAssert_STUB_COUNT(OS_TaskDelay, 0);
+    /* Error in write */
+    UT_ResetState(0);
+    UT_SetDeferredRetcode(UT_KEY(PCS_write), 1, sizeof(struct can_frame)-1);
+    UT_SetDeferredRetcode(UT_KEY(PCS_read), 1, sizeof(struct can_frame));
+    UtAssert_INT32_EQ(linux_serial_read_can2(&can_Xfer), CFE_PSP_IODriver_SERIAL_PARTIAL_WRITE_ERROR);
+    UtAssert_STUB_COUNT(PCS_write, 1);
+    UtAssert_STUB_COUNT(PCS_read, 0);
+    UtAssert_STUB_COUNT(OS_TaskDelay, 0);
 
-    
+    /* Error in read */
+    UT_ResetState(0);
+    UT_SetDeferredRetcode(UT_KEY(PCS_write), 1, sizeof(struct can_frame));
+    UT_SetDeferredRetcode(UT_KEY(PCS_read), 1, sizeof(struct can_frame)-1);
+    UtAssert_INT32_EQ(linux_serial_read_can2(&can_Xfer), CFE_PSP_IODriver_SERIAL_PARTIAL_READ_ERROR);
+    UtAssert_STUB_COUNT(PCS_write, 1);
+    UtAssert_STUB_COUNT(PCS_read, 1);
+    UtAssert_STUB_COUNT(OS_TaskDelay, 1);
+}
 
-// }
+void Test_linux_serial_read_uart(void) {
+    CFE_PSP_IODriver_SerialXfer_t uart_Xfer = {.FD = 3,
+                                        .Params.TxData = &TempTxBuf,
+                                        .Params.TxSize = sizeof(TempTxBuf),
+                                        .Params.RxData = &TempRxBuf,
+                                        .Params.RxSize = sizeof(TempRxBuf),
+                                        .Params.Addr = 0x23,
+                                        .Params.Timeout = 100,
+                                        .Params.Interval = 100};
+    /* Nominal case */
+    UT_SetDeferredRetcode(UT_KEY(PCS_write), 1, uart_Xfer.Params.TxSize);
+    UT_SetDeferredRetcode(UT_KEY(PCS_read), 1, uart_Xfer.Params.RxSize);
+    UtAssert_INT32_EQ(linux_serial_read_uart2(&uart_Xfer), CFE_PSP_SUCCESS);
+    UtAssert_STUB_COUNT(PCS_write, 1);
+    UtAssert_STUB_COUNT(PCS_read, 1);
+    UtAssert_STUB_COUNT(OS_TaskDelay, 1);
+
+    /* Error in write */
+    UT_ResetState(0);
+    UT_SetDeferredRetcode(UT_KEY(PCS_write), 1, 0);
+    UT_SetDeferredRetcode(UT_KEY(PCS_read), 1, uart_Xfer.Params.RxSize);
+    UtAssert_INT32_EQ(linux_serial_read_uart2(&uart_Xfer), CFE_PSP_IODriver_SERIAL_PARTIAL_WRITE_ERROR);
+    UtAssert_STUB_COUNT(PCS_write, 1);
+    UtAssert_STUB_COUNT(PCS_read, 0);
+    UtAssert_STUB_COUNT(OS_TaskDelay, 0);
+
+    /* Error in read */
+    UT_ResetState(0);
+    UT_SetDeferredRetcode(UT_KEY(PCS_write), 1, uart_Xfer.Params.TxSize);
+    UT_SetDeferredRetcode(UT_KEY(PCS_read), 1, 0);
+    UtAssert_INT32_EQ(linux_serial_read_uart2(&uart_Xfer), CFE_PSP_IODriver_SERIAL_PARTIAL_READ_ERROR);
+    UtAssert_STUB_COUNT(PCS_write, 1);
+    UtAssert_STUB_COUNT(PCS_read, 1);
+    UtAssert_STUB_COUNT(OS_TaskDelay, 1);
+}
 
 
 void Test_linux_serial_config_i2c(void) {
@@ -418,10 +537,11 @@ void UtTest_Setup(void) {
 
     ADD_TEST(Test_linux_serial_read_i2c);
     ADD_TEST(Test_linux_serial_read_spi);
+    ADD_TEST(Test_linux_serial_read_can);
+    ADD_TEST(Test_linux_serial_read_uart);
 
     ADD_TEST(Test_linux_serial_config_i2c);
     ADD_TEST(Test_linux_serial_config_spi);
     ADD_TEST(Test_linux_serial_config_can);
     ADD_TEST(Test_linux_serial_config_uart);
-
 }
