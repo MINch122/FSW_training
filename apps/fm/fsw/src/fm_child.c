@@ -908,6 +908,15 @@ void FM_ChildFileInfoCmd(FM_ChildQueueEntry_t *CmdArgs)
         ReportPtr->CRC = CurrentCRC;
     }
 
+    /* Print File info for debug */
+    OS_printf("File name: %s\n", FM_GlobalData.FileInfoPkt.Payload.Filename);
+    OS_printf("File size: %u\n", FM_GlobalData.FileInfoPkt.Payload.FileSize);
+    OS_printf("File status: %u\n", FM_GlobalData.FileInfoPkt.Payload.FileStatus);
+    OS_printf("File CRC compute flag: %s\n", FM_GlobalData.FileInfoPkt.Payload.CRC_Computed ? "true" : "false");
+    OS_printf("File CRC: %u\n", FM_GlobalData.FileInfoPkt.Payload.CRC);
+    OS_printf("File Last modified time: %u\n", FM_GlobalData.FileInfoPkt.Payload.LastModifiedTime);
+    OS_printf("File Mode: %u\n", FM_GlobalData.FileInfoPkt.Payload.Mode);
+
     /* Timestamp and send file info telemetry packet */
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(FM_GlobalData.FileInfoPkt.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(FM_GlobalData.FileInfoPkt.TelemetryHeader), true);

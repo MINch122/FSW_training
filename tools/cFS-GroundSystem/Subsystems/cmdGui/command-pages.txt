@@ -42,6 +42,7 @@ UANT,                       UANT_CMD,           0x1840, LE, UdpCommands.py,  127
 SANT,                       SANT_CMD,           0x1843, LE, UdpCommands.py,  127.0.0.1,   1234
 ADCS,                       ADCS_CMD,           0x1865, LE, UdpCommands.py,  127.0.0.1,   1234
 FTP,                        FTP_CMD,            0x1876, LE, UdpCommands.py,  127.0.0.1,   1234
+FM,                         FM_CMD,             0x1815, LE, UdpCommands.py,  127.0.0.1,   1234
 Spare,                                    ,     0x0000, LE, UdpCommands.py,  127.0.0.1,   1234
 LEGACY DEFINITIONS,                       ,     0x0000, LE, UdpCommands.py,  127.0.0.1,   1234
 Executive Services (CPU1),  cfe__es__msg_8h,    0x1806, LE, UdpCommands.py,  127.0.0.1,   1234

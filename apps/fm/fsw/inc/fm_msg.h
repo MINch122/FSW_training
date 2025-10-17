@@ -215,7 +215,7 @@ typedef struct
  */
 typedef struct
 {
-    char   Filename[OS_MAX_PATH_LEN]; /**< \brief Filename */
+    char   Filename[64]; /**< \brief Filename */
     uint32 FileInfoCRC;               /**< \brief File info CRC method */
 } FM_FilenameAndCRC_Payload_t;
 

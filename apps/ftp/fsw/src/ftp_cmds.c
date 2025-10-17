@@ -106,6 +106,8 @@ CFE_Status_t FTP_SendFileCmd(const FTP_SendFileCmd_t *Msg) {
     FTP_Data.RunFlag = true;
     int32 BytesRead = 0;
     uint32_t SeqCnt = 0;
+
+    /* File Transmission loop */
     while (FTP_Data.RunFlag) {
         if (SendBytes >= TotBytes) {
             FTP_Data.RunFlag = false;
@@ -149,15 +151,22 @@ CFE_Status_t FTP_SendFileCmd(const FTP_SendFileCmd_t *Msg) {
             CFE_SB_TransmitMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), false);
             /* End of To test */
 
+            /* Actual Transmission to GS */
             CFE_SRL_ApiTransactionCSP(CSP_NODE_GS_KISS, 14, &FTP_Data.Chunk, sizeof(FTP_Data.Chunk), NULL, 0);
             
             memset(RdBuf, 0, sizeof(RdBuf));
             SeqCnt ++;
         }
+        /* Time interval for each chunk */
         OS_TaskDelay(FTP_CHUNK_SLEEP_MS);
 
         SendBytes += BytesRead;
     }
+
+    /**
+     * Last packet
+     * There is no file data, just CCSDS tlm hdr
+     */
     CFE_MSG_SetSegmentationFlag(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), CFE_MSG_SegFlag_Last);
     CFE_MSG_SetSequenceCount(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), SeqCnt);
     CFE_MSG_SetSize(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), sizeof(FTP_Data.Chunk.TelemetryHeader));
@@ -167,6 +176,7 @@ CFE_Status_t FTP_SendFileCmd(const FTP_SendFileCmd_t *Msg) {
     CFE_SB_TransmitMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), false);
     /* End of To test */
 
+    /* Actual Transmission to GS */
     CFE_SRL_ApiTransactionCSP(CSP_NODE_GS_KISS, 14, &FTP_Data.Chunk.TelemetryHeader, sizeof(FTP_Data.Chunk.TelemetryHeader), NULL, 0);
     
     OS_TaskDelay(1000);
