@@ -159,7 +159,7 @@ CFE_Status_t EPS_Init(void)
         }
     }
 
-        if (status == CFE_SUCCESS)
+    if (status == CFE_SUCCESS)
     {
         /*
         ** Subscribe to Housekeeping request commands

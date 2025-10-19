@@ -64,8 +64,36 @@ bool EPS_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
         result = false;
 
         EPS_AppData.Counters.ErrCounter++;
-    }
 
+
+        /* RPT */
+        EPS_ReportTlm_t *BufPtr = (EPS_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(EPS_ReportTlm_t));
+        if (BufPtr == NULL) goto cleanup;
+
+        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(EPS_REPORT_MID),
+        sizeof(EPS_ReportTlm_t)) != CFE_SUCCESS) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            goto cleanup;
+        }
+        BufPtr->Payload.MsgID = (uint16_t)CFE_SB_MsgIdToValue(MsgId);
+        BufPtr->Payload.CommandCode = (uint8_t)FcnCode;
+        BufPtr->Payload.ReturnType = RPT_RETTYPE_APP;
+        BufPtr->Payload.ReturnCode = CFE_STATUS_WRONG_MSG_LENGTH; // Error code of `Length error`
+        BufPtr->Payload.ReturnDataSize = 2 * sizeof(uint32_t);
+        
+        uint32_t Temp32 = (uint32_t)ActualLength;
+        memcpy(BufPtr->Payload.ReturnValue, &Temp32, sizeof(uint32_t));
+        Temp32 = (uint32_t)ExpectedLength;
+        memcpy(BufPtr->Payload.ReturnValue + sizeof(uint32_t), &Temp32, sizeof(uint32_t));
+
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+        if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            goto cleanup;
+        }
+        /* End of RPT */
+    }
+cleanup:
     return result;
 }
 

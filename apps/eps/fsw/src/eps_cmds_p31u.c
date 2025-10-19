@@ -105,7 +105,9 @@ static void EPS_SendReport(const void* cmd,
                dataSize > RPT_RET_VALUE_BUF_SIZE 
                         ? RPT_RET_VALUE_BUF_SIZE
                         : dataSize);
-   CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader), true);
+                        
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader), true);
 }
 
 
