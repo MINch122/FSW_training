@@ -96,51 +96,78 @@ int32 ADCS_Reset(void);
  * COSMIC Actual Set Command Function
  * 
  ********************************************************/
-int32 ADCS_SetCurrentUnixTime(const ADCS_CurrentUnixTimeCmd_Payload_t *setVal);
-int32 ADCS_SetControlEstimationMode(const ADCS_ControlEstimationModeCmd_Payload_t *setVal);
-int32 ADCS_SetReferenceLLHTarget(const ADCS_ReferenceLLHTargetCmd_Payload_t *setVal);
-int32 ADCS_SetOrbitMode(const ADCS_OrbitModeCmd_Payload_t *setVal);
-int32 ADCS_SetReferenceRPYValues(const ADCS_ReferenceRPYvaluesCmd_Payload_t *setVal);
-int32 ADCS_SetSatOrbitParamConfig(const ADCS_SatOrbitParamConfigCmd_Payload_t *setVal);
-
-int32 ADCS_SetPersistConfig(void);
-int32 ADCS_SetPowerState(const ADCS_PowerStateCmd_Payload_t *setVal);
-int32 ADCS_SetRunMode(const ADCS_RunModeCmd_Payload_t *setVal);
-int32 ADCS_SetSatelliteConfig(const ADCS_SatConfigCmd_Payload_t *setVal);
-int32 ADCS_SetControllerConfig(const ADCS_ControllerConfig_Payload_t *setVal);
-int32 ADCS_SetDefaultModeConfig(const ADCS_DefaultModeConfigCmd_Payload_t *setVal);
-int32 ADCS_SetMountingConfig(const ADCS_MountingConfigCmd_Payload_t *setVal);
-int32 ADCS_SetUnsolicitEventMsgSetup(const ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t *setVal);
-int32 ADCS_SetInitiateEventLogTransfer(const ADCS_InitiateEventLogTransferCmd_Payload_t *setVal);
+int32 ADCS_SetCurrentUnixTime(const ADCS_CurrentUnixTimeCmd_Payload_t *setVal);		// 2
+int32 ADCS_SetErrorLogSetting(const ADCS_ErrorLogSettingCmd_Payload_t *msg);	// 6
+int32 ADCS_SetPersistConfig(void);	// 7
+int32 ADCS_SetControlEstimationMode(const ADCS_ControlEstimationModeCmd_Payload_t *setVal);	// 42
+int32 ADCS_SetDisableMagRwlMntMng(const ADCS_DisableMagRwlMntMngCmd_Payload_t *setVal);	// 43
+int32 ADCS_SetReferenceIRCVector(const ADCS_ReferenceIRCVectorCmd_Payload_t *setVal);	// 47
+int32 ADCS_SetReferenceLLHTarget(const ADCS_ReferenceLLHTargetCmd_Payload_t *setVal);	// 48
+int32 ADCS_SetOrbitMode(const ADCS_OrbitModeCmd_Payload_t *setVal);	// 51
+int32 ADCS_SetMagDeploy(const ADCS_MagDeployCmd_Payload_t *setVal);	// 52
+int32 ADCS_SetReferenceRPYValues(const ADCS_ReferenceRPYvaluesCmd_Payload_t *setVal);	// 54
+int32 ADCS_SetOpenLoopCmdMTQ(const ADCS_OpenLoopCmdMTQCmd_Payload_t *setVal);	// 55
+int32 ADCS_SetPowerState(const ADCS_PowerStateCmd_Payload_t *setVal);	// 56
+int32 ADCS_SetRunMode(const ADCS_RunModeCmd_Payload_t *setVal);	// 57
+int32 ADCS_SetControlMode(const ADCS_ControlModeCmd_Payload_t *setVal);	// 58
+int32 ADCS_SetWhlConfig(const ADCS_WhlConfigCmd_Payload_t *setVal);	// 59
+int32 ADCS_SetSatelliteConfig(const ADCS_SatConfigCmd_Payload_t *setVal);	// 61
+int32 ADCS_SetControllerConfig(const ADCS_ControllerConfig_Payload_t *setVal);	// 62
+int32 ADCS_SetMag0MMTCalibConfig(const ADCS_Mag0MMTCalibConfigCmd_Payload_t *setVal);	// 63
+int32 ADCS_SetDefaultModeConfig(const ADCS_DefaultModeConfigCmd_Payload_t *setVal);	// 64
+int32 ADCS_SetMountingConfig(const ADCS_MountingConfigCmd_Payload_t *setVal);	// 65
+int32 ADCS_SetMag1MMTCalibConfig(const ADCS_Mag1MMTCalibConfigCmd_Payload_t *setVal);	// 66
+int32 ADCS_SetEstimatorConfig(const ADCS_EstimatorConfigCmd_Payload_t *setVal);	// 67
+int32 ADCS_SetSatOrbitParamConfig(const ADCS_SatOrbitParamConfigCmd_Payload_t *setVal);	// 68
+int32 ADCS_SetNodeSelectionConfig(const ADCS_NodeSelectionConfigCmd_Payload_t *setVal);	// 69
+int32 ADCS_SetMTQConfig(const ADCS_MTQConfigCmd_Payload_t *setVal);	// 70
+int32 ADCS_SetEstimationMode(const ADCS_EstimationModeCmd_Payload_t *setVal);	// 71
+int32 ADCS_SetOperationalState(const ADCS_OperationalStateCmd_Payload_t *setVal);	// 72
+int32 ADCS_SetMagSensingElmConfig(const ADCS_MagSensingElmConfigCmd_Payload_t *setVal);	// 77
+int32 ADCS_SetUnsolicitTlmMsgSetup(const ADCS_UnsolicitTlmMsgSetupCmd_Payload_t *setVal);	// 112
+int32 ADCS_SetUnsolicitEventMsgSetup(const ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t *setVal);	// 116
+int32 ADCS_SetInitiateEventLogTransfer(const ADCS_InitiateEventLogTransferCmd_Payload_t *setVal);	// 120
 
 /********************************************************
  * 
  * COSMIC Actual Get Command Function (Get tlm)
  * 
  ********************************************************/
-int32 ADCS_GetCurrentUnixTime(ADCS_CurrentUnixTimeTlm_Payload_t *returnVal);
-int32 ADCS_GetControlEstimationMode(ADCS_ControlEstimationModeTlm_Payload_t *returnVal);
-int32 ADCS_GetReferenceLLHTarget(ADCS_ReferenceLLHTargetTlm_Payload_t *returnVal);
-int32 ADCS_GetOrbitMode(ADCS_OrbitModeTlm_Payload_t *returnVal);
-int32 ADCS_GetRawCubeSenseSun(ADCS_RawCubeSenseSunTlm_Payload_t *returnVal);
-int32 ADCS_GetPowerState(ADCS_PowerStateTlm_Payload_t *returnVal);
-int32 ADCS_GetControlMode(ADCS_ControlModeTlm_Payload_t *returnVal);
-int32 ADCS_GetSatOrbitParamConfig(ADCS_SatOrbitParamConfigTlm_Payload_t *returnVal);
-int32 ADCS_GetRawCSSSensor(ADCS_RawCSSSensorTlm_Payload_t *returnVal);
-int32 ADCS_GetRawGYRSensor(ADCS_RawGYRSensorTlm_Paylaod_t *returnVal);
-int32 ADCS_GetCalibratedGYRSensor(ADCS_CalibratedGYRSensorTlm_Payload_t *returnVal);
-
-int32 ADCS_GetPersistConfigDiagnostic(ADCS_PersistConfigDiagnosticTlm_Payload_t *returnVal);
-int32 ADCS_GetCommunicationStatus(ADCS_CommunicationStatusTlm_Payload_t *returnVal);
-int32 ADCS_GetRunMode(ADCS_RunModeTlm_Payload_t *returnVal);
-int32 ADCS_GetSatelliteConfig(ADCS_SatelliteConfigTlm_Payload_t *returnVal);
-int32 ADCS_GetControllerConfig(ADCS_ControllerConfigTlm_Payload_t *returnVal);
-int32 ADCS_GetDefaultModeConfig(ADCS_DefaultModeConfigTlm_Payload_t *returnVal);
-int32 ADCS_GetMountingConfig(ADCS_MountingConfigTlm_Payload_t *returnVal);
-int32 ADCS_GetOperationalState(ADCS_OperationalStateTlm_Payload_t *returnVal);
-int32 ADCS_GetUnsolicitEventMsgSetup(ADCS_UnsolicitEventMsgSetupTlm_Payload_t *returnVal);
-int32 ADCS_GetEventLogStatusResponse(ADCS_EventLogStatusResponseTlm_Payload_t *returnVal);
-
+int32 ADCS_GetErrorLogSetting(ADCS_ErrorLogSettingTlm_Payload_t *returnVal);	// 132
+int32 ADCS_GetCurrentUnixTime(ADCS_CurrentUnixTimeTlm_Payload_t *returnVal);	// 133
+int32 ADCS_GetPersistConfigDiagnostic(ADCS_PersistConfigDiagnosticTlm_Payload_t *returnVal);	// 134
+int32 ADCS_GetCommunicationStatus(ADCS_CommunicationStatusTlm_Payload_t *returnVal);	// 135
+int32 ADCS_GetControlEstimationMode(ADCS_ControlEstimationModeTlm_Payload_t *returnVal);	// 150
+int32 ADCS_GetReferenceIRCVector(ADCS_ReferenceIRCVectorTlm_Payload_t *returnVal);	// 156
+int32 ADCS_GetReferenceLLHTarget(ADCS_ReferenceLLHTargetTlm_Payload_t *returnVal);	// 157
+int32 ADCS_GetOrbitMode(ADCS_OrbitModeTlm_Payload_t *returnVal);	// 162
+int32 ADCS_GetHealthTlmMMT(ADCS_HealthTlmMMTTlm_Payload_t *returnVal);	// 167
+int32 ADCS_GetRawCubeSenseSun(ADCS_RawCubeSenseSunTlm_Payload_t *returnVal);	// 170
+int32 ADCS_GetReferenceRPYvalues(ADCS_ReferenceRPYvaluesTlm_Payload_t *returnVal);	// 181
+int32 ADCS_GetOpenLoopCmdMTQ(ADCS_OpenLoopCmdMTQTlm_Payload_t *returnVal);	// 182
+int32 ADCS_GetPowerState(ADCS_PowerStateTlm_Payload_t *returnVal);	// 183
+int32 ADCS_GetRunMode(ADCS_RunModeTlm_Payload_t *returnVal);	// 184
+int32 ADCS_GetControlMode(ADCS_ControlModeTlm_Payload_t *returnVal);	// 185
+int32 ADCS_GetWhlConfig(ADCS_WhlConfigTlm_Payload_t *returnVal);	// 186
+int32 ADCS_GetSatelliteConfig(ADCS_SatelliteConfigTlm_Payload_t *returnVal);	// 189
+int32 ADCS_GetControllerConfig(ADCS_ControllerConfigTlm_Payload_t *returnVal);	// 190
+int32 ADCS_GetMag0MMTCalibConfig(ADCS_Mag0MMTCalibConfigTlm_Payload_t *returnVal);	// 191
+int32 ADCS_GetDefaultModeConfig(ADCS_DefaultModeConfigTlm_Payload_t *returnVal);	// 192
+int32 ADCS_GetMountingConfig(ADCS_MountingConfigTlm_Payload_t *returnVal);	// 193
+int32 ADCS_GetMag1MMTCalibConfig(ADCS_Mag1MMTCalibConfigTlm_Payload_t *returnVal);	// 194
+int32 ADCS_GetEstimatorConfig(ADCS_EstimatorConfigTlm_Payload_t *returnVal);	// 195
+int32 ADCS_GetSatOrbitParamConfig(ADCS_SatOrbitParamConfigTlm_Payload_t *returnVal);	// 196
+int32 ADCS_GetNodeSelectionConfig(ADCS_NodeSelectionConfigTlm_Payload_t *returnVal);	// 197
+int32 ADCS_GetMTQConfig(ADCS_MTQConfigTlm_Payload_t *returnVal);	// 198
+int32 ADCS_GetEstimationMode(ADCS_EstimationModeTlm_Payload_t *returnVal);	// 199
+int32 ADCS_GetOperationalState(ADCS_OperationalStateTlm_Payload_t *returnVal);	// 200
+int32 ADCS_GetRawCSSSensor(ADCS_RawCSSSensorTlm_Payload_t *returnVal);	// 203
+int32 ADCS_GetRawGYRSensor(ADCS_RawGYRSensorTlm_Paylaod_t *returnVal);	// 204
+int32 ADCS_GetCalibratedGYRSensor(ADCS_CalibratedGYRSensorTlm_Payload_t *returnVal);	// 207
+int32 ADCS_GetMagSensingElmConfig(ADCS_MagSensingElmConfigTlm_Payload_t *returnVal);	// 221
+int32 ADCS_GetUnsolicitTlmMsgSetup(ADCS_UnsolicitTlmMsgSetupTlm_Payload_t *returnVal);	// 228
+int32 ADCS_GetUnsolicitEventMsgSetup(ADCS_UnsolicitEventMsgSetupTlm_Payload_t *returnVal);	// 233
+int32 ADCS_GetEventLogStatusResponse(ADCS_EventLogStatusResponseTlm_Payload_t *returnVal);	// 235
 
 /**
  * Report function

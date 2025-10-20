@@ -87,6 +87,7 @@ void RPT_ForwardReport(void) {
 
     for(;;) {
         Status = CFE_SB_ReceiveBuffer(&SBBufPtr, RPT_Data.RptPipe, CFE_SB_POLL);
+        if (Status == CFE_SB_NO_MESSAGE) break;
         if (Status != CFE_SUCCESS) {
             RPT_Data.RunStatus = CFE_ES_RunStatus_APP_ERROR;
             break;
@@ -107,6 +108,7 @@ void RPT_FowardCritical(void) {
 
     for (;;) {
         Status = CFE_SB_ReceiveBuffer(&SBBufPtr, RPT_Data.CritPipe, CFE_SB_POLL);
+        if (Status == CFE_SB_NO_MESSAGE) break;
         if (Status != CFE_SUCCESS) {
             RPT_Data.RunStatus = CFE_ES_RunStatus_APP_ERROR;
             break;
@@ -128,6 +130,7 @@ void RPT_ForwardCommand(void) {
 
     for (;;) {
         Status = CFE_SB_ReceiveBuffer(&SBBufPtr, RPT_Data.CmdPipe, CFE_SB_POLL);
+        if (Status == CFE_SB_NO_MESSAGE) break;
         if (Status != CFE_SUCCESS) {
             RPT_Data.RunStatus = CFE_ES_RunStatus_APP_ERROR;
             break;

@@ -208,10 +208,27 @@ typedef struct
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                     ADCS Set Cmd Payload Structures                       */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/* FORMAT OF STRUCT
+typedef struct { // ID 
+    
+}__attribute__((packed)) ADCS_***Cmd_Payload_t;
+*/
+
 typedef struct { // ID 2
     uint32 CurrentUnixseconds; // Current Unix time s. (Unit of measure is [s])
     uint32 CurrentUnixNanoseconds;  // Current Unix time ns. (Unit of measure is [ns])
 }__attribute__((packed)) ADCS_CurrentUnixTimeCmd_Payload_t;
+
+typedef struct { // ID 6
+    uint8 ActiveState:1;
+    uint8 BufferFullAction:1;
+    uint8_t Reserved:6; // Padding    
+}__attribute__((packed)) ADCS_ErrorLogSettingCmd_Payload_t;
+
+// typedef struct { // ID 7 - Noarg
+
+// }
 
 typedef struct { // ID 42
     uint8 ControlMode;
@@ -219,6 +236,16 @@ typedef struct { // ID 42
     uint8 BackupEstimatorMode;
     uint16 ControlTimeout;
 }__attribute__((packed)) ADCS_ControlEstimationModeCmd_Payload_t;
+
+typedef struct { // ID 43
+    uint16 Duration;
+}__attribute__((packed)) ADCS_DisableMagRwlMntMngCmd_Payload_t;
+
+typedef struct { // ID 47
+    float ECIPointingVectorX;
+    float ECIPointingVectorY;
+    float ECIPointingVectorZ;
+}__attribute__((packed)) ADCS_ReferenceIRCVectorCmd_Payload_t;
 
 typedef struct {// ID 48
     float TargetLatitude;
@@ -230,27 +257,24 @@ typedef struct { // ID 51
     uint8 OrbitMode;
 }__attribute__((packed)) ADCS_OrbitModeCmd_Payload_t;
 
+typedef struct { // ID 52
+    uint8 DeployMAG0:1;
+    uint8 DeployMAG1:1;
+
+    uint8 Spare:6; // Explicit declaration
+}__attribute__((packed)) ADCS_MagDeployCmd_Payload_t;
+
 typedef struct { // ID 54
     float Roll;
     float Pitch;
     float Yaw;
 }__attribute__((packed)) ADCS_ReferenceRPYvaluesCmd_Payload_t;
 
-typedef struct { // ID 68
-    double Epoch;
-    double Inclination;
-    double RAAN;
-    double Eccentricity;
-    double AOP;
-    double MeanAnomaly;
-    double MeanMotion;
-    double B_StarDrag;
-}__attribute__((packed)) ADCS_SatOrbitParamConfigCmd_Payload_t;
-
-
-// typedef struct { // ID 7 - Noarg
-
-// }
+typedef struct { // ID 55
+    int16 MTQ0_OpenLoopCmd;
+    int16 MTQ1_OpenLoopCmd;
+    int16 MTQ2_OpenLoopCmd;
+}__attribute__((packed)) ADCS_OpenLoopCmdMTQCmd_Payload_t;
 
 typedef struct {  // ID 56
     uint8 RWL0;
@@ -278,6 +302,33 @@ typedef struct {  // ID 56
 typedef struct { // ID 57
     uint8 RunMode;
 }__attribute__((packed)) ADCS_RunModeCmd_Payload_t;
+
+typedef struct { // ID 58
+    uint8 ControlMode;
+    uint16 Controltimeout;
+}__attribute__((packed)) ADCS_ControlModeCmd_Payload_t;
+
+typedef struct { // ID 59
+    float Rwl0Inertia;
+    float Rwl0MaxMomentum;
+    float Rwl0MaxToque;
+    float Rwl1Inertia;
+    float Rwl1MaxMomentum;
+    float Rwl1MaxToque;
+    float Rwl2Inertia;
+    float Rwl2MaxMomentum;
+    float Rwl2MaxToque;
+    float Rwl3Inertia;
+    float Rwl3MaxMomentum;
+    float Rwl3MaxToque;
+    float WheelRampTorque;
+
+    uint8 WheelScheme;
+    uint8 FailedWheelID;
+
+    float PyramidNominalMomentum;
+    float PyramidTiltAngle;
+}__attribute__((packed)) ADCS_WhlConfigCmd_Payload_t;
 
 typedef struct { // ID 61
     float Ixx;
@@ -335,6 +386,22 @@ typedef struct { // ID 62 (GS should sent properly)
         uint8_t Reserved                        : 5; // Padding to match spec
     } flags;
 }__attribute__((packed)) ADCS_ControllerConfig_Payload_t;
+
+typedef struct { // ID 63
+    int16 MMT_Ch1Offset;
+    int16 MMT_Ch2Offset;
+    int16 MMT_Ch3Offset;
+
+    int16 MMT_SensitivityMAT_S11;
+    int16 MMT_SensitivityMAT_S22;
+    int16 MMT_SensitivityMAT_S33;
+    int16 MMT_SensitivityMAT_S12;
+    int16 MMT_SensitivityMAT_S13;
+    int16 MMT_SensitivityMAT_S21;
+    int16 MMT_SensitivityMAT_S23;
+    int16 MMT_SensitivityMAT_S31;
+    int16 MMT_SensitivityMAT_S32;
+}__attribute__((packed)) ADCS_Mag0MMTCalibConfigCmd_Payload_t;
 
 typedef struct { // ID 64
     uint8_t DefaultRunMode;
@@ -428,6 +495,104 @@ typedef struct { // ID 65
     uint8 ExtGyro1_axis3_mounting;
 }__attribute__((packed)) ADCS_MountingConfigCmd_Payload_t;
 
+typedef struct { // ID 66
+    int16 MMT_Ch1Offset;
+    int16 MMT_Ch2Offset;
+    int16 MMT_Ch3Offset;
+
+    int16 MMT_SensitivityMAT_S11;
+    int16 MMT_SensitivityMAT_S22;
+    int16 MMT_SensitivityMAT_S33;
+    int16 MMT_SensitivityMAT_S12;
+    int16 MMT_SensitivityMAT_S13;
+    int16 MMT_SensitivityMAT_S21;
+    int16 MMT_SensitivityMAT_S23;
+    int16 MMT_SensitivityMAT_S31;
+    int16 MMT_SensitivityMAT_S32;
+}__attribute__((packed)) ADCS_Mag1MMTCalibConfigCmd_Payload_t;
+
+typedef struct { // ID 67
+    uint8 DefaultMainEstimatorMode;
+    uint8 DefaultBackupEstimatorMode;
+    float MAGMeasurementNoise;
+    float CSSMeasurementNoise;
+    float FSSMeasurementNoise;
+    float HSSMeasurementNoise;
+    float STRMeasurementNoise;
+    float MMTRKFSystemNoise;
+    float EKFSystemNoise;
+    float NutationEpsilonCorrection;
+    float NutationPsiCorrection;
+
+    uint8 UseFSSinEKF:1;
+    uint8 UseCSSinEKF:1;
+    uint8 UseHSSinEKF:1;
+    uint8 UseSTRinEKF:1;
+    uint8 TriadVector1:4;
+    uint8 TriadVector2:4;
+
+    uint8 Spare:4; // Explicit declaration
+
+}__attribute__((packed)) ADCS_EstimatorConfigCmd_Payload_t;
+
+typedef struct { // ID 68
+    double Epoch;
+    double Inclination;
+    double RAAN;
+    double Eccentricity;
+    double AOP;
+    double MeanAnomaly;
+    double MeanMotion;
+    double B_StarDrag;
+}__attribute__((packed)) ADCS_SatOrbitParamConfigCmd_Payload_t;
+
+typedef struct { // ID 69
+    uint8 RSWSelectionFlags;
+    uint8 MAGSelectionFlags;
+    uint8 FSSSelectionFlags;
+    uint8 HSSSelectionFlags;
+    uint8 GYRSelectionFlags;
+    uint8 STRSelectionFlags;
+    uint8 GNSSSelectionFlags;
+    uint8 ExtSensorSelectionFlags;
+}__attribute__((packed)) ADCS_NodeSelectionConfigCmd_Payload_t;
+
+typedef struct { // ID 70
+    float MTQ0MaxDipoleMoment;
+    float MTQ1MaxDipoleMoment;
+    float MTQ2MaxDipoleMoment;
+    uint16 MaxMTQOnTime;
+    uint16 MinMTQOnTime;
+    float MagneticControlFilterFactor;
+}__attribute__((packed)) ADCS_MTQConfigCmd_Payload_t;
+
+typedef struct { // ID 71
+    uint8 MainEstimatorMode;
+    uint8 BackupEstimatorMode;
+}__attribute__((packed)) ADCS_EstimationModeCmd_Payload_t;
+
+typedef struct { // ID 72
+    uint8 OperationalState;
+}__attribute__((packed)) ADCS_OperationalStateCmd_Payload_t;
+
+typedef struct { // ID 77
+    uint8 Mag0SensingElement:1;
+    uint8 Mag1SensingElement:1;
+
+    uint8 Spare:6; // Explicit declaration
+}__attribute__((packed)) ADCS_MagSensingElmConfigCmd_Payload_t;
+
+typedef struct { // ID 112
+    uint8 UARTTlmReturnInterval:4;
+    uint8 UART2TlmReturnInterval:4;
+    uint8 CANTlmRetrunInterval:4;
+    uint8 Reserved:4;
+
+    uint8 UARTTlmEDInclusionBitmask[5];
+    uint8 UART2TlmEDInclusionBitmask[5];
+    uint8 CANTlmEDInclusionBitmask[5];
+}__attribute__((packed)) ADCS_UnsolicitTlmMsgSetupCmd_Payload_t;
+
 typedef struct { // ID 116
     uint8 Flag; 
 } ADCS_UnsolicitEventMsgSetupCmd_ExternalPayload_t;
@@ -488,10 +653,51 @@ typedef struct { // ID 120
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                      ADCS Get Cmd Payload Structures                      */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/* FORMAT OF STRUCT
+typedef struct { // ID 
+    
+}__attribute__((packed)) ADCS_***Tlm_Payload_t;
+*/
+
+typedef struct { // ID 132
+    uint8 ActiveState:1;
+    uint8 BufferFullAction:1;
+    uint8_t Reserved:6; // Padding    
+}__attribute__((packed)) ADCS_ErrorLogSettingTlm_Payload_t;
+
 typedef struct { // ID 133
     uint32 CurrentUnixseconds; // Current Unix time s. (Unit of measure is [s])
     uint32 CurrentUnixNanoseconds;  // Current Unix time ns. (Unit of measure is [ns])
 }__attribute__((packed)) ADCS_CurrentUnixTimeTlm_Payload_t;
+
+typedef struct { // ID 134
+    uint8_t State;
+    uint8_t LastResult;
+    uint32_t Timestamp;
+}__attribute__((packed)) ADCS_PersistConfigDiagnosticTlm_Payload_t;
+
+typedef struct { // ID 135
+    uint16_t UART_TcCnt;
+    uint16_t UART_TlmCnt;
+    uint16_t UART_ErrSW;
+    uint16_t UART_ErrHW;
+
+    uint16_t UART2_TcCnt;
+    uint16_t UART2_TlmCnt;
+    uint16_t UART2_ErrSW;
+    uint16_t UART2_ErrHW;
+
+    uint16_t CAN_TcCnt;
+    uint16_t CAN_TlmCnt;
+    uint16_t CAN_ErrSW;
+    uint16_t CAN_ErrHW;
+
+    uint16_t I2C_TcCnt;
+    uint16_t I2C_TlmCnt;
+    uint16_t I2C_ErrSW;
+    uint16_t I2C_ErrHW;
+}__attribute__((packed)) ADCS_CommunicationStatusTlm_Payload_t;
 
 typedef struct { // ID 150
     uint8 ControlMode;
@@ -499,6 +705,12 @@ typedef struct { // ID 150
     uint8 BackupEstimatorMode;
     uint16 ControlTimeout;
 }__attribute__((packed)) ADCS_ControlEstimationModeTlm_Payload_t;
+
+typedef struct { // ID 156
+    float ECIPointingVectorX;
+    float ECIPointingVectorY;
+    float ECIPointingVectorZ;
+}__attribute__((packed)) ADCS_ReferenceIRCVectorTlm_Payload_t;
 
 typedef struct { // ID 157
     float Latitude;
@@ -509,6 +721,34 @@ typedef struct { // ID 157
 typedef struct { // ID 162
     uint8 OrbitMode;
 }__attribute__((packed)) ADCS_OrbitModeTlm_Payload_t;
+
+typedef struct { // ID 167
+    int16 Mag0MCUTemperature;
+    uint16 Mag0MCUCurrent;
+    uint16 Mag0MCUVoltage;
+    int16 Mag0PrimaryTemperature;
+    int16 Mag0RedundantTemperature;
+    uint32 Mag0BurnCurrent;
+    uint8 Mag0DeployPinState:1;
+    uint8 Mag0BurnPinState:1;
+    uint8 Mag0BurnUnderCurrent:1;
+    uint8 Mag0BurnOverCurrent:1;
+    uint8 Mag0DeployTimeout:1;
+    uint8 Padding1:3;
+
+    int16 Mag1MCUTemperature;
+    uint16 Mag1MCUCurrent;
+    uint16 Mag1MCUVoltage;
+    int16 Mag1PrimaryTemperature;
+    int16 Mag1RedundantTemperature;
+    uint32 Mag1BurnCurrent;
+    uint8 Mag1DeployPinState:1;
+    uint8 Mag1BurnPinState:1;
+    uint8 Mag1BurnUnderCurrent:1;
+    uint8 Mag1BurnOverCurrent:1;
+    uint8 Mag1DeployTimeout:1;
+    uint8 Padding2:3; // Explicit declaration
+}__attribute__((packed)) ADCS_HealthTlmMMTTlm_Payload_t;
 
 typedef struct { // ID 170
     uint32 TimeSecond;
@@ -531,6 +771,18 @@ typedef struct { // ID 170
     uint8 FSS3DetectionResult;
     bool ValidResult; // FSS0, 1, 2, 3
 }__attribute__((packed)) ADCS_RawCubeSenseSunTlm_Payload_t;
+
+typedef struct { // ID 181
+    float Roll;
+    float Pitch;
+    float Yaw;    
+}__attribute__((packed)) ADCS_ReferenceRPYvaluesTlm_Payload_t;
+
+typedef struct { // ID 182
+    int16 MTQ0_OpenLoopCmd;
+    int16 MTQ1_OpenLoopCmd;
+    int16 MTQ2_OpenLoopCmd;
+}__attribute__((packed)) ADCS_OpenLoopCmdMTQTlm_Payload_t;
 
 typedef struct { // ID 183
     uint8 RWL0;
@@ -562,103 +814,36 @@ typedef struct { // ID 183
     uint8 ExtGYR1;
 }__attribute__((packed)) ADCS_PowerStateTlm_Payload_t;
 
+typedef struct { // ID 184
+    uint8_t RunMode;
+}__attribute__((packed)) ADCS_RunModeTlm_Payload_t;
+
 typedef struct { // ID 185
-    /**
-     * Not used in GroundCommand 
-     * Only used in beacon
-     */
     uint8 ControlMode;
     uint16 ControlTimeout;
 }__attribute__((packed)) ADCS_ControlModeTlm_Payload_t;
 
-typedef struct { // ID 196
-    double Epoch;
-    double Inclination;
-    double RAAN;
-    double Eccentricity;
-    double AOP;
-    double MeanAnomaly;
-    double MeanMotion;
-    double B_StarDrag;
-}__attribute__((packed)) ADCS_SatOrbitParamConfigTlm_Payload_t;
+typedef struct { // ID 186
+    float Rwl0Inertia;
+    float Rwl0MaxMomentum;
+    float Rwl0MaxToque;
+    float Rwl1Inertia;
+    float Rwl1MaxMomentum;
+    float Rwl1MaxToque;
+    float Rwl2Inertia;
+    float Rwl2MaxMomentum;
+    float Rwl2MaxToque;
+    float Rwl3Inertia;
+    float Rwl3MaxMomentum;
+    float Rwl3MaxToque;
+    float WheelRampTorque;
 
-typedef struct { // ID 203
-    uint32 TimeSeconds;
-    uint32 TimeNanoSeconds;
-    uint8 CSS0;
-    uint8 CSS1;
-    uint8 CSS2;
-    uint8 CSS3;
-    uint8 CSS4;
-    uint8 CSS5;
-    uint8 CSS6;
-    uint8 CSS7;
-    uint8 CSS8;
-    uint8 CSS9;
-    bool CSSValidFlag;
-}__attribute__((packed)) ADCS_RawCSSSensorTlm_Payload_t;
+    uint8 WheelScheme;
+    uint8 FailedWheelID;
 
-typedef struct { // ID 204
-    uint32 TimeSeconds;
-    uint32 TimeNanoSeconds;
-    float GYR0RawRateX;
-    float GYR0RawRateY;
-    float GYR0RawRateZ;
-    float GYR1RawRateX;
-    float GYR1RawRateY;
-    float GYR1RawRateZ;
-    bool ValidFlag; // GYR0, 1
-}__attribute__((packed)) ADCS_RawGYRSensorTlm_Paylaod_t;
-
-typedef struct { // ID 207
-    uint32 TimeSeconds;
-    uint32 TimeNanoSeconds;
-    float GYR0CalibratedRateX;
-    float GYR0CalibratedRateY;
-    float GYR0CalibratedRateZ;
-    float GYR1CalibratedRateX;
-    float GYR1CalibratedRateY;
-    float GYR1CalibratedRateZ;
-    float ExtGYR0CalibratedRateX;
-    float ExtGYR0CalibratedRateY;
-    float ExtGYR0CalibratedRateZ;
-    float ExtGYR1CalibratedRateX;
-    float ExtGYR1CalibratedRateY;
-    float ExtGYR1CalibratedRateZ;
-    bool ValidFlag; // GYR0, 1, ExtGYR0, 1
-}__attribute__((packed)) ADCS_CalibratedGYRSensorTlm_Payload_t;
-
-typedef struct { // ID 134
-    uint8_t State;
-    uint8_t LastResult;
-    uint32_t Timestamp;
-}__attribute__((packed)) ADCS_PersistConfigDiagnosticTlm_Payload_t;
-
-typedef struct { // ID 135
-    uint16_t UART_TcCnt;
-    uint16_t UART_TlmCnt;
-    uint16_t UART_ErrSW;
-    uint16_t UART_ErrHW;
-
-    uint16_t UART2_TcCnt;
-    uint16_t UART2_TlmCnt;
-    uint16_t UART2_ErrSW;
-    uint16_t UART2_ErrHW;
-
-    uint16_t CAN_TcCnt;
-    uint16_t CAN_TlmCnt;
-    uint16_t CAN_ErrSW;
-    uint16_t CAN_ErrHW;
-
-    uint16_t I2C_TcCnt;
-    uint16_t I2C_TlmCnt;
-    uint16_t I2C_ErrSW;
-    uint16_t I2C_ErrHW;
-}__attribute__((packed)) ADCS_CommunicationStatusTlm_Payload_t;
-
-typedef struct { // ID 184
-    uint8_t RunMode;
-}__attribute__((packed)) ADCS_RunModeTlm_Payload_t;
+    float PyramidNominalMomentum;
+    float PyramidTiltAngle;
+}__attribute__((packed)) ADCS_WhlConfigTlm_Payload_t;
 
 typedef struct { // ID 189
     float Ixx;
@@ -717,6 +902,22 @@ typedef struct { // ID 190
         uint8_t Reserved                        : 5; // Padding to match spec
     } flags;
 }__attribute__((packed)) ADCS_ControllerConfigTlm_Payload_t;
+
+typedef struct { // ID 191
+    int16 MMT_Ch1Offset;
+    int16 MMT_Ch2Offset;
+    int16 MMT_Ch3Offset;
+
+    int16 MMT_SensitivityMAT_S11;
+    int16 MMT_SensitivityMAT_S22;
+    int16 MMT_SensitivityMAT_S33;
+    int16 MMT_SensitivityMAT_S12;
+    int16 MMT_SensitivityMAT_S13;
+    int16 MMT_SensitivityMAT_S21;
+    int16 MMT_SensitivityMAT_S23;
+    int16 MMT_SensitivityMAT_S31;
+    int16 MMT_SensitivityMAT_S32;
+}__attribute__((packed)) ADCS_Mag0MMTCalibConfigTlm_Payload_t;
 
 typedef struct { // ID 192
     uint8_t DefaultRunMode;
@@ -810,9 +1011,149 @@ typedef struct { // ID 193
     uint8_t ExtGyro1_axis3_mounting;
 }__attribute__((packed)) ADCS_MountingConfigTlm_Payload_t;
 
+typedef struct { // ID 194
+    int16 MMT_Ch1Offset;
+    int16 MMT_Ch2Offset;
+    int16 MMT_Ch3Offset;
+
+    int16 MMT_SensitivityMAT_S11;
+    int16 MMT_SensitivityMAT_S22;
+    int16 MMT_SensitivityMAT_S33;
+    int16 MMT_SensitivityMAT_S12;
+    int16 MMT_SensitivityMAT_S13;
+    int16 MMT_SensitivityMAT_S21;
+    int16 MMT_SensitivityMAT_S23;
+    int16 MMT_SensitivityMAT_S31;
+    int16 MMT_SensitivityMAT_S32;
+}__attribute__((packed)) ADCS_Mag1MMTCalibConfigTlm_Payload_t;
+
+typedef struct { // ID 195
+    uint8 DefaultMainEstimatorMode;
+    uint8 DefaultBackupEstimatorMode;
+    float MAGMeasurementNoise;
+    float CSSMeasurementNoise;
+    float FSSMeasurementNoise;
+    float HSSMeasurementNoise;
+    float STRMeasurementNoise;
+    float MMTRKFSystemNoise;
+    float EKFSystemNoise;
+    float NutationEpsilonCorrection;
+    float NutationPsiCorrection;
+
+    uint8 UseFSSinEKF:1;
+    uint8 UseCSSinEKF:1;
+    uint8 UseHSSinEKF:1;
+    uint8 UseSTRinEKF:1;
+    uint8 TriadVector1:4;
+    uint8 TriadVector2:4;
+
+    uint8 Spare:4; // Explicit declaration
+
+}__attribute__((packed)) ADCS_EstimatorConfigTlm_Payload_t;
+
+typedef struct { // ID 196
+    double Epoch;
+    double Inclination;
+    double RAAN;
+    double Eccentricity;
+    double AOP;
+    double MeanAnomaly;
+    double MeanMotion;
+    double B_StarDrag;
+}__attribute__((packed)) ADCS_SatOrbitParamConfigTlm_Payload_t;
+
+typedef struct { // ID 197
+    uint8 RWLSelectionFlags;
+    uint8 MAGSelectionFlags;
+    uint8 FSSSelectionFlags;
+    uint8 HSSSelectionFlags;
+    uint8 GYRSelectionFlags;
+    uint8 STRSelectionFlags;
+    uint8 GNSSSelectionFlags;
+    uint8 ExtSensorSelectionFlags;
+}__attribute__((packed)) ADCS_NodeSelectionConfigTlm_Payload_t;
+
+typedef struct { // ID 198
+    float MTQ0MaxDipoleMoment;
+    float MTQ1MaxDipoleMoment;
+    float MTQ2MaxDipoleMoment;
+    uint16 MaxMTQOnTime;
+    uint16 MinMTQOnTime;
+    float MagneticControlFilterFactor;
+}__attribute__((packed)) ADCS_MTQConfigTlm_Payload_t;
+
+typedef struct { // ID 199
+    uint8 MainEstimatorMode;
+    uint8 BackupEstimatorMode;
+}__attribute__((packed)) ADCS_EstimationModeTlm_Payload_t;
+
 typedef struct { // ID 200
     uint8_t OperationalMode;
 }__attribute__((packed)) ADCS_OperationalStateTlm_Payload_t;
+
+typedef struct { // ID 203
+    uint32 TimeSeconds;
+    uint32 TimeNanoSeconds;
+    uint8 CSS0;
+    uint8 CSS1;
+    uint8 CSS2;
+    uint8 CSS3;
+    uint8 CSS4;
+    uint8 CSS5;
+    uint8 CSS6;
+    uint8 CSS7;
+    uint8 CSS8;
+    uint8 CSS9;
+    bool CSSValidFlag;
+}__attribute__((packed)) ADCS_RawCSSSensorTlm_Payload_t;
+
+typedef struct { // ID 204
+    uint32 TimeSeconds;
+    uint32 TimeNanoSeconds;
+    float GYR0RawRateX;
+    float GYR0RawRateY;
+    float GYR0RawRateZ;
+    float GYR1RawRateX;
+    float GYR1RawRateY;
+    float GYR1RawRateZ;
+    bool ValidFlag; // GYR0, 1
+}__attribute__((packed)) ADCS_RawGYRSensorTlm_Paylaod_t;
+
+typedef struct { // ID 207
+    uint32 TimeSeconds;
+    uint32 TimeNanoSeconds;
+    float GYR0CalibratedRateX;
+    float GYR0CalibratedRateY;
+    float GYR0CalibratedRateZ;
+    float GYR1CalibratedRateX;
+    float GYR1CalibratedRateY;
+    float GYR1CalibratedRateZ;
+    float ExtGYR0CalibratedRateX;
+    float ExtGYR0CalibratedRateY;
+    float ExtGYR0CalibratedRateZ;
+    float ExtGYR1CalibratedRateX;
+    float ExtGYR1CalibratedRateY;
+    float ExtGYR1CalibratedRateZ;
+    bool ValidFlag; // GYR0, 1, ExtGYR0, 1
+}__attribute__((packed)) ADCS_CalibratedGYRSensorTlm_Payload_t;
+
+typedef struct { // ID 221
+    uint8 Mag0SensingElement:1;
+    uint8 Mag1SensingElement:1;
+
+    uint8 Spare:6; // Explicit declaration
+}__attribute__((packed)) ADCS_MagSensingElmConfigTlm_Payload_t;
+
+typedef struct { // ID 228
+    uint8 UARTTlmReturnInterval:4;
+    uint8 UART2TlmReturnInterval:4;
+    uint8 CANTlmRetrunInterval:4;
+    uint8 Reserved:4;
+
+    uint8 UARTTlmIDInclusionBitmask[5];
+    uint8 UART2TlmIDInclusionBitmask[5];
+    uint8 CANTlmIDInclusionBitmask[5];
+}__attribute__((packed)) ADCS_UnsolicitTlmMsgSetupTlm_Payload_t;
 
 typedef struct { // ID 233
     uint8_t InfoUART:1;

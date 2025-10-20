@@ -79,7 +79,7 @@ CFE_Status_t SP_AppInit(void){
     CFE_SRL_GPIO_Handle_t *In = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
     bool IsDeploy;
     if (status == CFE_SUCCESS) {
-        status = CFE_SRL_ApiGpioGet(In, &IsDeploy);
+        CFE_SRL_ApiGpioGet(In, &IsDeploy); // Ignore the ret code
     }
 
     if (status == CFE_SUCCESS) {

@@ -115,7 +115,7 @@
  *       This parameter can't be larger than an unsigned 16 bit
  *       integer (65535).
  */
-#define SC_RTS_BUFF_SIZE 150
+#define SC_RTS_BUFF_SIZE 200
 
 /**
  * \brief Max number of commands in each ATS
