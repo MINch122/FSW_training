@@ -18,7 +18,6 @@ CFE_Status_t EO_SendHKCmd(void) {
 }
 
 CFE_Status_t EO_SendBeaconCmd(void) {
-
     
     EO_Data.BcnTlm.Payload.CmdCounter = EO_Data.CmdCounter;
     EO_Data.BcnTlm.Payload.CmdErrCounter = EO_Data.ErrCounter;
@@ -44,7 +43,7 @@ CFE_Status_t EO_NoopCmd(const EO_NoopCmd_t *Msg) {
     
     if (CurrentPhase == EO_TC_WAIT_PHASE) {
         /* Report the message */
-        char WAM[] = "ILOVEMOZART";
+        char WAM[] = "I LOVE MOZART";
         EO_ReportTlm_t Report;
         CFE_MSG_Init(CFE_MSG_PTR(Report.TelemetryHeader), CFE_SB_ValueToMsgId(EO_REPORT_TLM_MID), sizeof(Report));
 
@@ -195,9 +194,17 @@ void EO_ValidateOperationData(const RPT_OpsTlm_t *Msg) {
     /* Check Boot Count */
     uint16_t BootCount = Msg->Payload.BootCount;
 
+    /* Update Epoch */
+    EO_Data.Epoch.Seconds = Msg->Payload.EpochSec;
+    EO_Data.Epoch.Subseconds = Msg->Payload.EpochSubsec;
+
+    EO_PRINTF("%s: Received Boot Count : %u\n", __func__, BootCount);
+    EO_PRINTF("%s: Received Epoch sec : %u\n", __func__, EO_Data.Epoch.Seconds);
+    EO_PRINTF("%s: Received Epoch Subsec : %u\n", __func__, EO_Data.Epoch.Subseconds);
+
     /* If Boot Count is `1`, Start EO sequence after 45 min */
     if (BootCount == 1) {
-        /* SC RTS 2 may handle this */
+        /* SC RTS 2 shall handle this */
         EO_EnableRTS2();
         EO_StartRTS2();
     }

@@ -14,9 +14,6 @@
 #include "sant_msg.h"
 #include "adcs_msg.h"
 
-/**
- * @deprecated EO only occupy Beacon
- */
 CFE_Status_t EO_SendHKCmd(void);
 CFE_Status_t EO_SendBeaconCmd(void);
 
