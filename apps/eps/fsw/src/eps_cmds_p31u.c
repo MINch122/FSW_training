@@ -213,12 +213,23 @@ void EPS_P31U_GetHkOutCmd(const EPS_P31U_GetHkOutCmd_t *Msg)
     int ret;
     
     EPS_AppData.Counters.CmdCounter++;
-    
+    OS_printf("EPS Out recved\n");
     ret = p31u_gethk_out(&hk);
     if (ret != P31U_OK)
         EPS_AppData.Counters.ErrCounter++;
 
     EPS_SendReport(Msg, &hk, sizeof(hk), ret, RPT_RETTYPE_HW);
+
+    /* Send EPS vbatt */
+    EPS_Output_Tlm_t *out = (EPS_Output_Tlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(EPS_Output_Tlm_t));
+    if (!out) return;
+    if (CFE_MSG_Init(CFE_MSG_PTR(out->TelemetryHeader), CFE_SB_ValueToMsgId(EPS_OUT_TLM_MID), sizeof(EPS_Output_Tlm_t)) != CFE_SUCCESS) return;
+
+    memcpy(&out->Output, &hk.output, sizeof(out->Output));
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(out->TelemetryHeader));
+    if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)out, true) != CFE_SUCCESS)
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)out);
 }
 
 void EPS_P31U_GetHkViCmd(const EPS_P31U_GetHkViCmd_t *Msg)
@@ -227,12 +238,28 @@ void EPS_P31U_GetHkViCmd(const EPS_P31U_GetHkViCmd_t *Msg)
     int ret;
     
     EPS_AppData.Counters.CmdCounter++;
-    
+    OS_printf("%s:EPS Vi recved.\n", __func__);
     ret = p31u_gethk_vi(&hk);
     if (ret != P31U_OK)
         EPS_AppData.Counters.ErrCounter++;
 
     EPS_SendReport(Msg, &hk, sizeof(hk), ret, RPT_RETTYPE_HW);
+
+    /* Send EPS vbatt */
+    EPS_Vi_Tlm_t *vi = (EPS_Vi_Tlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(EPS_Vi_Tlm_t));
+    if (!vi) return;
+    if (CFE_MSG_Init(CFE_MSG_PTR(vi->TelemetryHeader), CFE_SB_ValueToMsgId(EPS_VI_TLM_MID), sizeof(EPS_Vi_Tlm_t)) != CFE_SUCCESS) return;
+
+    vi->Vbatt = hk.vbatt;
+    vi->CurIn[0] = hk.curin[0];
+    vi->CurIn[1] = hk.curin[1];
+    OS_printf("%s:EPS Vbatt2: %u\n", __func__, vi->Vbatt);
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(vi->TelemetryHeader));
+    if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)vi, true) != CFE_SUCCESS)
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)vi);
+    
+    return;
 }
 
 void EPS_P31U_GetHkWdtCmd(const EPS_P31U_GetHkWdtCmd_t *Msg)

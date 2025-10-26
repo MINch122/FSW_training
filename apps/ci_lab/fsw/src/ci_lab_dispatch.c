@@ -89,6 +89,14 @@ void CI_LAB_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case CI_LAB_CREATE_CHILD_TASK_CC:
+            if (CI_LAB_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CI_LAB_CreateChildTaskCmd_t)))
+            {
+                CI_LAB_CreateChildTaskCmd((const CI_LAB_CreateChildTaskCmd_t *)SBBufPtr);
+            }
+            break;
+
+
         /* default case already found during FC vs length test */
         default:
             break;

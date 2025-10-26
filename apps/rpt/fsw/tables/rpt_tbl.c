@@ -16,9 +16,7 @@
 #include "utrx_msgids.h"
 
 #include "ftp_msgids.h"
-
-
-
+#include "eo_msgids.h"
 
 
 RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
@@ -35,7 +33,7 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
     /* Entry 2 */
     {.UsedState = RPT_ENABLED,
         .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(EPS_REPORT_MID),
-        .Entry.IsCritical = RPT_NOT_CRITICAL},
+        .Entry.IsCritical = RPT_CRITICAL},
         
     /* Entry 3 */
     {.UsedState = RPT_ENABLED,
@@ -73,9 +71,9 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 10 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
-        .Entry.IsCritical = RPT_NOT_CRITICAL},
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(EO_REPORT_TLM_MID),
+        .Entry.IsCritical = RPT_CRITICAL},
     
     /* Entry 11 */
     {.UsedState = RPT_DISABLED,

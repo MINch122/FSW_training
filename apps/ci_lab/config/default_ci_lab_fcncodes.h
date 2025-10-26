@@ -37,5 +37,6 @@
 */
 #define CI_LAB_NOOP_CC                 0
 #define CI_LAB_RESET_COUNTERS_CC       1
+#define CI_LAB_CREATE_CHILD_TASK_CC    2
 
 #endif

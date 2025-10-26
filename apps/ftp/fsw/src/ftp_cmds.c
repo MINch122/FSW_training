@@ -152,7 +152,7 @@ CFE_Status_t FTP_SendFileCmd(const FTP_SendFileCmd_t *Msg) {
             /* End of To test */
 
             /* Actual Transmission to GS */
-            CFE_SRL_ApiTransactionCSP(CSP_NODE_GS_KISS, 14, &FTP_Data.Chunk, sizeof(FTP_Data.Chunk), NULL, 0);
+            CFE_SRL_ApiTransactionCSP(CSP_NODE_GS_KISS, 14, &FTP_Data.Chunk, sizeof(FTP_Data.Chunk.TelemetryHeader) + BytesRead, NULL, 0);
             
             memset(RdBuf, 0, sizeof(RdBuf));
             SeqCnt ++;

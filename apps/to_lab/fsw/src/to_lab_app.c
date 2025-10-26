@@ -300,7 +300,6 @@ void TO_LAB_forward_telemetry(void)
     do
     {
         CfeStatus = CFE_SB_ReceiveBuffer(&SBBufPtr, TO_LAB_Global.Tlm_pipe, TO_LAB_TLM_PIPE_TIMEOUT);
-
         if ((CfeStatus == CFE_SUCCESS) && (TO_LAB_Global.suppress_sendto == false))
         {
             OsStatus = OS_SUCCESS;
@@ -326,7 +325,7 @@ void TO_LAB_forward_telemetry(void)
                     // if (CFE_SB_MsgIdToValue(MsgId) == (CFE_SB_MsgId_Atom_t)0x0825 || CFE_SB_MsgIdToValue(MsgId) == (CFE_SB_MsgId_Atom_t)0x0826) {
                     //    CfeStatus = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, 25); /* Eliminate `const` attr */ 
                     // }
-                    // else (CfeStatus = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, 23)); /* Eliminate `const` attr */
+                    // else (CfeStatus = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, 13)); /* Eliminate `const` attr */
                     // OS_printf("Status : %d\n", CfeStatus);
                     // if (CfeStatus != 1) { // `1` is Success status. Refer the comments in `CFE_RF_TelemetryEmit`
                     //     CFE_EVS_SendErr(TO_LAB_TLMOUTSTOP_ERR_EID, "%s: RF emit error. RC=0x%08X\n", __func__, CfeStatus);

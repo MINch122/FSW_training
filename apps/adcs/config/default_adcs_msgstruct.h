@@ -425,4 +425,17 @@ typedef struct {
     RPT_Report_t Report;
 } ADCS_ReportTlm_t;
 
+/* MMT status to EO */
+typedef struct {
+    uint8_t Mag0DeployPinState  : 1;
+    uint8_t Mag0BurnPinState    : 1;
+    uint8_t Mag0DeployTimeout   : 1;
+    uint8_t Padding1            : 5;
+} ADCS_MMTTlm_Payload_t;
+
+typedef struct {
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    ADCS_MMTTlm_Payload_t Payload;
+} ADCS_MMTTlm_t;
+
 #endif /* _adcs_app_msg_h_ */

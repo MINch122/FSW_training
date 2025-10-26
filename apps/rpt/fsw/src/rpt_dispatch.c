@@ -84,7 +84,7 @@ void RPT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
 
     case RPT_GET_OPS_DATA_CC:
         if (RPT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(RPT_GetOpsDataCmd_t))) {
-
+            RPT_GetOpsDataCmd((const RPT_GetOpsDataCmd_t *)SBBufPtr);
         }
         break;
         

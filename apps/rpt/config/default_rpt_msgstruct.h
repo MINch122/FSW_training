@@ -14,6 +14,11 @@ typedef struct {
     
 } RPT_BcnTlm_t;
 
+typedef struct {
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    RPT_OperationData_t Payload;
+} RPT_OpsTlm_t;
+
 
 typedef struct {
 

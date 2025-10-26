@@ -54,7 +54,6 @@ void RPT_Enqueue(const RPT_Report_t *Report, bool IsCritical) {
 
         RPT_Data.CritQueue.Entry[RPT_Data.CritQueue.Head].Report = *Report;
         RPT_Data.CritQueue.Head = (RPT_Data.CritQueue.Head + 1) % RPT_CRITICAL_QUEUE_LEN;
-        OS_printf("Critical Q Head: %u || Count: %u\n", RPT_Data.CritQueue.Head, RPT_Data.CritQueue.Count);
         
         /**
          * Append Time info - Only for critical
@@ -63,6 +62,7 @@ void RPT_Enqueue(const RPT_Report_t *Report, bool IsCritical) {
         RPT_Data.CritQueue.Entry[RPT_Data.CritQueue.Head].Time.Subseconds = RPT_Data.OpsData.TimeSubsec;
 
         if (RPT_Data.CritQueue.Count < RPT_CRITICAL_QUEUE_LEN) RPT_Data.CritQueue.Count ++;
+        OS_printf("Critical Q Head: %u || Count: %u\n", RPT_Data.CritQueue.Head, RPT_Data.CritQueue.Count);
 
         OS_MutSemGive(RPT_Data.CritMutexID);
         OS_MutSemGive(RPT_Data.OpsMutexID);
@@ -81,8 +81,8 @@ void RPT_Enqueue(const RPT_Report_t *Report, bool IsCritical) {
 
         RPT_Data.RptQueue.Entry[RPT_Data.RptQueue.Head] = *Report;
         RPT_Data.RptQueue.Head = (RPT_Data.RptQueue.Head +1) % RPT_REPORT_QUEUE_LEN;
-        OS_printf("Report Q Head: %u || Count:%u\n", RPT_Data.CritQueue.Head, RPT_Data.RptQueue.Count);
         if (RPT_Data.RptQueue.Count < RPT_REPORT_QUEUE_LEN) RPT_Data.RptQueue.Count ++;
+        OS_printf("Report Q Head: %u || Count:%u\n", RPT_Data.RptQueue.Head, RPT_Data.RptQueue.Count);
         
         OS_MutSemGive(RPT_Data.ReportMutexID);
     }

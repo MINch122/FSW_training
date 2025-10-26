@@ -22,6 +22,7 @@
 
 /* This is for the standard set of CFE core app MsgID values */
 #include "cfe_msgids.h"
+#include "sch_lab_interface_cfg.h"
 
 #ifdef HAVE_CI_LAB
 #include "ci_lab_msgids.h"
@@ -127,10 +128,12 @@
 */
 
 SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
-    .TickRate = 10, // This TickRate value is equivalent to 1 sec. If `TickRate` is `10`, `10` tick is `1` sec 
+        /* MID, Tick, CC, PayloadSz, Param */
+    .TickRate = SCH_LAB_TICK_RATE, // This TickRate value is equivalent to 1 sec. If `TickRate` is `10`, `10` tick is `1` sec 
     .Config   = {
-        {CFE_SB_MSGID_WRAP_VALUE(SC_CMD_MID), 10 * 45, SC_START_RTS_CC, sizeof(SC_RtsCmd_Payload_t), {8, 0}}, // Trigger the Bcn RTS for 45 seconds
-        {CFE_SB_MSGID_WRAP_VALUE(CFE_SRL_SEND_HK_MID), 10*10, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(EPS_CMD_MID), SCH_LAB_TICK_RATE, EPS_P31U_GETHK_VI_CC},
+        {CFE_SB_MSGID_WRAP_VALUE(SC_CMD_MID), SCH_LAB_TICK_RATE * 45, SC_START_RTS_CC, sizeof(SC_RtsCmd_Payload_t), {8, 0}}, // Trigger the Bcn RTS for 45 seconds
+        {CFE_SB_MSGID_WRAP_VALUE(CFE_SRL_SEND_HK_MID), SCH_LAB_TICK_RATE * 10, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(RPT_SEND_BCN_MID), 10*30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(SANT_SEND_BCN_MID), 10*30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(STRX_SEND_BCN_MID), 10*30, 0},
@@ -148,7 +151,7 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_SB_SEND_HK_MID), 97, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_EVS_SEND_HK_MID), 96, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_SEND_HK_MID), 1000, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(SC_ONEHZ_WAKEUP_MID), 5, 0}, // 0.5 sec per wakeup
+        {CFE_SB_MSGID_WRAP_VALUE(SC_ONEHZ_WAKEUP_MID), SCH_LAB_TICK_RATE/2, 0}, // 0.5 sec per wakeup
 
 /* Example of including additional open source apps */
 #ifdef HAVE_CI_LAB
@@ -175,7 +178,7 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
 #endif
 #ifdef HAVE_LC
         // {CFE_SB_MSGID_WRAP_VALUE(LC_SEND_HK_MID), 103, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(LC_SAMPLE_AP_MID), 50, 0, 8, {0, 175, 1}},
+        {CFE_SB_MSGID_WRAP_VALUE(LC_SAMPLE_AP_MID), SCH_LAB_TICK_RATE * 5, 0, 8, {0, 175, 1}},
 #endif
 
     }};

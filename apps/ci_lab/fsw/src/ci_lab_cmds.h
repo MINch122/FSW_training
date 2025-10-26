@@ -46,6 +46,14 @@ CFE_Status_t CI_LAB_NoopCmd(const CI_LAB_NoopCmd_t *cmd);
 CFE_Status_t CI_LAB_ResetCountersCmd(const CI_LAB_ResetCountersCmd_t *cmd);
 
 /**
+ * @brief Create CI child Task
+ *
+ * @param cmd Input message pointer
+ * @returns CFE Status code
+ * @retval #CFE_SUCCESS on successful processing
+ */
+CFE_Status_t CI_LAB_CreateChildTaskCmd(const CI_LAB_CreateChildTaskCmd_t *cmd);
+/**
  * @brief Handle Send HK command packets
  *
  * This function is triggered in response to a task telemetry request

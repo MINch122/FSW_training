@@ -43,4 +43,7 @@
  */
 #define SCH_LAB_MAX_ARGS_PER_ENTRY 32
 
+
+#define SCH_LAB_TICK_RATE   ((int)10)
+
 #endif /* SCH_LAB_INTERFACE_CFG_H */

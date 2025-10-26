@@ -190,7 +190,16 @@
         "cfe_psp_config.h": "c",
         "uttest.h": "c",
         "utassert.h": "c",
-        "csp_endian.h": "c"
+        "csp_endian.h": "c",
+        "eps_msg.h": "c",
+        "to_lab_msgids.h": "c",
+        "rpt_mission_cfg.h": "c",
+        "eo_utils.h": "c",
+        "eo_tbl.h": "c",
+        "eo_child.h": "c",
+        "fm_msg.h": "c",
+        "eo_task.h": "c",
+        "eo_file.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

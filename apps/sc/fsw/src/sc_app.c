@@ -586,6 +586,7 @@ void SC_LoadDefaultTables(void)
     ** Currently, only RTS tables are loaded during initialization.
     **
     ** ATS and ATS Append tables must be loaded by command.
+    ** + DSS KHJ : Append ATS Load
     */
     for (RtsIndex = 0; RtsIndex < SC_NUMBER_OF_RTS; RtsIndex++)
     {
@@ -602,6 +603,16 @@ void SC_LoadDefaultTables(void)
                               "RTS table %d failed to load, returned: 0x%08lX", (int)RtsIndex, (unsigned long)Status);
         }
     }
+
+    /* Load ATS Table 1 for convinience */
+    Status = CFE_TBL_Load(SC_OperData.AtsTblHandle[0], CFE_TBL_SRC_FILE, "/cf/sc_ats1.tbl");
+    if (Status != CFE_SUCCESS)
+    {
+        /* send an event for ATS Table load */
+            CFE_EVS_SendEvent(SC_RTS_LOAD_FAIL_DBG_EID, CFE_EVS_EventType_DEBUG,
+                              "ATS table 1 failed to load, returned: 0x%08lX", (unsigned long)Status);
+    }
+    else OS_printf("%s: ATS Table 1 Loaded.\n", __func__);
 
     /* Display startup RTS not loaded count */
     CFE_EVS_SendEvent(SC_RTS_LOAD_FAIL_COUNT_INFO_EID, CFE_EVS_EventType_INFORMATION,

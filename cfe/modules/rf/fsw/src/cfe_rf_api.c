@@ -56,7 +56,7 @@ int32 CFE_RF_CommandIngestInit(CFE_ES_TaskId_t *TaskIdPtr) {
         return Status;
     }
 
-    Status = CFE_ES_CreateChildTask(TaskIdPtr, "CI Task", CFE_RF_CommandIngestTask, CFE_ES_TASK_STACK_ALLOCATE, CI_TASK_STACK_SIZE(2), CI_TASK_PRIORITY(100), 0);
+    Status = CFE_ES_CreateChildTask(TaskIdPtr, "CI_TASK", CFE_RF_CommandIngestTask, CFE_ES_TASK_STACK_ALLOCATE, CI_TASK_STACK_SIZE(2), CI_TASK_PRIORITY(100), 0);
     if (Status != CFE_SUCCESS) {
         CFE_ES_WriteToSysLog("%s: Create Ingest task failed. RC = 0x%08X\n", __func__, Status);
         return Status;
@@ -75,7 +75,6 @@ void CFE_RF_CommandIngestTask(void) {
     int32 Status;
     csp_conn_t *Connection = NULL;
     csp_packet_t *Packet = NULL;
-    
     for (;;) {
         Connection = csp_accept(Socket, CSP_TIMEOUT(1));
         if (Connection == NULL) {
@@ -129,7 +128,9 @@ void CFE_RF_CommandIngestTask(void) {
             }
             csp_close(Connection);
         }
-    }
+    } /* End of loop */
+    /* This area should not be reached */
+    CFE_EVS_SendCrit(626, "CRITICAL: CI Task Finished. Should be restarted.");
     
 }
 

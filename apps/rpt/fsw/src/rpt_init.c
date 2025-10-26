@@ -92,12 +92,20 @@ CFE_Status_t RPT_OpsDataInit(void) {
         if (Status < CFE_SUCCESS) {
             CFE_EVS_SendErr(RPT_DATA_READ_ERR_EID, "Read Operation data file failed.");
         }
-        else if (RPT_Data.OpsData.BootCount == 0 || Status == 0) Status = CFE_SUCCESS;
+        else if (RPT_Data.OpsData.BootCount == 0 || Status == 0) {
+            /* If First Boot, Store time epoch */
+            CFE_TIME_SysTime_t Epoch = CFE_TIME_GetTime();
+            RPT_Data.OpsData.EpochSec = Epoch.Seconds;
+            RPT_Data.OpsData.EpochSubsec = Epoch.Subseconds;
+            Status = CFE_SUCCESS;
+
+            OS_printf("Epoch - Sec: %u || Subsec: %u\n", RPT_Data.OpsData.EpochSec, RPT_Data.OpsData.EpochSubsec);
+        }
         else if (RPT_Data.OpsData.BootCount != 0 || Status == sizeof(RPT_OperationData_t)) Status = CFE_SUCCESS;
         else Status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
     
-    if (Status == CFE_SUCCESS) {
+    if (Status == CFE_SUCCESS && RPT_Data.OpsData.BootCount) { // If First Boot, skip this
         /**
          * CRC Check
          */

@@ -42,7 +42,6 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CmdHdr;
-    uint8_t Addr;
 } SANT_SoftRebootCmd_t;        /* FC = SANT_SOFT_REBOOT_CC */
 
 /* Burn for N seconds
@@ -50,7 +49,6 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CmdHdr;
-    uint8_t                 Addr;
     uint8_t                 Duration;
 } SANT_BurnCmd_t;       /* FC = SANT_BURN_CC */
 
@@ -59,45 +57,38 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CmdHdr;
-    uint8_t                 Addr;
 } SANT_StopBurnCmd_t;          /* FC = SANT_STOP_BURN_CC */
 
 /* Telemetry‑pull commands (all 1‑byte Addr argument) */
 typedef struct
 {
     CFE_MSG_CommandHeader_t CmdHdr;
-    uint8_t                 Addr;
 } SANT_GetStatusCmd_t;         /* FC = SANT_GET_STATUS_CC */
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CmdHdr;
-    uint8_t                 Addr;
 } SANT_GetBackupStatusCmd_t;   /* FC = SANT_GET_BACKUP_STATUS_CC */
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CmdHdr;
-    uint8_t                 Addr;
 } SANT_GetBoardStatusCmd_t;    /* FC = SANT_GET_BOARD_STATUS_CC */
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CmdHdr;
-    uint8_t                 Addr;
 } SANT_GetTemperatureCmd_t;    /* FC = SANT_GET_TEMPERATURE_CC */
 
 /* Backup‑deploy settings (read / write) */
 typedef struct
 {
     CFE_MSG_CommandHeader_t CmdHdr;
-    uint8_t                 Addr;
 } SANT_GetSettingsCmd_t;       /* FC = SANT_GET_SETTINGS_CC */
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CmdHdr;
-    uint8_t                 Addr;
     uint16_t                MinutesUntilDeploy;   /* 0‑5000 min */
     uint8_t                 BackupActive;         /* 0|1 */
     uint8_t                 MaxBurnDuration;      /* 0‑127 s */

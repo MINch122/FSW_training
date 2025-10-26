@@ -20,6 +20,7 @@ CFE_Status_t RPT_NoopCmd(const RPT_NoopCmd_t *Msg);
 CFE_Status_t RPT_ResetCounterCmd(const RPT_ResetCounterCmd_t *Msg);
 CFE_Status_t RPT_ReportCmd(const RPT_ReportCmd_t *Msg);
 CFE_Status_t RPT_ClearQueueCmd(const RPT_ClearQueueCmd_t *Msg);
+CFE_Status_t RPT_GetOpsDataCmd(const RPT_GetOpsDataCmd_t *Msg);
 
 void RPT_UpdateOperationData(void);
 

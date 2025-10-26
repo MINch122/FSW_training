@@ -29,9 +29,7 @@
  * This source file creates a sample RTS table that contains only
  * the following commands that are scheduled as follows:
  *
- * SC NOOP command, execution wakeup count relative to start of RTS = 0
- * SC NOOP command, execution wakeup count relative to prev cmd = 5
- * SC NOOP command, execution wakeup count relative to prev cmd = 5
+ * EO Start Child Task Cmd
  */
 
 #include "cfe.h"
@@ -43,6 +41,9 @@
 #include "sc_msgids.h"       /* defines SC packet msg ID's */
 #include "sc_msg.h"          /* defines SC message structures */
 
+#include "eo_msg.h"
+#include "eo_msgids.h"
+
 /* Checksum for each sample command */
 #ifndef SC_NOOP_CKSUM
 #define SC_NOOP_CKSUM (0x06)
@@ -52,11 +53,7 @@
 typedef struct
 {
     SC_RtsEntryHeader_t hdr1;
-    SC_NoopCmd_t        cmd1;
-    SC_RtsEntryHeader_t hdr2;
-    SC_NoopCmd_t        cmd2;
-    SC_RtsEntryHeader_t hdr3;
-    SC_NoopCmd_t        cmd3;
+    EO_StartChildTaskCmd_t        cmd1;
 } SC_RtsStruct002_t;
 
 /* Define the union to size the table correctly */
@@ -72,16 +69,9 @@ typedef union
 /* Used designated initializers to be verbose, modify as needed/desired */
 SC_RtsTable002_t SC_Rts002 = {
     /* 1 */
-    .rts.hdr1.WakeupCount       = 0,
-    .rts.cmd1.CommandHeader = CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd1), SC_NOOP_CC, SC_NOOP_CKSUM),
-
-    /* 2 */
-    .rts.hdr2.WakeupCount       = 5,
-    .rts.cmd2.CommandHeader = CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd2), SC_NOOP_CC, SC_NOOP_CKSUM),
-
-    /* 3 */
-    .rts.hdr3.WakeupCount       = 5,
-    .rts.cmd3.CommandHeader = CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd3), SC_NOOP_CC, SC_NOOP_CKSUM)};
+    .rts.hdr1.WakeupCount       = (2 * 60 * 45), // 45 min
+    .rts.cmd1.CommandHeader = CFE_MSG_CMD_HDR_INIT(EO_CMD_MID, SC_MEMBER_SIZE(cmd1), EO_START_CHILD_TASK_CC, SC_NOOP_CKSUM),
+};
 
 /* Macro for table structure */
 CFE_TBL_FILEDEF(SC_Rts002, SC.RTS_TBL002, SC Example RTS_TBL002, sc_rts002.tbl)

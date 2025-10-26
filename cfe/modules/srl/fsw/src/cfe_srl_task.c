@@ -283,7 +283,7 @@ int32 CFE_SRL_SendHkCmd(const CFE_SRL_SendHkCmd_t *data) {
 
         if (CFE_SRL_UpdateHandleCounters(TempHandle) == CFE_SUCCESS) {
             CFE_SRL_Global.HKTlmMsg.Payload.IOHandleTxCount[i] = TempHandle->Counters.TxCnt;
-            OS_printf("%s: %s Tx Cnt : %u || Rx Cnt : %u\n", __func__, ((const CFE_SRL_Global_Handle_t *)TempHandle)->Name, TempHandle->Counters.TxCnt, TempHandle->Counters.RxCnt);
+            // OS_printf("%s: %s Tx Cnt : %u || Rx Cnt : %u\n", __func__, ((const CFE_SRL_Global_Handle_t *)TempHandle)->Name, TempHandle->Counters.TxCnt, TempHandle->Counters.RxCnt);
         }
     }
 
@@ -297,7 +297,7 @@ int32 CFE_SRL_SendHkCmd(const CFE_SRL_SendHkCmd_t *data) {
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(CFE_SRL_Global.HKTlmMsg.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(CFE_SRL_Global.HKTlmMsg.TelemetryHeader), true);
     
-    CFE_EVS_SendEvent(114, CFE_EVS_EventType_INFORMATION, "SRL Send HK Cmd Received.");
+    // CFE_EVS_SendEvent(114, CFE_EVS_EventType_INFORMATION, "SRL Send HK Cmd Received.");
 
     return CFE_SUCCESS;
 }

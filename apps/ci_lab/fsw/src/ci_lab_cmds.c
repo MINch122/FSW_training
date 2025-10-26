@@ -59,6 +59,19 @@ CFE_Status_t CI_LAB_ResetCountersCmd(const CI_LAB_ResetCountersCmd_t *cmd)
     return CFE_SUCCESS;
 }
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/*                                                                             */
+/*  Purpose:                                                                   */
+/*     Create Child Task                                                       */
+/*                                                                             */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+CFE_Status_t CI_LAB_CreateChildTaskCmd(const CI_LAB_CreateChildTaskCmd_t *cmd)
+{
+    CFE_ES_CreateChildTask(&CI_LAB_Global.ChildTaskId, "CI_TASK", CFE_RF_CommandIngestTask,
+                            CFE_ES_TASK_STACK_ALLOCATE, 4096*2, 100, 0);
+    return CFE_SUCCESS;
+}
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
 /*  Purpose:                                                                  */

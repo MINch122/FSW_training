@@ -81,6 +81,23 @@ CFE_Status_t SANT_SendOpCmd(const SANT_SendOpCmd_t *Msg)
     /*
     ** Send housekeeping telemetry packet...
     */
+    OS_printf("SANT Operation tlm requests.\n");
+    CFE_Status_t gs_st;
+    gs_gssb_ar6_release_status_t release_status;
+
+    gs_st = gs_gssb_ar6_get_release_status(SANT_I2C_ADDR, SANT_I2C_TIMEOUT_MS, &release_status);
+
+    if (gs_st != GS_OK)
+    {
+        CFE_EVS_SendEvent(SANT_GET_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
+                            "Get release status failed, gs_err=0x%02X", gs_st);
+        SANT_Data.ErrCounter++;
+    }
+    OS_printf("State: %u || Status: %u || Burn time left: %u || Burn tries: %u\n",
+                    release_status.state, release_status.status, release_status.burn_time_left, release_status.burn_tries);
+
+    CFE_MSG_Init(CFE_MSG_PTR(SANT_Data.OperationTlm.TelemetryHeader), CFE_SB_ValueToMsgId(SANT_OP_TLM_MID), sizeof(SANT_Data.OperationTlm));
+    memcpy(&SANT_Data.OperationTlm.Payload, &release_status, sizeof(SANT_Data.OperationTlm.Payload));
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(SANT_Data.OperationTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(SANT_Data.OperationTlm.TelemetryHeader), true);
 

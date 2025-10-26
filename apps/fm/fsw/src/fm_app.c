@@ -32,7 +32,6 @@
 
 #include "cfe.h"
 #include "fm_msg.h"
-#include "fm_msgdefs.h"
 #include "fm_msgids.h"
 #include "fm_app.h"
 #include "fm_tbl.h"

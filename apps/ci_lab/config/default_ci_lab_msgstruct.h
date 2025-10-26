@@ -61,6 +61,11 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader;
+} CI_LAB_CreateChildTaskCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
 } CI_LAB_SendHkCmd_t;
 
 typedef struct

@@ -35,6 +35,9 @@
 #include "cfe_es_msg.h"
 #include "cfe_msgids.h"
 
+#include "ci_lab_msgids.h"
+#include "ci_lab_msg.h"
+
 /* Checksum for each desired command - Note that if checksum is enabled, real values (non-zero) must be input */
 #ifndef CFE_TBL_NOOP_CKSUM
 #define CFE_TBL_NOOP_CKSUM 0x00
@@ -49,6 +52,7 @@ typedef union
 {
     CFE_TBL_NoopCmd_t cmd1;   /**< \brief Desired cmd1 type */
     CFE_ES_NoopCmd_t  cmd2;   /**< \brief Desired cmd2 type */
+    CI_LAB_CreateChildTaskCmd_t cmd3;
     HS_MATMsgBuf_t    MsgBuf; /**< \brief Message Buffer for alignment */
 } HS_Message;
 
@@ -75,9 +79,9 @@ HS_MatTableEntry_t HS_MsgActs_Tbl[HS_MAX_MSG_ACT_TYPES] = {
      .Cooldown    = 10,
      .HsMsg.cmd2  = {CFE_MSG_CMD_HDR_INIT(CFE_ES_CMD_MID, HS_MEMBER_SIZE(cmd2), CFE_ES_NOOP_CC, CFE_ES_NOOP_CKSUM)}},
     /*   2 */
-    {.EnableState = HS_MAT_STATE_DISABLED,
-     .Cooldown    = 10,
-     .HsMsg.cmd1  = {CFE_MSG_CMD_HDR_INIT(CFE_TBL_CMD_MID, HS_MEMBER_SIZE(cmd1), CFE_TBL_NOOP_CC, CFE_TBL_NOOP_CKSUM)}},
+    {.EnableState = HS_MAT_STATE_ENABLED,
+     .Cooldown    = 1,
+     .HsMsg.cmd1  = {CFE_MSG_CMD_HDR_INIT(CI_LAB_CMD_MID, HS_MEMBER_SIZE(cmd3), CI_LAB_CREATE_CHILD_TASK_CC, 0x34)}},
     /*   3 */
     {.EnableState = HS_MAT_STATE_DISABLED,
      .Cooldown    = 10,

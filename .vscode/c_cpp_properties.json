@@ -13,7 +13,8 @@
                 "${workspaceFolder}/apps/adcs/fsw/inc",
                 "${workspaceFolder}/libs/adcs_lib/fsw/inc/adcs",
                 "${workspaceFolder}/libs/adcs_lib/fsw/public_inc",
-                "${workspaceFolder}/apps/ftp/fsw/inc"
+                "${workspaceFolder}/apps/ftp/fsw/inc",
+                "${workspaceFolder}/apps/eo/fsw/inc"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

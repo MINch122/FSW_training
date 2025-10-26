@@ -35,6 +35,10 @@ typedef struct {
 } RPT_CriticalQueue_t;
 
 typedef struct {
+    /* Store Time epoch */
+    uint32_t EpochSec;
+    uint32_t EpochSubsec;
+
     uint8 ResetCause;
     uint16 BootCount;
     uint32 TimeSec;

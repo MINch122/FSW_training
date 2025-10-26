@@ -71,10 +71,6 @@ typedef struct
 /* -------------------SANT All Tlm Payload------------------*/
 typedef struct {
     SANT_ReleaseStatus_Payload_t ReleaseStatus;
-    SANT_BackupStatus_Payload_t BackupStatus;
-    SANT_BoardStatus_Payload_t BoardStatus;
-    SANT_Temp_Payload_t Temp;
-    SANT_Settings_Payload_t Settings;
 } SANT_OperationTlm_Payload_t;
 
 /* ------------------Downlink Telemetry------------------- */

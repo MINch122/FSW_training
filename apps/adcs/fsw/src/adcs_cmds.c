@@ -1001,6 +1001,15 @@ CFE_Status_t ADCS_GetHealthTlmMMTCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Health Telemetry MMT: 0x%08lx", (unsigned long)status);
         return status;
     }
+
+    ADCS_MMTTlm_t Tlm;
+    CFE_MSG_Init(CFE_MSG_PTR(Tlm.TelemetryHeader), CFE_SB_ValueToMsgId(ADCS_MMT_TLM_MID), sizeof(Tlm));
+    Tlm.Payload.Mag0BurnPinState = RetVal.Mag0BurnPinState;
+    Tlm.Payload.Mag0DeployPinState = RetVal.Mag0DeployPinState;
+    Tlm.Payload.Mag0DeployTimeout = RetVal.Mag0DeployTimeout;
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(Tlm.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(Tlm.TelemetryHeader), true);
     
     // Handling Retval
     OS_printf("MAG0::\n");
@@ -1014,6 +1023,7 @@ CFE_Status_t ADCS_GetHealthTlmMMTCmd(void) {
     OS_printf("Primary Temp    : %d || Redundant Temp : %d || Burn Current : %u\n", RetVal.Mag1PrimaryTemperature, RetVal.Mag1RedundantTemperature, RetVal.Mag1BurnCurrent);
     OS_printf("DeployPinState  : %u || BurnPinState   : %u\n", RetVal.Mag1DeployPinState, RetVal.Mag1BurnPinState);
     OS_printf("BurnUnderCurrent: %u || BurnOverCurrent: %u || DeployTimeout: %u\n", RetVal.Mag1BurnUnderCurrent, RetVal.Mag1BurnOverCurrent, RetVal.Mag1DeployTimeout);
+    
     return CFE_SUCCESS;
 }
 
