@@ -23,7 +23,7 @@
 #define FTP_MAX_CHUNK_DATA_SIZE     (FTP_MAX_CHUNK_SIZE - OS_MAX_PATH_LEN)
 
 /* Delay between chunk */
-#define FTP_CHUNK_SLEEP_MS  10
+#define FTP_CHUNK_SLEEP_MS  50
 
 
 #endif

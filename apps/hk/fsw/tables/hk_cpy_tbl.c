@@ -80,7 +80,9 @@
 /*********************
  * PAYLOAD Header 
  ********************/
-// include PAY UEL...
+#include "uel_app_msgids.h"
+#include "uel_app_msg.h"
+
 #include "payuzuc_msgids.h"
 #include "payuzuc_msg.h"
 
@@ -106,7 +108,7 @@
 #define BCN_OFFSET_9            BCN_OFFSET_8 + sizeof(ADCS_BcnTlm_Payload_t) // NOT done
 #define BCN_OFFSET_10           BCN_OFFSET_9 + sizeof(PAYUZUC_BcnTlm_Payload_t)
 #define BCN_OFFSET_11           BCN_OFFSET_10 + sizeof(PAYUZUT_BcnTlm_Payload_t)
-#define BCN_OFFSET_12           BCN_OFFSET_11 + sizeof(PAYUELM_BcnTlm_Payload_t)
+#define BCN_OFFSET_12           BCN_OFFSET_11 + sizeof(UEL_APP_bcn_Payload_t)
 #define BCN_OFFSET_13           BCN_OFFSET_12 + sizeof(PAYUELC_BcnTlm_Payload_t) // Doesn't needed
 
 
@@ -221,15 +223,15 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
         BCN_OFFSET_10,
         sizeof(PAYUZUT_BcnTlm_Payload_t),
     },
-    /*  11 : PAYUELM    */
+    /*  11 : PAYUEL    */
     {
-        CFE_SB_MSGID_RESERVED,
+        CFE_SB_MSGID_WRAP_VALUE(UEL_APP_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        0, // Revise to BCN_OFFSET_11
-        0,
+        BCN_OFFSET_11, // Revise to BCN_OFFSET_11
+        sizeof(UEL_APP_bcn_Payload_t),
     },
-    /*  12 : PAYUELC    */
+    /*  12 : PAYUELC  - @deprecated  */
     {
         CFE_SB_MSGID_RESERVED,
         CFE_MSG_TLM_HDR_SIZE,

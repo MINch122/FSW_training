@@ -17,6 +17,7 @@
 
 #include "ftp_msgids.h"
 #include "eo_msgids.h"
+#include "uel_app_msgids.h"
 
 
 RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
@@ -76,8 +77,8 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
         .Entry.IsCritical = RPT_CRITICAL},
     
     /* Entry 11 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(UEL_APP_RPT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 12 */
