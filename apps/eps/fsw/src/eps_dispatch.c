@@ -291,6 +291,27 @@ void EPS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case EPS_P31U_GETHK_OUT_INTERNAL_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetHkOutCmd_t)))
+            {
+                EPS_P31U_GetHkOutInternalCmd((const EPS_P31U_GetHkOutCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case EPS_P31U_GETHK_VI_INTERNAL_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetHkViCmd_t)))
+            {
+                EPS_P31U_GetHkViInternalCmd((const EPS_P31U_GetHkViCmd_t *)SBBufPtr);
+            }
+            break;
+        
+        case EPS_P31U_SET_OUT_SINGLE_INTERNAL_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_SetOutputSingleCmd_t)))
+            {
+                EPS_P31U_SetOutputSingleInternalCmd((const EPS_P31U_SetOutputSingleCmd_t *)SBBufPtr);
+            }
+            break;
+
         /* default case already found during FC vs length test */
         default:
             CFE_EVS_SendEvent(EPS_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",

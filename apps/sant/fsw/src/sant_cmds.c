@@ -188,6 +188,30 @@ CFE_Status_t SANT_BurnCmd(const SANT_BurnCmd_t *Msg)
     return gs_st;
 }
 
+CFE_Status_t SANT_BurnInternalCmd(const SANT_BurnCmd_t *Msg)
+{
+    SANT_Data.CmdCounter++;
+    CFE_Status_t gs_st;
+
+    if (Msg->Duration > 60)
+    {
+        CFE_EVS_SendEvent(SANT_BURN_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "Burn param out of range (dur=%u)", Msg->Duration);
+        SANT_Data.ErrCounter++;
+    }
+
+    gs_st = gs_gssb_ar6_burn(SANT_I2C_ADDR, SANT_I2C_TIMEOUT_MS, Msg->Duration);
+
+    if (gs_st != GS_OK)
+    {
+        CFE_EVS_SendEvent(SANT_BURN_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "Burn failed, gs_err=0x%02X", gs_st);
+        SANT_Data.ErrCounter++;
+    }
+
+    return gs_st;
+}
+
 CFE_Status_t SANT_StopBurnCmd(const SANT_StopBurnCmd_t *Msg)
 {
     SANT_Data.CmdCounter++;

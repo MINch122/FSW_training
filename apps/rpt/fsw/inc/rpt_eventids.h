@@ -31,4 +31,6 @@
 #define RPT_DATA_CRC_VALID_INF_EID  20
 #define RPT_DATA_WRITE_ERR_EID  21
 
+#define RPT_NOOP_CMD_INF_EID    23
+
 #endif

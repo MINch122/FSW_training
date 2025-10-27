@@ -224,6 +224,14 @@ void SANT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case SANT_BURN_INTERNAL_CC:
+
+            if (SANT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(SANT_BurnCmd_t)))
+            {
+                SANT_BurnInternalCmd((const SANT_BurnCmd_t *)SBBufPtr);
+            }
+            break;
+
         default:
             CFE_EVS_SendEvent(SANT_CC_ERR_EID, CFE_EVS_EventType_ERROR,
 

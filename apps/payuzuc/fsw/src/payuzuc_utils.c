@@ -43,7 +43,7 @@ int PAYUZUC_OpenFile(uint8_t MemorySlot, uint16_t StartLine, uint16_t LineNum) {
     
     OS_printf("Path: %s\n", Path);
     
-    ID = open(Path, O_CREAT|O_TRUNC | O_WRONLY, 0666);
+    ID = open(Path, O_CREAT| O_TRUNC | O_WRONLY, 0666);
     return ID;
 }
 
@@ -257,7 +257,133 @@ void PAYUZUC_ConfigurePacket(const void *Payload, void *Packet, uint8 ParamNum, 
  * @deprecated not used
  * 
  ***********************************************/
-void PAYUZUC_CreateDownloadTask(void) {
+void PAYUZUC_DownloadTask(void) {
+
+    OS_MutSemTake(PAYUZUC_Data.MutId);
+    PAYUZUC_DownloadAll_Payload_t DownLoadInfo = PAYUZUC_Data.DownTaskArg;
+    OS_MutSemGive(PAYUZUC_Data.MutId);
+
+    int32 Status;
+    PAYUZUC_Cmd_t Cmd = {0,};
+    uint8_t RxBuf[PAYUZUC_DOWNLOAD_TLM_SIZE] = {0};
+    uint16_t ErrCnt = 0;
+
+    const uint16_t TotLine = DownLoadInfo.PRE ? PAYUZUC_THUMBNAIL_IMG_LINE_NUM : PAYUZUC_IMG_LINE_NUM;;
+
+    /* Validate the args */
+    if (DownLoadInfo.PRE != PAYUZUC_DOWNLOAD_THUMBNAIL_FLAG && DownLoadInfo.PRE != PAYUZUC_DOWNLOAD_ORIGINAL_FLAG) {
+        PAYUZUC_Data.ErrCounter ++;
+        Status = CFE_STATUS_VALIDATION_FAILURE;
+        goto report;
+    }
+
+    if (DownLoadInfo.StartLine < 0 || (DownLoadInfo.StartLine + DownLoadInfo.LineNum) > TotLine) {
+        PAYUZUC_Data.ErrCounter ++;
+        Status = CFE_STATUS_VALIDATION_FAILURE;
+        goto report;
+    }
+
+    int FD = PAYUZUC_OpenFile(DownLoadInfo.MEM, DownLoadInfo.StartLine, DownLoadInfo.LineNum);
+
+    uint8_t Payload[PAYUZUC_DOWNLOAD_PARAM_SIZE] = {0,};
+    Payload[0] = DownLoadInfo.MEM;
+    Payload[1] = DownLoadInfo.PRE;
+
+    for (uint16_t line = DownLoadInfo.StartLine; line < (DownLoadInfo.StartLine + DownLoadInfo.LineNum); 
+        line ++) {
+        Payload[2] = (line >> 8) & 0xFF; // Line MSB
+        Payload[3] = line & 0xFF;       // Line LSB
+        PAYUZUC_ConfigurePacket(Payload, &Cmd, PAYUZUC_DOWNLOAD_PARAM_SIZE,
+                            PAYUZUC_DOWNLOAD_CMD_CODE);
+        
+        CFE_SRL_IO_Param_t Params = {0,};
+        Params.TxData = &Cmd;
+        Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
+        Params.RxData = &RxBuf;
+        Params.RxSize = DownLoadInfo.PRE ? PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE : PAYUZUC_DOWNLOAD_TLM_SIZE;
+        Params.Timeout = 200;
+        Params.Interval = 80; // Empirical value 70ms, Margin for stability
+
+        Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
+        if (Status != CFE_SUCCESS) {
+            ErrCnt ++;
+            PAYUZUC_HandleErrorSerial(Status, PAYUZUC_DOWNLOAD_ALL_CC, Params.RxData, Params.ReadBytes);
+            continue;
+        }
+        else if (RxBuf[1] == PAYUZUC_TLM_ERR_FLAG) {
+            PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes, PAYUZUC_DOWNLOAD_ALL_CC);
+            ErrCnt ++;
+            PAYUZUC_Data.DeviceErrCounter ++;
+            break;
+        }
+        
+        /**
+         * Write Image Data to file
+         */
+        Status  = PAYUZUC_WriteToFile(FD, RxBuf, DownLoadInfo.PRE ? PAYUZUC_DOWNLOAD_THUMBNAIL_TLM_SIZE : PAYUZUC_DOWNLOAD_TLM_SIZE, false);
+        if (Status != CFE_SUCCESS) {
+            OS_printf("Write Error. RC = %d\n", Status);
+            ErrCnt ++;
+            continue;
+        }
+        memset(RxBuf, 0, sizeof(RxBuf));
+
+        /**
+         * Update line state
+         */
+        PAYUZUC_SetLineTrue(DownLoadInfo.MEM, line);
+
+        /* Debugging */
+        OS_printf("%s:Line %u Download done.\n", __func__, line);
+
+    }
+    /**
+     * When Download Done, Close file
+     */
+    Status = PAYUZUC_CloseFile(FD);
+    if (Status != CFE_SUCCESS) {
+        ErrCnt ++;
+        PAYUZUC_Data.ErrCounter ++;
+        goto report;
+    }
+
+    /**
+     * Update download state
+     */
+    PAYUZUC_Data.MemSlotStatus.Entry[DownLoadInfo.MEM].MemoryState = PAYUZUC_DOWNLOAD_ON_GOING;
+
+    /**
+     * Inspection
+     */
+    PAYUZUC_Inspection(DownLoadInfo.MEM);
+
+    /**
+     * Store Table State to File
+     */
+    Status = PAYUZUC_WriteToFile(PAYUZUC_Data.TblHandle, &PAYUZUC_Data.MemSlotStatus, sizeof(PAYUZUC_Memory_Status_t), true);
+    if (Status != CFE_SUCCESS) {
+        ErrCnt ++;
+        OS_printf("Write Fail!.\n");
+        goto report;
+    }
+
+    PAYUZUC_Data.ErrCount = ErrCnt;
+
+report: 
+        /* Report */
+    {
+        PAYUZUC_ReportTlm_t Report = {0, };
+        CFE_MSG_Init(CFE_MSG_PTR(Report.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUC_REPORT_TLM_MID),
+                        sizeof(PAYUZUC_ReportTlm_t));
+        Report.Report.MsgID = PAYUZUC_CMD_MID;
+        Report.Report.CommandCode = PAYUZUC_DOWNLOAD_ALL_CHILD_CC;
+        Report.Report.ReturnType = (PAYUZUC_Data.ErrCount == 0) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_APP;
+        Report.Report.ReturnCode = Status;
+        Report.Report.ReturnDataSize = sizeof(PAYUZUC_Data.ErrCount);
+        memcpy(Report.Report.ReturnValue, &PAYUZUC_Data.ErrCount, sizeof(PAYUZUC_Data.ErrCount));
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
+        CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
+    }
     return;
 }
 

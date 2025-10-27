@@ -166,7 +166,7 @@ CFE_Status_t PAYUZUC_Init(void) {
     /**
      * Get Serial Handle pointer
      */
-    PAYUZUC_Data.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_RS422_HANDLE_INDEXER);
+    PAYUZUC_Data.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_SOCAT_HANDLE_INDEXER);
     CFE_ES_WriteToSysLog("%s: IO Handle Ptr: %p", __func__, (void *)PAYUZUC_Data.Handle);
 
     /**
@@ -183,6 +183,8 @@ CFE_Status_t PAYUZUC_Init(void) {
         OS_printf("Read Error.\n");
     }
     else if (Status == sizeof(PAYUZUC_Memory_Status_t)) Status = CFE_SUCCESS;
+
+    OS_MutSemCreate(&PAYUZUC_Data.MutId, PAYUZUC_MUTEX_NAME, 0);
 
     return Status;
 }

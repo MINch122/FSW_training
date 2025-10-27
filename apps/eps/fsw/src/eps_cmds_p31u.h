@@ -32,6 +32,7 @@
 
 
 void EPS_P31U_SetOutputSingleCmd(const EPS_P31U_SetOutputSingleCmd_t *Msg);
+void EPS_P31U_SetOutputSingleInternalCmd(const EPS_P31U_SetOutputSingleCmd_t *Msg);
 void EPS_P31U_SetOutputsCmd(const EPS_P31U_SetOutputsCmd_t *Msg);
 void EPS_P31U_ResetWdtCmd(const EPS_P31U_ResetWdtCmd_t *Msg);
 void EPS_P31U_ResetCountersCmd(const EPS_P31U_ResetCountersCmd_t *Msg);
@@ -39,7 +40,9 @@ void EPS_P31U_HardResetCmd(const EPS_P31U_HardResetCmd_t *Msg);
 
 void EPS_P31U_GetHkAllCmd(const EPS_P31U_GetHkAllCmd_t *Msg);
 void EPS_P31U_GetHkOutCmd(const EPS_P31U_GetHkOutCmd_t *Msg);
+void EPS_P31U_GetHkOutInternalCmd(const EPS_P31U_GetHkOutCmd_t *Msg);
 void EPS_P31U_GetHkViCmd(const EPS_P31U_GetHkViCmd_t *Msg);
+void EPS_P31U_GetHkViInternalCmd(const EPS_P31U_GetHkViCmd_t *Msg);
 void EPS_P31U_GetHkWdtCmd(const EPS_P31U_GetHkWdtCmd_t *Msg);
 void EPS_P31U_GetHkBasicCmd(const EPS_P31U_GetHkBasicCmd_t *Msg);
 void EPS_P31U_GetHkOldCmd(const EPS_P31U_GetHkOldCmd_t *Msg);

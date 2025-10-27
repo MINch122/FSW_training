@@ -19,7 +19,7 @@ void EO_RequestVbattEPS(void) {
 
     EPS_P31U_GetHkViCmd_t Cmd;
     CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(EPS_CMD_MID), sizeof(Cmd));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), EPS_P31U_GETHK_VI_CC);
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), EPS_P31U_GETHK_VI_INTERNAL_CC);
 
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
 }
@@ -28,7 +28,7 @@ void EO_RequestSetOutSingle(uint8_t Channel, uint8_t Value) {
 
     EPS_P31U_SetOutputSingleCmd_t Cmd;
     CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(EPS_CMD_MID), sizeof(Cmd));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), EPS_P31U_SET_OUT_SINGLE_CC);
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), EPS_P31U_SET_OUT_SINGLE_INTERNAL_CC);
     Cmd.Payload.channel = Channel;
     Cmd.Payload.value = Value;
     Cmd.Payload.delay = 0;
@@ -39,7 +39,7 @@ void EO_RequestSetOutSingle(uint8_t Channel, uint8_t Value) {
 void EO_RequestOutEPS(void) {
     EPS_P31U_GetHkOutCmd_t Cmd;
     CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(EPS_CMD_MID), sizeof(Cmd));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), EPS_P31U_GETHK_OUT_CC);
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), EPS_P31U_GETHK_OUT_INTERNAL_CC);
 
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
 }
@@ -70,7 +70,7 @@ void EO_SantDeploy(void) {
     /* Send Deploy command to SANT */
     SANT_BurnCmd_t Cmd;
     CFE_MSG_Init(CFE_MSG_PTR(Cmd.CmdHdr), CFE_SB_ValueToMsgId(SANT_CMD_MID), sizeof(Cmd));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CmdHdr), SANT_BURN_CC);
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CmdHdr), SANT_BURN_INTERNAL_CC);
     Cmd.Duration = EO_SANT_DURATION;   /* 6 Seconds */
 
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CmdHdr), true);

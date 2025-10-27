@@ -47,6 +47,8 @@ CFE_Status_t RPT_NoopCmd(const RPT_NoopCmd_t *Msg) {
 
     RPT_Data.CmdCounter ++;
 
+    CFE_EVS_SendEvent(RPT_NOOP_CMD_INF_EID, CFE_EVS_EventType_INFORMATION, "RPT: Noop command Received.");
+
     return CFE_SUCCESS;
 }
 

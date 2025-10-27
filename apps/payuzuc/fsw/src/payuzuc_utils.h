@@ -86,4 +86,7 @@ void PAYUZUC_Transaction(void *Tx, void *Rx, uint8_t CC);
 /// @param ParamNum [in] Number of parameter in specific Command
 /// @param Command [in] KissCAM Command code of specific Command
 void PAYUZUC_ConfigurePacket(const void *Payload, void *Packet, uint8 ParamNum, uint8_t Command);
+
+void PAYUZUC_DownloadTask(void);
+
 #endif

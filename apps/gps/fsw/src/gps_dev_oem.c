@@ -192,7 +192,7 @@ int GPS_Device_Init(void)
                 return status;
             }
         }
-        OEM_Log_HandlerActivate(entry->msgId);
+        OEM_Log_HandlerAcivate(entry->msgId);
     }
 
     /**

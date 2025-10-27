@@ -25,8 +25,8 @@ void EO_ChildTask(void) {
         OS_MutSemGive(EO_Data.EOMutex);
 
         /* Send EPS to get vi */
-        EO_RequestVbattEPS();
         EO_Data.WaitingEPS = true;
+        EO_RequestVbattEPS();
 
         if (OS_BinSemTake(EO_Data.EPS_SemId) == OS_SUCCESS) {
             /* Debug */
@@ -101,8 +101,8 @@ void EO_SantPhase(void) {
     /* Or, Polling. */
 
     /* Send SANT operation tlm */
-    EO_SantConfirm();
     EO_Data.WaitingSANT = true;
+    EO_SantConfirm();
 
     if (OS_BinSemTake(EO_Data.SANT_SemId) == OS_SUCCESS) {
         /* Check SANT Status */
@@ -185,8 +185,8 @@ void EO_TCWaitPhase(void) {
 
 void EO_SantConfirmPhase(void) {
     /* Send SANT operation tlm */
-    EO_SantConfirm();
     EO_Data.WaitingSANT = true;
+    EO_SantConfirm();
 
     if (OS_BinSemTake(EO_Data.SANT_SemId) == OS_SUCCESS) {
         EO_PRINTF("%s: SANT Sem Take.\n", __func__);
@@ -242,8 +242,8 @@ void EO_PCDU2ndChannelOnPhase(void) {
         OS_TaskDelay(500); // Wait until channel on
 
         /* Request EPS output channel */
-        EO_RequestOutEPS();
         EO_Data.WaitingEPS = true;
+        EO_RequestOutEPS();
 
         if (OS_BinSemTake(EO_Data.EPS_SemId) == OS_SUCCESS) {
             /* If 2nd channel ON, (Success) */
@@ -393,8 +393,8 @@ void EO_MMTDeployPhase(void) {
     OS_TaskDelay(3000); // Wait until deploy procedure complete
 
     /* Request to ADCS, MMT deploy status */
-    EO_RequestMMTTlm();
     EO_Data.WaitingADCS = true;
+    EO_RequestMMTTlm();
 
     /* Check the deployment status - Target ID 167 deploy pin state */
     if (OS_BinSemTimedWait(EO_Data.ADCS_SemId, 2000) == OS_SUCCESS) {

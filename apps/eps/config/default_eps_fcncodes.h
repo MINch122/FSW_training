@@ -81,4 +81,11 @@
 */
 #define EPS_P31U_TRANSACTION_CC     99
 
+/**
+ * S/C Internal command (Not invoked by GS)
+ */
+#define EPS_P31U_GETHK_VI_INTERNAL_CC   60
+#define EPS_P31U_GETHK_OUT_INTERNAL_CC  61
+#define EPS_P31U_SET_OUT_SINGLE_INTERNAL_CC 62
+
 #endif

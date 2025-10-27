@@ -74,7 +74,11 @@ typedef struct {
     /**
      * Arguments of Download Task Arguments
      */
-    PAYUZUC_DownloadAll_Payload_t DownTaskArg;
+    CFE_ES_TaskId_t DownTaskId;
+    PAYUZUC_DownloadAll_Payload_t DownTaskArg;  /* <\brief Arguments used `Download All` Command */
+    uint16_t ErrCount;                          /* <\brief Error count during `Download All` Command */
+
+    osal_id_t MutId;
 
 } PAYUZUC_Data_t;
 

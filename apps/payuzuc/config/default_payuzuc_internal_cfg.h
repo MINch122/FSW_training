@@ -20,6 +20,11 @@
 
 #define PAYUZUC_PIPE_DEPTH  50 /* Depth of the Command Pipe for Application */
 
+/* Download Child Task Configuration */
+#define PAYUZUC_CHILD_TASK_NAME         "PAYUZUC_ChildTask"
+#define PAYUZUC_CHILD_STACK_SIZE(n)     (4096 *(n))
+#define PAYUZUC_CHILD_PRIORITY          90
+
 
 /**
  * Define Packet Start, End Byte
@@ -71,6 +76,9 @@
  */
 #define PAYUZUC_TBL_PATH            "./cf/sdcard/PAYUZUC.tbl"
 #define PAYUZUC_IMG_PATH            "./cf/sdcard/Kiss"
+
+/* PAYUZUC Mutex */
+#define PAYUZUC_MUTEX_NAME          "PAYUZUC_MUTEX"
 
 typedef struct {
     uint8 StartByte; /* Always `0x40` */

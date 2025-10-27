@@ -584,6 +584,19 @@ report: {
     return CFE_SUCCESS;
 }
 
+CFE_Status_t PAYUZUC_DownloadAll2Cmd(const PAYUZUC_DownloadAllCmd_t *Msg) {
+    PAYUZUC_Data.CmdCounter++;
+
+    OS_MutSemTake(PAYUZUC_Data.MutId);
+    PAYUZUC_Data.DownTaskArg = Msg->Payload;
+    OS_MutSemGive(PAYUZUC_Data.MutId);
+
+    CFE_ES_CreateChildTask(&PAYUZUC_Data.DownTaskId, PAYUZUC_CHILD_TASK_NAME, PAYUZUC_DownloadTask,
+                            CFE_ES_TASK_STACK_ALLOCATE, PAYUZUC_CHILD_STACK_SIZE(2), PAYUZUC_CHILD_PRIORITY, 0);
+
+    return CFE_SUCCESS;
+}
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */

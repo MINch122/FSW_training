@@ -45,6 +45,7 @@ CFE_Status_t SANT_ResetCountersCmd(const SANT_ResetCountersCmd_t *Msg);
 
 CFE_Status_t SANT_SoftRebootCmd(const SANT_SoftRebootCmd_t *Msg);
 CFE_Status_t SANT_BurnCmd(const SANT_BurnCmd_t *Msg);
+CFE_Status_t SANT_BurnInternalCmd(const SANT_BurnCmd_t *Msg);
 CFE_Status_t SANT_StopBurnCmd(const SANT_StopBurnCmd_t *Msg);
 CFE_Status_t SANT_GetBoardStatusCmd(const SANT_GetBoardStatusCmd_t *Msg);
 CFE_Status_t SANT_GetTemperatureCmd(const SANT_GetTemperatureCmd_t *Msg);

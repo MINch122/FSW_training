@@ -22,4 +22,6 @@
 #define PAYUZUC_DOWNLOAD_ALL_CC     10
 #define PAYUZUC_MOSAIC_CC           11
 
+#define PAYUZUC_DOWNLOAD_ALL_CHILD_CC   23
+
 #endif

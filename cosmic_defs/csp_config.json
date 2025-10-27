@@ -71,7 +71,7 @@
             "name": "GS_KISS",
             "node": 8,
             "interface": "CAN",
-            "via": "UTRX",
+            "via": "STRX",
 
             "priority": 2,
             "timeout": 1,
@@ -81,7 +81,7 @@
             "name": "GSTRX",
             "node": 20,
             "interface": "CAN",
-            "via": "UTRX",
+            "via": "STRX",
 
             "priority": 2,
             "timeout": 1,

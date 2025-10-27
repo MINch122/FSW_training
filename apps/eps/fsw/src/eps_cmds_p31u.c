@@ -143,6 +143,20 @@ void EPS_P31U_SetOutputSingleCmd(const EPS_P31U_SetOutputSingleCmd_t *Msg)
     EPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
 }
 
+void EPS_P31U_SetOutputSingleInternalCmd(const EPS_P31U_SetOutputSingleCmd_t *Msg)
+{
+    int ret;
+
+    EPS_AppData.Counters.CmdCounter++;
+    
+    ret = p31u_set_output_single(Msg->Payload.channel,
+                                 Msg->Payload.value,
+                                 Msg->Payload.delay);
+    if (ret != P31U_OK)
+        EPS_AppData.Counters.ErrCounter++;
+
+}
+
 void EPS_P31U_SetOutputsCmd(const EPS_P31U_SetOutputsCmd_t *Msg)
 {
     int ret;
@@ -213,12 +227,24 @@ void EPS_P31U_GetHkOutCmd(const EPS_P31U_GetHkOutCmd_t *Msg)
     int ret;
     
     EPS_AppData.Counters.CmdCounter++;
-    OS_printf("EPS Out recved\n");
+
     ret = p31u_gethk_out(&hk);
     if (ret != P31U_OK)
         EPS_AppData.Counters.ErrCounter++;
 
     EPS_SendReport(Msg, &hk, sizeof(hk), ret, RPT_RETTYPE_HW);
+}
+
+void EPS_P31U_GetHkOutInternalCmd(const EPS_P31U_GetHkOutCmd_t *Msg)
+{
+    p31u_hk_out_t hk;
+    int ret;
+    
+    EPS_AppData.Counters.CmdCounter++;
+    OS_printf("EPS Out recved\n");
+    ret = p31u_gethk_out(&hk);
+    if (ret != P31U_OK)
+        EPS_AppData.Counters.ErrCounter++;
 
     /* Send EPS vbatt */
     EPS_Output_Tlm_t *out = (EPS_Output_Tlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(EPS_Output_Tlm_t));
@@ -238,12 +264,26 @@ void EPS_P31U_GetHkViCmd(const EPS_P31U_GetHkViCmd_t *Msg)
     int ret;
     
     EPS_AppData.Counters.CmdCounter++;
-    OS_printf("%s:EPS Vi recved.\n", __func__);
+
     ret = p31u_gethk_vi(&hk);
     if (ret != P31U_OK)
         EPS_AppData.Counters.ErrCounter++;
 
     EPS_SendReport(Msg, &hk, sizeof(hk), ret, RPT_RETTYPE_HW);
+    
+    return;
+}
+
+void EPS_P31U_GetHkViInternalCmd(const EPS_P31U_GetHkViCmd_t *Msg)
+{
+    p31u_hk_vi_t hk;
+    int ret;
+    
+    EPS_AppData.Counters.CmdCounter++;
+    OS_printf("%s:EPS Vi recved.\n", __func__);
+    ret = p31u_gethk_vi(&hk);
+    if (ret != P31U_OK)
+        EPS_AppData.Counters.ErrCounter++;
 
     /* Send EPS vbatt */
     EPS_Vi_Tlm_t *vi = (EPS_Vi_Tlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(EPS_Vi_Tlm_t));

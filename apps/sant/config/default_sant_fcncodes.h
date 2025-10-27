@@ -47,4 +47,6 @@
 #define SANT_GET_SETTINGS_CC        9
 #define SANT_SET_SETTINGS_CC        10
 
+#define SANT_BURN_INTERNAL_CC       11
+
 #endif

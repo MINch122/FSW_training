@@ -290,7 +290,7 @@ void TO_LAB_forward_telemetry(void)
     const void      *NetBufPtr;
     size_t           NetBufSize;
     uint32           PktCount = 0;
-    // CFE_SB_MsgId_t   MsgId = CFE_SB_INVALID_MSG_ID;
+    CFE_SB_MsgId_t   MsgId = CFE_SB_INVALID_MSG_ID;
 
     OS_SocketAddrInit(&d_addr, OS_SocketDomain_INET);
     OS_SocketAddrSetPort(&d_addr, TO_LAB_TLM_PORT);
@@ -321,16 +321,16 @@ void TO_LAB_forward_telemetry(void)
                     /*****************************
                      * RT Telemetry Out
                      ****************************/
-                    // CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
-                    // if (CFE_SB_MsgIdToValue(MsgId) == (CFE_SB_MsgId_Atom_t)0x0825 || CFE_SB_MsgIdToValue(MsgId) == (CFE_SB_MsgId_Atom_t)0x0826) {
-                    //    CfeStatus = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, 25); /* Eliminate `const` attr */ 
-                    // }
-                    // else (CfeStatus = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, 13)); /* Eliminate `const` attr */
-                    // OS_printf("Status : %d\n", CfeStatus);
-                    // if (CfeStatus != 1) { // `1` is Success status. Refer the comments in `CFE_RF_TelemetryEmit`
-                    //     CFE_EVS_SendErr(TO_LAB_TLMOUTSTOP_ERR_EID, "%s: RF emit error. RC=0x%08X\n", __func__, CfeStatus);
-                    //     CfeStatus = CFE_SUCCESS; // Forcing to loop
-                    // }
+                    CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
+                    if (CFE_SB_MsgIdToValue(MsgId) == (CFE_SB_MsgId_Atom_t)0x0825 || CFE_SB_MsgIdToValue(MsgId) == (CFE_SB_MsgId_Atom_t)0x0826) {
+                       CfeStatus = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, 25); /* Eliminate `const` attr */ 
+                    }
+                    else (CfeStatus = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, 13)); /* Eliminate `const` attr */
+                    OS_printf("Status : %d\n", CfeStatus);
+                    if (CfeStatus != 1) { // `1` is Success status. Refer the comments in `CFE_RF_TelemetryEmit`
+                        CFE_EVS_SendErr(TO_LAB_TLMOUTSTOP_ERR_EID, "%s: RF emit error. RC=0x%08X\n", __func__, CfeStatus);
+                        CfeStatus = CFE_SUCCESS; // Forcing to loop
+                    }
                 }
 
                 CFE_ES_PerfLogExit(TO_LAB_SOCKET_SEND_PERF_ID);
