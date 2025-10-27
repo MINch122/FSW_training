@@ -15,6 +15,7 @@ static void EO_AttitudeControlPhase(void);
 
 void EO_ChildTask(void) {
     for (;;) {
+        EO_PRINTF("%s: Main Entry Loop.\n", __func__);
         OS_MutSemTake(EO_Data.EOMutex);
         if(EO_Data.CurrentStep.CurrentPhase == EO_DONE) {
             /* If Early Orbit Phase done, Exit several app */
@@ -151,6 +152,7 @@ void EO_TCWaitPhase(void) {
         CFE_SRL_ApiChangeVia(CSP_NODE_STRX);
 
         /* Enable beacon */
+        EO_EnableTO();
         EO_EnableBeacon();
     }
 
@@ -162,7 +164,8 @@ void EO_TCWaitPhase(void) {
     EO_PRINTF("%s: Elapsed Time sec: %u\n", __func__, Result.Seconds);
     /* If Elapsed too much, */
     if (Result.Seconds > EO_MAX_ELAPSED_TIME) {
-        EO_PRINTF("%s: Too much time elapsed. Goto SANT confirm phase.\n", __func__);
+        EO_PRINTF("%s: Too much time elapsed. Disable beacon and Goto SANT confirm phase.\n", __func__);
+        EO_DisableBeacon();
         
         /* Forced to Next Phase */
         OS_MutSemTake(EO_Data.EOMutex);
@@ -174,7 +177,8 @@ void EO_TCWaitPhase(void) {
 
     /* Check the elapsed time & TC receive flag */
     if (EO_Data.CurrentStep.IsTC == true) { // If TC received,
-        EO_PRINTF("%s: TC Received. Goto SANT Confirm Phase.\n", __func__);
+        EO_PRINTF("%s: TC Received. Disable beacon and Goto SANT Confirm Phase.\n", __func__);
+        EO_DisableBeacon();
 
         OS_MutSemTake(EO_Data.EOMutex);
         EO_Data.CurrentStep.CurrentPhase = EO_SANT_DEPLOY_CONFIRM_PHASE;

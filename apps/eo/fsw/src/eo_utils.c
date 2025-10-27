@@ -80,6 +80,17 @@ void EO_TCWait(void) {
     // ??
 }
 
+
+void EO_EnableTO(void) {
+    TO_LAB_EnableOutputCmd_t Cmd;
+    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(TO_LAB_CMD_MID), sizeof(Cmd));
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), TO_LAB_OUTPUT_ENABLE_CC);
+    char Pay[] = "192.168.23.23";
+    memcpy(Cmd.Payload.dest_IP, Pay, sizeof(Pay));
+
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
+
+}
 void EO_EnableBeacon(void) {
     /* Send Enable beacon to SC - RTS 8 */
     SC_EnableRtsCmd_t Cmd;

@@ -99,7 +99,7 @@ SC_RtsTable001_t SC_Rts001 = {
         CFE_MSG_CMD_HDR_INIT(ADCS_CMD_MID, SC_MEMBER_SIZE(cmd3), ADCS_GPIO_ENABLE_HIGH_CC, 0x46),
 
     /* 4 To Enable Output */
-    .rts.hdr4.WakeupCount = 0,
+    .rts.hdr4.WakeupCount = 1, // 0.5 sec
     .rts.cmd4.CommandHeader = 
         CFE_MSG_CMD_HDR_INIT(TO_LAB_CMD_MID, SC_MEMBER_SIZE(cmd4), TO_LAB_OUTPUT_ENABLE_CC, 0x23),
     .rts.cmd4.Payload.dest_IP = "192.168.16.13",

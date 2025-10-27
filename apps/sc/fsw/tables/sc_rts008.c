@@ -150,6 +150,7 @@ typedef struct
      * 'dot'  : interval 0.5 second
      * 'dash' : interval 1 second
      * Therefore, total 13 packet should be transmitted
+     * -> Changed to "C" only: total 5 packet
      */
 
     /*---------------Start "C"---------------*/
@@ -174,45 +175,45 @@ typedef struct
     HK_SendCombinedPktCmd_t cmd16;
     /*---------------End "C"---------------*/
 
-    /* 3 sec interval */
+    // /* 3 sec interval */
 
-    /*---------------Start "O"---------------*/
-    /* 17 HK send combined packet */
-    SC_RtsEntryHeader_t hdr17;
-    HK_SendCombinedPktCmd_t cmd17;
-    /* dash */
-    /* 18 HK send combined packet */
-    SC_RtsEntryHeader_t hdr18;
-    HK_SendCombinedPktCmd_t cmd18;
-    /* dash */
-    /* 19 HK send combined packet */
-    SC_RtsEntryHeader_t hdr19;
-    HK_SendCombinedPktCmd_t cmd19;
-    /* dash */
-    /* 20 HK send combined packet */
-    SC_RtsEntryHeader_t hdr20;
-    HK_SendCombinedPktCmd_t cmd20;
-    /*---------------End "O"---------------*/
+    // /*---------------Start "O"---------------*/
+    // /* 17 HK send combined packet */
+    // SC_RtsEntryHeader_t hdr17;
+    // HK_SendCombinedPktCmd_t cmd17;
+    // /* dash */
+    // /* 18 HK send combined packet */
+    // SC_RtsEntryHeader_t hdr18;
+    // HK_SendCombinedPktCmd_t cmd18;
+    // /* dash */
+    // /* 19 HK send combined packet */
+    // SC_RtsEntryHeader_t hdr19;
+    // HK_SendCombinedPktCmd_t cmd19;
+    // /* dash */
+    // /* 20 HK send combined packet */
+    // SC_RtsEntryHeader_t hdr20;
+    // HK_SendCombinedPktCmd_t cmd20;
+    // /*---------------End "O"---------------*/
 
-    /* 3 sec interval */
+    // /* 3 sec interval */
 
-    /*---------------Start "S"---------------*/
-    /* 21 HK send combined packet */
-    SC_RtsEntryHeader_t hdr21;
-    HK_SendCombinedPktCmd_t cmd21;
-    /* dot */
-    /* 22 HK send combined packet */
-    SC_RtsEntryHeader_t hdr22;
-    HK_SendCombinedPktCmd_t cmd22;
-    /* dot */
-    /* 23 HK send combined packet */
-    SC_RtsEntryHeader_t hdr23;
-    HK_SendCombinedPktCmd_t cmd23;
-    /* dot */
-    /* 24 HK send combined packet */
-    SC_RtsEntryHeader_t hdr24;
-    HK_SendCombinedPktCmd_t cmd24;
-    /*---------------End "S"---------------*/
+    // /*---------------Start "S"---------------*/
+    // /* 21 HK send combined packet */
+    // SC_RtsEntryHeader_t hdr21;
+    // HK_SendCombinedPktCmd_t cmd21;
+    // /* dot */
+    // /* 22 HK send combined packet */
+    // SC_RtsEntryHeader_t hdr22;
+    // HK_SendCombinedPktCmd_t cmd22;
+    // /* dot */
+    // /* 23 HK send combined packet */
+    // SC_RtsEntryHeader_t hdr23;
+    // HK_SendCombinedPktCmd_t cmd23;
+    // /* dot */
+    // /* 24 HK send combined packet */
+    // SC_RtsEntryHeader_t hdr24;
+    // HK_SendCombinedPktCmd_t cmd24;
+    // /*---------------End "S"---------------*/
 
 } SC_RtsStruct008_t;
 
@@ -329,65 +330,65 @@ SC_RtsTable008_t SC_Rts008 = {
     .rts.cmd16.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd16), 0, 0x29),
     .rts.cmd16.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
 
-    /* 3 sec */
+    // /* 3 sec */
 
-    /**
-     *  17 HK send combined
-     * */
-    .rts.hdr17.WakeupCount       = 6, // 3 sec
-    .rts.cmd17.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd17), 0, 0x29),
-    .rts.cmd17.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-    /* dash */
-    /**
-     *  18 HK send combined
-     * */
-    .rts.hdr18.WakeupCount       = 2, // 1 sec
-    .rts.cmd18.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd18), 0, 0x29),
-    .rts.cmd18.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-    /* dash */
-    /**
-     *  19 HK send combined
-     * */
-    .rts.hdr19.WakeupCount       = 2, // 1 sec
-    .rts.cmd19.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd19), 0, 0x29),
-    .rts.cmd19.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-    /* dash */
-    /**
-     *  20 HK send combined
-     * */
-    .rts.hdr20.WakeupCount       = 2, // 1 sec
-    .rts.cmd20.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd20), 0, 0x29),
-    .rts.cmd20.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+    // /**
+    //  *  17 HK send combined
+    //  * */
+    // .rts.hdr17.WakeupCount       = 6, // 3 sec
+    // .rts.cmd17.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd17), 0, 0x29),
+    // .rts.cmd17.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+    // /* dash */
+    // /**
+    //  *  18 HK send combined
+    //  * */
+    // .rts.hdr18.WakeupCount       = 2, // 1 sec
+    // .rts.cmd18.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd18), 0, 0x29),
+    // .rts.cmd18.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+    // /* dash */
+    // /**
+    //  *  19 HK send combined
+    //  * */
+    // .rts.hdr19.WakeupCount       = 2, // 1 sec
+    // .rts.cmd19.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd19), 0, 0x29),
+    // .rts.cmd19.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+    // /* dash */
+    // /**
+    //  *  20 HK send combined
+    //  * */
+    // .rts.hdr20.WakeupCount       = 2, // 1 sec
+    // .rts.cmd20.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd20), 0, 0x29),
+    // .rts.cmd20.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
     
-    /* 3 sec */
+    // /* 3 sec */
 
-    /**
-     *  21 HK send combined
-     * */
-    .rts.hdr21.WakeupCount       = 1, // 0.5 sec
-    .rts.cmd21.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd21), 0, 0x29),
-    .rts.cmd21.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-    /* dot */
-    /**
-     *  22 HK send combined
-     * */
-    .rts.hdr22.WakeupCount       = 1, // 0.5 sec
-    .rts.cmd22.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd22), 0, 0x29),
-    .rts.cmd22.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-    /* dot */
-    /**
-     *  23 HK send combined
-     * */
-    .rts.hdr23.WakeupCount       = 1, // 0.5 sec
-    .rts.cmd23.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd23), 0, 0x29),
-    .rts.cmd23.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-    /* dot */
-    /**
-     *  24 HK send combined
-     * */
-    .rts.hdr24.WakeupCount       = 1, // 0.5 sec
-    .rts.cmd24.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd24), 0, 0x29),
-    .rts.cmd24.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID)
+    // /**
+    //  *  21 HK send combined
+    //  * */
+    // .rts.hdr21.WakeupCount       = 1, // 0.5 sec
+    // .rts.cmd21.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd21), 0, 0x29),
+    // .rts.cmd21.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+    // /* dot */
+    // /**
+    //  *  22 HK send combined
+    //  * */
+    // .rts.hdr22.WakeupCount       = 1, // 0.5 sec
+    // .rts.cmd22.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd22), 0, 0x29),
+    // .rts.cmd22.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+    // /* dot */
+    // /**
+    //  *  23 HK send combined
+    //  * */
+    // .rts.hdr23.WakeupCount       = 1, // 0.5 sec
+    // .rts.cmd23.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd23), 0, 0x29),
+    // .rts.cmd23.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+    // /* dot */
+    // /**
+    //  *  24 HK send combined
+    //  * */
+    // .rts.hdr24.WakeupCount       = 1, // 0.5 sec
+    // .rts.cmd24.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd24), 0, 0x29),
+    // .rts.cmd24.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID)
 
 };
 

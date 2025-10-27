@@ -55,7 +55,7 @@
 
 /* SP Configuration */
 #define EO_DEFAULT_SP_DEPLOY_TIME       20 /* <\brief [sec]*/
-#define EO_VBATT_THRESHOLD_FOR_SP       (EO_VBATT_THRESHOLD + 3000) /* <\brief [mV]*/
+#define EO_VBATT_THRESHOLD_FOR_SP       (EO_VBATT_THRESHOLD + 300u) /* <\brief [mV]*/
 #define EO_SP_MAX_TRIES                 3
 
 /* MMT Configuration */
@@ -63,7 +63,7 @@
 
 /* TC Wait configuration */
 #ifdef EO_DEBUG
-#define EO_MAX_ELAPSED_TIME     ((uint32)60)    /* <\brief 1 minute */
+#define EO_MAX_ELAPSED_TIME     ((uint32)180)    /* <\brief 3 minute */
 #else
 #define EO_MAX_ELAPSED_TIME     ((uint32)(60 * 60 * 24 * 2)) /* <\brief 2 days */
 #endif

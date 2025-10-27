@@ -156,6 +156,7 @@ void EO_WakeupTask(void) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 void EO_UpdateDataEPS(const EPS_Vi_Tlm_t *Msg) {
+    EO_PRINTF("%s: EPS VI arrived.\n", __func__);
     EO_Data.Vbatt = Msg->Vbatt;
     EO_Data.CurIn[0] = Msg->CurIn[0];
     EO_Data.CurIn[1] = Msg->CurIn[1];

@@ -29,6 +29,9 @@
 #include "adcs_msgids.h"
 #include "adcs_msg.h"
 
+#include "to_lab_msgids.h"
+#include "to_lab_msg.h"
+
 /* Debug definition */
 #ifdef EO_DEBUG
 #define EO_PRINTF(...)  OS_printf(__VA_ARGS__)
@@ -54,6 +57,8 @@ void EO_SantDeploy(void);
 void EO_SantConfirm(void);
 
 void EO_TCWait(void);
+
+void EO_EnableTO(void);
 void EO_EnableBeacon(void);
 void EO_DisableBeacon(void);
 
