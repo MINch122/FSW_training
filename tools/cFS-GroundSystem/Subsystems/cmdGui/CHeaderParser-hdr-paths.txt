@@ -38,5 +38,7 @@
 #../../../../apps/strx/config/default_strx_msgstruct.h
 #../../../../apps/ftp/config/default_ftp_fcncodes.h
 #../../../../apps/ftp/config/default_ftp_msgdefs.h
-../../../../apps/fm/fsw/inc/fm_msgdefs.h
-../../../../apps/fm/fsw/inc/fm_msg.h
+#../../../../apps/fm/fsw/inc/fm_msgdefs.h
+#../../../../apps/fm/fsw/inc/fm_msg.h
+../../../../apps/uel_app/config/default_uel_app_fcncodes.h
+../../../../apps/uel_app/config/default_uel_app_msgstruct.h
