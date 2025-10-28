@@ -147,8 +147,8 @@ CFE_Status_t FTP_SendFileCmd(const FTP_SendFileCmd_t *Msg) {
             memcpy(FTP_Data.Chunk.Payload.Bytes, RdBuf, BytesRead);
 
             /* Test using TO Lab */
-            CFE_SB_TimeStampMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader));
-            CFE_SB_TransmitMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), false);
+            // CFE_SB_TimeStampMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader));
+            // CFE_SB_TransmitMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), false);
             /* End of To test */
 
             /* Actual Transmission to GS */
@@ -172,8 +172,8 @@ CFE_Status_t FTP_SendFileCmd(const FTP_SendFileCmd_t *Msg) {
     CFE_MSG_SetSize(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), sizeof(FTP_Data.Chunk.TelemetryHeader));
 
     /* Test using TO Lab */
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), false);
+    // CFE_SB_TimeStampMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader));
+    // CFE_SB_TransmitMsg(CFE_MSG_PTR(FTP_Data.Chunk.TelemetryHeader), false);
     /* End of To test */
 
     /* Actual Transmission to GS */

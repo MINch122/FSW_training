@@ -179,7 +179,7 @@ CFE_Status_t UEL_APP_Init(void)
         }
     }
 
-    OS_MutSemCreate(&UEL_APP_Data.MutexId);
+    OS_MutSemCreate(&UEL_APP_Data.MutexId, UEL_APP_MUTEX_NAME, 0);
 
    
 

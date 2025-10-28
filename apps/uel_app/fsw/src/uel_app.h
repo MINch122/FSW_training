@@ -94,6 +94,7 @@ typedef struct
     uint8 LastChunkSize;
     uint16 StartChunk;
     uint16 EndChunk;
+    uint8 RecentDownLoadProcess; /* <\brief [%] */
     
 } UEL_APP_Data_t;
 

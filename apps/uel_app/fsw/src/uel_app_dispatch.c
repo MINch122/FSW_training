@@ -167,7 +167,7 @@ void UEL_APP_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             /* Download whole Img */
             if (UEL_APP_VerifyCmdLength(&SBBufPtr->Msg, sizeof(UEL_APP_DownloadAllCmd_t)))
             {
-                UEL_APP_DownloadImgCmd((const UEL_APP_DownloadAllCmd_t *Msg));
+                UEL_APP_DownloadImgCmd((const UEL_APP_DownloadAllCmd_t *)SBBufPtr);
             }
             break;
 

@@ -119,6 +119,10 @@ CFE_Status_t UEL_APP_SendBcnCmd(const UEL_APP_SendBcnCmd_t *Msg)
         return status;
     }
 
+    OS_MutSemTake(UEL_APP_Data.MutexId);
+    UEL_APP_Data.bcn.Payload.RecentDownloadProcess = UEL_APP_Data.RecentDownLoadProcess;
+    OS_MutSemGive(UEL_APP_Data.MutexId);
+
 
     
     return CFE_SUCCESS;
@@ -633,7 +637,7 @@ CFE_Status_t UEL_APP_GetCamImageCmd(const UEL_APP_GetCamImageCmd_t *Msg)
 
 CFE_Status_t UEL_APP_DownloadImgCmd(const UEL_APP_DownloadAllCmd_t *Msg) {
 
-    uint8_t TxData[3] = { UEL_APP_ID_GetCamShotStat, Msg->ImageSlot, Msg->ImageNumber };
+    uint8_t TxData[3] = { UEL_APP_ID_GetCamShotStat, Msg->ImgSlot, Msg->ImgNumber };
     
     uint8_t RxData[6] = {0};
 
@@ -676,8 +680,8 @@ CFE_Status_t UEL_APP_DownloadImgCmd(const UEL_APP_DownloadAllCmd_t *Msg) {
     CFE_ES_CreateChildTask(&UEL_APP_Data.TaskId, UEL_APP_CHILD_NAME, UEL_APP_DownloadTask,
                             CFE_ES_TASK_STACK_ALLOCATE, UEL_APP_CHILD_STACK_SIZE(2), UEL_APP_CHILD_PRIORITY, 0);
 
-report:
-    RPT_Report_t report = (RPT_Report_t){0};
+report:{
+    RPT_Report_t report = {0,};
     report.MsgID = UEL_APP_CMD_MID;
     report.CommandCode = UEL_APP_DOWNLOAD_IMG_CC;
     report.ReturnType = (status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
@@ -686,7 +690,7 @@ report:
     UEL_APP_Data.rpt.Payload = report;
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(UEL_APP_Data.rpt.TelemetryHeader));
     (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UEL_APP_Data.rpt.TelemetryHeader), true);
-
+}
     return CFE_SUCCESS;
 
 }

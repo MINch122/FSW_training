@@ -41,7 +41,7 @@
 
 #define UEL_APP_TBL_ELEMENT_1_MAX 10
 
-
+#define UEL_APP_MUTEX_NAME      "UEL_MUTEX"
 #define UEL_APP_CHILD_NAME      "UEL_DOWNLOAD"
 #define UEL_APP_CHILD_STACK_SIZE(n)     (4096*(n))
 #define UEL_APP_CHILD_PRIORITY          100

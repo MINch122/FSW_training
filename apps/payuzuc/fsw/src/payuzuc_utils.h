@@ -79,6 +79,7 @@ void PAYUZUC_HandleSuccess(uint8_t CC, void *ReadData, ssize_t ReadSize);
 /// @param Rx Rx data buffer pointer
 /// @param CC Command Code which is invoked
 void PAYUZUC_Transaction(void *Tx, void *Rx, uint8_t CC);
+void PAYUZUC_TransactionWithoutReport(void *Tx, void *Rx, uint8_t CC);
 
 /// @brief Configure the Command packet for KissCAM
 /// @param Payload [in] Data pointer of Parameter payload 

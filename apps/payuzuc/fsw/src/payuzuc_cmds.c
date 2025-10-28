@@ -67,7 +67,7 @@ CFE_Status_t PAYUZUC_SendBcnCmd(const PAYUZUC_SendBcnCmd_t *Msg) {
 
     PAYUZUC_ConfigurePacket(&PingArg, &Cmd, PAYUZUC_PING_PARAM_SIZE, PAYUZUC_PING_CMD_CODE);
 
-    PAYUZUC_Transaction(&Cmd, RxBuf, PAYUZUC_PING_CC);
+    PAYUZUC_TransactionWithoutReport(&Cmd, RxBuf, PAYUZUC_PING_CC);
 
     PAYUZUC_Data.BcnTlm.Payload.Mode = RxBuf[2];
 

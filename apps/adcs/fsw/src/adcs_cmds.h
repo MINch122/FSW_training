@@ -86,6 +86,7 @@ CFE_Status_t ADCS_SetInitiateEventLogTransferCmd(const ADCS_InitiateEventLogTran
 /* Get function */
 CFE_Status_t ADCS_GetErrorLogSettingCmd(void);	// 132
 CFE_Status_t ADCS_GetCurrentUnixTimeCmd(void);	// 133
+CFE_Status_t ADCS_GetCurrentUnixTimeInternalCmd(void); // 133 (Internal function)
 CFE_Status_t ADCS_GetPersistConfigDiagnosticCmd(void);	// 134
 CFE_Status_t ADCS_GetCommunicationStatusCmd(void);	// 135
 CFE_Status_t ADCS_GetControlEstimationModeCmd(void);	// 150

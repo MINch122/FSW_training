@@ -108,9 +108,9 @@ typedef struct {
     uint8_t MMT_Deploy; /* <\brief `EO_NOT_DEPLOYED` or `EO_IS_DEPLOYED` */
     uint8_t MMT_tries;
 
-    /* UANT */
-    uint8_t U_deploy; /* <\brief `EO_NOT_DEPLOYED` or `EO_IS_DEPLOYED` */
-    uint8_t U_tries;
+    // /* UANT */
+    // uint8_t U_deploy; /* <\brief `EO_NOT_DEPLOYED` or `EO_IS_DEPLOYED` */
+    // uint8_t U_tries;
 
     /*
      * " TC receive flag "

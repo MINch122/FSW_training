@@ -834,7 +834,7 @@ CFE_Status_t ADCS_GetErrorLogSettingCmd(void) {
     return CFE_SUCCESS;
 }
 
- CFE_Status_t ADCS_GetCurrentUnixTimeCmd(void) {
+CFE_Status_t ADCS_GetCurrentUnixTimeCmd(void) {
     // ID 133
     CFE_Status_t               status;
     ADCS_CurrentUnixTimeTlm_Payload_t RetVal = {0,};
@@ -851,6 +851,29 @@ CFE_Status_t ADCS_GetErrorLogSettingCmd(void) {
     
     // Handling Retval
     OS_printf("Unix Time sec: %u || Unix Time subsec: %u\n", RetVal.CurrentUnixseconds, RetVal.CurrentUnixNanoseconds);
+    
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_GetCurrentUnixTimeInternalCmd(void) {
+    // ID 133
+    /* Check ADCS comm. status */
+    /* Try 5 times, if all fail, Send EVS */
+    /* HS will ingest this, and send Hard Reset to EPS */
+    CFE_Status_t               status;
+    ADCS_CurrentUnixTimeTlm_Payload_t RetVal = {0,};
+
+    for (uint8_t i = 0; i < 5; i++) {
+        status = ADCS_GetCurrentUnixTime(&RetVal);
+        if (status != CFE_SUCCESS) {
+            ADCS_AppData.BootUpCheckCounter ++;
+        }
+        else ADCS_AppData.BootUpCheckCounter = 0;
+
+        OS_TaskDelay(100);
+    }
+    if (ADCS_AppData.BootUpCheckCounter == 5)
+        CFE_EVS_SendErr(ADCS_BOOTUP_CHECK_ERR_EID, "ADCS Boot up check fail. Need S/C Power reset.\n");
     
     return CFE_SUCCESS;
 }

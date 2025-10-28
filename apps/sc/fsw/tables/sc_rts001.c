@@ -94,7 +94,7 @@ SC_RtsTable001_t SC_Rts001 = {
         CFE_MSG_CMD_HDR_INIT(ADCS_CMD_MID, SC_MEMBER_SIZE(cmd2), ADCS_GPIO_BOOT_LOW_CC, 0x4A),
 
     /* 3 ADCS Enable High */
-    .rts.hdr3.WakeupCount = 4, // 2 sec
+    .rts.hdr3.WakeupCount = 6, // 3 sec
     .rts.cmd3.CommandHeader =
         CFE_MSG_CMD_HDR_INIT(ADCS_CMD_MID, SC_MEMBER_SIZE(cmd3), ADCS_GPIO_ENABLE_HIGH_CC, 0x46),
 

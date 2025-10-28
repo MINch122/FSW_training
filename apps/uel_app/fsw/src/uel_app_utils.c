@@ -106,6 +106,10 @@ void UEL_APP_DownloadTask(void) {
         }
         memset(RxData, 0, sizeof(RxData));
 
+        OS_MutSemTake(UEL_APP_Data.MutexId);
+        UEL_APP_Data.RecentDownLoadProcess = (uint8)(i / (EndChunk - StartChunk));
+        OS_MutSemGive(UEL_APP_Data.MutexId);
+
         OS_TaskDelay(50); /* Prevent Hogging */
     }
 

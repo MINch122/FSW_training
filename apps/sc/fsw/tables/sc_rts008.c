@@ -51,6 +51,9 @@
 #include "cfe_srl_msg.h"
 #include "rpt_msgids.h"
 #include "rpt_msg.h"
+
+#include "eo_msgids.h"
+#include "eo_msg.h"
 /* End of FSW Header */
 
 /*********************
@@ -89,12 +92,15 @@
 /*********************
  * PAYLOAD Header 
  ********************/
-// include PAY UEL...
+#include "uel_app_msgids.h"
+#include "uel_app_msg.h"
+
 #include "payuzuc_msgids.h"
 #include "payuzuc_msg.h"
 
 #include "payuzut_msgids.h"
 #include "payuzut_msg.h"
+/* End of PAYLOAD Header */
 
 /* Custom table structure, modify as needed to add desired commands */
 typedef struct
@@ -111,37 +117,45 @@ typedef struct
     SC_RtsEntryHeader_t hdr3;
     RPT_NoopCmd_t cmd3;
 
-    /* 4 SANT */
+    /* 4 EO */
     SC_RtsEntryHeader_t hdr4;
-    SANT_SendBcnCmd_t cmd4;
+    EO_NoopCmd_t cmd4;
 
-    /* 5 UANT */
+    /* 5 SANT */
     SC_RtsEntryHeader_t hdr5;
-    UANT_SendBcnCmd_t cmd5;
+    SANT_SendBcnCmd_t cmd5;
 
-    /* 6 EPS */
+    /* 6 UANT */
     SC_RtsEntryHeader_t hdr6;
-    EPS_SendBcnCmd_t cmd6;
+    UANT_SendBcnCmd_t cmd6;
 
-    /* 7 SP */
+    /* 7 EPS */
     SC_RtsEntryHeader_t hdr7;
-    SP_SendBcnCmd_t cmd7;
+    EPS_SendBcnCmd_t cmd7;
 
-    /* 8 PAYUZUC */
+    /* 8 SP */
     SC_RtsEntryHeader_t hdr8;
-    PAYUZUC_SendBcnCmd_t cmd8;
+    SP_SendBcnCmd_t cmd8;
 
-    /* 9 PAYUZUT */
+    /* 9 PAYUZUC */
     SC_RtsEntryHeader_t hdr9;
-    PAYUZUT_SendBcnCmd_t cmd9;
+    PAYUZUC_SendBcnCmd_t cmd9;
 
-    /* 10 ADCS */
+    /* 10 PAYUZUT */
     SC_RtsEntryHeader_t hdr10;
-    ADCS_SendBcnCmd_t cmd10;
+    PAYUZUT_SendBcnCmd_t cmd10;
 
-    /* 11 STRX */
+    /* 11 ADCS */
     SC_RtsEntryHeader_t hdr11;
-    STRX_SendHkCmd_t cmd11;
+    ADCS_SendBcnCmd_t cmd11;
+
+    /* 12 STRX */
+    SC_RtsEntryHeader_t hdr12;
+    STRX_SendHkCmd_t cmd12;
+
+    /* 13 UEL PAY */
+    SC_RtsEntryHeader_t hdr13;
+    UEL_APP_SendBcnCmd_t cmd13;
 
     /**
      * Send Combined packet
@@ -154,14 +168,6 @@ typedef struct
      */
 
     /*---------------Start "C"---------------*/
-    /* 12 HK send combined packet */
-    SC_RtsEntryHeader_t hdr12;
-    HK_SendCombinedPktCmd_t cmd12;
-    /* dash */
-    /* 13 HK send combined packet */
-    SC_RtsEntryHeader_t hdr13;
-    HK_SendCombinedPktCmd_t cmd13;
-    /* dot */
     /* 14 HK send combined packet */
     SC_RtsEntryHeader_t hdr14;
     HK_SendCombinedPktCmd_t cmd14;
@@ -173,6 +179,14 @@ typedef struct
     /* 16 HK send combined packet */
     SC_RtsEntryHeader_t hdr16;
     HK_SendCombinedPktCmd_t cmd16;
+    /* dash */
+    /* 17 HK send combined packet */
+    SC_RtsEntryHeader_t hdr17;
+    HK_SendCombinedPktCmd_t cmd17;
+    /* dot */
+    /* 18 HK send combined packet */
+    SC_RtsEntryHeader_t hdr18;
+    HK_SendCombinedPktCmd_t cmd18;
     /*---------------End "C"---------------*/
 
     // /* 3 sec interval */
@@ -247,72 +261,70 @@ SC_RtsTable008_t SC_Rts008 = {
     .rts.hdr3.WakeupCount       = 0,
     .rts.cmd3.CommandHeader = CFE_MSG_CMD_HDR_INIT(RPT_SEND_BCN_MID, SC_MEMBER_SIZE(cmd3), 0, 0x00),
 
-    /**
-     *  4 SANT
+    /** 
+     *  4 EO
      * */
-    .rts.hdr4.WakeupCount       = 1, // 0.5 sec
-    .rts.cmd4.CommandHeader = CFE_MSG_CMD_HDR_INIT(SANT_SEND_BCN_MID, SC_MEMBER_SIZE(cmd4), 0, 0x63),
+    .rts.hdr4.WakeupCount       = 0,
+    .rts.cmd4.CommandHeader = CFE_MSG_CMD_HDR_INIT(EO_SEND_BCN_MID, SC_MEMBER_SIZE(cmd4), 0, 0xB7),
 
     /**
-     *  5 UANT
+     *  5 SANT
      * */
-    .rts.hdr5.WakeupCount       = 0,
-    .rts.cmd5.CommandHeader = CFE_MSG_CMD_HDR_INIT(UANT_SEND_BCN_MID, SC_MEMBER_SIZE(cmd5), 0, 0x64),
+    .rts.hdr5.WakeupCount       = 0, // 0.5 sec
+    .rts.cmd5.CommandHeader = CFE_MSG_CMD_HDR_INIT(SANT_SEND_BCN_MID, SC_MEMBER_SIZE(cmd5), 0, 0x63),
 
     /**
-     *  6 EPS
+     *  6 UANT
      * */
     .rts.hdr6.WakeupCount       = 0,
-    .rts.cmd6.CommandHeader = CFE_MSG_CMD_HDR_INIT(EPS_SEND_BCN_MID, SC_MEMBER_SIZE(cmd6), 0, 0x55),
+    .rts.cmd6.CommandHeader = CFE_MSG_CMD_HDR_INIT(UANT_SEND_BCN_MID, SC_MEMBER_SIZE(cmd6), 0, 0x64),
 
     /**
-     *  7 SP
+     *  7 EPS
      * */
-    .rts.hdr7.WakeupCount       = 1, // 0.5 sec
-    .rts.cmd7.CommandHeader = CFE_MSG_CMD_HDR_INIT(SP_SEND_BCN_MID, SC_MEMBER_SIZE(cmd7), 0, 0x7F),
+    .rts.hdr7.WakeupCount       = 0,
+    .rts.cmd7.CommandHeader = CFE_MSG_CMD_HDR_INIT(EPS_SEND_BCN_MID, SC_MEMBER_SIZE(cmd7), 0, 0x55),
 
     /**
-     *  8 PAYUZUC
+     *  8 SP
      * */
-    .rts.hdr8.WakeupCount       = 0,
-    .rts.cmd8.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_SEND_BCN_MID, SC_MEMBER_SIZE(cmd8), 0, 0x14),
+    .rts.hdr8.WakeupCount       = 1, // 0.5 sec
+    .rts.cmd8.CommandHeader = CFE_MSG_CMD_HDR_INIT(SP_SEND_BCN_MID, SC_MEMBER_SIZE(cmd8), 0, 0x7F),
 
     /**
-     *  9 PAYUZUT
+     *  9 PAYUZUC
      * */
     .rts.hdr9.WakeupCount       = 0,
-    .rts.cmd9.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUT_SEND_BCN_MID, SC_MEMBER_SIZE(cmd9), 0, 0x11),
+    .rts.cmd9.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_SEND_BCN_MID, SC_MEMBER_SIZE(cmd9), 0, 0x14),
 
     /**
-     *  10 ADCS
+     *  10 PAYUZUT
      * */
     .rts.hdr10.WakeupCount       = 0,
-    .rts.cmd10.CommandHeader = CFE_MSG_CMD_HDR_INIT(ADCS_SEND_BCN_MID, SC_MEMBER_SIZE(cmd10), 0, 0x41),
+    .rts.cmd10.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUT_SEND_BCN_MID, SC_MEMBER_SIZE(cmd10), 0, 0x11),
 
     /**
-     *  11 STRX
+     *  11 ADCS
      * */
-    .rts.hdr11.WakeupCount       = 1, // 0.5 sec
-    .rts.cmd11.CommandHeader = CFE_MSG_CMD_HDR_INIT(STRX_SEND_BCN_MID, SC_MEMBER_SIZE(cmd11), 0, 0x71),
+    .rts.hdr11.WakeupCount       = 0,
+    .rts.cmd11.CommandHeader = CFE_MSG_CMD_HDR_INIT(ADCS_SEND_BCN_MID, SC_MEMBER_SIZE(cmd11), 0, 0x41),
 
     /**
-     *  12 HK send combined
+     *  12 STRX
      * */
-    .rts.hdr12.WakeupCount       = 2, // 1 sec
-    .rts.cmd12.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd12), 0, 0x29),
-    .rts.cmd12.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-    /* dash */
+    .rts.hdr12.WakeupCount       = 0, // 0.5 sec
+    .rts.cmd12.CommandHeader = CFE_MSG_CMD_HDR_INIT(STRX_SEND_BCN_MID, SC_MEMBER_SIZE(cmd12), 0, 0x71),
+
     /**
-     *  13 HK send combined
+     *  13 UEL PAY
      * */
-    .rts.hdr13.WakeupCount       = 2, // 1 sec
-    .rts.cmd13.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd13), 0, 0x29),
-    .rts.cmd13.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-    /* dot */
+    .rts.hdr13.WakeupCount       = 0, // 0.5 sec
+    .rts.cmd13.CommandHeader = CFE_MSG_CMD_HDR_INIT(UEL_APP_SEND_BCN_MID, SC_MEMBER_SIZE(cmd13), 0, 0xA0),
+
     /**
      *  14 HK send combined
      * */
-    .rts.hdr14.WakeupCount       = 1, // 0.5 sec
+    .rts.hdr14.WakeupCount       = 2, // 1 sec
     .rts.cmd14.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd14), 0, 0x29),
     .rts.cmd14.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
     /* dash */
@@ -329,6 +341,20 @@ SC_RtsTable008_t SC_Rts008 = {
     .rts.hdr16.WakeupCount       = 1, // 0.5 sec
     .rts.cmd16.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd16), 0, 0x29),
     .rts.cmd16.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+    /* dash */
+    /**
+     *  17 HK send combined
+     * */
+    .rts.hdr17.WakeupCount       = 2, // 1 sec
+    .rts.cmd17.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd17), 0, 0x29),
+    .rts.cmd17.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+    /* dot */
+    /**
+     *  18 HK send combined
+     * */
+    .rts.hdr18.WakeupCount       = 1, // 0.5 sec
+    .rts.cmd18.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd18), 0, 0x29),
+    .rts.cmd18.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
 
     // /* 3 sec */
 

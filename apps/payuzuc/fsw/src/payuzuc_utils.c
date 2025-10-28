@@ -453,3 +453,64 @@ void PAYUZUC_Transaction(void *Tx, void *Rx, uint8_t CC) {
 
     return;
 }
+
+/*************************************************
+ * 
+ * Transaction function without report
+ * This should be used in beacon sequence
+ * Sequencial read
+ * 
+ **************************************************/
+void PAYUZUC_TransactionWithoutReport(void *Tx, void *Rx, uint8_t CC) {
+    int32 Status;
+    CFE_SRL_IO_Param_t Params = {0,};
+    ssize_t ReadByte = 0;
+
+    Params.TxData = Tx;
+    Params.TxSize = PAYUZUC_CMD_PKT_SIZE;
+    Params.RxData = Rx;
+    Params.RxSize = 3; // Read Start byte, Ack, Mode
+    Params.Timeout = 1000;
+
+    // Read Start byte, Ack, Mode
+    Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
+    ReadByte += Params.ReadBytes;
+    if (Status != CFE_SUCCESS) {
+        return;
+    }
+
+    if (((uint8_t *)Rx)[1] == PAYUZUC_TLM_ERR_FLAG) {
+        return;
+    }
+
+    /* Read Tlm payload length */
+    memset(&Params, 0, sizeof(Params));
+    Params.TxData = NULL;
+    Params.TxSize = 0;
+    Params.RxData = (uint8_t *)Rx + 3;
+    Params.RxSize = 2; // MSB + LSB
+    Params.Timeout = 100;
+    Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
+    ReadByte += Params.ReadBytes;
+    if (Status != CFE_SUCCESS) {
+        return;
+    }
+    uint16_t Len = ((uint8_t *)Params.RxData)[0] << 8 | ((uint8_t *)Params.RxData)[1];
+
+    /* Read Tlm Payload length */
+    memset(&Params, 0, sizeof(Params));
+    Params.TxData = NULL;
+    Params.TxSize = 0;
+    Params.RxData = (uint8_t *)Rx + 5;
+    Params.RxSize = Len + 1; // Include Terminate byte
+    Params.Timeout = 700;
+    if (CC == PAYUZUC_DOWNLOAD_ALL_CC || CC == PAYUZUC_DOWNLOAD_CC) {
+        Params.Interval = 1000 * 70;
+    }
+    Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
+    if (Status != CFE_SUCCESS) {
+        return;
+    }
+
+    return;
+}

@@ -48,6 +48,7 @@ static inline void STRX_RptBegin(void)
 
 static inline void STRX_RptSetStatusAuto(uint8_t cc, int32_t status)
 {
+    STRX_AppData.RptPkt.Report.MsgID = STRX_CMD_MID;
     STRX_AppData.RptPkt.Report.CommandCode = cc;
 
     if (status == DEVICE_SUCCESS) {

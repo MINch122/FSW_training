@@ -1,6 +1,22 @@
 # COSMIC FSW
 - Author: Kweon HyeokJin
 
+# ToDo
+- 1028
+  1. Modify UZURO Mission sequence (RTS 3, 4, 5) - SE should confirm
+  2. Add EO Attitude Control - Ph.D Kang should confirm
+
+# Update
+- 1028
+  1. Revise UEL syntax error
+  2. Add UEL download Task
+  3. Add ADCS Boot up check (add ADCS cmd, Modify HS EMT, MAT)
+  4. Add UEL, EO to beacon (modify HK, RTS8 table)
+  5. Revise cFE RF Emit (Chunked Transmission for Long packet)
+  6. Modify PAYUZUC beacon to not send report
+  7. Modify STRX report to include proper Messsage ID
+
+
 # Notes
 - Move serial config file (`Interface_config.json` & `csp_config.json`) to `sample_defs`
 - Add CSP configuration tool - refer `csp_config.json`

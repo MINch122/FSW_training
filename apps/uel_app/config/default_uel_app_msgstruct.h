@@ -147,7 +147,8 @@ typedef struct
     int16_t  ESC_temp_C;
 
     uint16_t CAM_Shutter_Count;
-} UEL_APP_bcn_Payload_t;
+    uint8_t RecentDownloadProcess; /* <\brief [%] */
+}__attribute__((packed)) UEL_APP_bcn_Payload_t;
 
 typedef struct
 {
