@@ -22,6 +22,7 @@ CFE_APP, gps,         GPS_AppMain,        GPS,          52,   16384, 0x0, 0;
 CFE_APP, payuzuc,     PAYUZUC_Main,       PAYUZUC_APP,  53,   16384, 0x0, 0;
 CFE_APP, payuzut,     PAYUZUT_Main,       PAYUZUT_APP,  54,   16384, 0x0, 0;
 CFE_APP, ftp,         FTP_Main,           FTP,          55,   16384, 0x0, 0;
+CFE_APP, uel_app,     UEL_APP_Main,       UEL_APP,      56,   16384, 0x0, 0;
 CFE_APP, sample_app,  SAMPLE_APP_Main,    SAMPLE_APP,   70,   16384, 0x0, 0;
 !
 ! Startup script fields:

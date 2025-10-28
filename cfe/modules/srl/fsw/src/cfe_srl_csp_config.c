@@ -54,7 +54,7 @@ void CFE_SRL_ConfigHost(csp_conf_t *Conf) {
 	Conf->port_max_bind = 58;
 	Conf->rdp_max_window = 20;
 	Conf->buffers = 10;
-	Conf->buffer_data_size = 256;
+	Conf->buffer_data_size = 512;
 	Conf->conn_dfl_so = CSP_O_NONE;
 
 	return;
