@@ -54,7 +54,7 @@
         },
         {
             "type": "uart",
-            "ready": true,
+            "ready": false,
             "name": "socat",
             "DevName": "/dev/pts/6",
             
