@@ -36,11 +36,16 @@
 CFE_Status_t TO_LAB_AddPacketCmd(const TO_LAB_AddPacketCmd_t *data);
 CFE_Status_t TO_LAB_NoopCmd(const TO_LAB_NoopCmd_t *data);
 CFE_Status_t TO_LAB_EnableOutputCmd(const TO_LAB_EnableOutputCmd_t *data);
+CFE_Status_t TO_LAB_DisableOutputCmd(const TO_LAB_DisableOutputCmd_t *Msg);
 CFE_Status_t TO_LAB_RemoveAllCmd(const TO_LAB_RemoveAllCmd_t *data);
 CFE_Status_t TO_LAB_RemovePacketCmd(const TO_LAB_RemovePacketCmd_t *data);
 CFE_Status_t TO_LAB_ResetCountersCmd(const TO_LAB_ResetCountersCmd_t *data);
 CFE_Status_t TO_LAB_SendDataTypesCmd(const TO_LAB_SendDataTypesCmd_t *data);
 CFE_Status_t TO_LAB_SendHkCmd(const TO_LAB_SendHkCmd_t *data);
+
+CFE_Status_t TO_SetEmissionModeSCmd(const TO_SetEmissionModeSCmd_t *Msg);
+CFE_Status_t TO_SetEmissionModeUCmd(const TO_SetEmissionModeUCmd_t *Msg);
+CFE_Status_t TO_SetEmissionModeDualCmd(const TO_SetEmissionModeDualCmd_t *Msg);
 
 /******************************************************************************/
 

@@ -71,6 +71,27 @@ void TO_LAB_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             TO_LAB_EnableOutputCmd((const TO_LAB_EnableOutputCmd_t *)SBBufPtr);
             break;
 
+        case TO_LAB_OUTPUT_DISABLE_CC:
+            TO_LAB_DisableOutputCmd((const TO_LAB_DisableOutputCmd_t *)SBBufPtr);
+            break;
+
+        /* Telemetry Emission mode command */
+        case TO_SET_S_ONLY_EMISSION_CC:
+            /* S only */
+            TO_SetEmissionModeSCmd((const TO_SetEmissionModeSCmd_t *)SBBufPtr);
+            break;
+        
+        case TO_SET_U_ONLY_EMISSION_CC:
+            /* UHF only */
+            TO_SetEmissionModeUCmd((const TO_SetEmissionModeUCmd_t *)SBBufPtr);
+            break;
+
+        case TO_SET_DUAL_EMISSION_CC:
+            /* Both */
+            TO_SetEmissionModeDualCmd((const TO_SetEmissionModeDualCmd_t *)SBBufPtr);
+            break;
+        /* End of Telemetry Emission mode command */
+        
         default:
             CFE_EVS_SendEvent(TO_LAB_FNCODE_ERR_EID, CFE_EVS_EventType_ERROR,
                               "L%d TO: Invalid Function Code Rcvd In Ground Command 0x%x", __LINE__,

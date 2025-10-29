@@ -54,6 +54,7 @@ CFE_Status_t CI_LAB_ResetCountersCmd(const CI_LAB_ResetCountersCmd_t *cmd);
  */
 CFE_Status_t CI_LAB_CreateChildTaskCmd(const CI_LAB_CreateChildTaskCmd_t *cmd);
 /**
+ * @deprecated Not used. `CI_LAB_SEND_HK_MID` will invoke `CI_LAB_SendBcnCmd` instead
  * @brief Handle Send HK command packets
  *
  * This function is triggered in response to a task telemetry request
@@ -66,6 +67,7 @@ CFE_Status_t CI_LAB_CreateChildTaskCmd(const CI_LAB_CreateChildTaskCmd_t *cmd);
  * @retval #CFE_SUCCESS on successful processing
  */
 CFE_Status_t CI_LAB_SendHkCmd(const CI_LAB_SendHkCmd_t *cmd);
+CFE_Status_t CI_LAB_SendBcnCmd(const CI_LAB_SendHkCmd_t *cmd);
 
 /**
  * @brief Read Uplink command packets
@@ -81,5 +83,10 @@ CFE_Status_t CI_LAB_SendHkCmd(const CI_LAB_SendHkCmd_t *cmd);
  * @retval #CFE_SUCCESS on successful processing
  */
 CFE_Status_t CI_LAB_ReadUplinkCmd(const CI_LAB_ReadUplinkCmd_t *cmd);
+
+
+CFE_Status_t CI_UpdateContactTime(const CFE_RF_ContactTimeTlm_t *Msg);
+
+CFE_Status_t CI_CompareTime(void);
 
 #endif

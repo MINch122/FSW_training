@@ -59,4 +59,16 @@
  */
 #define TO_LAB_TLM_PIPE_DEPTH OS_QUEUE_MAX_DEPTH
 
+/**
+ * @brief enum to indicate the emission mode
+ */
+typedef enum {
+
+    TO_S_ONLY_EMISSION, /* S band only transmission */
+
+    TO_U_ONLY_EMISSION, /* UHF band only transmission */
+
+    TO_DUAL_EMISSION,   /* Both band transmission */
+} TO_EmissionMode_t;
+
 #endif

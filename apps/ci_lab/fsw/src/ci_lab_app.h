@@ -30,14 +30,21 @@
 #include "osapi.h"
 #include "cfe.h"
 #include "cfe_config.h"
+#include "cfe_msgids.h"
 
 #include "ci_lab_mission_cfg.h"
 #include "ci_lab_platform_cfg.h"
 #include "ci_lab_eventids.h"
 #include "ci_lab_dispatch.h"
 #include "ci_lab_cmds.h"
+#include "ci_lab_utils.h"
 
 #include "ci_lab_msg.h"
+
+#include "sc_msgids.h"
+#include "rpt_msgids.h"
+#include "rpt_interface_cfg.h"
+#include "rpt_msg.h"
 
 #include <string.h>
 #include <errno.h>
@@ -60,11 +67,19 @@ typedef struct
     OS_SockAddr_t   SocketAddress;
 
     CI_LAB_HkTlm_t HkTlm;
+    CI_LAB_BcnTlm_t BcnTlm;
+    
 
     void * NetBufPtr;
     size_t NetBufSize;
 
     CFE_ES_TaskId_t ChildTaskId;
+
+    CFE_TIME_SysTime_t LastContactTime;
+
+    osal_id_t MutexId;
+
+    osal_id_t FileHandle;
 
 } CI_LAB_GlobalData_t;
 

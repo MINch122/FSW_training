@@ -44,4 +44,10 @@ typedef struct
     uint32 Spare2;
 } CI_LAB_HkTlm_Payload_t;
 
+typedef struct
+{
+    uint32 LastContactTimeSec;
+    
+} CI_LAB_BcnTlm_Payload_t;
+
 #endif

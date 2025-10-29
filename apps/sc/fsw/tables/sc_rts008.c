@@ -54,6 +54,12 @@
 
 #include "eo_msgids.h"
 #include "eo_msg.h"
+
+#include "ci_lab_msgids.h"
+#include "ci_lab_msg.h"
+
+#include "to_lab_msgids.h"
+#include "to_lab_msg.h"
 /* End of FSW Header */
 
 /*********************
@@ -157,6 +163,14 @@ typedef struct
     SC_RtsEntryHeader_t hdr13;
     UEL_APP_SendBcnCmd_t cmd13;
 
+    /* 14 CI */
+    SC_RtsEntryHeader_t hdr14;
+    CI_LAB_SendHkCmd_t cmd14;
+
+    /* 15 TO */
+    SC_RtsEntryHeader_t hdr15;
+    TO_LAB_SendHkCmd_t cmd15;
+
     /**
      * Send Combined packet
      * Beacon pattern should be "COS" in morse code
@@ -168,14 +182,6 @@ typedef struct
      */
 
     /*---------------Start "C"---------------*/
-    /* 14 HK send combined packet */
-    SC_RtsEntryHeader_t hdr14;
-    HK_SendCombinedPktCmd_t cmd14;
-    /* dash */
-    /* 15 HK send combined packet */
-    SC_RtsEntryHeader_t hdr15;
-    HK_SendCombinedPktCmd_t cmd15;
-    /* dot */
     /* 16 HK send combined packet */
     SC_RtsEntryHeader_t hdr16;
     HK_SendCombinedPktCmd_t cmd16;
@@ -187,6 +193,14 @@ typedef struct
     /* 18 HK send combined packet */
     SC_RtsEntryHeader_t hdr18;
     HK_SendCombinedPktCmd_t cmd18;
+    /* dash */
+    /* 19 HK send combined packet */
+    SC_RtsEntryHeader_t hdr19;
+    HK_SendCombinedPktCmd_t cmd19;
+    /* dot */
+    /* 20 HK send combined packet */
+    SC_RtsEntryHeader_t hdr20;
+    HK_SendCombinedPktCmd_t cmd20;
     /*---------------End "C"---------------*/
 
     // /* 3 sec interval */
@@ -247,7 +261,7 @@ SC_RtsTable008_t SC_Rts008 = {
      *  1  UTRX
      * */
     .rts.hdr1.WakeupCount       = 0,
-    .rts.cmd1.CommandHeader = CFE_MSG_CMD_HDR_INIT(UTRX_SEND_BCN_MID, SC_MEMBER_SIZE(cmd1), 0, 0x75),
+    .rts.cmd1.CommandHeader = CFE_MSG_CMD_HDR_INIT(UTRX_SEND_BCN_MID, SC_MEMBER_SIZE(cmd1), 0, 0x74),
 
     /**
      *  2  SRL
@@ -270,7 +284,7 @@ SC_RtsTable008_t SC_Rts008 = {
     /**
      *  5 SANT
      * */
-    .rts.hdr5.WakeupCount       = 0, // 0.5 sec
+    .rts.hdr5.WakeupCount       = 0,
     .rts.cmd5.CommandHeader = CFE_MSG_CMD_HDR_INIT(SANT_SEND_BCN_MID, SC_MEMBER_SIZE(cmd5), 0, 0x63),
 
     /**
@@ -288,7 +302,7 @@ SC_RtsTable008_t SC_Rts008 = {
     /**
      *  8 SP
      * */
-    .rts.hdr8.WakeupCount       = 1, // 0.5 sec
+    .rts.hdr8.WakeupCount       = 1,
     .rts.cmd8.CommandHeader = CFE_MSG_CMD_HDR_INIT(SP_SEND_BCN_MID, SC_MEMBER_SIZE(cmd8), 0, 0x7F),
 
     /**
@@ -322,23 +336,21 @@ SC_RtsTable008_t SC_Rts008 = {
     .rts.cmd13.CommandHeader = CFE_MSG_CMD_HDR_INIT(UEL_APP_SEND_BCN_MID, SC_MEMBER_SIZE(cmd13), 0, 0xA0),
 
     /**
-     *  14 HK send combined
+     *  14 CI
      * */
-    .rts.hdr14.WakeupCount       = 2, // 1 sec
-    .rts.cmd14.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd14), 0, 0x29),
-    .rts.cmd14.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-    /* dash */
+    .rts.hdr14.WakeupCount       = 0, // 0.5 sec
+    .rts.cmd14.CommandHeader = CFE_MSG_CMD_HDR_INIT(CI_LAB_SEND_HK_MID, SC_MEMBER_SIZE(cmd14), 0, 0x37),
+
     /**
-     *  15 HK send combined
+     *  15 TO
      * */
-    .rts.hdr15.WakeupCount       = 2, // 1 sec
-    .rts.cmd15.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd15), 0, 0x29),
-    .rts.cmd15.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-    /* dot */
+    .rts.hdr15.WakeupCount       = 10, // 5 sec
+    .rts.cmd15.CommandHeader = CFE_MSG_CMD_HDR_INIT(TO_LAB_SEND_HK_MID, SC_MEMBER_SIZE(cmd15), 0, 0x02),
+
     /**
      *  16 HK send combined
      * */
-    .rts.hdr16.WakeupCount       = 1, // 0.5 sec
+    .rts.hdr16.WakeupCount       = 2, // 1 sec
     .rts.cmd16.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd16), 0, 0x29),
     .rts.cmd16.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
     /* dash */
@@ -355,6 +367,20 @@ SC_RtsTable008_t SC_Rts008 = {
     .rts.hdr18.WakeupCount       = 1, // 0.5 sec
     .rts.cmd18.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd18), 0, 0x29),
     .rts.cmd18.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+    /* dash */
+    /**
+     *  19 HK send combined
+     * */
+    .rts.hdr19.WakeupCount       = 2, // 1 sec
+    .rts.cmd19.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd19), 0, 0x29),
+    .rts.cmd19.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+    /* dot */
+    /**
+     *  20 HK send combined
+     * */
+    .rts.hdr20.WakeupCount       = 1, // 0.5 sec
+    .rts.cmd20.CommandHeader = CFE_MSG_CMD_HDR_INIT(HK_SEND_COMBINED_PKT_MID, SC_MEMBER_SIZE(cmd20), 0, 0x29),
+    .rts.cmd20.Payload.OutMsgToSend = CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
 
     // /* 3 sec */
 

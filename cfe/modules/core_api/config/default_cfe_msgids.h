@@ -38,5 +38,6 @@
 #include "cfe_tbl_msgids.h"
 #include "cfe_time_msgids.h"
 #include "cfe_srl_msgids.h"
+#include "cfe_rf_msgids.h"
 
 #endif /* CFE_MSGIDS_H */

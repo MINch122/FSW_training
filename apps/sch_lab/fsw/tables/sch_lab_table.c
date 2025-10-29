@@ -24,9 +24,8 @@
 #include "cfe_msgids.h"
 #include "sch_lab_interface_cfg.h"
 
-#ifdef HAVE_CI_LAB
+
 #include "ci_lab_msgids.h"
-#endif
 
 #ifdef HAVE_TO_LAB
 #include "to_lab_msgids.h"
@@ -152,6 +151,7 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_EVS_SEND_HK_MID), 96, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_SEND_HK_MID), 1000, 0},
         {CFE_SB_MSGID_WRAP_VALUE(SC_ONEHZ_WAKEUP_MID), SCH_LAB_TICK_RATE/2, 0}, // 0.5 sec per wakeup
+        {CFE_SB_MSGID_WRAP_VALUE(CI_LAB_WAKEUP_MID), SCH_LAB_TICK_RATE * 60 * 60, 0}, // 1 hour per wakeup
 
 /* Example of including additional open source apps */
 #ifdef HAVE_CI_LAB

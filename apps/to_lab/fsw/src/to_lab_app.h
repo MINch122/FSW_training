@@ -57,6 +57,8 @@ typedef struct
     TO_LAB_Subs_t *  SubsTblPtr;
     CFE_TBL_Handle_t SubsTblHandle;
 
+    uint8_t EmissionMode;
+
 } TO_LAB_GlobalData_t;
 
 /************************************************************************

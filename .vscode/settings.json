@@ -199,7 +199,17 @@
         "eo_child.h": "c",
         "fm_msg.h": "c",
         "eo_task.h": "c",
-        "eo_file.h": "c"
+        "eo_file.h": "c",
+        "cfe_rf_extern_typedefs.h": "c",
+        "ci_lab_app.h": "c",
+        "cfe_rf_api_typedefs.h": "c",
+        "cfe_rf_msgids.h": "c",
+        "ci_lab_perfids.h": "c",
+        "ci_lab_cmds.h": "c",
+        "ci_lab_mission_cfg.h": "c",
+        "ci_lab_dispatch.h": "c",
+        "hk_extern_typedefs.h": "c",
+        "default_gps_topicids.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

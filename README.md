@@ -7,6 +7,10 @@
   2. Add EO Attitude Control - Ph.D Kang should confirm
 
 # Update
+- 1029
+  1. Add Communication Emergency Handling
+  2. Append TO to Beacon - Look up the beacon table in NAS
+    - Modify HK, SC table
 - 1028
   1. Revise UEL syntax error
   2. Add UEL download Task

@@ -81,7 +81,7 @@
             "name": "GSTRX",
             "node": 20,
             "interface": "CAN",
-            "via": "STRX",
+            "via": "UTRX",
 
             "priority": 2,
             "timeout": 1,

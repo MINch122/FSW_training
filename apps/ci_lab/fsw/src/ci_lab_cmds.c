@@ -29,6 +29,8 @@
 #include "ci_lab_cmds.h"
 #include "ci_lab_version.h"
 
+#include "cfe_rf_interface_cfg.h"
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                             */
 /*  Purpose:                                                                   */
@@ -89,10 +91,61 @@ CFE_Status_t CI_LAB_SendHkCmd(const CI_LAB_SendHkCmd_t *cmd)
     return CFE_SUCCESS;
 }
 
+CFE_Status_t CI_LAB_SendBcnCmd(const CI_LAB_SendHkCmd_t *cmd)
+{
+    CI_LAB_Global.BcnTlm.Payload.LastContactTimeSec =
+                        CI_LAB_Global.LastContactTime.Seconds;
+                        
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(CI_LAB_Global.BcnTlm.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(CI_LAB_Global.BcnTlm.TelemetryHeader), true);
+    return CFE_SUCCESS;
+}
+
 CFE_Status_t CI_LAB_ReadUplinkCmd(const CI_LAB_ReadUplinkCmd_t *cmd)
 {
     /* Any occurrence of this request will cause CI to read ONLY on this request thereafter */
     CI_LAB_Global.Scheduled = true;
     CI_LAB_ReadUpLink();
     return CFE_SUCCESS;
+}
+
+
+CFE_Status_t CI_UpdateContactTime(const CFE_RF_ContactTimeTlm_t *Msg) {
+    uint8_t TimeSec[4];
+    memcpy(TimeSec, Msg->TelemetryHeader.Sec.Time, sizeof(TimeSec));
+
+    // OS_MutSemTake(CI_LAB_Global.MutexId);
+    /* Convert the Time Stamp to Sec */
+    CI_LAB_Global.LastContactTime.Seconds =
+            CFE_PLATFORM_TBL_U32FROM4CHARS(TimeSec[0], TimeSec[1], TimeSec[2], TimeSec[3]);
+
+    /* Store to file */
+    CI_StoreContactTime();
+    // OS_MutSemGive(CI_LAB_Global.MutexId);
+
+    OS_printf("%s: Last Contact Time Sec: %u\n", __func__, CI_LAB_Global.LastContactTime.Seconds);
+}
+
+CFE_Status_t CI_CompareTime(void) {
+    
+    // OS_MutSemTake(CI_LAB_Global.MutexId);
+    CFE_TIME_SysTime_t LastContactTime = CI_LAB_Global.LastContactTime;
+    // OS_MutSemGive(CI_LAB_Global.MutexId);
+
+    CFE_TIME_SysTime_t CurTime = CFE_TIME_GetTime();
+
+    CFE_TIME_SysTime_t Result = CFE_TIME_Subtract(CurTime, LastContactTime);
+
+    if (Result.Seconds > CFE_RF_MAX_MISSING_TIME) {
+        /* If specified time is elapsed from last contact, */
+        /* Do Emergency Protocol !! */
+        /* Send TO to dual emission */
+        CI_SetEmissionMode(true);
+    }
+    else {
+        /* If not, Send To to Normal */
+        CI_SetEmissionMode(false);
+    }
+
+    OS_printf("%s: Elapsed Time sec: %u\n", __func__, Result.Seconds);
 }

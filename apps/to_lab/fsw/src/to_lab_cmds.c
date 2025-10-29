@@ -56,6 +56,13 @@ CFE_Status_t TO_LAB_EnableOutputCmd(const TO_LAB_EnableOutputCmd_t *data)
     return CFE_SUCCESS;
 }
 
+CFE_Status_t TO_LAB_DisableOutputCmd(const TO_LAB_DisableOutputCmd_t *Msg) {
+    
+    TO_LAB_Global.downlink_on = false;
+
+    return CFE_SUCCESS;
+}
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                 */
 /* TO_LAB_Noop() -- Noop Handler                                   */
@@ -147,6 +154,8 @@ CFE_Status_t TO_LAB_SendDataTypesCmd(const TO_LAB_SendDataTypesCmd_t *data)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 CFE_Status_t TO_LAB_SendHkCmd(const TO_LAB_SendHkCmd_t *data)
 {
+    TO_LAB_Global.HkTlm.Payload.EmissionMode = TO_LAB_Global.EmissionMode;
+
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(TO_LAB_Global.HkTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(TO_LAB_Global.HkTlm.TelemetryHeader), true);
     return CFE_SUCCESS;
@@ -228,5 +237,27 @@ CFE_Status_t TO_LAB_RemoveAllCmd(const TO_LAB_RemoveAllCmd_t *data)
                       "L%d TO Unsubscribed to all Commands and Telemetry", __LINE__);
 
     ++TO_LAB_Global.HkTlm.Payload.CommandCounter;
+    return CFE_SUCCESS;
+}
+
+
+CFE_Status_t TO_SetEmissionModeSCmd(const TO_SetEmissionModeSCmd_t *Msg) {
+
+    TO_LAB_Global.EmissionMode = TO_S_ONLY_EMISSION;   
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t TO_SetEmissionModeUCmd(const TO_SetEmissionModeUCmd_t *Msg) {
+
+    TO_LAB_Global.EmissionMode = TO_U_ONLY_EMISSION;   
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t TO_SetEmissionModeDualCmd(const TO_SetEmissionModeDualCmd_t *Msg) {
+
+    TO_LAB_Global.EmissionMode = TO_DUAL_EMISSION;   
+
     return CFE_SUCCESS;
 }

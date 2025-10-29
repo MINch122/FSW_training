@@ -42,5 +42,10 @@
 #define TO_LAB_REMOVE_PKT_CC      4 /*  remove packet     */
 #define TO_LAB_REMOVE_ALL_PKT_CC  5 /*  remove all packet */
 #define TO_LAB_OUTPUT_ENABLE_CC   6 /*  output enable     */
+#define TO_LAB_OUTPUT_DISABLE_CC  7 /*  output disable    */
+
+#define TO_SET_S_ONLY_EMISSION_CC    23
+#define TO_SET_U_ONLY_EMISSION_CC    24
+#define TO_SET_DUAL_EMISSION_CC      27
 
 #endif

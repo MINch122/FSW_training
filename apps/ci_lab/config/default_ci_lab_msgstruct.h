@@ -79,4 +79,10 @@ typedef struct
     CI_LAB_HkTlm_Payload_t    Payload;
 } CI_LAB_HkTlm_t;
 
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    CI_LAB_BcnTlm_Payload_t    Payload;
+} CI_LAB_BcnTlm_t;
+
 #endif /* CI_LAB_MSGSTRUCT_H */

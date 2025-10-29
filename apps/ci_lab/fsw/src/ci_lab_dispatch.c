@@ -127,12 +127,26 @@ void CI_LAB_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
             break;
 
         case CI_LAB_SEND_HK_MID:
-            CI_LAB_SendHkCmd((const CI_LAB_SendHkCmd_t *)SBBufPtr);
+            /* Don't confused. CI Lab Bcn should be transmitted */
+            CI_LAB_SendBcnCmd((const CI_LAB_SendHkCmd_t *)SBBufPtr);
             break;
 
-        case CI_LAB_READ_UPLINK_MID:
-            CI_LAB_ReadUplinkCmd((const CI_LAB_ReadUplinkCmd_t *)SBBufPtr);
+        case CI_LAB_WAKEUP_MID:
+            /* Use CI Wakeup for comparison the time */
+            /* `Last contact time` VS `current time` */
+            CI_CompareTime();
+            // CI_LAB_ReadUplinkCmd((const CI_LAB_ReadUplinkCmd_t *)SBBufPtr);
             break;
+
+        case CFE_RF_TLM_MID:
+            /* If CFE RF send this, this means that UL received */
+            CI_UpdateContactTime((const CFE_RF_ContactTimeTlm_t *)SBBufPtr);
+
+        case SC_ONEHZ_WAKEUP_MID: // 0.5 Sec
+            /* @deprecated */
+            /* Use SC Wakeup for comparison the time */
+            /* `Last contact time` VS `current time` */
+            // CI_CompareTime();
 
         default:
             CI_LAB_Global.HkTlm.Payload.CommandErrorCounter++;

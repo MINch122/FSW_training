@@ -69,7 +69,6 @@ CFE_Status_t UEL_APP_SendBcnCmd(const UEL_APP_SendBcnCmd_t *Msg)
         
         uint8_t *p = &RxData[1];
         int idx = 0;
-
         UEL_APP_Data.bcn.Payload.PI_boot_State = p[idx++];
         UEL_APP_Data.bcn.Payload.PI_boot_Count = (uint16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
         UEL_APP_Data.bcn.Payload.CAM_detect_State = p[idx++];
@@ -108,6 +107,8 @@ CFE_Status_t UEL_APP_SendBcnCmd(const UEL_APP_SendBcnCmd_t *Msg)
                 UEL_APP_Data.bcn.Payload.ESC_Ic_mA,
                 UEL_APP_Data.bcn.Payload.ESC_I_rms_true_mA,
                 UEL_APP_Data.bcn.Payload.ESC_temp_C);
+
+        
 
         
 
@@ -168,33 +169,35 @@ CFE_Status_t UEL_APP_GetSensData(const UEL_APP_GetSensDataCmd_t *Msg)
     );
     
     if (status > 0 ) {
-        if (RxData[0] == UEL_APP_ID_GetSensData) {  
+        {   
+            
+            OS_printf("asdasdasdasd: 0x%02X",RxData[0]);
             uint8_t *p = &RxData[1];
             int idx = 0;
             
             
-            int16_t IMU_cnt = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_diag = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_gx = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_gy = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_gz = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_ax = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_ay = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_az = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_temp = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_chk_ok = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            
-            
-            int16_t ESC_Ia_mA = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_Ib_mA = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_Ic_mA = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_I_rms_true_mA = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_I_std_abs_mA = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_temp_C = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_vbus_mV = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_timestamp_ms = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_esc_seq = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_crc16 = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
+            int16_t IMU_cnt     = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_diag    = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_gx      = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_gy      = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_gz      = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_ax      = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_ay      = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_az      = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_temp    = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_chk_ok  = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+
+            int16_t ESC_Ia_mA           = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_Ib_mA           = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_Ic_mA           = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_I_rms_true_mA   = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_I_std_abs_mA    = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_temp_C          = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_vbus_mV         = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_timestamp_ms    = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_esc_seq         = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_crc16           = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+
 
 
             OS_printf("[Sensor] IMU: gx=%d, gy=%d, gz=%d, ax=%d, ay=%d, az=%d, temp=%d\n",
@@ -209,7 +212,9 @@ CFE_Status_t UEL_APP_GetSensData(const UEL_APP_GetSensDataCmd_t *Msg)
             OS_printf("[Sensor][ESC extra] I_rms_true=%d, I_std_abs=%d, ts_ms=%d, esc_seq=%d, crc16=0x%04X\n",
                     ESC_I_rms_true_mA, ESC_I_std_abs_mA, ESC_timestamp_ms, ESC_esc_seq, (uint16_t)ESC_crc16);
         }
-    }else{
+        
+    }
+    else{
         CFE_EVS_SendEvent(UEL_APP_TX_ERR_EID, CFE_EVS_EventType_ERROR,
                           "UEL_APP: Failed to GetSensData command, status=0x%08X", status);
         UEL_APP_Data.ErrCounter++;
@@ -219,7 +224,7 @@ CFE_Status_t UEL_APP_GetSensData(const UEL_APP_GetSensDataCmd_t *Msg)
     RPT_Report_t report = (RPT_Report_t){0};
     report.MsgID        = UEL_APP_CMD_MID;
     report.CommandCode  = UEL_APP_GET_SENS_DATA_CC;
-    report.ReturnType   = (status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
+    report.ReturnType   = (status >0 ) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
     report.ReturnCode   = status;
     report.ReturnDataSize = 40;
     memcpy(report.ReturnValue, &RxData[1], report.ReturnDataSize);
@@ -237,21 +242,21 @@ CFE_Status_t UEL_APP_SetCamPowerOnCmd(const UEL_APP_SetCamPowerCmd_t *Msg)
     UEL_APP_Data.CmdCounter++;
 
     uint8_t TxData[1] = {UEL_APP_ID_SetCamPower};
-    uint8_t RxData[2];
+    
 
     int32 status = CFE_SRL_ApiTransactionCSP(
         UEL_APP_UEL_OBC_NODE,  
         26,
         TxData,
         sizeof(TxData),
-        RxData,
-        sizeof(RxData)
+        NULL,
+        0
     );
 
 
-    if (status >0 ){
-        if (RxData[0] == UEL_APP_ID_SetCamPower){
-        OS_printf("Cam Power Ack: %u,%u\n", RxData[0], RxData[1]);
+    if (status > 0){
+        {
+        OS_printf("Cam Power On success\n");
         }
     }else{
         CFE_EVS_SendEvent(UEL_APP_TX_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -262,10 +267,9 @@ CFE_Status_t UEL_APP_SetCamPowerOnCmd(const UEL_APP_SetCamPowerCmd_t *Msg)
     RPT_Report_t report = (RPT_Report_t){0};
     report.MsgID = UEL_APP_CMD_MID;
     report.CommandCode = UEL_APP_SET_CAM_POWER_ON_CC;
-    report.ReturnType = (status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
+    report.ReturnType = (status >0 ) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
     report.ReturnCode = status;
-    report.ReturnDataSize = (status == CFE_SUCCESS && RxData[0] == UEL_APP_ID_SetCamPower) ? 1 : 0;
-    if (report.ReturnDataSize == 1) memcpy(report.ReturnValue, &RxData[1], 1);
+    report.ReturnDataSize = 0;
     UEL_APP_Data.rpt.Payload = report;
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(UEL_APP_Data.rpt.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(UEL_APP_Data.rpt.TelemetryHeader), true);
@@ -278,22 +282,21 @@ CFE_Status_t UEL_APP_SetCamPowerOffCmd(const UEL_APP_SetCamPowerCmd_t *Msg)
     UEL_APP_Data.CmdCounter++;
 
     uint8_t TxData[1] = {UEL_APP_ID_SetCamPower};
-    uint8_t RxData[2];
+    
 
     int32 status = CFE_SRL_ApiTransactionCSP(
         UEL_APP_UEL_OBC_NODE,  
         27,
         TxData,
         sizeof(TxData),
-        RxData,
-        sizeof(RxData)
+        NULL,
+        0
     );
 
 
     if (status >0 ){
-        if (RxData[0] == UEL_APP_ID_SetCamPower){
-        OS_printf("Cam Power Ack: %u,%u\n", RxData[0], RxData[1]);
-        }
+        OS_printf("Cam Power Off success\n");
+        
     }else{
         CFE_EVS_SendEvent(UEL_APP_TX_ERR_EID, CFE_EVS_EventType_ERROR,
                           "UEL_APP: Failed to SetCamPowerOff command, status=0x%08X", status);
@@ -303,10 +306,9 @@ CFE_Status_t UEL_APP_SetCamPowerOffCmd(const UEL_APP_SetCamPowerCmd_t *Msg)
     RPT_Report_t report = (RPT_Report_t){0};
     report.MsgID = UEL_APP_CMD_MID;
     report.CommandCode = UEL_APP_SET_CAM_POWER_OFF_CC;
-    report.ReturnType = (status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
+    report.ReturnType = (status >0 ) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
     report.ReturnCode = status;
-    report.ReturnDataSize = (status == CFE_SUCCESS && RxData[0] == UEL_APP_ID_SetCamPower) ? 1 : 0;
-    if (report.ReturnDataSize == 1) memcpy(report.ReturnValue, &RxData[1], 1);
+    report.ReturnDataSize = 0;
     UEL_APP_Data.rpt.Payload = report;
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(UEL_APP_Data.rpt.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(UEL_APP_Data.rpt.TelemetryHeader), true);
@@ -330,7 +332,7 @@ CFE_Status_t UEL_APP_SetMotorMode(const UEL_APP_SetMotorMode_t *Msg)
         TxData,
         sizeof(TxData),
         RxData,
-        sizeof(RxData)
+        -1
     );
     
     if (status > 0) {
@@ -338,29 +340,29 @@ CFE_Status_t UEL_APP_SetMotorMode(const UEL_APP_SetMotorMode_t *Msg)
             uint8_t *p = &RxData[1];
             int idx = 0;
             
-            // IMU 데이터 (각 int16, 2byte)
-            int16_t IMU_cnt = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_diag = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_gx = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_gy = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_gz = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_ax = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_ay = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_az = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_temp = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t IMU_chk_ok = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
             
-            // ESC 데이터 (각 int16, 2byte)
-            int16_t ESC_Ia_mA = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_Ib_mA = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_Ic_mA = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_I_rms_true_mA = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_I_std_abs_mA = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_temp_C = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_vbus_mV = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_timestamp_ms = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_esc_seq = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
-            int16_t ESC_crc16 = (int16_t)((p[idx] << 8) | p[idx+1]); idx += 2;
+            int16_t IMU_cnt     = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_diag    = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_gx      = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_gy      = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_gz      = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_ax      = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_ay      = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_az      = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_temp    = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t IMU_chk_ok  = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+
+            int16_t ESC_Ia_mA           = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_Ib_mA           = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_Ic_mA           = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_I_rms_true_mA   = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_I_std_abs_mA    = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_temp_C          = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_vbus_mV         = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_timestamp_ms    = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_esc_seq         = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+            int16_t ESC_crc16           = (int16_t)(p[idx] | (p[idx+1] << 8)); idx += 2;
+
             
             OS_printf("[Motor][IMU] cnt=%d, diag=%d, chk_ok=%d\n",
           IMU_cnt, IMU_diag, IMU_chk_ok);
@@ -384,7 +386,7 @@ CFE_Status_t UEL_APP_SetMotorMode(const UEL_APP_SetMotorMode_t *Msg)
     RPT_Report_t report = (RPT_Report_t){0};
     report.MsgID = UEL_APP_CMD_MID;
     report.CommandCode = UEL_APP_SET_MOTOR_MODE_CC;
-    report.ReturnType = (status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
+    report.ReturnType = (status >0) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
     report.ReturnCode = status;
     report.ReturnDataSize = 40; 
     memcpy(report.ReturnValue, &RxData[1], 40);
@@ -418,9 +420,11 @@ CFE_Status_t UEL_APP_SetCamShotCmd(const UEL_APP_SetCamShotCmd_t *Msg)
 
     if (status > 0){
         if (RxData[0] == UEL_APP_ID_SetCamShotCmd){
+            status = CFE_SUCCESS;
         OS_printf("Set Cam Shot Cmd Success\n");
         }
     }else{
+        status = 
         CFE_EVS_SendEvent(UEL_APP_TX_ERR_EID, CFE_EVS_EventType_ERROR,
                           "UEL_APP: Failed to SetCamShot command, status=0x%08X", status);
         UEL_APP_Data.ErrCounter++;
@@ -429,7 +433,7 @@ CFE_Status_t UEL_APP_SetCamShotCmd(const UEL_APP_SetCamShotCmd_t *Msg)
     RPT_Report_t report = (RPT_Report_t){0};
     report.MsgID = UEL_APP_CMD_MID;
     report.CommandCode = UEL_APP_SET_CAM_SHOT_CC;
-    report.ReturnType = (status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
+    report.ReturnType = (status >0 ) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
     report.ReturnCode = status;
     report.ReturnDataSize = 1;
     memcpy(report.ReturnValue,&RxData[1],1);
@@ -485,7 +489,7 @@ CFE_Status_t UEL_APP_SetTerminalCmd(const UEL_APP_SetTerminalCmd_t *Msg)
     RPT_Report_t report = (RPT_Report_t){0};
     report.MsgID = UEL_APP_CMD_MID;
     report.CommandCode = UEL_APP_SET_TERMINAL_CC;
-    report.ReturnType = (status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
+    report.ReturnType = (status >0) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
     report.ReturnCode = status;
     uint16_t resp_len = 0;
     memcpy(&resp_len, &RxData[1], sizeof(uint16_t));
@@ -539,7 +543,7 @@ CFE_Status_t UEL_APP_GetCamShotStatus(const UEL_APP_GetCamShootStatusCmd_t *Msg)
         RPT_Report_t report = (RPT_Report_t){0};
         report.MsgID        = UEL_APP_CMD_MID;
         report.CommandCode  = UEL_APP_GET_CAM_SHOT_STATUS_CC;
-        report.ReturnType   = (status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
+        report.ReturnType   = (status >0 ) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
         report.ReturnCode   = status;
         report.ReturnDataSize = 5;
         memcpy(report.ReturnValue, &RxData[1], 5); 
@@ -571,7 +575,7 @@ CFE_Status_t UEL_APP_GetCamImageCmd(const UEL_APP_GetCamImageCmd_t *Msg)
         TxData,
         sizeof(TxData),
         RxData,
-        sizeof(RxData)
+        -1
     );
 
     if (status > 0)
@@ -580,7 +584,7 @@ CFE_Status_t UEL_APP_GetCamImageCmd(const UEL_APP_GetCamImageCmd_t *Msg)
         {
             uint8_t  imgSlot     = RxData[1];
             uint8_t  imgNumber   = RxData[2];
-            uint16_t chunkNumber = (uint16_t)RxData[4] | ((uint16_t)RxData[3] << 8);
+            uint16_t chunkNumber = ((uint16_t)RxData[3]) | ((uint16_t)RxData[4] << 8 ); 
 
             OS_printf("Image Downloading: Img Slot:%u, Img No:%u, Chunk number:%u\n",
                       imgSlot, imgNumber, chunkNumber);
@@ -624,7 +628,7 @@ CFE_Status_t UEL_APP_GetCamImageCmd(const UEL_APP_GetCamImageCmd_t *Msg)
     RPT_Report_t report = (RPT_Report_t){0};
     report.MsgID = UEL_APP_CMD_MID;
     report.CommandCode = UEL_APP_GET_CAM_IMAGE_CC;
-    report.ReturnType = (status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
+    report.ReturnType = (status >0 ) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
     report.ReturnCode = status;
     report.ReturnDataSize = 0; 
     UEL_APP_Data.rpt.Payload = report;
@@ -684,7 +688,7 @@ report:{
     RPT_Report_t report = {0,};
     report.MsgID = UEL_APP_CMD_MID;
     report.CommandCode = UEL_APP_DOWNLOAD_IMG_CC;
-    report.ReturnType = (status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
+    report.ReturnType = (status >0 ) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
     report.ReturnCode = status;
     report.ReturnDataSize = 0; 
     UEL_APP_Data.rpt.Payload = report;

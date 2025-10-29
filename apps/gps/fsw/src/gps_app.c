@@ -199,7 +199,7 @@ void GPS_SendReport(const void* cmd,
     CFE_MSG_GetFcnCode(cmd, &cmdCode);
 
     CFE_MSG_Init(CFE_MSG_PTR(GPS_AppData.Report.TelemetryHeader),
-                 CFE_SB_ValueToMsgId(GPS_HK_TLM_MID), // todo: define gps report mid.
+                 CFE_SB_ValueToMsgId(GPS_REPORT_TLM_MID),
                  sizeof(GPS_AppData.Report));
     GPS_AppData.Report.Payload.MsgID = (uint16_t)CFE_SB_MsgIdToValue(cmdMid);
     GPS_AppData.Report.Payload.CommandCode = cmdCode;

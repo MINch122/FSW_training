@@ -8,6 +8,8 @@
  ************************************************************************/
 
 #include "cfe_rf_typedef.h"
+#include "cfe_rf_extern_typedefs.h"
+#include "cfe_rf_msgids.h"
 
 /**
  * Global data
@@ -75,6 +77,11 @@ void CFE_RF_CommandIngestTask(void) {
     int32 Status;
     csp_conn_t *Connection = NULL;
     csp_packet_t *Packet = NULL;
+
+    CFE_RF_ContactTimeTlm_t Tlm = {0,};
+
+    CFE_MSG_Init(CFE_MSG_PTR(Tlm.TelemetryHeader), CFE_SB_ValueToMsgId(CFE_RF_TLM_MID), sizeof(Tlm));
+
     for (;;) {
         Connection = csp_accept(Socket, CSP_TIMEOUT(1));
         if (Connection == NULL) {
@@ -89,6 +96,13 @@ void CFE_RF_CommandIngestTask(void) {
                     break;
                 }
                 case CFE_RF_UPORT_TC: {
+                    /**
+                     * If TC received, Transmit the SB Message
+                     * This Time Stamp will be used as Last contact time
+                     */
+                    CFE_SB_TimeStampMsg(CFE_MSG_PTR(Tlm.TelemetryHeader));
+                    CFE_SB_TransmitMsg(CFE_MSG_PTR(Tlm.TelemetryHeader), true);
+
                     CFE_SB_Buffer_t *BufPtr = NULL;
 
                     /**
@@ -141,7 +155,6 @@ void CFE_RF_CommandIngestTask(void) {
  * Maybe just `csp_transaction` with GS
  * Refer `cfe_rf_typedef.h` to find the Port
  *********************************************/
-#define RF_MAX_MTU      208
 int32 CFE_RF_TelemetryEmit(void *BufPtr, size_t Size, uint8_t Port) {
     int32 Status;
     uint16_t TotSendByte = 0;
@@ -150,6 +163,22 @@ int32 CFE_RF_TelemetryEmit(void *BufPtr, size_t Size, uint8_t Port) {
     while (TotSendByte < Size) {
         SendByte = (Size - TotSendByte > RF_MAX_MTU) ? RF_MAX_MTU : (Size - TotSendByte);
         Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_GS_KISS, Port, (void *)(((uint8_t *)BufPtr) + TotSendByte), SendByte, NULL, 0);
+        if (!Status) break;
+
+        TotSendByte += SendByte;
+    }
+    
+    return Status;
+}
+
+int32 CFE_RF_TelemetryEmit2(void *BufPtr, size_t Size, uint8_t Port) {
+    int32 Status;
+    uint16_t TotSendByte = 0;
+    uint16_t SendByte = 0;
+
+    while (TotSendByte < Size) {
+        SendByte = (Size - TotSendByte > RF_MAX_MTU) ? RF_MAX_MTU : (Size - TotSendByte);
+        Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_GSTRX, Port, (void *)(((uint8_t *)BufPtr) + TotSendByte), SendByte, NULL, 0);
         if (!Status) break;
 
         TotSendByte += SendByte;

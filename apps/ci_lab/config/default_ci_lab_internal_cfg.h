@@ -62,4 +62,8 @@
  */
 #define CI_LAB_PIPE_DEPTH 32
 
+
+
+#define CI_FILE_NAME        "/cf/ci_contact_time.bin"
+
 #endif

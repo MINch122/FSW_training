@@ -124,7 +124,30 @@ typedef struct {
     uint16 EndChunNumber;
 } UEL_APP_DownloadAllCmd_t;
 
+typedef struct {
+    int16_t IMU_cnt;   
+    int16_t IMU_diag;   
+    int16_t IMU_gx   ;   
+    int16_t IMU_gy    ;  
+    int16_t IMU_gz     ; 
+    int16_t IMU_ax      ;
+    int16_t IMU_ay      ;
+    int16_t IMU_az      ;
+    int16_t IMU_temp    ;
+    int16_t IMU_chk_ok  ;
 
+    int16_t ESC_Ia_mA    ;       
+    int16_t ESC_Ib_mA     ;     
+    int16_t ESC_Ic_mA      ;     
+    int16_t ESC_I_rms_true_mA;   
+    int16_t ESC_I_std_abs_mA ;   
+    int16_t ESC_temp_C         ; 
+    int16_t ESC_vbus_mV         ;
+    int16_t ESC_timestamp_ms    ;
+    int16_t ESC_esc_seq         ;
+    int16_t ESC_crc16           ;
+
+}UEL_APP_Sense_Data;
 /************************************************************************
  * Telemetry Structures - Required for UEL_APP_Data
  ************************************************************************/

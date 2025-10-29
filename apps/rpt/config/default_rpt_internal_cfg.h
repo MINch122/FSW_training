@@ -41,7 +41,7 @@ typedef struct {
 
     uint8 ResetCause;
     uint16 BootCount;
-    uint32 TimeSec;
+    uint32 TimeSec;     /* <\brief S/C time seconds */
     uint32 TimeSubsec;
     uint32 Sequence; /* For Backup file numbering */
 

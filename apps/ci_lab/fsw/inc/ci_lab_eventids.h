@@ -41,5 +41,6 @@
 #define CI_LAB_CMD_LEN_ERR_EID          16
 
 #define CI_RF_INIT_ERR_EID              17
+#define CI_RF_MISSING_CRIT_EID          23
 
 #endif
