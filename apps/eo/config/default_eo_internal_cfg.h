@@ -31,11 +31,12 @@
 /**
  * EO Mut Sem name definition
  */
-#define EO_EPS_SEM      "EO_EPS_SEM"
-#define EO_SANT_SEM     "EO_SANT_SEM"
-#define EO_ADCS_SEM       "EO_ADCS_SEM"
+#define EO_EPS_VI_SEM       "EO_EPS_VI_SEM"
+#define EO_EPS_OUT_SEM      "EO_EPS_OUT_SEM"
+#define EO_SANT_SEM         "EO_SANT_SEM"
+#define EO_ADCS_SEM         "EO_ADCS_SEM"
 
-#define EO_PHASE_MUT    "EO_PHASE_MUT"
+#define EO_PHASE_MUT        "EO_PHASE_MUT"
 
 
 /****************************************/
@@ -44,29 +45,34 @@
 /*                                      */
 /****************************************/
 /* EPS Configuration */
-#define EO_VBATT_THRESHOLD      13400u /* [mV] */
+#define EO_VBATT_THRESHOLD_DEFAULT      14000u /* [mV] */
 
 /* SANT Configuration */
 #define EO_SANT_DURATION    6u /* [sec] */
+#define EO_VBATT_THRESHOLD_FOR_SANT_CONFIRM       (EO_VBATT_THRESHOLD_DEFAULT - 900u) /* [mV] */
+
+/* TC Wait configuration */
+#define EO_VBATT_THRESHOLD_FOR_TC       (EO_VBATT_THRESHOLD_DEFAULT - 500u) /* [mV] */
+#ifdef EO_DEBUG
+#define EO_MAX_ELAPSED_TIME     ((uint32)180)    /* <\brief 3 minute */
+#else
+#define EO_MAX_ELAPSED_TIME     ((uint32)(60 * 60 * 24 * 4)) /* <\brief 4 days */
+#endif
 
 /* PCDU Configuration */
-#define EO_PCDU_MAX_TRIES       5
-#define EO_PCDU_SP_CHANNEL_IDX  2
+#define EO_PCDU_MAX_TRIES               5
+#define EO_PCDU_SP_CHANNEL_IDX          2
 
 /* SP Configuration */
 #define EO_DEFAULT_SP_DEPLOY_TIME       20 /* <\brief [sec]*/
-#define EO_VBATT_THRESHOLD_FOR_SP       (EO_VBATT_THRESHOLD + 300u) /* <\brief [mV]*/
+#define EO_VBATT_THRESHOLD_FOR_SP       (EO_VBATT_THRESHOLD_DEFAULT - 900u) /* <\brief [mV]*/
 #define EO_SP_MAX_TRIES                 3
 
 /* MMT Configuration */
 #define EO_MMT_MAX_TRIES                3
+#define EO_VBATT_THRESHOLD_FOR_MMT      (EO_VBATT_THRESHOLD_DEFAULT - 900u) /* <\brief [mV]*/
 
-/* TC Wait configuration */
-#ifdef EO_DEBUG
-#define EO_MAX_ELAPSED_TIME     ((uint32)180)    /* <\brief 3 minute */
-#else
-#define EO_MAX_ELAPSED_TIME     ((uint32)(60 * 60 * 24 * 2)) /* <\brief 2 days */
-#endif
+
 
 
 /**
@@ -100,9 +106,10 @@ typedef struct {
     uint8_t S_tries;
     
     /* Solar Panel */
-    uint8_t SP_deploy; /* <\brief `EO_NOT_DEPLOYED` or `EO_IS_DEPLOYED` */
-    uint8_t SP_tries1; /* <\brief PC3 High time */
-    uint8_t SP_tries2; /* <\brief PA28 High time */
+    uint8_t SP_deploy;  /* <\brief `EO_NOT_DEPLOYED` or `EO_IS_DEPLOYED` */
+    uint8_t SP_tries;   /* <\brief Trial for SP deploy. Max 3 */
+    uint8_t SP_Sec1;    /* <\brief PC3 High time */
+    uint8_t SP_Sec2;    /* <\brief PA28 High time */
 
     /* ADCS */
     uint8_t MMT_Deploy; /* <\brief `EO_NOT_DEPLOYED` or `EO_IS_DEPLOYED` */

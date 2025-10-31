@@ -7,10 +7,32 @@
   2. Add EO Attitude Control - Ph.D Kang should confirm
 
 # Update
+- 1031
+  1. CI, TO almost verified.
+    - Checklist
+      1. S, U transmission mode corresponded to Last Contact Elapsed sec.
+      2. TO Beacon Sub/Unsub status corresponed to EPS Vbatt
+  2. EO Vbatt Threshold
+  
+- 1030
+  1. Modify EPS TRx fucntion (Retry if comm. fail)
+  2. Add several functionality in CI
+    - Last contact time surveillance: Check the last GS command time.
+    - If 4 days are elpased, RF emission will be executed in both frequency (UHF, S)
+  3. Add several functionality in TO
+    - Vbatt inspection (Toggle the RF transmission)
+      - If Vbatt is under 13V, stop transmit beacon. (Report is still can be transmitted.)
+  4. Add beacon table
+    - CI, TO. Loop up the beacon table in NAS
+    - Modify HK, SC table
+  5. Minor modification of EO
+    - VBATT threshold, ...etc
+
 - 1029
   1. Add Communication Emergency Handling
   2. Append TO to Beacon - Look up the beacon table in NAS
     - Modify HK, SC table
+    
 - 1028
   1. Revise UEL syntax error
   2. Add UEL download Task

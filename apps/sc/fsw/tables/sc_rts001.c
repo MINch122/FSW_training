@@ -24,11 +24,13 @@
  * This source file creates a RTS table that contains only
  * the following commands that are scheduled as follows:
  *
+ * Comprehensive S/C startup Procedure
  * ------------ RTS #1 ------------
  * ADCS Boot High
  * ADCS Boot Low
  * ADCS Enable High
- * TO   Enable Tlms
+ * TO   Enable Tlm
+ * SC   Enable RTS : RTS8 (i.e. beacon sequence) is always be executed. Should Never be stopped !!!
  * 
  * Total 4 commands
  */
@@ -69,6 +71,9 @@ typedef struct
     SC_RtsEntryHeader_t hdr5;
     RPT_GetOpsDataCmd_t cmd5;
 
+    SC_RtsEntryHeader_t hdr6;
+    SC_EnableRtsCmd_t cmd6;
+
 } SC_RtsStruct001_t;
 
 /* Define the union to size the table correctly */
@@ -102,12 +107,18 @@ SC_RtsTable001_t SC_Rts001 = {
     .rts.hdr4.WakeupCount = 1, // 0.5 sec
     .rts.cmd4.CommandHeader = 
         CFE_MSG_CMD_HDR_INIT(TO_LAB_CMD_MID, SC_MEMBER_SIZE(cmd4), TO_LAB_OUTPUT_ENABLE_CC, 0x23),
-    .rts.cmd4.Payload.dest_IP = "192.168.16.13",
 
     /* 5 Rpt Get ops data cmd - EO will ingest this msg, and start child task */
     .rts.hdr5.WakeupCount = 0,
     .rts.cmd5.CommandHeader =
         CFE_MSG_CMD_HDR_INIT(RPT_CMD_MID, SC_MEMBER_SIZE(cmd5), RPT_GET_OPS_DATA_CC, 0x23),
+
+    /* 6 Enable RTS 8 */
+    .rts.hdr6.WakeupCount = 0,
+    .rts.cmd6.CommandHeader = 
+        CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd6), SC_ENABLE_RTS_CC, 0x8E),
+    .rts.cmd6.Payload.RtsNum = 8,
+    .rts.cmd6.Payload.Padding = 0
 
 };
 /* Macro for table structure */

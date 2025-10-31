@@ -161,21 +161,17 @@ void EO_UpdateDataEPS(const EPS_Vi_Tlm_t *Msg) {
     EO_Data.CurIn[0] = Msg->CurIn[0];
     EO_Data.CurIn[1] = Msg->CurIn[1];
 
-    if (EO_Data.WaitingEPS) {
-        EO_Data.WaitingEPS = false;
-        EO_PRINTF("%s: EPS Vbatt Sem Give.\n", __func__);
-        OS_BinSemGive(EO_Data.EPS_SemId);
-    }
+    EO_PRINTF("%s: EPS Vbatt Sem Give.\n", __func__);
+    OS_BinSemGive(EO_Data.EPS_ViSemId);
+
 }
 
 void EO_UpdateOutEPS(const EPS_Output_Tlm_t *Msg) {
     memcpy(EO_Data.Output, Msg->Output, sizeof(EO_Data.Output));
 
-    if (EO_Data.WaitingEPS) {
-        EO_Data.WaitingEPS = false;
-        EO_PRINTF("%s: EPS Output Sem Give.\n", __func__);
-        OS_BinSemGive(EO_Data.EPS_SemId);
-    }
+    EO_PRINTF("%s: EPS Output Sem Give.\n", __func__);
+    OS_BinSemGive(EO_Data.EPS_OutSemId);
+
 }
 
 void EO_UpdateDataSANT(const SANT_OperationTlm_t *Msg) {

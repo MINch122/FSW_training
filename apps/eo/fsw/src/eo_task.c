@@ -199,7 +199,7 @@ CFE_Status_t EO_Init(void) {
 
     /********************************
      * 
-     * Current State Init
+     * Current Early Orbit State Init
      * 
      *******************************/
     if (Status == CFE_SUCCESS) {
@@ -211,9 +211,13 @@ CFE_Status_t EO_Init(void) {
     }
 
     /* Semaphore creation for synchronization */
-    OsStatus = OS_BinSemCreate(&EO_Data.EPS_SemId, EO_EPS_SEM, 0, 0);
+    OsStatus = OS_BinSemCreate(&EO_Data.EPS_ViSemId, EO_EPS_VI_SEM, 0, 0);
     if (OsStatus != OS_SUCCESS) {
-        CFE_EVS_SendErr(EO_SEM_INIT_ERR_EID, "EO EPS Sem Create Err. RC = %d\n", OsStatus);
+        CFE_EVS_SendErr(EO_SEM_INIT_ERR_EID, "EO EPS Vi Sem Create Err. RC = %d\n", OsStatus);
+    }
+    OsStatus = OS_BinSemCreate(&EO_Data.EPS_OutSemId, EO_EPS_OUT_SEM, 0, 0);
+    if (OsStatus != OS_SUCCESS) {
+        CFE_EVS_SendErr(EO_SEM_INIT_ERR_EID, "EO EPS Out Sem Create Err. RC = %d\n", OsStatus);
     }
     OsStatus = OS_BinSemCreate(&EO_Data.SANT_SemId, EO_SANT_SEM, 0, 0);
     if (OsStatus != OS_SUCCESS) {

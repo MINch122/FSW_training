@@ -42,6 +42,7 @@
 /**
  * @brief Telemetry pipe timeout
  */
+#define TO_LAB_CMD_PIPE_TIMEOUT 500
 #define TO_LAB_TLM_PIPE_TIMEOUT CFE_SB_POLL
 
 /**
@@ -60,6 +61,12 @@
 #define TO_LAB_TLM_PIPE_DEPTH OS_QUEUE_MAX_DEPTH
 
 /**
+ * @brief TO App Mutex ID
+ * This mutex is used for Emission mode mutual exclusion
+ */
+#define TO_MUTEX_NAME   "TO_MUTEX"
+
+/**
  * @brief enum to indicate the emission mode
  */
 typedef enum {
@@ -69,6 +76,23 @@ typedef enum {
     TO_U_ONLY_EMISSION, /* UHF band only transmission */
 
     TO_DUAL_EMISSION,   /* Both band transmission */
+
+    TO_NO_EMISSION,     /* No transmission */
 } TO_EmissionMode_t;
+
+/**
+ * @brief TO child Task Configuration
+ */
+#define TO_CHILD_NAME               "TO_CHILD"
+#define TO_CHILD_STACK_SIZE(n)      (4096 * (n))   
+#define TO_CHILD_PRIORITY           ((CFE_ES_TaskPriority_Atom_t)50)
+
+
+/**
+ * @brief TO Vbatt Threshold
+ * If Vbatt is lower than this, stop beacon. i.e.) "Un" Subscribe the HK combined packet 1 (0x081A)
+ * @note Then, TO not ingest the beacon packet. beacon data collection & storing (RTS 8) still work
+ */
+#define TO_VBATT_THRESHOLD_TO_OFF_BEACON    13000u /* [mV] */
 
 #endif

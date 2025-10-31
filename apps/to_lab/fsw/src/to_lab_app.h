@@ -32,8 +32,14 @@
 #include "to_lab_platform_cfg.h"
 #include "to_lab_cmds.h"
 #include "to_lab_dispatch.h"
+#include "to_lab_utils.h"
 #include "to_lab_msg.h"
 #include "to_lab_tbl.h"
+
+#include "rpt_interface_cfg.h"
+#include "eps_msgids.h"
+#include "eps_msg.h"
+#include "hk_msgids.h"
 
 /************************************************************************
 ** Type Definitions
@@ -48,16 +54,19 @@ typedef struct
     CFE_SB_PipeId_t Cmd_pipe;
     osal_id_t       TLMsockid;
     bool            downlink_on;
-    char            tlm_dest_IP[17];
-    bool            suppress_sendto;
+    // char            tlm_dest_IP[17];
+    // bool            suppress_sendto;
 
     TO_LAB_HkTlm_t        HkTlm;
-    TO_LAB_DataTypesTlm_t DataTypesTlm;
+    TO_ReportTlm_t        ReportTlm;
 
     TO_LAB_Subs_t *  SubsTblPtr;
     CFE_TBL_Handle_t SubsTblHandle;
 
     uint8_t EmissionMode;
+
+    osal_id_t MutexId;
+    CFE_ES_TaskId_t ChildId;
 
 } TO_LAB_GlobalData_t;
 

@@ -93,8 +93,11 @@ CFE_Status_t CI_LAB_SendHkCmd(const CI_LAB_SendHkCmd_t *cmd)
 
 CFE_Status_t CI_LAB_SendBcnCmd(const CI_LAB_SendHkCmd_t *cmd)
 {
-    CI_LAB_Global.BcnTlm.Payload.LastContactTimeSec =
-                        CI_LAB_Global.LastContactTime.Seconds;
+    /* Calculate the elapsed time sec */
+    CFE_TIME_SysTime_t Time = CFE_TIME_GetTime();
+    Time = CFE_TIME_Subtract(Time, CI_LAB_Global.LastContactTime);
+
+    CI_LAB_Global.BcnTlm.Payload.ElapsedTimeSec = Time.Seconds;
                         
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(CI_LAB_Global.BcnTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(CI_LAB_Global.BcnTlm.TelemetryHeader), true);
@@ -124,6 +127,8 @@ CFE_Status_t CI_UpdateContactTime(const CFE_RF_ContactTimeTlm_t *Msg) {
     // OS_MutSemGive(CI_LAB_Global.MutexId);
 
     OS_printf("%s: Last Contact Time Sec: %u\n", __func__, CI_LAB_Global.LastContactTime.Seconds);
+
+    return CFE_SUCCESS;
 }
 
 CFE_Status_t CI_CompareTime(void) {
@@ -148,4 +153,6 @@ CFE_Status_t CI_CompareTime(void) {
     }
 
     OS_printf("%s: Elapsed Time sec: %u\n", __func__, Result.Seconds);
+
+    return CFE_SUCCESS;
 }

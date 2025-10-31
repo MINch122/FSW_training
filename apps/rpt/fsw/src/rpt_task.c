@@ -52,7 +52,7 @@ void RPT_Main(void) {
         */
         CFE_ES_PerfLogExit(RPT_PERF_ID);
 
-        OS_TaskDelay(50);
+        OS_TaskDelay(20);
 
         CFE_ES_PerfLogEntry(RPT_PERF_ID);
 

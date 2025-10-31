@@ -38,6 +38,9 @@
 #include "ci_lab_msgids.h"
 #include "ci_lab_msg.h"
 
+#include "to_lab_msgids.h"
+#include "to_lab_msg.h"
+
 #include "eps_msgids.h"
 #include "eps_msg.h"
 
@@ -57,6 +60,7 @@ typedef union
     CFE_ES_NoopCmd_t  cmd2;   /**< \brief Desired cmd2 type */
     CI_LAB_CreateChildTaskCmd_t cmd3;
     EPS_P31U_HardResetCmd_t cmd4;
+    TO_CreateChildCmd_t cmd5;
 
     HS_MATMsgBuf_t    MsgBuf; /**< \brief Message Buffer for alignment */
 } HS_Message;
@@ -94,10 +98,10 @@ HS_MatTableEntry_t HS_MsgActs_Tbl[HS_MAX_MSG_ACT_TYPES] = {
      .Cooldown    = 10,
      .HsMsg.cmd1  = {CFE_MSG_CMD_HDR_INIT(EPS_CMD_MID, HS_MEMBER_SIZE(cmd4), EPS_P31U_HARD_RESET_CC, 0x41)}},
     
-    /*   4 */
-    {.EnableState = HS_MAT_STATE_DISABLED,
-     .Cooldown    = 10,
-     .HsMsg.cmd1  = {CFE_MSG_CMD_HDR_INIT(CFE_TBL_CMD_MID, HS_MEMBER_SIZE(cmd1), CFE_TBL_NOOP_CC, CFE_TBL_NOOP_CKSUM)}},
+    /*   4  - TO child restart */
+    {.EnableState = HS_MAT_STATE_ENABLED,
+     .Cooldown    = 1,
+     .HsMsg.cmd1  = {CFE_MSG_CMD_HDR_INIT(TO_LAB_CMD_MID, HS_MEMBER_SIZE(cmd5), TO_CREATE_CHILD_CC, 0x10)}},
     /*   5 */
     {.EnableState = HS_MAT_STATE_DISABLED,
      .Cooldown    = 10,

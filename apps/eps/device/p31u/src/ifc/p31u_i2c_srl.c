@@ -48,7 +48,15 @@ int p31u_transaction(uint8_t port,
     Params.Timeout = 100; // If combined transaction is wanted, delete this
     Params.Interval = 40;
 
-    status = CFE_SRL_ApiRead(EPS_AppData.Handle, &Params);
+    /**
+     * Try multiple transaction if failure occur.
+     * If fail, sleep 50ms and try again. Maximum 4 times
+     */
+    uint8_t i = 0;
+    do {
+        status = CFE_SRL_ApiRead(EPS_AppData.Handle, &Params);
+        if (status != CFE_SUCCESS) OS_TaskDelay(100);
+    } while (status != CFE_SUCCESS && ++i < 4);
     /**
      * If the transaction failed that would probably be EREMOTEIO (121)
      * - the slave not ready to send data.

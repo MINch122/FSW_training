@@ -18,7 +18,7 @@ void EO_ChildTask(void) {
         EO_PRINTF("%s: Main Entry Loop.\n", __func__);
         OS_MutSemTake(EO_Data.EOMutex);
         if(EO_Data.CurrentStep.CurrentPhase == EO_DONE) {
-            /* If Early Orbit Phase done, Exit several app */
+            /* If Early Orbit Phase done, Exit several apps */
             OS_MutSemGive(EO_Data.EOMutex);
             EO_ExitApps();
             return;
@@ -26,17 +26,16 @@ void EO_ChildTask(void) {
         OS_MutSemGive(EO_Data.EOMutex);
 
         /* Send EPS to get vi */
-        EO_Data.WaitingEPS = true;
-        EO_RequestVbattEPS();
+        // EO_RequestVbattEPS();
 
-        if (OS_BinSemTake(EO_Data.EPS_SemId) == OS_SUCCESS) {
+        if (OS_BinSemTake(EO_Data.EPS_ViSemId) == OS_SUCCESS) {
             /* Debug */
             EO_PRINTF("%s:EPS Vbatt: %u\n", __func__, EO_Data.Vbatt);
 
             EO_PhaseDispatch();
         }
 
-        OS_TaskDelay(5000); /* Prevent CPU hogging */
+        OS_TaskDelay(3000); /* Prevent CPU hogging */
     }
 }
 
@@ -89,7 +88,7 @@ void EO_PhaseDispatch(void) {
 
 void EO_SantPhase(void) {
     /* Check Vbatt */
-    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD) {
+    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_DEFAULT) {
         EO_PRINTF("%s: Vbatt Low, Exit.\n", __func__);
         return;
     }
@@ -110,6 +109,7 @@ void EO_SantPhase(void) {
         if (EO_Data.Status == EO_IS_DEPLOYED) { // If deployed,
             EO_PRINTF("%s:SANT Deployed.\n", __func__);
             OS_MutSemTake(EO_Data.EOMutex);
+
             /* Change Current Step */
             EO_Data.CurrentStep.CurrentPhase = EO_TC_WAIT_PHASE;
             EO_Data.CurrentStep.S_deploy = EO_IS_DEPLOYED;
@@ -141,15 +141,15 @@ void EO_SantPhase(void) {
 
 void EO_TCWaitPhase(void) {
     /* Check Vbatt */
-    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD) {
+    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_FOR_TC) {
         EO_PRINTF("%s: Vbatt Low, Disable Beacon.\n", __func__);
+
+        /* Disable beacon */
         EO_DisableBeacon();
     }
     /* If Vbatt OK, */
-    /* Forced via to STRX of bcn transmission and, */
     else {
         EO_PRINTF("%s: Vbatt enough, Enable Beacon.\n", __func__);
-        CFE_SRL_ApiChangeVia(CSP_NODE_STRX);
 
         /* Enable beacon */
         EO_EnableTO();
@@ -197,6 +197,7 @@ void EO_SantConfirmPhase(void) {
         /* Check SANT Status */
         if (EO_Data.Status == EO_IS_DEPLOYED) { // If deployed,
             EO_PRINTF("%s: SANT Deployed.\n", __func__);
+
             /* Change Current Step */
             OS_MutSemTake(EO_Data.EOMutex);
             EO_Data.CurrentStep.CurrentPhase = EO_PCDU_2ND_CHANNEL_ON_PHASE;
@@ -208,7 +209,7 @@ void EO_SantConfirmPhase(void) {
         else { // If not deployed,
             EO_PRINTF("%s: SANT NOT Deployed.\n", __func__);
             /* Check Vbatt */
-            if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD) {
+            if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_FOR_SANT_CONFIRM) {
                 EO_PRINTF("%s: VBatt Low. Exit.\n", __func__);
                 return;
             }
@@ -246,10 +247,9 @@ void EO_PCDU2ndChannelOnPhase(void) {
         OS_TaskDelay(500); // Wait until channel on
 
         /* Request EPS output channel */
-        EO_Data.WaitingEPS = true;
         EO_RequestOutEPS();
 
-        if (OS_BinSemTake(EO_Data.EPS_SemId) == OS_SUCCESS) {
+        if (OS_BinSemTake(EO_Data.EPS_OutSemId) == OS_SUCCESS) {
             /* If 2nd channel ON, (Success) */
             if (EO_Data.Output[EO_PCDU_SP_CHANNEL_IDX]) {
                 EO_PRINTF("%s: PCDU 2nd Channel ON.\n", __func__);
@@ -259,7 +259,7 @@ void EO_PCDU2ndChannelOnPhase(void) {
             /* If 2nd channel OFF, (Fail) */
             else {
                 EO_PRINTF("%s: PCDU 2nd Channel `NOT` ON.\n", __func__);
-                OS_TaskDelay(500);  // Wait for a moment,
+                OS_TaskDelay(50);  // Wait for a moment,
             }
 
             i++;
@@ -275,8 +275,9 @@ void EO_PCDU2ndChannelOnPhase(void) {
         OS_MutSemTake(EO_Data.EOMutex);
         EO_Data.CurrentStep.CurrentPhase = EO_MMT_DEPLOY_PHASE;
         EO_Data.CurrentStep.SP_deploy = EO_NOT_DEPLOYED;
-        EO_Data.CurrentStep.SP_tries1 = 0;
-        EO_Data.CurrentStep.SP_tries2 = 0;
+        EO_Data.CurrentStep.SP_tries = 0;
+        EO_Data.CurrentStep.SP_Sec1 = 0;
+        EO_Data.CurrentStep.SP_Sec2 = 0;
         OS_MutSemGive(EO_Data.EOMutex);
     }
     else { // PCDU channel on success,
@@ -297,74 +298,90 @@ void EO_SPDeployPhase(void) {
     CFE_SRL_GPIO_Handle_t *Out2 = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_OUT2_GPIO_INDEXER);
     CFE_SRL_GPIO_Handle_t *In = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
 
-    uint8_t i = 0;
+    OS_MutSemTake(EO_Data.EOMutex);
+    uint8_t Tries = EO_Data.CurrentStep.SP_tries;
+    OS_MutSemGive(EO_Data.EOMutex);
+    EO_PRINTF("%s: SP tries: %u.\n", __func__, Tries);
+
+    if (Tries >= EO_SP_MAX_TRIES) { // If too many tries,
+        /* Forced to next phase */
+        OS_MutSemTake(EO_Data.EOMutex);
+        EO_Data.CurrentStep.CurrentPhase = EO_MMT_DEPLOY_PHASE;
+        EO_Data.CurrentStep.SP_deploy = EO_NOT_DEPLOYED;
+        OS_MutSemGive(EO_Data.EOMutex);
+        return;
+    }
+
+/*-------------------------------------------------------------*/
+/*                                                             */
+/*            If "NOT too many" tries, TRY deployment          */
+/*                                                             */
+/*-------------------------------------------------------------*/
+    /* Increase the SP `tries` */
+    OS_MutSemTake(EO_Data.EOMutex);
+    EO_Data.CurrentStep.SP_tries ++;
+    OS_MutSemGive(EO_Data.EOMutex);
+
     bool IsDeploy = true; /* In this phase, `false` indicate deployed */
-    do {
-        /* Calculate the duration */
-        uint8_t Duration = (EO_DEFAULT_SP_DEPLOY_TIME + (i*10));
-        EO_PRINTF("%s: SP duration time: %u.\n", __func__, Duration);
-        /*------------------------------------*/
-        /*              SP1 Deploy            */
-        /*------------------------------------*/
-        /* Check the Vbatt */
-        if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_FOR_SP) return;
 
-        /* SP1 deploy trial */
-        EO_SPDeploy(Out1, Duration);
-        
-        OS_MutSemTake(EO_Data.EOMutex);
-        EO_Data.CurrentStep.SP_tries1 += Duration;
-        OS_MutSemGive(EO_Data.EOMutex);
+    /* Check the Vbatt */
+    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_FOR_SP) return;
 
-        /* Write the SP deploy time */
-        EO_WriteStep();
+    /* Calculate the duration */
+    uint8_t Duration = (EO_DEFAULT_SP_DEPLOY_TIME + (Tries * 10));
+    EO_PRINTF("%s: SP duration time: %u.\n", __func__, Duration);
 
-        /* Check deploy status */
-        CFE_SRL_ApiGpioGet(In, &IsDeploy);
-        if (!IsDeploy) break;
+/*------------------------------------*/
+/*              SP1 Deploy            */
+/*------------------------------------*/
+    /* Write the SP deploy time first */
+    OS_MutSemTake(EO_Data.EOMutex);
+    EO_Data.CurrentStep.SP_Sec1 += Duration;
+    OS_MutSemGive(EO_Data.EOMutex);
 
-        /*------------------------------------*/
-        /*              SP2 Deploy            */
-        /*------------------------------------*/
-        /* Check the Vbatt */
-        if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_FOR_SP) return;
+    EO_WriteStep();
 
-        /* SP2 deploy trial */
-        EO_SPDeploy(Out2, Duration);
+    /* And SP1 deploy trial */
+    EO_SPDeploy(Out1, Duration);
 
-        OS_MutSemTake(EO_Data.EOMutex);
-        EO_Data.CurrentStep.SP_tries2 += Duration;
-        OS_MutSemGive(EO_Data.EOMutex);
-
-        /* Write the SP deploy time */
-        EO_WriteStep();
-
-        /* Check deploy status */
-        CFE_SRL_ApiGpioGet(In, &IsDeploy);
-        if (!IsDeploy) break;
-
-        i++;
-
-    } while (i < EO_SP_MAX_TRIES);
-
-    /* Confirm the phase results */
-    if (!IsDeploy) { // If Deployed,
+    /* Check deploy status */
+    CFE_SRL_ApiGpioGet(In, &IsDeploy);
+    if (!IsDeploy) { /* If deployed, */
+        /* Goto next Phase */
         EO_PRINTF("%s: SP deployed SUCCESS.\n", __func__);
         /* Change to Next Phase */
         OS_MutSemTake(EO_Data.EOMutex);
         EO_Data.CurrentStep.CurrentPhase = EO_MMT_DEPLOY_PHASE;
         EO_Data.CurrentStep.SP_deploy = EO_IS_DEPLOYED;
         OS_MutSemGive(EO_Data.EOMutex);
+        return;
     }
-    else {
-        EO_PRINTF("%s: SP deployed FAIL. Goto next Phase\n", __func__);
-        /* Forced to Next Phase */
+
+/*------------------------------------*/
+/*              SP2 Deploy            */
+/*------------------------------------*/
+    /* Write the SP deploy time first */
+    OS_MutSemTake(EO_Data.EOMutex);
+    EO_Data.CurrentStep.SP_Sec2 += Duration;
+    OS_MutSemGive(EO_Data.EOMutex);
+
+    EO_WriteStep();
+
+    /* And SP2 deploy trial */
+    EO_SPDeploy(Out2, Duration);
+
+    /* Check deploy status */
+    CFE_SRL_ApiGpioGet(In, &IsDeploy);
+    if (!IsDeploy) { /* If deployed, */
+        /* Goto next Phase */
+        EO_PRINTF("%s: SP deployed SUCCESS.\n", __func__);
+        /* Change to Next Phase */
         OS_MutSemTake(EO_Data.EOMutex);
         EO_Data.CurrentStep.CurrentPhase = EO_MMT_DEPLOY_PHASE;
-        EO_Data.CurrentStep.SP_deploy = EO_NOT_DEPLOYED;
+        EO_Data.CurrentStep.SP_deploy = EO_IS_DEPLOYED;
         OS_MutSemGive(EO_Data.EOMutex);
+        return;
     }
-    
 }
 
 void EO_MMTDeployPhase(void) {
@@ -381,20 +398,7 @@ void EO_MMTDeployPhase(void) {
     OS_MutSemGive(EO_Data.EOMutex);
 
     /* Check the Vbatt */
-    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD) return;
-
-    /* Send ADCS MMT deploy cmd - Target ID 52 */
-    /* Only try when previous Burn pin state is `false` */
-    if (!EO_Data.MagBurnPinState) {
-        EO_PRINTF("%s: MMT still Burn.\n", __func__);
-        EO_RequestMMTDeploy();
-
-        OS_MutSemTake(EO_Data.EOMutex);
-        EO_Data.CurrentStep.MMT_tries ++;
-        OS_MutSemGive(EO_Data.EOMutex);
-    }
-
-    OS_TaskDelay(3000); // Wait until deploy procedure complete
+    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_FOR_MMT) return;
 
     /* Request to ADCS, MMT deploy status */
     EO_Data.WaitingADCS = true;
@@ -402,6 +406,7 @@ void EO_MMTDeployPhase(void) {
 
     /* Check the deployment status - Target ID 167 deploy pin state */
     if (OS_BinSemTimedWait(EO_Data.ADCS_SemId, 2000) == OS_SUCCESS) {
+
         if (EO_Data.MagDeployPinState == true) { // If deployed,
             EO_PRINTF("%s: MMT deployed.\n", __func__);
             /* Change to next Phase */
@@ -419,7 +424,8 @@ void EO_MMTDeployPhase(void) {
             return;
         }
         else { // If not deployed and not tring,
-            /* Try again */
+            /* Try deploy again */
+            EO_RequestMMTDeploy();
             EO_PRINTF("%s: MMT NOT deployed and not burn.\n", __func__);
             return;
         }
@@ -429,7 +435,7 @@ void EO_MMTDeployPhase(void) {
 void EO_AttitudeControlPhase(void) {
 
     /* Check the Vbatt */
-    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD) return;
+    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_DEFAULT) return;
 
     /* Send */
 }

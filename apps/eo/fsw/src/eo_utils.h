@@ -32,6 +32,9 @@
 #include "to_lab_msgids.h"
 #include "to_lab_msg.h"
 
+#include "hk_msgids.h"
+#include "hk_msg.h"
+
 /* Debug definition */
 #ifdef EO_DEBUG
 #define EO_PRINTF(...)  OS_printf(__VA_ARGS__)
@@ -59,7 +62,14 @@ void EO_SantConfirm(void);
 void EO_TCWait(void);
 
 void EO_EnableTO(void);
+
+/**
+ * @brief TO Subscribe The HK combined Packet 1 (Beacon, `0x081A)`
+ */
 void EO_EnableBeacon(void);
+/**
+ * @brief TO "Un" Subscribe The HK combined Packet 1 (Beacon, `0x081A)`
+ */
 void EO_DisableBeacon(void);
 
 void EO_SPDeploy(CFE_SRL_GPIO_Handle_t *Handle, uint8_t Duration);

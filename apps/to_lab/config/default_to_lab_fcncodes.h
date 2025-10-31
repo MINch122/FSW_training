@@ -44,6 +44,8 @@
 #define TO_LAB_OUTPUT_ENABLE_CC   6 /*  output enable     */
 #define TO_LAB_OUTPUT_DISABLE_CC  7 /*  output disable    */
 
+#define TO_CREATE_CHILD_CC           21
+#define TO_SET_NO_EMISSION_CC        22
 #define TO_SET_S_ONLY_EMISSION_CC    23
 #define TO_SET_U_ONLY_EMISSION_CC    24
 #define TO_SET_DUAL_EMISSION_CC      27

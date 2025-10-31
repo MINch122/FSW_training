@@ -36,6 +36,8 @@
 #include "to_lab_msgdefs.h"
 #include "cfe_msg_hdr.h"
 
+#include "rpt_interface_cfg.h"
+
 /******************************************************************************/
 
 typedef struct
@@ -49,8 +51,8 @@ typedef struct
 typedef struct
 {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
-    TO_LAB_DataTypes_Payload_t Payload;         /**< \brief Telemetry payload */
-} TO_LAB_DataTypesTlm_t;
+    RPT_Report_t Payload;         /**< \brief Telemetry payload */
+} TO_ReportTlm_t;
 
 /******************************************************************************/
 
@@ -101,7 +103,7 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t       CommandHeader; /**< \brief Command header */
-    TO_LAB_EnableOutput_Payload_t Payload;       /**< \brief Command payload */
+    // TO_LAB_EnableOutput_Payload_t Payload;       /**< \brief Command payload */
 } TO_LAB_EnableOutputCmd_t;
 
 typedef struct
@@ -109,8 +111,17 @@ typedef struct
     CFE_MSG_CommandHeader_t       CommandHeader; /**< \brief Command header */
 } TO_LAB_DisableOutputCmd_t;
 
+typedef struct
+{
+    CFE_MSG_CommandHeader_t       CommandHeader; /**< \brief Command header */
+} TO_CreateChildCmd_t;
 
 /* Transmission mode command */
+typedef struct
+{
+    CFE_MSG_CommandHeader_t       CommandHeader; /**< \brief Command header */
+} TO_SetEmissionModeNoneCmd_t;
+
 typedef struct
 {
     CFE_MSG_CommandHeader_t       CommandHeader; /**< \brief Command header */

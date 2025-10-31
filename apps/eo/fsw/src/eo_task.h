@@ -71,11 +71,12 @@ typedef struct {
     
 
     /* Mut Sem object */
-    osal_id_t EPS_SemId;
+    osal_id_t EPS_ViSemId;
+    osal_id_t EPS_OutSemId;
     osal_id_t SANT_SemId;
     osal_id_t ADCS_SemId;
 
-    osal_id_t EOMutex;
+    osal_id_t EOMutex;  /* <\brief Mutual exclusion for `CurrentStep` */
     
     /* Child Task ID */
     CFE_ES_TaskId_t ChildTaskId;

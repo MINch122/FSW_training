@@ -26,7 +26,7 @@ void CFE_RF_CommandIngestTask(void);
 /// @param Size TxSize
 /// @param Port Destination Port
 /// @return `1` on success, `0` on failure.
-/// @note This function Transmit via #STRX. Can be differed by rtable
+/// @note This function Transmit via #STRX. Can be differed by CSP rtable
 int32 CFE_RF_TelemetryEmit(void *BufPtr, size_t Size, uint8_t Port);
 
 
@@ -35,7 +35,7 @@ int32 CFE_RF_TelemetryEmit(void *BufPtr, size_t Size, uint8_t Port);
 /// @param Size TxSize
 /// @param Port Destination Port
 /// @return `1` on success, `0` on failure.
-/// @note This function Transmit via #UTRX. Can be differed by rtable
+/// @note This function Transmit via #UTRX. Can be differed by CSP rtable
 int32 CFE_RF_TelemetryEmit2(void *BufPtr, size_t Size, uint8_t Port);
 
 #endif

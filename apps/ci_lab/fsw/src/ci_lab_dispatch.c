@@ -132,7 +132,7 @@ void CI_LAB_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
             break;
 
         case CI_LAB_WAKEUP_MID:
-            /* Use CI Wakeup for comparison the time */
+            /* Use `CI Wakeup Message` for time comparison */
             /* `Last contact time` VS `current time` */
             CI_CompareTime();
             // CI_LAB_ReadUplinkCmd((const CI_LAB_ReadUplinkCmd_t *)SBBufPtr);

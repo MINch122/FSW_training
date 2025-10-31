@@ -46,7 +46,7 @@ typedef struct
 
 typedef struct
 {
-    uint32 LastContactTimeSec;
+    uint32 ElapsedTimeSec; /* <\brief Elapsed time from last contact with GS. [sec] */
     
 } CI_LAB_BcnTlm_Payload_t;
 

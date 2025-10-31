@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./cmdUtil -ELE --pktid=0x1824 --pktfc=0
+./cmdUtil -ELE --pktid=0x1823 --pktfc=0

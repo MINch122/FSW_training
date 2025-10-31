@@ -75,7 +75,16 @@ void TO_LAB_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             TO_LAB_DisableOutputCmd((const TO_LAB_DisableOutputCmd_t *)SBBufPtr);
             break;
 
+        case TO_CREATE_CHILD_CC:
+            TO_CreateChildCmd((const TO_CreateChildCmd_t *)SBBufPtr);
+            break;
+            
         /* Telemetry Emission mode command */
+        case TO_SET_NO_EMISSION_CC:
+            /* No Emission */
+            TO_SetEmissionModeNoneCmd((const TO_SetEmissionModeNoneCmd_t *)SBBufPtr);
+            break;
+            
         case TO_SET_S_ONLY_EMISSION_CC:
             /* S only */
             TO_SetEmissionModeSCmd((const TO_SetEmissionModeSCmd_t *)SBBufPtr);
@@ -116,6 +125,10 @@ void TO_LAB_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 
         case TO_LAB_SEND_HK_MID:
             TO_LAB_SendHkCmd((const TO_LAB_SendHkCmd_t *)SBBufPtr);
+            break;
+
+        case EPS_VI_TLM_MID:
+            TO_ValidateEPS((const EPS_Vi_Tlm_t *)SBBufPtr);
             break;
 
         default:

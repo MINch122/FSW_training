@@ -4,19 +4,10 @@ project(CFS_CI_LAB C)
 set(APP_SRC_FILES
     fsw/src/ci_lab_app.c
     fsw/src/ci_lab_cmds.c
-)
-
-if (CFE_EDS_ENABLED_BUILD)
-  list(APPEND APP_SRC_FILES
-    fsw/src/ci_lab_eds_dispatch.c
-    fsw/src/ci_lab_eds_decode.c
-  )
-else()
-  list(APPEND APP_SRC_FILES
     fsw/src/ci_lab_dispatch.c
     fsw/src/ci_lab_passthru_decode.c
-  )
-endif()
+    fsw/src/ci_lab_utils.c
+)
 
 
 # Create the app module

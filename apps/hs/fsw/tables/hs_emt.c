@@ -44,7 +44,7 @@ HS_EMTEntry_t HS_EventMon_Tbl[HS_MAX_MONITORED_EVENTS] = {
     /*   4 */ {"CFE_SB", 0, 10, HS_EMT_ACT_NOACT},
     /*   5 */ {"CI_LAB_APP", 0, 626, 6},    // Entry `2` in MAT. 6 == `2` + 4(default offset)
     /*   6 */ {"ADCS", 0, 114, 7},          // Entry `3` in MAT. 7 == `3` + 4(default offset)
-    /*   7 */ {"", 0, 10, HS_EMT_ACT_NOACT},
+    /*   7 */ {"TO_LAB_APP", 0, 41, 8},     // Entry `4` in MAT. 8 == `4` + 4(default offset)
     /*   8 */ {"", 0, 10, HS_EMT_ACT_NOACT},
     /*   9 */ {"", 0, 10, HS_EMT_ACT_NOACT},
     /*  10 */ {"", 0, 10, HS_EMT_ACT_NOACT},

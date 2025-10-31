@@ -45,28 +45,26 @@ void EO_RequestOutEPS(void) {
 }
 
 void EO_ExitApps(void) {
+    CFE_Status_t Status; 
     /* If Early Orbit Phase done, Exit several apps */
     CFE_ES_AppId_t AppId = CFE_ES_APPID_UNDEFINED;
 
     /* Delete SANT App */
-    CFE_ES_GetAppIDByName(&AppId, "SANT");
-    CFE_ES_DeleteApp(AppId);
+    Status = CFE_ES_GetAppIDByName(&AppId, "SANT");
+    if (Status == CFE_SUCCESS) CFE_ES_DeleteApp(AppId);
 
     /* Delete SP App */
-    CFE_ES_GetAppIDByName(&AppId, "SP");
-    CFE_ES_DeleteApp(AppId);
+    Status = CFE_ES_GetAppIDByName(&AppId, "SP");
+    if (Status == CFE_SUCCESS) CFE_ES_DeleteApp(AppId);
 
     /* UANT ? */
     // .....
 
     /* Exit EO App */
-    CFE_ES_ExitApp(CFE_ES_RunStatus_APP_EXIT);
+    // CFE_ES_ExitApp(CFE_ES_RunStatus_APP_EXIT);
 }
 
 void EO_SantDeploy(void) {
-    /* Check the Vbatt, and Send Deploy cmd */
-    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD) return;
-
     /* Send Deploy command to SANT */
     SANT_BurnCmd_t Cmd;
     CFE_MSG_Init(CFE_MSG_PTR(Cmd.CmdHdr), CFE_SB_ValueToMsgId(SANT_CMD_MID), sizeof(Cmd));
@@ -82,31 +80,34 @@ void EO_TCWait(void) {
 
 
 void EO_EnableTO(void) {
+    /* Open TO emission */
     TO_LAB_EnableOutputCmd_t Cmd;
     CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(TO_LAB_CMD_MID), sizeof(Cmd));
     CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), TO_LAB_OUTPUT_ENABLE_CC);
-    char Pay[] = "192.168.23.23";
-    memcpy(Cmd.Payload.dest_IP, Pay, sizeof(Pay));
 
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
 
 }
+
+
 void EO_EnableBeacon(void) {
-    /* Send Enable beacon to SC - RTS 8 */
-    SC_EnableRtsCmd_t Cmd;
-    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(SC_CMD_MID), sizeof(Cmd));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), SC_ENABLE_RTS_CC);
-    Cmd.Payload.RtsNum = 8;
+    /* Subscribe The HK combined Packet 1 (Beacon, `0x081A)` */
+    TO_LAB_AddPacketCmd_t Cmd;
+    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(TO_LAB_CMD_MID), sizeof(Cmd));
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), TO_LAB_ADD_PKT_CC);
+    Cmd.Payload.Stream = CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID);
+    Cmd.Payload.Flags = (CFE_SB_Qos_t){.Priority = 0, .Reliability = 0};
+    Cmd.Payload.BufLimit = 4;
 
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
 }
 
 void EO_DisableBeacon(void) {
-    /* Send Disable beacon to SC - RTS 8 */
-    SC_DisableRtsCmd_t Cmd;
-    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(SC_CMD_MID), sizeof(Cmd));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), SC_DISABLE_RTS_CC);
-    Cmd.Payload.RtsNum = 8;
+    /* "Un" Subscribe The HK combined Packet 1 (Beacon, `0x081A)` */
+    TO_LAB_RemovePacketCmd_t Cmd;
+    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(TO_LAB_CMD_MID), sizeof(Cmd));
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), TO_LAB_ADD_PKT_CC);
+    Cmd.Payload.Stream = CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID);
 
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
 }
@@ -181,8 +182,9 @@ void EO_FinalizePhase(void) {
     EO_PRINTF("S_tries: %u\n\n", EO_Data.CurrentStep.S_tries);
     EO_PRINTF("TC received: %u\n\n", EO_Data.CurrentStep.IsTC);
     EO_PRINTF("SP_deploy: %u\n", EO_Data.CurrentStep.SP_deploy);
-    EO_PRINTF("SP_tries1: %u\n", EO_Data.CurrentStep.SP_tries1);
-    EO_PRINTF("SP_tries2: %u\n\n", EO_Data.CurrentStep.SP_tries2);
+    EO_PRINTF("SP_tries: %u\n", EO_Data.CurrentStep.SP_tries);
+    EO_PRINTF("SP_Sec1: %u\n", EO_Data.CurrentStep.SP_Sec1);
+    EO_PRINTF("SP_Sec2: %u\n\n", EO_Data.CurrentStep.SP_Sec2);
     EO_PRINTF("ADCS MMT Deploy: %u\n", EO_Data.MagDeployPinState);
     EO_PRINTF("ADCS MMT Burn: %u\n", EO_Data.MagBurnPinState);
     EO_PRINTF("ADCS MMT Timeout: %u\n", EO_Data.MagDeployTimeout);

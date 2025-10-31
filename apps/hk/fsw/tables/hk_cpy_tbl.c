@@ -1176,14 +1176,6 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
         0,
         0,
     },
-    /* 127 */
-    {
-        CFE_SB_MSGID_RESERVED,
-        0,
-        CFE_SB_MSGID_RESERVED,
-        0,
-        0,
-    },
 };
 
 /*
