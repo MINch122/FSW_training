@@ -13,4 +13,9 @@ void CI_StoreContactTime(void);
 
 void CI_SetEmissionMode(bool IsEmergency);
 
+/* UANT deploy related command */
+void CI_UantArm(void);
+void CI_UantDisArm(void);
+void CI_UantAutoDeploy(void);
+
 #endif

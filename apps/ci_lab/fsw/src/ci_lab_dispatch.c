@@ -141,12 +141,14 @@ void CI_LAB_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
         case CFE_RF_TLM_MID:
             /* If CFE RF send this, this means that UL received */
             CI_UpdateContactTime((const CFE_RF_ContactTimeTlm_t *)SBBufPtr);
+            break;
 
         case SC_ONEHZ_WAKEUP_MID: // 0.5 Sec
             /* @deprecated */
             /* Use SC Wakeup for comparison the time */
             /* `Last contact time` VS `current time` */
             // CI_CompareTime();
+            // break;
 
         default:
             CI_LAB_Global.HkTlm.Payload.CommandErrorCounter++;

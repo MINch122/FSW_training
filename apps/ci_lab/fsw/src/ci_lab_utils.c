@@ -3,6 +3,9 @@
 #include "to_lab_msgids.h"
 #include "to_lab_msg.h"
 
+#include "uant_msgids.h"
+#include "uant_msg.h"
+
 static int32 CI_OpenFile(void) {
 
     return OS_OpenCreate(&CI_LAB_Global.FileHandle, CI_FILE_NAME, OS_FILE_FLAG_CREATE, OS_READ_WRITE);
@@ -57,4 +60,30 @@ void CI_SetEmissionMode(bool IsEmergency) {
 
         CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
     }
+}
+
+void CI_UantArm(void) {
+    UANT_ISIS_ArmAntennaSystemsCmd_t Cmd;
+    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(UANT_CMD_MID), sizeof(Cmd));
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), UANT_ARM_ANTENNA_SYSTEMS_CC);
+
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
+}
+
+void CI_UantDisArm(void) {
+    UANT_ISIS_DisarmCmd_t Cmd;
+    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(UANT_CMD_MID), sizeof(Cmd));
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), UANT_DISARM_CC);
+
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
+}
+
+void CI_UantAutoDeploy(void) {
+    /* Sequencial Automate deployment */
+    UANT_ISIS_AutomatedDeploymentCmd_t Cmd;
+    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(UANT_CMD_MID), sizeof(Cmd));
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), UANT_AUTOMATED_DEPLOYMENT_CC);
+    Cmd.Arg = 5; /* Burn time in sec */
+
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader));
 }
