@@ -1056,6 +1056,33 @@ int32 ADCS_SetMagSensingElmConfig(const ADCS_MagSensingElmConfigCmd_Payload_t *s
 	return CFE_SUCCESS;
 }
 
+int32 ADCS_SetTransferFrame(const ADCS_TransferFrameCmd_Payload_t *setVal)
+{	// ID 79
+	
+    int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8_t *tx_buffer;
+	uint16_t bufferSizeUsed;
+	
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_SET_TRANSFER_FRAME;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	tx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_TransferFrameCmd_Payload_t);
+	memcpy(tx_buffer, setVal, bufferSizeUsed);
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
+
 int32 ADCS_SetUnsolicitTlmMsgSetup(const ADCS_UnsolicitTlmMsgSetupCmd_Payload_t *setVal)
 {	// ID 112
 	
@@ -1110,6 +1137,33 @@ int32 ADCS_SetUnsolicitEventMsgSetup(const ADCS_UnsolicitEventMsgSetupCmd_Intern
 	return CFE_SUCCESS;
 }
 
+int32 ADCS_SetReqTlmLogTransferSetup(const ADCS_RequestTlmLogTransferSetupCmd_Payload_t *setVal)
+{	// ID 117
+	
+    int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8_t *tx_buffer;
+	uint16_t bufferSizeUsed;
+	
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_SET_REQ_TLM_LOG_TRANSFER_SETUP;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	tx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_RequestTlmLogTransferSetupCmd_Payload_t);
+	memcpy(tx_buffer, setVal, bufferSizeUsed);
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
+
 int32 ADCS_SetInitiateEventLogTransfer(const ADCS_InitiateEventLogTransferCmd_Payload_t *setVal)
 {	// ID 120
 
@@ -1120,7 +1174,7 @@ int32 ADCS_SetInitiateEventLogTransfer(const ADCS_InitiateEventLogTransferCmd_Pa
 	
 	ZERO_VAR(target);
 	
-	target.id = ADCS_ID_SET_INITIATE_EVENT_LOG_TRANSGER;
+	target.id = ADCS_ID_SET_INITIATE_EVENT_LOG_TRANSFER;
 	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
 
 	tx_buffer = cubeObc_connect_buffer(&target);
@@ -1919,6 +1973,56 @@ int32 ADCS_GetCalibratedGYRSensor(ADCS_CalibratedGYRSensorTlm_Payload_t *returnV
 	return CFE_SUCCESS;
 }
 
+int32 ADCS_GetDataFrame(ADCS_DataFrameTlm_Payload_t *returnVal)
+{	// ID 219
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_DATA_FRAME;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_DataFrameTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_GetInfoFramInMemory(ADCS_InfoFrameInMemoryTlm_Payload_t *returnVal)
+{	// ID 220
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_INFO_FRAME_IN_MOMERY;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_InfoFrameInMemoryTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	return CFE_SUCCESS;
+}
+
 int32 ADCS_GetMagSensingElmConfig(ADCS_MagSensingElmConfigTlm_Payload_t *returnVal)
 {	// ID 221
 	
@@ -1935,6 +2039,31 @@ int32 ADCS_GetMagSensingElmConfig(ADCS_MagSensingElmConfigTlm_Payload_t *returnV
 	rx_buffer = cubeObc_connect_buffer(&target);
 
 	bufferSizeUsed = sizeof(ADCS_MagSensingElmConfigTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_GetTlmLogInclMask(ADCS_TlmLogInclMaskTlm_Payload_t *returnVal)
+{	// ID 227
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_TLM_LOG_INCLMASK;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_TlmLogInclMaskTlm_Payload_t);
 	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
 		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
 		return status;
@@ -1994,6 +2123,31 @@ int32 ADCS_GetUnsolicitEventMsgSetup(ADCS_UnsolicitEventMsgSetupTlm_Payload_t *r
 	return CFE_SUCCESS;
 }
 
+int32 ADCS_GetTlmLogStatusResponse(ADCS_TlmLogStatusResponseTlm_Payload_t *returnVal)
+{	// ID 234
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_TLM_LOG_STATUS_RESPONSE;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_TlmLogStatusResponseTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	return CFE_SUCCESS;
+}
+
 int32 ADCS_GetEventLogStatusResponse(ADCS_EventLogStatusResponseTlm_Payload_t *returnVal)
 {	// ID 235
 	
@@ -2019,6 +2173,53 @@ int32 ADCS_GetEventLogStatusResponse(ADCS_EventLogStatusResponseTlm_Payload_t *r
 	return CFE_SUCCESS;
 }
 
+int32 ADCS_GetPortMap(ADCS_PortMapTlm_Payload_t *returnVal)
+{	// ID 239
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_PORTMAP;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_PortMapTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_SetErrorLogClear(void)
+{	// ID 5
+	
+    int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint16_t bufferSizeUsed;
+	
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_SET_ERROR_LOG_CLEAR;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	bufferSizeUsed = 0;
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
 
 
 /***********************************************
@@ -2154,3 +2355,319 @@ void ADCS_ListenEventTask(void) {
 	}
 	
 }
+
+
+/**************************************
+ * CubeADCS Additional Functions
+ **************************************/
+// Commissioning Functions
+ int32 ADCS_COMM_InitAngRateEst(void) {
+	CFE_Status_t			status;
+	CFE_TIME_SysTime_t		tnow, tsend;
+
+    // Struct for Setting Values
+	ADCS_PowerStateCmd_Payload_t					SetVal_56 = {0,};
+	// ADCS_UnsolicitTlmMsgSetupCmd_Payload_t 			SetVal_112 = {0,};
+    ADCS_RequestTlmLogTransferSetupCmd_Payload_t 	SetVal_117 = {0,};
+    ADCS_TransferFrameCmd_Payload_t 				SetVal_79 = {0,};
+
+    // Struct for Return Values
+    ADCS_CurrentUnixTimeTlm_Payload_t 				RetVal_133 = {0,};    
+    ADCS_TlmLogStatusResponseTlm_Payload_t 			RetVal_234 = {0,};
+    ADCS_InfoFrameInMemoryTlm_Payload_t 			RetVal_220 = {0,};
+	ADCS_DataFrameTlm_Payload_t						RetVal_219 = {0,};
+
+
+    // uint32 UnixSeconds_start = 0;
+	uint8 TotalNumberOfEntries = 20;
+	uint8 SumNumberOfEntries = 0;
+
+	SetVal_56.GYR0 = 1;
+	SetVal_56.GYR1 = 1;
+	status = ADCS_SetPowerState(&SetVal_56);
+	OS_TaskDelay(10);
+
+	// SetVal_112.CANTlmRetrunInterval = 6;				// Return interval 1s
+    // SetVal_112.CANTlmEDInclusionBitmask[2] = 1;			// 0b0000 0001
+    // status = ADCS_SetUnsolicitTlmMsgSetup(&SetVal_112);
+    // SetVal_112.CANTlmEDInclusionBitmask[2] = 0;
+
+	// status = ADCS_SetUnsolicitTlmMsgSetup(&SetVal_112);
+
+	// if (status != CUBEOBC_ERROR_OK) {
+	// 	OS_printf("ADCS Error on ADCS_SubSeqTlmSet_InitAngRateEst()\n");
+	// 	return status;
+	// }
+	
+    status = ADCS_GetCurrentUnixTime(&RetVal_133);
+
+    SetVal_117.FilterType = 4;
+	SetVal_117.NumberOfEntries = TotalNumberOfEntries;
+	SetVal_117.UnixStartTime = RetVal_133.CurrentUnixseconds;
+	SetVal_117.UnixEndTime = RetVal_133.CurrentUnixseconds;
+	SetVal_117.TlmLogReturnInterval = 0;	// 1 = 1 s, ... 5 = 5 s, 6 = 10 s, ...
+    SetVal_117.LogIDbitmask[2] = 1;
+	
+	// SET TLM LOG Transfer Setup
+    status = ADCS_SetReqTlmLogTransferSetup(&SetVal_117);
+	
+	OS_TaskDelay(10);
+	// OS_TaskDelay(22000);
+
+	uint16 timeout_234 = 10000;
+	uint16 backoff = 100;
+	uint16 backoffTotal = 0;
+
+	// TLM Poll
+    status = ADCS_GetTlmLogStatusResponse(&RetVal_234);
+	uint8 flagReadQStatus = (RetVal_234.ReadQState == 1);
+	while ((flagReadQStatus == false) && (status == CUBEOBC_ERROR_OK)) {
+		if (flagReadQStatus == false) {
+			if (backoffTotal >= timeout_234) {
+				return CUBEOBC_ERROR_TOUT;
+			}
+			else {
+				OS_TaskDelay(backoff);
+				backoffTotal += backoff;
+			}
+
+		}
+		status = ADCS_GetTlmLogStatusResponse(&RetVal_234);
+		flagReadQStatus = (RetVal_234.ReadQState == 1);
+	}
+	OS_TaskDelay(10);
+
+
+	// Data Transfer - Download
+	ErrorCode result = CUBEOBC_ERROR_OK;
+	ErrorCode lastResult = CUBEOBC_ERROR_OK;
+	uint16 LocalFrameNumber = 0;
+	uint8 flagFrameSet = false;
+	uint8 flagFrameError = false;
+	uint8 flagExit = false;
+	uint8 flagFrameNumMatch = false;
+	uint8 flagLastFrame = false;
+
+	uint8 frameCrc = 0xFF;
+
+	CubeADCS_TlmLogFrame_Test_t Frame_test = {0};
+
+	tsend = CFE_TIME_GetTime();
+
+	while ((flagLastFrame == false) && (result == CUBEOBC_ERROR_OK)) {
+		flagFrameSet = false;
+		flagExit = false;
+
+		ZERO_VAR(Frame_test);
+
+		// Set Frame Number
+		while ((flagFrameSet == false) && (flagExit == false)) {
+			SetVal_79.NextFrameNumber = LocalFrameNumber;
+			OS_printf("START: ADCS_SetTransferFrame! - Required Frame #: %u\n",LocalFrameNumber);
+			result = ADCS_SetTransferFrame(&SetVal_79);
+			OS_printf("ADCS_SetTransferFrame Result: %d\n",result);
+			if (result == CUBEOBC_ERROR_OK) {
+				tsend = CFE_TIME_GetTime();
+				flagFrameSet = true;
+				
+			}
+			else {
+				tnow = CFE_TIME_GetTime();
+				if (result == CUBEOBC_ERROR_TOUT) {
+					if ((tnow.Seconds - tsend.Seconds) > 5) {
+						flagExit = true;
+					}
+				}
+				else if (result == CUBEOBC_ERROR_TCTLM_BUSY) {
+					if (lastResult == CUBEOBC_ERROR_TOUT) {
+						flagFrameSet = true;
+					}
+					else if ((tnow.Seconds - tsend.Seconds) > 5) {
+						flagExit = true;
+					}
+					else {
+						OS_TaskDelay(5);
+					}				
+				}
+				else if (result == CUBEOBC_ERROR_TCTLM_INVALID_PARAM) {
+					if (lastResult == CUBEOBC_ERROR_TOUT) {
+						flagFrameSet = true;
+					}
+					else if ((tnow.Seconds - tsend.Seconds) > 5) {
+						flagExit = true;
+					}
+				}
+				else {
+					flagExit = true;
+				}
+			}
+			lastResult = result;
+			OS_printf("ERROR CODE: %d\n",result);
+		}
+
+		if (flagFrameSet == true) status = CUBEOBC_ERROR_OK;
+		status = result;
+		tsend = CFE_TIME_GetTime();
+
+		if (status == CUBEOBC_ERROR_OK) {
+			OS_printf("Set Frame Number is complete!!\n");
+		}
+
+		// Poll Frame Number
+		if (status == CUBEOBC_ERROR_OK) {
+			while ((flagFrameNumMatch == false) && (flagFrameError == false) && (flagExit == false)) {
+				OS_TaskDelay(10);
+				result = ADCS_GetInfoFramInMemory(&RetVal_220);
+				if (result == CUBEOBC_ERROR_OK) {
+					flagFrameNumMatch = (RetVal_220.FrameNumber == LocalFrameNumber);
+					flagLastFrame = RetVal_220.LastFrame;
+					flagFrameError = RetVal_220.FrameError;
+				}
+				if (flagFrameNumMatch == false) {
+					tnow = CFE_TIME_GetTime();
+					if ((tnow.Seconds - tsend.Seconds) > 5) {
+						flagExit = true;
+						if (result == CUBEOBC_ERROR_OK) result = CUBEOBC_ERROR_TOUT;
+					}
+				}
+
+			}
+		}
+
+		status = result;
+		if (flagLastFrame) {
+			OS_printf("This is the Last Frame!: %u\n",LocalFrameNumber);
+		}
+
+
+
+		if ((status == CUBEOBC_ERROR_OK) && (flagFrameError == true)) status = CUBEOBC_ERROR_FRAME;
+		
+		// Get Frame
+		frameCrc = 0xFF;
+		if (status == CUBEOBC_ERROR_OK) {
+			flagExit = false;
+			
+			while (flagExit == false) {	
+				status = ADCS_GetDataFrame(&RetVal_219);
+				OS_printf("Download Compelete! (FrameSize = %u)\n",RetVal_219.FrameSize);
+				
+				if (result == CUBEOBC_ERROR_OK) {
+					flagExit =true;
+				}
+				else {
+					tnow = CFE_TIME_GetTime();
+					if ((tnow.Seconds - tsend.Seconds) > 5) {
+						flagExit = true;
+					}
+				}
+			}
+			
+			if (result == CUBEOBC_ERROR_OK) {
+				if ((RetVal_219.FrameSize == 0) && (flagLastFrame == false)) result = CUBEOBC_ERROR_UNKNOWN;
+			}
+			
+			if ((result == CUBEOBC_ERROR_OK) && (RetVal_219.FrameSize > 0)) {
+				
+				// Check CRC
+				for (int i = 0; i < RetVal_219.FrameSize; i++) {
+					frameCrc ^= RetVal_219.FrameByte[i];
+				}
+
+				OS_printf("Frame #%u CRC from FrameInfo: %u\n",LocalFrameNumber,RetVal_220.Checksum);
+				OS_printf("Frame #%u CRC from Calculate: %u\n",LocalFrameNumber,frameCrc);
+
+				if (RetVal_220.Checksum != frameCrc) {
+					OS_printf("Frame #%u CRC is NOT MATCHED!\n",LocalFrameNumber);
+					result = CUBEOBC_ERROR_CRC;
+					flagExit = true;
+				}
+				else {
+					OS_printf("Frame #%u CRC is MATCHED!\n",LocalFrameNumber);
+				}
+
+				// Handling Data in the current Frame
+				memcpy(&Frame_test,&RetVal_219.FrameByte,RetVal_219.FrameSize);
+
+
+				LocalFrameNumber++;
+
+				status = result;
+			}
+		}
+
+		uint16 NumberofEntry = 0;
+		NumberofEntry = (RetVal_219.FrameSize - 5) / (14 + sizeof(ADCS_RawGYRSensorTlm_Paylaod_t));
+		OS_printf("[Frame %u]\n",LocalFrameNumber-1);
+		OS_printf("Size of Frame         : %u\n", RetVal_219.FrameSize);
+		OS_printf("Size of Frame w/o mask: %u\n", RetVal_219.FrameSize-5);
+		OS_printf("Size of TLM + metadata: %u\n", (uint32) (14 + sizeof(ADCS_RawGYRSensorTlm_Paylaod_t)));
+		OS_printf("Size of TLM           : %u\n", (uint32) sizeof(ADCS_RawGYRSensorTlm_Paylaod_t));
+
+		OS_printf("[TLM LOG Transfer Reseult]\n");
+		OS_printf("Inclusion Mask: |%u|%u|%u|%u|%u|\n",Frame_test.inclusionMask[0],Frame_test.inclusionMask[1],Frame_test.inclusionMask[2],Frame_test.inclusionMask[3],Frame_test.inclusionMask[4]);
+		OS_printf("Number of Entries: %u\n", NumberofEntry);
+		OS_printf("------------------------------\n");
+		for (int i = 0; i<NumberofEntry; i++) {
+			OS_printf("<Entry %d>\n", i);
+			OS_printf("Counter: %u | Uptime: %u\n", Frame_test.Entry[i].MetaData.counter, Frame_test.Entry[i].MetaData.uptime);
+			OS_printf("Unix Time: %u [sec] + %u [ms]\n", Frame_test.Entry[i].MetaData.unixtime_sec, Frame_test.Entry[i].MetaData.unixtime_ms);
+			OS_printf("[TLM ID 204]\n");
+			OS_printf("Time : %u [sec] + %u [ns]\n", Frame_test.Entry[i].TLM0.TimeSeconds, Frame_test.Entry[i].TLM0.TimeNanoSeconds);
+			OS_printf("GYR0 X|Y|Z: %f | %f | %f \n", Frame_test.Entry[i].TLM0.GYR0RawRateX, Frame_test.Entry[i].TLM0.GYR0RawRateY, Frame_test.Entry[i].TLM0.GYR0RawRateZ);
+			OS_printf("GYR1 X|Y|Z: %f | %f | %f \n", Frame_test.Entry[i].TLM0.GYR1RawRateX, Frame_test.Entry[i].TLM0.GYR1RawRateY, Frame_test.Entry[i].TLM0.GYR1RawRateZ);
+			OS_printf("Valid Flag GYR0 & 1: %u & %u\n", Frame_test.Entry[i].TLM0.GYR0ValidFlag, Frame_test.Entry[i].TLM0.GYR1ValidFlag);
+			OS_printf("------------------------------\n");
+		}
+
+		SumNumberOfEntries += NumberofEntry;
+
+		if (SumNumberOfEntries == TotalNumberOfEntries) flagLastFrame = true;
+
+	}
+
+	
+	return status;
+ }
+
+/*
+int32 ADCS_SubSeqTlmSet_InitAngRateEst() {
+    CFE_Status_t               status;
+	
+	// Telemetry Logging
+    ADCS_UnsolicitTlmMsgSetupCmd_Payload_t SetVal_112 = {0,};
+
+    // // ID 211 Main estimator high-resolution telemetry
+    // SetVal_112.CANTlmRetrunInterval = 6;				// Return interval 10s
+    // SetVal_112.CANTlmEDInclusionBitmask[2] = 128;		// 0b1000 0000
+    // status = ADCS_SetUnsolicitTlmMsgSetup(&SetVal_112);
+    // SetVal_112.CANTlmEDInclusionBitmask[2] = 0;
+    
+    // // ID 173 Backup estimator telemetry
+    // SetVal_112.CANTlmRetrunInterval = 6;				// Return interval 10s
+    // SetVal_112.CANTlmEDInclusionBitmask[0] = 128;		// 0b1000 0000
+    // status = ADCS_SetUnsolicitTlmMsgSetup(&SetVal_112);
+    // SetVal_112.CANTlmEDInclusionBitmask[0] = 0;
+
+    // ID 204 Raw GYR sensor telemetry
+    // SetVal_112.CANTlmRetrunInterval = 6;				// Return interval 10s
+	// SetVal_112.CANTlmRetrunInterval = 5;				// Return interval 5s
+	SetVal_112.CANTlmRetrunInterval = 1;				// Return interval 1s
+    SetVal_112.CANTlmEDInclusionBitmask[2] = 1;			// 0b0000 0001
+    status = ADCS_SetUnsolicitTlmMsgSetup(&SetVal_112);
+    SetVal_112.CANTlmEDInclusionBitmask[2] = 0;
+
+	if (status != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS Error on ADCS_SubSeqTlmSet_InitAngRateEst()\n");
+		return status;
+	}
+    
+    // // ID 180 Raw MAG sensor telemetry
+    // SetVal_112.CANTlmRetrunInterval = 6;				// Return interval 10s
+    // SetVal_112.CANTlmEDInclusionBitmask[1] = 64;		// 0b0100 0000
+    // status = ADCS_SetUnsolicitTlmMsgSetup(&SetVal_112);
+    // SetVal_112.CANTlmEDInclusionBitmask[1] = 0;
+	
+	return CFE_SUCCESS;
+}
+*/

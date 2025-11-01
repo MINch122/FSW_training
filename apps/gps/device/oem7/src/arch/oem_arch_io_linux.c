@@ -124,9 +124,7 @@ int OEM_IO_ReadCallback(int portIndex,
 	struct timeval tv;
     ssize_t b;
 
-    if (portIndex < 0 || portIndex > OEM_PHYSICAL_PORTS) {
-        return OEM_ERR_IO_PORT_INDEX;
-    }
+    if (portIndex < 0 || portIndex > OEM_PHYSICAL_PORTS) return OEM_ERR_IO_PORT_INDEX;
 
 	FD_ZERO(&fdset);
 	FD_SET(ports[portIndex].fd, &fdset);

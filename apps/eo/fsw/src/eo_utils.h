@@ -80,7 +80,7 @@ void EO_SPDeploy(CFE_SRL_GPIO_Handle_t *Handle, uint8_t Duration);
 void EO_RequestMMTDeploy(void);
 void EO_RequestMMTTlm(void);
 
-void EO_AC(void);
+void EO_AdcsDetumble(void);
 
 void EO_EnableRTS2(void);
 void EO_StartRTS2(void);

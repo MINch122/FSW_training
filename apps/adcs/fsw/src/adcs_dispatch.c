@@ -615,6 +615,13 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case ADCS_GET_TLM_LOG_INCLMASK_CC:
+            // ID 227
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetTlmLogInclMaskCmd_t))) {
+                ADCS_GetTlmLogInclMaskCmd();
+            }
+            break;
+
         case ADCS_GET_UNSOLICIT_TLM_MSG_SETUP_CC:
             // ID 228
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetUnsolicitTlmMsgSetupCmd_t))) {
@@ -636,6 +643,55 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case ADCS_GET_PORTMAP_CC:
+            // ID 239
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetPortMapCmd_t))) {
+                ADCS_GetPortMapCmd();
+            }
+            break;
+
+        case ADCS_SEQ_DTUMB_CC:
+			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdDetumblingCmd_t))) {
+                ADCS_SequenceCmd_Detumbling();
+            }
+            break;
+
+		case ADCS_SEQ_SUNPT_CC:
+			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdSunpointingCmd_t))) {
+                ADCS_SequenceCmd_Sunpointing();
+            }
+            break;
+		
+		case ADCS_SEQ_VELPT_CC:
+			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdVpointingCmd_t))) {
+                ADCS_SequenceCmd_Vpointing();
+            }
+            break;
+
+		case ADCS_SEQ_KSCPT_CC:
+			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdKSCpointingCmd_t))) {
+                ADCS_SequenceCmd_KSCpointing();
+            }
+            break;
+
+		case ADCS_SEQ_LGCPT_CC:
+			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdLGCpointingCmd_t))) {
+                ADCS_SequenceCmd_LGCpointing();
+            }
+            break;
+
+		case ADCS_SEQ_RPYPT_CC:
+			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdRPYpointingCmd_t))) {
+                ADCS_SequenceCmd_RPYpointing((const ADCS_SequenceCmdRPYpointingCmd_t *)SBBufPtr);
+            }
+            break;
+
+		case ADCS_SET_ERROR_LOG_CLEAR_CC:
+			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_ErrorLogClearCmd_t))) {
+                ADCS_SetErrorLogClearCmd((const ADCS_ErrorLogClearCmd_t *)SBBufPtr);
+            }
+            break;
+
         case ADCS_GET_CURRENT_UNIX_TIME_INTERNAL_CC:
             // ID 133
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetCurrentUnixTimeCmd_t))) {
@@ -643,6 +699,10 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+		// case ADCS_LOOPTEST_CC:
+		// 	ADCS_Loop();
+		// 	break;
+		
         /* default case already found during FC vs length test */
         default:
             CFE_EVS_SendEvent(ADCS_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
@@ -674,7 +734,7 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
 /*  Purpose:                                                                  */
-/*     This routine will process any packet that is received on the ADCS    */
+/*     This routine will process any packet that is received on the ADCS      */
 /*     command pipe.                                                          */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
@@ -697,7 +757,11 @@ void ADCS_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
         case ADCS_SEND_BCN_MID:
             ADCS_SendBcnCmd((const ADCS_SendBcnCmd_t *)SBBufPtr);
             break;
-        
+
+        case ADCS_LOOP_MID:
+            ADCS_Loop();
+            break;
+
         default:
             CFE_EVS_SendEvent(ADCS_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                               "ADCS: invalid command packet,MID = 0x%x", (unsigned int)CFE_SB_MsgIdToValue(MsgId));

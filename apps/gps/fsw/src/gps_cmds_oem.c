@@ -304,7 +304,7 @@ void GPS_OEMLog_HandlerActivateCmd(const GPS_OEMLog_HandlerActivateCmd_t* Msg)
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_HandlerAcivate(Msg->Payload.msgId);
+    ret = OEM_Log_HandlerActivate(Msg->Payload.msgId);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     

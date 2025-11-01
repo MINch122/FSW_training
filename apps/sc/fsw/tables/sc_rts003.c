@@ -45,7 +45,16 @@
  * PAYUZUC capture in Memory Slot 2
  * PAYUZUC capture in Memory Slot 3
  * 
- * Total 15 commands 1 + 5 + 5 + 4
+ * PAYUZUC Download all Memory Slot 0
+ * PAYUZUC Download all Memory Slot 1
+ * PAYUZUC Download all Memory Slot 2
+ * PAYUZUC Download all Memory Slot 3
+ * PAYUZUC Download all Memory Slot 4
+ * PAYUZUC Download all Memory Slot 5
+ * 
+ * EPS Set output 0 (All off)
+ * 
+ * Total 22 commands 1 + 5 + 5 + 4 + 5 + 1
  */
 
 #include "cfe.h"
@@ -59,6 +68,9 @@
 
 #include "payuzuc_msgids.h"
 #include "payuzuc_msg.h"
+
+#include "eps_msgids.h"
+#include "eps_msg.h"
 
 /* Custom table structure, modify as needed to add desired commands */
 typedef struct
@@ -111,6 +123,29 @@ typedef struct
 
     SC_RtsEntryHeader_t hdr15;
     PAYUZUC_CaptureCmd_t cmd15;
+
+
+    SC_RtsEntryHeader_t hdr16;
+    PAYUZUC_DownloadAllCmd_t cmd16;
+
+    SC_RtsEntryHeader_t hdr17;
+    PAYUZUC_DownloadAllCmd_t cmd17;
+
+    SC_RtsEntryHeader_t hdr18;
+    PAYUZUC_DownloadAllCmd_t cmd18;
+
+    SC_RtsEntryHeader_t hdr19;
+    PAYUZUC_DownloadAllCmd_t cmd19;
+
+    SC_RtsEntryHeader_t hdr20;
+    PAYUZUC_DownloadAllCmd_t cmd20;
+
+    SC_RtsEntryHeader_t hdr21;
+    PAYUZUC_DownloadAllCmd_t cmd21;
+
+
+    SC_RtsEntryHeader_t hdr22;
+    EPS_P31U_SetOutputsCmd_t cmd22;
 
 } SC_RtsStruct003_t;
 
@@ -247,6 +282,76 @@ SC_RtsTable003_t SC_Rts003 = {
     .rts.cmd15.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd15), PAYUZUC_CAPTURE_CC, 0x11),
     .rts.cmd15.Payload.MEM       = (uint8)3,
     .rts.cmd15.Payload.TST       = (uint8)0,
+
+
+    /* Download all */
+
+    /**
+     *  16  PAYUZUC DOWNLOAD ALL CMD
+     */
+    .rts.hdr16.WakeupCount      = 2, // 1 sec
+    .rts.cmd16.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd16), PAYUZUC_DOWNLOAD_ALL_CHILD_CC, 0xE6),
+    .rts.cmd16.Payload.MEM      = 0,
+    .rts.cmd16.Payload.PRE      = 0,
+    .rts.cmd16.Payload.StartLine = 0,
+    .rts.cmd16.Payload.LineNum = 480,
+
+    /**
+     *  17  PAYUZUC DOWNLOAD ALL CMD
+     */
+    .rts.hdr17.WakeupCount      = 2 * 120, // 120 sec
+    .rts.cmd17.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd17), PAYUZUC_DOWNLOAD_ALL_CHILD_CC, 0xE6),
+    .rts.cmd17.Payload.MEM      = 1,
+    .rts.cmd17.Payload.PRE      = 0,
+    .rts.cmd17.Payload.StartLine = 0,
+    .rts.cmd17.Payload.LineNum = 480,
+
+    /**
+     *  18  PAYUZUC DOWNLOAD ALL CMD
+     */
+    .rts.hdr18.WakeupCount      = 2 * 120, // 120 sec
+    .rts.cmd18.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd18), PAYUZUC_DOWNLOAD_ALL_CHILD_CC, 0xE6),
+    .rts.cmd18.Payload.MEM      = 2,
+    .rts.cmd18.Payload.PRE      = 0,
+    .rts.cmd18.Payload.StartLine = 0,
+    .rts.cmd18.Payload.LineNum = 480,
+
+    /**
+     *  19  PAYUZUC DOWNLOAD ALL CMD
+     */
+    .rts.hdr19.WakeupCount      = 2 * 120, // 120 sec
+    .rts.cmd19.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd19), PAYUZUC_DOWNLOAD_ALL_CHILD_CC, 0xE6),
+    .rts.cmd19.Payload.MEM      = 3,
+    .rts.cmd19.Payload.PRE      = 0,
+    .rts.cmd19.Payload.StartLine = 0,
+    .rts.cmd19.Payload.LineNum = 480,
+
+    /**
+     *  20  PAYUZUC DOWNLOAD ALL CMD
+     */
+    .rts.hdr20.WakeupCount      = 2 * 120, // 120 sec
+    .rts.cmd20.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd20), PAYUZUC_DOWNLOAD_ALL_CHILD_CC, 0xE6),
+    .rts.cmd20.Payload.MEM      = 4,
+    .rts.cmd20.Payload.PRE      = 0,
+    .rts.cmd20.Payload.StartLine = 0,
+    .rts.cmd20.Payload.LineNum = 480,
+
+    /**
+     *  21  PAYUZUC DOWNLOAD ALL CMD
+     */
+    .rts.hdr21.WakeupCount      = 2 * 120, // 120 sec
+    .rts.cmd21.CommandHeader = CFE_MSG_CMD_HDR_INIT(PAYUZUC_CMD_MID, SC_MEMBER_SIZE(cmd21), PAYUZUC_DOWNLOAD_ALL_CHILD_CC, 0xE6),
+    .rts.cmd21.Payload.MEM      = 5,
+    .rts.cmd21.Payload.PRE      = 0,
+    .rts.cmd21.Payload.StartLine = 0,
+    .rts.cmd21.Payload.LineNum = 480,
+
+    /**
+     * 22  EPS Set Output All off
+     */
+    .rts.hdr22.WakeupCount      = 2, // 1 sec
+    .rts.cmd22.CommandHeader = CFE_MSG_CMD_HDR_INIT(EPS_CMD_MID, SC_MEMBER_SIZE(cmd22), EPS_P31U_SET_OUTPUTS_CC, 0x4B),
+    .rts.cmd22.Payload.mask     = 0, // All off
     
 };
 

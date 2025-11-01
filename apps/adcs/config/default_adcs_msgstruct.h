@@ -103,6 +103,10 @@ typedef struct{ // ID 2
     ADCS_CurrentUnixTimeCmd_Payload_t Payload;
 } ADCS_CurrentUnixTimeCmd_t;
 
+typedef struct { // ID 5
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_ErrorLogClearCmd_t;
+
 typedef struct{ // ID 6
     CFE_MSG_CommandHeader_t CommandHeader;
     ADCS_ErrorLogSettingCmd_Payload_t Payload;
@@ -386,6 +390,10 @@ typedef struct{ // ID 221
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_GetMagSensingElmConfigCmd_t;
 
+typedef struct{ // ID 227
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetTlmLogInclMaskCmd_t;
+
 typedef struct{ // ID 228
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_GetUnsolicitTlmMsgSetupCmd_t;
@@ -397,6 +405,10 @@ typedef struct{ // ID 233
 typedef struct { // ID 235
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_GetEventLogStatusReponseCmd_t;
+
+typedef struct { // ID 239
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetPortMapCmd_t;
 
 
 /********************************************************
@@ -427,15 +439,44 @@ typedef struct {
 
 /* MMT status to EO */
 typedef struct {
-    uint8_t Mag0DeployPinState  : 1;
-    uint8_t Mag0BurnPinState    : 1;
-    uint8_t Mag0DeployTimeout   : 1;
-    uint8_t Padding1            : 5;
-} ADCS_MMTTlm_Payload_t;
-
-typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     ADCS_MMTTlm_Payload_t Payload;
 } ADCS_MMTTlm_t;
+/********************************************************
+ * 
+ * ADCS Additional Msg structure
+ * 
+ ********************************************************/
+/* Detumbling */
+typedef struct { 
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_SequenceCmdDetumblingCmd_t;
+
+/* Sun Pointing */
+typedef struct { 
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_SequenceCmdSunpointingCmd_t;
+
+/* Velocity Pointing */
+typedef struct { 
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_SequenceCmdVpointingCmd_t;
+
+/* KissCAM EARTH Pointing */
+typedef struct { 
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_SequenceCmdKSCpointingCmd_t;
+
+/* LG CAM EARTH Pointing */
+typedef struct { 
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_SequenceCmdLGCpointingCmd_t;
+
+/* GS-based RPY Pointing */
+typedef struct { 
+    CFE_MSG_CommandHeader_t CommandHeader;
+	ADCS_ReferenceRPYvaluesCmd_Payload_t Payload;
+} ADCS_SequenceCmdRPYpointingCmd_t;
+
 
 #endif /* _adcs_app_msg_h_ */

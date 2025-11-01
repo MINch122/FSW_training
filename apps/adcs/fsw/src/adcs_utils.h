@@ -44,6 +44,11 @@
 #define CSP_UNKNOWN_LEN			((int32)-1)		/**< CSP parameter value which is used in `csp_transaction_w_opt` */
 
 
+/*
+// CubeADCS Log Frame Max Entry Number
+*/
+#define CUBESPACE_MAX_ENTRY_NUM		11
+
 typedef enum CubeADCS_EventClass {
 	CLASS_INFORMATION,
 	CLASS_MINOR_WARNING,
@@ -75,6 +80,26 @@ typedef enum V1TctlmCanTransport_TypeEnum {
 	V1_TCTLM_CAN_TRANSPORT__TYPE_USOL_TLM_LAST = 12,	/**< Unsolicited telemetry last packet */
 } V1TctlmCanTransport_Type;
 
+typedef struct CubeADCS_TlmLogEntryMetadaStruct {
+	uint32 counter;
+	uint32 uptime;
+	uint32 unixtime_sec;
+	uint16 unixtime_ms;
+} __attribute__((packed)) CubeADCS_TlmLogEntryMetada_t;
+
+typedef struct CubeADCS_TlmLogEntryStruct_Test {
+	CubeADCS_TlmLogEntryMetada_t MetaData;
+	
+	ADCS_RawGYRSensorTlm_Paylaod_t TLM0;	// ID 204
+	// ADCS_XXXXXTlm_Payload_t TLMX; // ID XXX
+
+} CubeADCS_TlmLogEntry_Test_t;
+
+typedef struct CubeADCS_TlmLogFrameStruct_Test {
+	uint8 inclusionMask[5];
+	CubeADCS_TlmLogEntry_Test_t Entry[CUBESPACE_MAX_ENTRY_NUM];
+} CubeADCS_TlmLogFrame_Test_t;
+
 /**
  * @brief Set Endpoint parameter
  */
@@ -97,6 +122,7 @@ int32 ADCS_Reset(void);
  * 
  ********************************************************/
 int32 ADCS_SetCurrentUnixTime(const ADCS_CurrentUnixTimeCmd_Payload_t *setVal);		// 2
+int32 ADCS_SetErrorLogClear(void);	// 5
 int32 ADCS_SetErrorLogSetting(const ADCS_ErrorLogSettingCmd_Payload_t *msg);	// 6
 int32 ADCS_SetPersistConfig(void);	// 7
 int32 ADCS_SetControlEstimationMode(const ADCS_ControlEstimationModeCmd_Payload_t *setVal);	// 42
@@ -124,8 +150,10 @@ int32 ADCS_SetMTQConfig(const ADCS_MTQConfigCmd_Payload_t *setVal);	// 70
 int32 ADCS_SetEstimationMode(const ADCS_EstimationModeCmd_Payload_t *setVal);	// 71
 int32 ADCS_SetOperationalState(const ADCS_OperationalStateCmd_Payload_t *setVal);	// 72
 int32 ADCS_SetMagSensingElmConfig(const ADCS_MagSensingElmConfigCmd_Payload_t *setVal);	// 77
+int32 ADCS_SetTransferFrame(const ADCS_TransferFrameCmd_Payload_t *setVal);	// 79
 int32 ADCS_SetUnsolicitTlmMsgSetup(const ADCS_UnsolicitTlmMsgSetupCmd_Payload_t *setVal);	// 112
 int32 ADCS_SetUnsolicitEventMsgSetup(const ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t *setVal);	// 116
+int32 ADCS_SetReqTlmLogTransferSetup(const ADCS_RequestTlmLogTransferSetupCmd_Payload_t *setVal);	// 117
 int32 ADCS_SetInitiateEventLogTransfer(const ADCS_InitiateEventLogTransferCmd_Payload_t *setVal);	// 120
 
 /********************************************************
@@ -164,10 +192,16 @@ int32 ADCS_GetOperationalState(ADCS_OperationalStateTlm_Payload_t *returnVal);	/
 int32 ADCS_GetRawCSSSensor(ADCS_RawCSSSensorTlm_Payload_t *returnVal);	// 203
 int32 ADCS_GetRawGYRSensor(ADCS_RawGYRSensorTlm_Paylaod_t *returnVal);	// 204
 int32 ADCS_GetCalibratedGYRSensor(ADCS_CalibratedGYRSensorTlm_Payload_t *returnVal);	// 207
+int32 ADCS_GetDataFrame(ADCS_DataFrameTlm_Payload_t *returnVal);	// 219
+int32 ADCS_GetInfoFramInMemory(ADCS_InfoFrameInMemoryTlm_Payload_t *returnVal);	// 220
 int32 ADCS_GetMagSensingElmConfig(ADCS_MagSensingElmConfigTlm_Payload_t *returnVal);	// 221
+int32 ADCS_GetTlmLogInclMask(ADCS_TlmLogInclMaskTlm_Payload_t *returnVal);	// 227
 int32 ADCS_GetUnsolicitTlmMsgSetup(ADCS_UnsolicitTlmMsgSetupTlm_Payload_t *returnVal);	// 228
 int32 ADCS_GetUnsolicitEventMsgSetup(ADCS_UnsolicitEventMsgSetupTlm_Payload_t *returnVal);	// 233
+int32 ADCS_GetTlmLogStatusResponse(ADCS_TlmLogStatusResponseTlm_Payload_t *returnVal);	// 234
 int32 ADCS_GetEventLogStatusResponse(ADCS_EventLogStatusResponseTlm_Payload_t *returnVal);	// 235
+int32 ADCS_GetPortMap(ADCS_PortMapTlm_Payload_t *returnVal);	// 239
+
 
 /**
  * Report function
@@ -179,5 +213,12 @@ void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSi
  */
 void ADCS_HandleEvent(const ADCS_EventEntry_t *Event);
 void ADCS_ListenEventTask(void);
+
+
+/**
+ * Additional Function
+ */
+
+int32 ADCS_COMM_InitAngRateEst(void);
 
 #endif

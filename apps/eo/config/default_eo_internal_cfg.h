@@ -69,8 +69,11 @@
 #define EO_SP_MAX_TRIES                 3
 
 /* MMT Configuration */
-#define EO_MMT_MAX_TRIES                3
-#define EO_VBATT_THRESHOLD_FOR_MMT      (EO_VBATT_THRESHOLD_DEFAULT - 900u) /* <\brief [mV]*/
+#define EO_MMT_MAX_TRIES                3                                   /* <\brief Deprecated */
+#define EO_VBATT_THRESHOLD_FOR_MMT      (EO_VBATT_THRESHOLD_DEFAULT - 900u) /* <\brief [mV] Deprecated */
+
+/* ADCS Detumbling Configuration */
+#define EO_VBATT_THRESHOLD_FOR_DETUMBLE (EO_VBATT_THRESHOLD_DEFAULT - 900u) /* <\brief [mV] */
 
 
 
@@ -85,8 +88,8 @@ typedef enum {
     EO_SANT_DEPLOY_CONFIRM_PHASE,
     EO_PCDU_2ND_CHANNEL_ON_PHASE,
     EO_SP_DEPLOY_PHASE,
-    EO_MMT_DEPLOY_PHASE,
-    EO_ATTITUDE_CONTROL_PHASE,
+    // EO_MMT_DEPLOY_PHASE, /* <\brief Deprecated. */
+    EO_DETUMBLE_PHASE,      /* <\brief Changed from `EO_ATTITUDE_CONTROL_PHASE` */
     
     EO_DONE = 0xFF
 } EO_StepEnum_t;
@@ -114,6 +117,7 @@ typedef struct {
     /* ADCS */
     uint8_t MMT_Deploy; /* <\brief `EO_NOT_DEPLOYED` or `EO_IS_DEPLOYED` */
     uint8_t MMT_tries;
+    uint8_t IsExecuteDetumble;
 
     // /* UANT */
     // uint8_t U_deploy; /* <\brief `EO_NOT_DEPLOYED` or `EO_IS_DEPLOYED` */

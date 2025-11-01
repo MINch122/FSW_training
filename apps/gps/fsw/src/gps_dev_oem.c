@@ -2,7 +2,7 @@
 #include "gps_eventids.h"
 #include "oem.h"
 #include "oem_utils.h"
-#include "oem_log_cb.h"
+#include "oem_cb.h"
 
 #include "arch/oem_arch.h"
 
@@ -20,19 +20,13 @@ static const GPS_Device_HandlerEntry_t defaultHandlers[] =
     {.name = "VERSION",
      .msgId = OEM_ID_LOG_VERSION,
      .msgLen = OEM_LOG_HANDLER_MLEN_VARIABLE,
-     .callback = OEM_Log_Callback_VERSION
+     .callback = OEM_Callback_VERSION
     },
 
     {.name = "BESTXYZ",
      .msgId = OEM_ID_LOG_BESTXYZ,
      .msgLen = OEM_LOG_HANDLER_MLEN_VARIABLE,
-     .callback = NULL
-    },
-
-    {.name = "HWMONITOR",
-     .msgId = OEM_ID_LOG_HWMONITOR,
-     .msgLen = OEM_LOG_HANDLER_MLEN_VARIABLE,
-     .callback = OEM_Log_Callback_HWMONITOR
+     .callback = OEM_Callback_BESTXYZ_Bin
     }
 };
 
@@ -171,6 +165,10 @@ int GPS_Device_Init(void)
         return status;
     }
 
+    OEM_Cmd_UNLOGALL(GPS_PORT_INDEX_COM1, OEM_PORT_ALL_PORTS, true);
+    OS_TaskDelay(500);
+    OEM_Cmd_UNLOGALL(GPS_PORT_INDEX_COM1, OEM_PORT_THIS, true);
+
     /**
      * Register default log handlers.
      */
@@ -192,7 +190,7 @@ int GPS_Device_Init(void)
                 return status;
             }
         }
-        OEM_Log_HandlerAcivate(entry->msgId);
+        OEM_Log_HandlerActivate(entry->msgId);
     }
 
     /**

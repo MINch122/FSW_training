@@ -29,7 +29,7 @@
  * This source file creates a sample RTS table that contains only
  * the following commands that are scheduled as follows:
  *
- * EO Start Child Task Cmd
+ * EO Start Child Task Cmd after 45 min
  */
 
 #include "cfe.h"

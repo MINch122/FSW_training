@@ -217,7 +217,7 @@ int OEM_Log_GetHandlerStatus(oem_ushort mid,
  * @param mid Message ID of the handler.
  * @return See OEM_Log_SetHandlerStatus().
  */
-int OEM_Log_HandlerAcivate(oem_ushort mid);
+int OEM_Log_HandlerActivate(oem_ushort mid);
 
 /**
  * @brief Dectivate a handler from the active status.

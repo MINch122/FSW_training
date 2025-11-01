@@ -28,7 +28,7 @@
  * ------------ RTS #8 ------------
  * 
  * 
- * Total 12 commands
+ * Total 20 commands
  * 
  */
 

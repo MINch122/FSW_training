@@ -117,8 +117,20 @@ CFE_Status_t ADCS_GetRawCSSSensorCmd(void);	// 203
 CFE_Status_t ADCS_GetRawGYRSensorCmd(void);	// 204
 CFE_Status_t ADCS_GetCalibratedGYRSensorCmd(void);	// 207
 CFE_Status_t ADCS_GetMagSensingElmConfigCmd(void);	// 221
+CFE_Status_t ADCS_GetTlmLogInclMaskCmd(void); // 227
 CFE_Status_t ADCS_GetUnsolicitTlmMsgSetupCmd(void);	// 228
 CFE_Status_t ADCS_GetUnsolicitEventMsgSetupCmd(void);	// 233
 CFE_Status_t ADCS_GetEventLogStatusResponseCmd(void);	// 235
+CFE_Status_t ADCS_GetPortMapCmd(void);  // 239
+
+CFE_Status_t ADCS_SetErrorLogClearCmd(const ADCS_ErrorLogClearCmd_t *msg);
+CFE_Status_t ADCS_SequenceCmd_Detumbling(void);
+CFE_Status_t ADCS_SequenceCmd_Sunpointing(void);
+CFE_Status_t ADCS_SequenceCmd_Vpointing(void);
+CFE_Status_t ADCS_SequenceCmd_KSCpointing(void);
+CFE_Status_t ADCS_SequenceCmd_LGCpointing(void);
+CFE_Status_t ADCS_SequenceCmd_RPYpointing(const ADCS_SequenceCmdRPYpointingCmd_t *msg);
+
+CFE_Status_t ADCS_Loop(void);
 
 #endif /* ADCS_CMDS_H */

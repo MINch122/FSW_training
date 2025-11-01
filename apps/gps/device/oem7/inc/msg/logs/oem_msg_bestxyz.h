@@ -159,4 +159,24 @@ typedef struct {
     /* 32-bit CRC at the end */
 } OEM_PACK oem_log_bestxyz;
 
+
+typedef enum {
+    OEM_BESTXYZ_SOLSTAT_SOL_COMPUTED        = 0,
+    OEM_BESTXYZ_SOLSTAT_INSUFFICIENT_OBS    = 1,
+    OEM_BESTXYZ_SOLSTAT_NO_CONVERGENCE      = 2,
+    OEM_BESTXYZ_SOLSTAT_SINGULARITY         = 3,
+    OEM_BESTXYZ_SOLSTAT_COV_TRACE           = 4,
+    OEM_BESTXYZ_SOLSTAT_TEST_DIST           = 5,
+    OEM_BESTXYZ_SOLSTAT_COLD_START          = 6,
+    OEM_BESTXYZ_SOLSTAT_V_H_LIMIT           = 7,
+    OEM_BESTXYZ_SOLSTAT_VARIANCE            = 8,
+    OEM_BESTXYZ_SOLSTAT_RESIDUALS           = 9,
+    OEM_BESTXYZ_SOLSTAT_INTEGRITY_WARNING   = 10,
+    OEM_BESTXYZ_SOLSTAT_PENDING             = 18,
+    OEM_BESTXYZ_SOLSTAT_INVALID_FIX         = 19,
+    OEM_BESTXYZ_SOLSTAT_UNAUTHORIZED        = 20,
+    OEM_BESTXYZ_SOLSTAT_INVALID_RATE        = 22,
+} oem_bestxyz_sol_status_t;
+
+
 #endif

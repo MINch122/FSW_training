@@ -333,7 +333,7 @@ int OEM_Log_GetHandlerStatus(oem_ushort id,
     return OEM_OK;
 }
 
-int OEM_Log_HandlerAcivate(oem_ushort id)
+int OEM_Log_HandlerActivate(oem_ushort id)
 {
     return SetHandlerStatusInternal(id, HANDLER_ACTIVE, STAT_NORMAL);
 }
@@ -621,12 +621,6 @@ static int ExecuteHandlerCallback(oem_log_handler_t* handler,
         if (ctx) {
             ctx->callbackExecCnt++;
         }
-        if (ret != OEM_OK) {
-            /**
-             * Return the handler retcode.
-             */
-            goto early_return_callback;
-        }
         oem_list_tonext(handler->callbacks);
     }
 
@@ -717,14 +711,9 @@ int _DoLogHandle(void* msg,
         Debug("Log %d CRC verification skipped: handler %s\n",
               handler->messageId, handler->name);
 
-    if (handler->status == HANDLER_INACTIVE) {
-        ret = handler->stat.errorCause = OEM_OK;
-        DebugWarning("Skipping inactive handler '%s' at MID %d\n",
-                     handler->name,
-                     handler->messageId);
-        goto early_return_log;
-    }
-
+    /**
+     * Store the recent message.
+     */
     if (handler->recentMessage == NULL) {
         ret = handler->stat.errorCause = OEM_ERR_NOBUF;
         handler->status = HANDLER_BROKEN;
@@ -744,6 +733,15 @@ int _DoLogHandle(void* msg,
     }
 
     memcpy(handler->recentMessage, msg, mlen);
+
+    if (handler->status == HANDLER_INACTIVE) {
+        ret = handler->stat.errorCause = OEM_OK;
+        DebugWarning("Skipping inactive handler '%s' at MID %d\n",
+                     handler->name,
+                     handler->messageId);
+        goto early_return_log;
+    }
+
     handler->stat.errorCause = OEM_OK;
 
     OEM_Log_HandlerUnlock();

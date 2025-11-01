@@ -83,7 +83,7 @@ CFE_Status_t EO_ResetPhaseCmd(const EO_ResetPhaseCmd_t *Msg) {
 CFE_Status_t EO_NextPhaseCmd(const EO_NextPhaseCmd_t *Msg) {
     
     OS_MutSemTake(EO_Data.EOMutex);
-    if (EO_Data.CurrentStep.CurrentPhase < EO_ATTITUDE_CONTROL_PHASE)
+    if (EO_Data.CurrentStep.CurrentPhase < EO_DETUMBLE_PHASE)
         EO_Data.CurrentStep.CurrentPhase ++;
     OS_MutSemGive(EO_Data.EOMutex);
 

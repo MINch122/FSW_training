@@ -13,7 +13,9 @@ list(APPEND APP_SRC_FILES
   device/oem7/src/oem_task.c
   device/oem7/src/oem_io.c
   device/oem7/src/oem_utils.c
-  device/oem7/callbacks/oem_log_cb.c
+  device/oem7/callbacks/oem_cb_bestxyz.c
+  device/oem7/callbacks/oem_cb_version.c
+  device/oem7/callbacks/oem_cb_hwmonitor.c
 )
 
 # Append this only if the default linux serial callbacks are in use.

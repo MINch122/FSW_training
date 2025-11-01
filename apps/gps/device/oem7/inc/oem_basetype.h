@@ -58,11 +58,20 @@ typedef enum {
     OEM_ERR_STRAY       = -25,
     OEM_ERR_MID         = -26,
 
-    OEM_ERR_IO_PORT_INDEX   = 0,    /* Invalid IO port index.   */
-    OEM_ERR_IO_PORT_UNSET   = 0,    /* IO port not initialized. */
-
     OEM_ERR_LIB         = -30,
-    OEM_ERR_UNKNOWN     = -99,
+
+    OEM_ERR_FILE_OPEN    = -40,
+    OEM_ERR_FILE_READ    = -41,
+    OEM_ERR_FILE_WRITE   = -42,
+
+
+    OEM_ERR_IO_PORT_INDEX   = -50,    /* Invalid IO port index.   */
+    OEM_ERR_IO_PORT_UNSET   = -51,    /* IO port not initialized. */
+
+    OEM_ERR_NO_SOLUTION   = -100,
+    OEM_ERR_INVALID_TIME  = -101,
+
+    OEM_ERR_UNKNOWN     = -9999,
 } oem_ret;
 
 #endif

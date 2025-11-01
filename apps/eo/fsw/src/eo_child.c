@@ -8,8 +8,8 @@ static void EO_TCWaitPhase(void);
 static void EO_SantConfirmPhase(void);
 static void EO_PCDU2ndChannelOnPhase(void);
 static void EO_SPDeployPhase(void);
-static void EO_MMTDeployPhase(void);
-static void EO_AttitudeControlPhase(void);
+// static void EO_MMTDeployPhase(void);
+static void EO_DetumblePhase(void);
 /* End of Forward declaration */
 
 
@@ -68,14 +68,14 @@ void EO_PhaseDispatch(void) {
         EO_SPDeployPhase();
         break;
 
-    case EO_MMT_DEPLOY_PHASE:
-        EO_PRINTF("%s: MMT Deploy Phase.\n", __func__);
-        EO_MMTDeployPhase();
-        break;
+    // case EO_MMT_DEPLOY_PHASE:
+    //     EO_PRINTF("%s: MMT Deploy Phase.\n", __func__);
+    //     EO_MMTDeployPhase();
+    //     break;
 
-    case EO_ATTITUDE_CONTROL_PHASE:
+    case EO_DETUMBLE_PHASE:
         EO_PRINTF("%s: Attitude Phase.\n", __func__);
-        EO_AttitudeControlPhase();
+        EO_DetumblePhase();
         break;
 
     default:
@@ -275,7 +275,7 @@ void EO_PCDU2ndChannelOnPhase(void) {
         EO_PRINTF("%s: PCDU 2nd Channel FAIL.\n", __func__);
         /* Forced to next phase - skip the SP deploy */
         OS_MutSemTake(EO_Data.EOMutex);
-        EO_Data.CurrentStep.CurrentPhase = EO_MMT_DEPLOY_PHASE;
+        EO_Data.CurrentStep.CurrentPhase = EO_DETUMBLE_PHASE;
         EO_Data.CurrentStep.SP_deploy = EO_NOT_DEPLOYED;
         EO_Data.CurrentStep.SP_tries = 0;
         EO_Data.CurrentStep.SP_Sec1 = 0;
@@ -308,7 +308,7 @@ void EO_SPDeployPhase(void) {
     if (Tries >= EO_SP_MAX_TRIES) { // If too many tries,
         /* Forced to next phase */
         OS_MutSemTake(EO_Data.EOMutex);
-        EO_Data.CurrentStep.CurrentPhase = EO_MMT_DEPLOY_PHASE;
+        EO_Data.CurrentStep.CurrentPhase = EO_DETUMBLE_PHASE;
         EO_Data.CurrentStep.SP_deploy = EO_NOT_DEPLOYED;
         OS_MutSemGive(EO_Data.EOMutex);
         return;
@@ -353,7 +353,7 @@ void EO_SPDeployPhase(void) {
         EO_PRINTF("%s: SP deployed SUCCESS.\n", __func__);
         /* Change to Next Phase */
         OS_MutSemTake(EO_Data.EOMutex);
-        EO_Data.CurrentStep.CurrentPhase = EO_MMT_DEPLOY_PHASE;
+        EO_Data.CurrentStep.CurrentPhase = EO_DETUMBLE_PHASE;
         EO_Data.CurrentStep.SP_deploy = EO_IS_DEPLOYED;
         OS_MutSemGive(EO_Data.EOMutex);
         return;
@@ -379,65 +379,78 @@ void EO_SPDeployPhase(void) {
         EO_PRINTF("%s: SP deployed SUCCESS.\n", __func__);
         /* Change to Next Phase */
         OS_MutSemTake(EO_Data.EOMutex);
-        EO_Data.CurrentStep.CurrentPhase = EO_MMT_DEPLOY_PHASE;
+        EO_Data.CurrentStep.CurrentPhase = EO_DETUMBLE_PHASE;
         EO_Data.CurrentStep.SP_deploy = EO_IS_DEPLOYED;
         OS_MutSemGive(EO_Data.EOMutex);
         return;
     }
 }
 
-void EO_MMTDeployPhase(void) {
-    /* Check the Deploy tries */
-    /* If exceed `3`, force to next phase */
+// void EO_MMTDeployPhase(void) {
+//     /* Check the Deploy tries */
+//     /* If exceed `3`, force to next phase */
+//     OS_MutSemTake(EO_Data.EOMutex);
+//     if (EO_Data.CurrentStep.MMT_tries >= EO_MMT_MAX_TRIES) {
+//         EO_PRINTF("%s: MMT deployed FAIL. Goto next Phase\n", __func__);
+//         EO_Data.CurrentStep.CurrentPhase = EO_ATTITUDE_CONTROL_PHASE;
+//         EO_Data.CurrentStep.MMT_Deploy = EO_NOT_DEPLOYED;
+//         OS_MutSemGive(EO_Data.EOMutex);
+//         return;
+//     }
+//     OS_MutSemGive(EO_Data.EOMutex);
+
+//     /* Check the Vbatt */
+//     if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_FOR_MMT) return;
+
+//     /* Request to ADCS, MMT deploy status */
+//     EO_Data.WaitingADCS = true;
+//     EO_RequestMMTTlm();
+
+//     /* Check the deployment status - Target ID 167 deploy pin state */
+//     if (OS_BinSemTimedWait(EO_Data.ADCS_SemId, 2000) == OS_SUCCESS) {
+
+//         if (EO_Data.MagDeployPinState == true) { // If deployed,
+//             EO_PRINTF("%s: MMT deployed.\n", __func__);
+//             /* Change to next Phase */
+//             OS_MutSemTake(EO_Data.EOMutex);
+//             EO_Data.CurrentStep.CurrentPhase = EO_ATTITUDE_CONTROL_PHASE;
+//             EO_Data.CurrentStep.MMT_Deploy = EO_IS_DEPLOYED;
+//             OS_MutSemGive(EO_Data.EOMutex);
+//             return;
+//         }
+//         else if (EO_Data.MagDeployPinState == false && 
+//                 EO_Data.MagBurnPinState == true) { // If not deployed and tring to deploy,
+//             /* Wait */
+//             EO_PRINTF("%s: MMT NOT deployed and still burn.\n", __func__);
+//             /* i.e.) just return. the Burn request will be skipped, and look up the deploy state */
+//             return;
+//         }
+//         else { // If not deployed and not tring,
+//             /* Try deploy again */
+//             EO_RequestMMTDeploy();
+//             EO_PRINTF("%s: MMT NOT deployed and not burn.\n", __func__);
+//             return;
+//         }
+//     }
+// }
+
+void EO_DetumblePhase(void) {
+
+    /* Check the Vbatt */
+    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_FOR_DETUMBLE) return;
+
+    /* Send Detumble command to ADCS */
+    EO_AdcsDetumble();
+
+    /* Need Additional procedure? */
+    // ....
+
+    /* Finish the EO Phase */
+    EO_PRINTF("%s: Early Orbit done.\n", __func__);
     OS_MutSemTake(EO_Data.EOMutex);
-    if (EO_Data.CurrentStep.MMT_tries >= EO_MMT_MAX_TRIES) {
-        EO_PRINTF("%s: MMT deployed FAIL. Goto next Phase\n", __func__);
-        EO_Data.CurrentStep.CurrentPhase = EO_ATTITUDE_CONTROL_PHASE;
-        EO_Data.CurrentStep.MMT_Deploy = EO_NOT_DEPLOYED;
-        OS_MutSemGive(EO_Data.EOMutex);
-        return;
-    }
+    EO_Data.CurrentStep.CurrentPhase = EO_DONE;
+    EO_Data.CurrentStep.IsExecuteDetumble = true;
     OS_MutSemGive(EO_Data.EOMutex);
 
-    /* Check the Vbatt */
-    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_FOR_MMT) return;
-
-    /* Request to ADCS, MMT deploy status */
-    EO_Data.WaitingADCS = true;
-    EO_RequestMMTTlm();
-
-    /* Check the deployment status - Target ID 167 deploy pin state */
-    if (OS_BinSemTimedWait(EO_Data.ADCS_SemId, 2000) == OS_SUCCESS) {
-
-        if (EO_Data.MagDeployPinState == true) { // If deployed,
-            EO_PRINTF("%s: MMT deployed.\n", __func__);
-            /* Change to next Phase */
-            OS_MutSemTake(EO_Data.EOMutex);
-            EO_Data.CurrentStep.CurrentPhase = EO_ATTITUDE_CONTROL_PHASE;
-            EO_Data.CurrentStep.MMT_Deploy = EO_IS_DEPLOYED;
-            OS_MutSemGive(EO_Data.EOMutex);
-            return;
-        }
-        else if (EO_Data.MagDeployPinState == false && 
-                EO_Data.MagBurnPinState == true) { // If not deployed and tring to deploy,
-            /* Wait */
-            EO_PRINTF("%s: MMT NOT deployed and still burn.\n", __func__);
-            /* i.e.) just return. the Burn request will be skipped, and look up the deploy state */
-            return;
-        }
-        else { // If not deployed and not tring,
-            /* Try deploy again */
-            EO_RequestMMTDeploy();
-            EO_PRINTF("%s: MMT NOT deployed and not burn.\n", __func__);
-            return;
-        }
-    }
-}
-
-void EO_AttitudeControlPhase(void) {
-
-    /* Check the Vbatt */
-    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_DEFAULT) return;
-
-    /* Send */
+    return;
 }

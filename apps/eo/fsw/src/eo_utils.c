@@ -146,8 +146,12 @@ void EO_RequestMMTTlm(void) {
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
 }
 
-void EO_AC(void) {
+void EO_AdcsDetumble(void) {
+    ADCS_SequenceCmdDetumblingCmd_t Cmd;
+    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(ADCS_CMD_MID), sizeof(Cmd));
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), ADCS_SEQ_DTUMB_CC);
 
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
 }
 
 
