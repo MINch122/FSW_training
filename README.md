@@ -7,6 +7,18 @@
   2. Add EO Attitude Control - Ph.D Kang should confirm
 
 # Update
+- 1101, 22:18
+  1. ADCS update
+    - Detumbling, Attitude control
+  2. GPS update
+    - Best XYZ callback
+  3. SC update
+    - UZURO mission sequence
+    - RTS 3, 4, 5, 6
+  4. EO update
+    - Delete MMT deploy, Attitude control
+    - Add Detumbling Phase after SP deploy
+
 - 1101
   1. CI, TO scenario changed
     - CI
