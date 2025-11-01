@@ -13,34 +13,4 @@ typedef struct EO_HkTlm_Payload{
 
 }__attribute__((packed)) EO_BcnTlm_Payload_t;
 
-
-typedef struct EO_Report_Payload {
-
-    /**
-     * Start Index of Queue
-     */
-    uint8 StartIdx;
-
-    /**
-     * \# of report number want to get
-     */
-    uint8 TotalNumber;
-
-    /**
-     * Critical report flag
-     * `false` : Report queue
-     * `true`  : Critical queue
-     */
-    uint8 IsCritical;
-
-} EO_Report_Payload_t;
-
-
-
-typedef struct EO_ClearQueue_Payload {
-
-    uint8 IsCritical;
-    
-} EO_ClearQueue_Payload_t;
-
 #endif
