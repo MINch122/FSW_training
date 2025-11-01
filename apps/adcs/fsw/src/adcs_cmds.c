@@ -2448,9 +2448,16 @@ CFE_Status_t ADCS_Loop(void)
 	uint8 contmode_curr;
 
 	FILE *fp;
-	fp = fopen("./cf/adcs_contmode.txt","r");   // Previous Control mode: if mode = 0; before starting detumbling (EO)
-	fscanf(fp,"%d",&contmode_save);
-	fclose(fp);
+	if ((fp = fopen("./cf/adcs_contmode.txt","r"))== NULL) {  // Previous Control mode: if mode = 0; before starting detumbling (EO)
+        fp = fopen("./cf/adcs_contmode.txt","w");
+        fprintf(fp,"%d",0);
+        fclose(fp);
+    }
+    else {
+        fscanf(fp,"%d",&contmode_save);
+        fclose(fp);
+    }
+		
 
 	ADCS_ControlModeTlm_Payload_t RetVal_185 = {0,};
 	ADCS_GetControlMode(&RetVal_185);
