@@ -35,6 +35,9 @@
 #include "hk_msgids.h"
 #include "hk_msg.h"
 
+#include "uant_msgids.h"
+#include "uant_msg.h"
+
 /* Debug definition */
 #ifdef EO_DEBUG
 #define EO_PRINTF(...)  OS_printf(__VA_ARGS__)

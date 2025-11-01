@@ -10,7 +10,7 @@
 #include "cfe_rf_typedef.h"
 #include "cfe_rf_extern_typedefs.h"
 #include "cfe_rf_msgids.h"
-
+#include "osapi.h"
 /**
  * Global data
  */
@@ -18,6 +18,11 @@ static csp_socket_t *Socket = NULL;
 
 /* Forward Declaration */
 void CFE_RF_CommandIngestTask(void);
+
+/**
+ * @deprecated Not used
+ */
+void CFE_RF_Cleanup(void);
 
 
 /***********************************************************
@@ -28,6 +33,14 @@ void CFE_RF_CommandIngestTask(void);
 int32 CFE_RF_CommandIngestInit(CFE_ES_TaskId_t *TaskIdPtr) {
     int Status;
 
+    /* First, cleanup the existing resources, if exist */
+    /* These function do NOT care the resource is exist or not */
+    if(Socket) csp_close(Socket);
+    csp_unbind(CFE_RF_UPORT_PING);
+    csp_unbind(CFE_RF_UPORT_TC);
+    csp_unbind(CFE_RF_UPORT_FTP);
+
+    /* Then, start the RF ingest init */
     Socket = csp_socket(CSP_O_NONE);
     if (Socket == NULL) {
         CFE_ES_WriteToSysLog("%s: csp_socket failed! NO RC\n", __func__);
@@ -35,19 +48,19 @@ int32 CFE_RF_CommandIngestInit(CFE_ES_TaskId_t *TaskIdPtr) {
     }
 
     Status = csp_bind(Socket, CFE_RF_UPORT_PING);
-    if (Status != CSP_ERR_NONE) {
+    if (Status != CSP_ERR_NONE && Status != CSP_ERR_USED) {
         CFE_ES_WriteToSysLog("%s: csp_bind failed at Port: %d RC=%d\n", __func__, CFE_RF_UPORT_PING, Status);
         return Status;
     }
 
     Status = csp_bind(Socket, CFE_RF_UPORT_TC);
-    if (Status != CSP_ERR_NONE) {
+    if (Status != CSP_ERR_NONE && Status != CSP_ERR_USED) {
         CFE_ES_WriteToSysLog("%s: csp_bind failed at Port: %d RC=%d\n", __func__, CFE_RF_UPORT_TC, Status);
         return Status;
     }
 
     Status = csp_bind(Socket, CFE_RF_UPORT_FTP);
-    if (Status != CSP_ERR_NONE) {
+    if (Status != CSP_ERR_NONE && Status != CSP_ERR_USED) {
         CFE_ES_WriteToSysLog("%s: csp_bind failed at Port: %d RC=%d\n", __func__, CFE_RF_UPORT_FTP, Status);
         return Status;
     }
@@ -148,7 +161,13 @@ void CFE_RF_CommandIngestTask(void) {
     
 }
 
-
+void CFE_RF_Cleanup(void) {
+    int32 status = csp_close(Socket);
+    csp_unbind(CFE_RF_UPORT_PING);
+    csp_unbind(CFE_RF_UPORT_TC);
+    csp_unbind(CFE_RF_UPORT_FTP);
+    OS_printf("%s: close status: %d\n", __func__, status);
+}
 
 /*********************************************
  * RF TO function

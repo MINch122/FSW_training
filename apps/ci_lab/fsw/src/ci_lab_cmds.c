@@ -141,25 +141,30 @@ CFE_Status_t CI_CompareTime(void) {
 
     CFE_TIME_SysTime_t Result = CFE_TIME_Subtract(CurTime, LastContactTime);
 
+    OS_printf("%s: Elapsed Time sec: %u\n", __func__, Result.Seconds);
+
     if (Result.Seconds > CFE_RF_MAX_MISSING_TIME) {
         /* If specified time is elapsed from last contact, */
         /* Do Emergency Protocol !! */
-        /* 1. Deploy UANT - UANT has it's own MCU, so if deployed this command just ignored. */
+        /* 1. Send TO to Ingest beacon. */
+        CI_SubscribeBeacon();
+        
+        /* 2. Deploy UANT - UANT has it's own MCU, so if deployed this command just ignored. */
         CI_UantArm(); /* Arm */
         OS_TaskDelay(10);
         CI_UantAutoDeploy(); /* Auto Deploy - Later, GS will check UANT deploy status */
-        OS_TaskDelay(1000 * 5 * 4); /* 5 sec per Ant. Total 20 sec sleep */
-        CI_UantDisArm(); /* Dis Arm */
 
-        /* Send TO to dual emission */
+        /* Delay until deploy done - deprecated. this cause the postponed processing like updating last contact. */
+        // OS_TaskDelay(1000 * 5 * 4); /* 5 sec per Ant. Total 20 sec sleep */
+        // CI_UantDisArm(); /* Dis Arm */
+
+        /* 3. Send TO to dual emission */
         CI_SetEmissionMode(true);
     }
     else {
         /* If not, Send TO to Normal */
         CI_SetEmissionMode(false);
     }
-
-    OS_printf("%s: Elapsed Time sec: %u\n", __func__, Result.Seconds);
 
     return CFE_SUCCESS;
 }

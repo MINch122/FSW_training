@@ -106,7 +106,7 @@ void EO_DisableBeacon(void) {
     /* "Un" Subscribe The HK combined Packet 1 (Beacon, `0x081A)` */
     TO_LAB_RemovePacketCmd_t Cmd;
     CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(TO_LAB_CMD_MID), sizeof(Cmd));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), TO_LAB_ADD_PKT_CC);
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), TO_LAB_REMOVE_PKT_CC);
     Cmd.Payload.Stream = CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID);
 
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);

@@ -92,6 +92,8 @@ void EO_SantPhase(void) {
         EO_PRINTF("%s: Vbatt Low, Exit.\n", __func__);
         return;
     }
+    /* First, disable beacon - default: Subscribed */
+    EO_DisableBeacon();
 
     /* Send SANT Deploy Command */
     EO_SantDeploy();
@@ -152,8 +154,18 @@ void EO_TCWaitPhase(void) {
         EO_PRINTF("%s: Vbatt enough, Enable Beacon.\n", __func__);
 
         /* Enable beacon */
-        EO_EnableTO();
+        // EO_EnableTO(); /* Default open */
         EO_EnableBeacon();
+    }
+
+    /* Check the elapsed time & TC receive flag */
+    if (EO_Data.CurrentStep.IsTC == true) { // If TC received,
+        EO_PRINTF("%s: TC Received. Disable beacon and Goto SANT Confirm Phase.\n", __func__);
+        EO_DisableBeacon();
+
+        OS_MutSemTake(EO_Data.EOMutex);
+        EO_Data.CurrentStep.CurrentPhase = EO_SANT_DEPLOY_CONFIRM_PHASE;
+        OS_MutSemGive(EO_Data.EOMutex);
     }
 
     /* Check Elapsed time */
@@ -173,16 +185,6 @@ void EO_TCWaitPhase(void) {
         EO_Data.CurrentStep.IsTC = false;
         OS_MutSemGive(EO_Data.EOMutex);
         return;
-    }
-
-    /* Check the elapsed time & TC receive flag */
-    if (EO_Data.CurrentStep.IsTC == true) { // If TC received,
-        EO_PRINTF("%s: TC Received. Disable beacon and Goto SANT Confirm Phase.\n", __func__);
-        EO_DisableBeacon();
-
-        OS_MutSemTake(EO_Data.EOMutex);
-        EO_Data.CurrentStep.CurrentPhase = EO_SANT_DEPLOY_CONFIRM_PHASE;
-        OS_MutSemGive(EO_Data.EOMutex);
     }
 }
 

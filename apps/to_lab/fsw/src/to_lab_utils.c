@@ -91,17 +91,19 @@ void TO_LAB_ForwardTelemetryRF(void) {
             /* Do Actual Transmission */
             if (EmitS) {
                 Status = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, Port); /* Eliminate `const` attr by (void *) casting */ 
+                OS_printf("%s: S Transmission Status : %d\n", __func__, Status);
+                
                 if (Status == 1) Status = CFE_SUCCESS;
                 else CFE_EVS_SendErr(TO_LAB_TLMOUTSTOP_ERR_EID, "%s: RF emit error. RC=0x%08X\n", __func__, Status);
 
-                OS_printf("%s: S Transmission Status : %d\n", __func__, Status);
             }
             if (EmitU) {
                 Status = CFE_RF_TelemetryEmit2((void *)NetBufPtr, NetBufSize, Port); /* Eliminate `const` attr by (void *) casting */ 
+                OS_printf("%s: UHF Transmission Status : %d\n", __func__, Status);
+                
                 if (Status == 1) Status = CFE_SUCCESS;
                 else CFE_EVS_SendErr(TO_LAB_TLMOUTSTOP_ERR_EID, "%s: RF emit error. RC=0x%08X\n", __func__, Status);
                 
-                OS_printf("%s: UHF Transmission Status : %d\n", __func__, Status);
             }
 
             PktCount ++;

@@ -193,7 +193,6 @@ void STRX_ReportBeacon(void)
 
     OS_printf("[STRX] RX FREQ: %u\n", bcn->BootCount);
     OS_printf("[STRX] TX FREQ: %u\n", bcn->BootCause);
-    OS_printf("[STRX] bcn succes\n");
 
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));

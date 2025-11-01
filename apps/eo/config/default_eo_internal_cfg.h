@@ -54,7 +54,7 @@
 /* TC Wait configuration */
 #define EO_VBATT_THRESHOLD_FOR_TC       (EO_VBATT_THRESHOLD_DEFAULT - 500u) /* [mV] */
 #ifdef EO_DEBUG
-#define EO_MAX_ELAPSED_TIME     ((uint32)180)    /* <\brief 3 minute */
+#define EO_MAX_ELAPSED_TIME     ((uint32)300)    /* <\brief 3 minute */
 #else
 #define EO_MAX_ELAPSED_TIME     ((uint32)(60 * 60 * 24 * 4)) /* <\brief 4 days */
 #endif

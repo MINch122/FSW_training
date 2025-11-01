@@ -23,7 +23,7 @@ int CFE_SRL_RtableCSP(csp_iface_t *Iface) {
 	Status = csp_rtable_set(CSP_NODE_GS_KISS, CSP_ID_HOST_SIZE, Iface, CSP_NODE_STRX);
 	if (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;
 
-	Status = csp_rtable_set(CSP_NODE_GSTRX, CSP_ID_HOST_SIZE, Iface, CSP_NODE_STRX);
+	Status = csp_rtable_set(CSP_NODE_GSTRX, CSP_ID_HOST_SIZE, Iface, CSP_NODE_UTRX);
 	if (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;
 
 	return CFE_SUCCESS;

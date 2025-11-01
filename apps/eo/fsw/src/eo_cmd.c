@@ -114,7 +114,7 @@ CFE_Status_t EO_StartChildTaskCmd(const EO_StartChildTaskCmd_t *Msg) {
     return CFE_SUCCESS;
 }
 
-CFE_Status_t EO_AppsPermOffCmd(const EO_AppsPermOffCmd_t*Msg) {
+CFE_Status_t EO_AppsPermOffCmd(const EO_AppsPermOffCmd_t *Msg) {
     /* Delete Apps library file */
     const char *AppName[] = {"/cf/sant.so", "/cf/sp.so", "/cf/eo.so"};
 

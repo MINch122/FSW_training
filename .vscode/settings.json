@@ -212,7 +212,11 @@
         "default_gps_topicids.h": "c",
         "to_lab_app.h": "c",
         "sc_msg.h": "c",
-        "to_lab_utils.h": "c"
+        "to_lab_utils.h": "c",
+        "eo_mission_cfg.h": "c",
+        "uant_msg.h": "c",
+        "ci_lab_utils.h": "c",
+        "to_lab_msg.h": "c"
     },
     "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
 }

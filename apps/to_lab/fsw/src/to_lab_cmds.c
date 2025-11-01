@@ -258,7 +258,7 @@ CFE_Status_t TO_SetEmissionModeNoneCmd(const TO_SetEmissionModeNoneCmd_t *Msg) {
     TO_LAB_Global.EmissionMode = TO_NO_EMISSION;
     OS_MutSemGive(TO_LAB_Global.MutexId);
 
-    TO_HandleReport(CFE_SUCCESS, TO_SET_NO_EMISSION_CC, NULL, 0);
+    // TO_HandleReport(CFE_SUCCESS, TO_SET_NO_EMISSION_CC, NULL, 0);
 
     return CFE_SUCCESS;
 }
@@ -269,7 +269,9 @@ CFE_Status_t TO_SetEmissionModeSCmd(const TO_SetEmissionModeSCmd_t *Msg) {
     TO_LAB_Global.EmissionMode = TO_S_ONLY_EMISSION;
     OS_MutSemGive(TO_LAB_Global.MutexId);
 
-    TO_HandleReport(CFE_SUCCESS, TO_SET_S_ONLY_EMISSION_CC, NULL, 0);
+    // TO_HandleReport(CFE_SUCCESS, TO_SET_S_ONLY_EMISSION_CC, NULL, 0);
+
+    OS_printf("%s: S Only Emission.\n", __func__);
 
     return CFE_SUCCESS;
 }
@@ -280,7 +282,7 @@ CFE_Status_t TO_SetEmissionModeUCmd(const TO_SetEmissionModeUCmd_t *Msg) {
     TO_LAB_Global.EmissionMode = TO_U_ONLY_EMISSION;
     OS_MutSemGive(TO_LAB_Global.MutexId);
 
-    TO_HandleReport(CFE_SUCCESS, TO_SET_U_ONLY_EMISSION_CC, NULL, 0);
+    // TO_HandleReport(CFE_SUCCESS, TO_SET_U_ONLY_EMISSION_CC, NULL, 0);
 
     return CFE_SUCCESS;
 }
@@ -291,7 +293,9 @@ CFE_Status_t TO_SetEmissionModeDualCmd(const TO_SetEmissionModeDualCmd_t *Msg) {
     TO_LAB_Global.EmissionMode = TO_DUAL_EMISSION;
     OS_MutSemGive(TO_LAB_Global.MutexId);
 
-    TO_HandleReport(CFE_SUCCESS, TO_SET_DUAL_EMISSION_CC, NULL, 0);
+    // TO_HandleReport(CFE_SUCCESS, TO_SET_DUAL_EMISSION_CC, NULL, 0);
+
+    OS_printf("%s: Dual Emission.\n", __func__);
 
     return CFE_SUCCESS;
 }
@@ -307,7 +311,8 @@ void TO_ValidateEPS(const EPS_Vi_Tlm_t *Msg) {
     }
     else { // If Vbatt is enough,
         /* Subscribe the beacon */
+        /* @deprecated */
         OS_printf("%s: Vbatt is enough. Ingest beacon.\n", __func__);
-        CFE_SB_SubscribeEx(CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID), TO_LAB_Global.Tlm_pipe, (CFE_SB_Qos_t){0, 0}, 4);
+        // CFE_SB_SubscribeEx(CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID), TO_LAB_Global.Tlm_pipe, (CFE_SB_Qos_t){0, 0}, 4);
     }
 }

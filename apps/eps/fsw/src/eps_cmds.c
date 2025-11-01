@@ -76,16 +76,6 @@ CFE_Status_t EPS_NoopCmd(const EPS_NoopCmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
-    uint8_t tx = 0x55;
-    uint8_t rx = 0x00;
-    int ret = p31u_ping(&tx, &rx);
-
-    if (ret == P31U_OK && rx == 0x55) {
-        OS_printf("Ping Success.\n");
-    }
-    else if (ret == P31U_OK && rx != 0x55) {
-        OS_printf("Ping Failed. got 0x%02X\n", rx);
-    }
 
     CFE_EVS_SendEvent(EPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "EPS: NOOP command received.");
 

@@ -226,7 +226,7 @@ CFE_Status_t UANT_Arm(const UANT_ISIS_ArmAntennaSystemsCmd_t *Msg)
     /* 전역 RPT 패킷 전송 */
     UANT_Data.rpt.Payload = report;
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader));
-    (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader), true);
+    // (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader), true);
 
     if (status != CFE_SUCCESS)
     {
@@ -238,6 +238,7 @@ CFE_Status_t UANT_Arm(const UANT_ISIS_ArmAntennaSystemsCmd_t *Msg)
     else
     {
         UANT_Data.CmdCounter++;
+        OS_printf("%s: Uant Armed.\n", __func__);
     }
 
     return status;
@@ -262,7 +263,7 @@ CFE_Status_t UANT_Disarm(const UANT_ISIS_DisarmCmd_t *Msg)
     /* 전역 RPT 패킷 전송 */
     UANT_Data.rpt.Payload = report;
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader));
-    (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader), true);
+    // (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader), true);
 
     if (status != CFE_SUCCESS)
     {
@@ -274,6 +275,7 @@ CFE_Status_t UANT_Disarm(const UANT_ISIS_DisarmCmd_t *Msg)
     else
     {
         UANT_Data.CmdCounter++;
+        OS_printf("%s: Uant DisArmed.\n", __func__);
     }
 
     return status;
@@ -296,7 +298,7 @@ CFE_Status_t UANT_AutomatedDeployment(const UANT_ISIS_AutomatedDeploymentCmd_t *
 
         UANT_Data.rpt.Payload = report;
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader));
-        (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader), true);
+        // (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_Data.rpt.TelemetryHeader), true);
     }
 
     if (status != CFE_SUCCESS)
@@ -309,6 +311,7 @@ CFE_Status_t UANT_AutomatedDeployment(const UANT_ISIS_AutomatedDeploymentCmd_t *
     else
     {
         UANT_Data.CmdCounter++;
+        OS_printf("%s: Uant Automated Deploy.\n", __func__);
     }
 
     return status;

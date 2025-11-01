@@ -7,12 +7,27 @@
   2. Add EO Attitude Control - Ph.D Kang should confirm
 
 # Update
+- 1101
+  1. CI, TO scenario changed
+    - CI
+      1. If, CI confirm that GS connection is staled, Do sequence
+        - Send command to TO that subscribe the beacon
+        - Send command to UANT deploy
+        - Send command to TO that DUAL Emission
+    - TO
+      1. If, TO confirm that Vbatt is too low,
+        - Unsubscribe the beacon
+        - If Vbatt become enough though, TO do NOT subscribe beacon again
+        - So, beacon can be subscribed only if GS command received during Vbatt is enough
+  2. EO
+    - Disable beacon(= TO Unsubscribe beacon) when TC(= EO NOOP) received.
 - 1031
   1. CI, TO almost verified.
     - Checklist
       1. S, U transmission mode corresponded to Last Contact Elapsed sec.
       2. TO Beacon Sub/Unsub status corresponed to EPS Vbatt
   2. EO Vbatt Threshold
+  3. Add UANT deploy functionality when Communication Emergency.
   
 - 1030
   1. Modify EPS TRx fucntion (Retry if comm. fail)

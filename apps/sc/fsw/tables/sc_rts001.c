@@ -30,6 +30,7 @@
  * ADCS Boot Low
  * ADCS Enable High
  * TO   Enable Tlm
+ * RPT  Get operation data - EO will ingest this and determine the boot count (First deploy or not)
  * SC   Enable RTS : RTS8 (i.e. beacon sequence) is always be executed. Should Never be stopped !!!
  * 
  * Total 4 commands

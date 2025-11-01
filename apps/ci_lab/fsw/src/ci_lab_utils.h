@@ -13,6 +13,9 @@ void CI_StoreContactTime(void);
 
 void CI_SetEmissionMode(bool IsEmergency);
 
+void CI_SubscribeBeacon(void);
+void CI_UnSubscribeBeacon(void);
+
 /* UANT deploy related command */
 void CI_UantArm(void);
 void CI_UantDisArm(void);

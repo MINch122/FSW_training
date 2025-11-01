@@ -20,6 +20,11 @@
 int32 CFE_RF_CommandIngestInit(CFE_ES_TaskId_t *TaskIdPtr);
 void CFE_RF_CommandIngestTask(void);
 
+/**
+ * @deprecated Not used
+ */
+void CFE_RF_Cleanup(void);
+
 
 /// @brief Telemetry output function. Must only used in To app
 /// @param BufPtr Tx Buffer

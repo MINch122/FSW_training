@@ -6,6 +6,8 @@
 #include "uant_msgids.h"
 #include "uant_msg.h"
 
+#include "hk_msgids.h"
+#include "hk_msg.h"
 static int32 CI_OpenFile(void) {
 
     return OS_OpenCreate(&CI_LAB_Global.FileHandle, CI_FILE_NAME, OS_FILE_FLAG_CREATE, OS_READ_WRITE);
@@ -62,6 +64,27 @@ void CI_SetEmissionMode(bool IsEmergency) {
     }
 }
 
+void CI_SubscribeBeacon(void) {
+    TO_LAB_AddPacketCmd_t Cmd;
+    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(TO_LAB_CMD_MID), sizeof(Cmd));
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), TO_LAB_ADD_PKT_CC);
+    Cmd.Payload.Stream = CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID);
+    Cmd.Payload.Flags = (CFE_SB_Qos_t){.Priority = 0, .Reliability = 0};
+    Cmd.Payload.BufLimit = 4;
+
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
+}
+
+
+void CI_UnSubscribeBeacon(void) {
+    TO_LAB_RemovePacketCmd_t Cmd;
+    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(TO_LAB_CMD_MID), sizeof(Cmd));
+    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), TO_LAB_REMOVE_PKT_CC);
+    Cmd.Payload.Stream = CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID);
+    
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
+}
+
 void CI_UantArm(void) {
     UANT_ISIS_ArmAntennaSystemsCmd_t Cmd;
     CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(UANT_CMD_MID), sizeof(Cmd));
@@ -85,5 +108,5 @@ void CI_UantAutoDeploy(void) {
     CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), UANT_AUTOMATED_DEPLOYMENT_CC);
     Cmd.Arg = 5; /* Burn time in sec */
 
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
 }

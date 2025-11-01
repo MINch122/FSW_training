@@ -15,7 +15,8 @@
                 "${workspaceFolder}/libs/adcs_lib/fsw/public_inc",
                 "${workspaceFolder}/apps/ftp/fsw/inc",
                 "${workspaceFolder}/apps/eo/fsw/inc",
-                "${workspaceFolder}/apps/uel_app/fsw/inc"
+                "${workspaceFolder}/apps/uel_app/fsw/inc",
+                "${workspaceFolder}/build/i686-linux-gnu/default_cpu1/inc"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
