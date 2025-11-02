@@ -136,7 +136,7 @@ CFE_Status_t ADCS_EN_HighCmd(void) {
     CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_EN_GPIO_INDEXER);
     status = CFE_SRL_ApiGpioSet(Handle, true);
 
-    ADCS_HandleReport(status, ADCS_GPIO_ENABLE_HIGH_CC, NULL, 0);
+    // ADCS_HandleReport(status, ADCS_GPIO_ENABLE_HIGH_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -155,7 +155,7 @@ CFE_Status_t ADCS_EN_LowCmd(void){
     CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_EN_GPIO_INDEXER);
     status = CFE_SRL_ApiGpioSet(Handle, false);
 
-    ADCS_HandleReport(status, ADCS_GPIO_ENABLE_LOW_CC, NULL, 0);
+    // ADCS_HandleReport(status, ADCS_GPIO_ENABLE_LOW_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -173,7 +173,7 @@ CFE_Status_t ADCS_Boot_HighCmd(void){
     CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_THRUSTER_GPIO_INDEXER);
     status = CFE_SRL_ApiGpioSet(Handle, true);
 
-    ADCS_HandleReport(status, ADCS_GPIO_BOOT_HIGH_CC, NULL, 0);
+    // ADCS_HandleReport(status, ADCS_GPIO_BOOT_HIGH_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -191,7 +191,7 @@ CFE_Status_t ADCS_Boot_LowCmd(void){
     CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_THRUSTER_GPIO_INDEXER);
     status = CFE_SRL_ApiGpioSet(Handle, false);
 
-    ADCS_HandleReport(status, ADCS_GPIO_BOOT_LOW_CC, NULL, 0);
+    // ADCS_HandleReport(status, ADCS_GPIO_BOOT_LOW_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -223,7 +223,7 @@ CFE_Status_t ADCS_SetReset(void){
 
     status = ADCS_Reset();
 
-    ADCS_HandleReport(status, ADCS_SET_RESET_CC, NULL, 0);
+    // ADCS_HandleReport(status, ADCS_SET_RESET_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -864,6 +864,8 @@ CFE_Status_t ADCS_GetCurrentUnixTimeInternalCmd(void) {
     /* HS will ingest this, and send Hard Reset to EPS */
     CFE_Status_t               status;
     ADCS_CurrentUnixTimeTlm_Payload_t RetVal = {0,};
+    
+    OS_printf("%s: ADCS checkup start.\n", __func__);
 
     for (uint8_t i = 0; i < 5; i++) {
         status = ADCS_GetCurrentUnixTime(&RetVal);

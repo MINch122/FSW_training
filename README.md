@@ -7,6 +7,18 @@
   2. Add EO Attitude Control - Ph.D Kang should confirm
 
 # Update
+- 1102
+  1. Minor revision
+    - GPS
+    - EO scenario
+    - PAYUZUC
+  2. Add ADCS startup check
+    - If this fails, S/C power reset
+  3. Add CI command
+    - Report the elapsed sec
+  4. Revise DS table
+    - Add critical report
+    
 - 1101, 22:18
   1. ADCS update
     - Detumbling, Attitude control

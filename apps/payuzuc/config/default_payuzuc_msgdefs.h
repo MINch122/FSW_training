@@ -114,6 +114,9 @@ typedef struct PAYUZUC_DownloadAll_Payload {
 
     uint16_t StartLine;
     uint16_t LineNum;
+
+    uint8_t IsInternal;
+    uint8_t padding;
 } PAYUZUC_DownloadAll_Payload_t;
 
 

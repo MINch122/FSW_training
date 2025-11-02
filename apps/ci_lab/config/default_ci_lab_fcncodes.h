@@ -39,4 +39,6 @@
 #define CI_LAB_RESET_COUNTERS_CC       1
 #define CI_LAB_CREATE_CHILD_TASK_CC    2
 
+#define CI_LAB_GET_ELAPSED_TIME_CC     3
+
 #endif

@@ -6,6 +6,7 @@
  * Add More `*_msgids.h`
  **************************/
 #include "to_lab_msgids.h"
+#include "ci_lab_msgids.h"
 
 #include "adcs_msgids.h"
 #include "eps_msgids.h"
@@ -95,8 +96,8 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 14 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(CI_LAB_REPORT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
         
     /* Entry 15 */

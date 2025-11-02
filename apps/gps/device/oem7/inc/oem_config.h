@@ -10,7 +10,7 @@
 /**
  * @brief Enables debugging log messages to the standard output.
  */
-#define OEM_DEBUG                           true
+#define OEM_DEBUG                           false
 
 /**
  * @brief Number of the physical ports. Normally 1 to use the COM1 port only.

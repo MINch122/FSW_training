@@ -312,7 +312,7 @@ void TO_ValidateEPS(const EPS_Vi_Tlm_t *Msg) {
     else { // If Vbatt is enough,
         /* Subscribe the beacon */
         /* @deprecated */
-        OS_printf("%s: Vbatt is enough. Ingest beacon.\n", __func__);
+        OS_printf("%s: Vbatt is enough. But not ingest beacon.\n", __func__);
         // CFE_SB_SubscribeEx(CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID), TO_LAB_Global.Tlm_pipe, (CFE_SB_Qos_t){0, 0}, 4);
     }
 }

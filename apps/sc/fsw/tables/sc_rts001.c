@@ -32,6 +32,7 @@
  * TO   Enable Tlm
  * RPT  Get operation data - EO will ingest this and determine the boot count (First deploy or not)
  * SC   Enable RTS : RTS8 (i.e. beacon sequence) is always be executed. Should Never be stopped !!!
+ * ADCS Checkup
  * 
  * Total 4 commands
  */
@@ -75,6 +76,9 @@ typedef struct
     SC_RtsEntryHeader_t hdr6;
     SC_EnableRtsCmd_t cmd6;
 
+    SC_RtsEntryHeader_t hdr7;
+    ADCS_GetCurrentUnixTimeCmd_t cmd7;
+
 } SC_RtsStruct001_t;
 
 /* Define the union to size the table correctly */
@@ -100,7 +104,7 @@ SC_RtsTable001_t SC_Rts001 = {
         CFE_MSG_CMD_HDR_INIT(ADCS_CMD_MID, SC_MEMBER_SIZE(cmd2), ADCS_GPIO_BOOT_LOW_CC, 0x4A),
 
     /* 3 ADCS Enable High */
-    .rts.hdr3.WakeupCount = 6, // 3 sec
+    .rts.hdr3.WakeupCount = 10, // 5 sec
     .rts.cmd3.CommandHeader =
         CFE_MSG_CMD_HDR_INIT(ADCS_CMD_MID, SC_MEMBER_SIZE(cmd3), ADCS_GPIO_ENABLE_HIGH_CC, 0x46),
 
@@ -119,7 +123,12 @@ SC_RtsTable001_t SC_Rts001 = {
     .rts.cmd6.CommandHeader = 
         CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd6), SC_ENABLE_RTS_CC, 0x8E),
     .rts.cmd6.Payload.RtsNum = 8,
-    .rts.cmd6.Payload.Padding = 0
+    .rts.cmd6.Payload.Padding = 0,
+
+    /* 7 ADCS Checkup */
+    .rts.hdr7.WakeupCount = 16, // 8 sec
+    .rts.cmd7.CommandHeader = 
+        CFE_MSG_CMD_HDR_INIT(ADCS_CMD_MID, SC_MEMBER_SIZE(cmd7), ADCS_GET_CURRENT_UNIX_TIME_INTERNAL_CC, 0x31)
 
 };
 /* Macro for table structure */

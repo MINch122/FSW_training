@@ -96,9 +96,9 @@ void CFE_RF_CommandIngestTask(void) {
     CFE_MSG_Init(CFE_MSG_PTR(Tlm.TelemetryHeader), CFE_SB_ValueToMsgId(CFE_RF_TLM_MID), sizeof(Tlm));
 
     for (;;) {
-        Connection = csp_accept(Socket, CSP_TIMEOUT(1));
+        Connection = csp_accept(Socket, CSP_MAX_TIMEOUT);
         if (Connection == NULL) {
-            CFE_ES_WriteToSysLog("%s: No incoming connection! NO RC\n", __func__);
+            // CFE_ES_WriteToSysLog("%s: No incoming connection! NO RC\n", __func__);
             continue;
         }
         while ((Packet = csp_read(Connection, CSP_TIMEOUT(1))) != NULL) {
@@ -156,7 +156,8 @@ void CFE_RF_CommandIngestTask(void) {
             csp_close(Connection);
         }
     } /* End of loop */
-    /* This area should not be reached */
+
+    /* This area should never be reached */
     CFE_EVS_SendCrit(626, "CRITICAL: CI Task Finished. Should be restarted.");
     
 }

@@ -56,7 +56,7 @@
 #ifdef EO_DEBUG
 #define EO_MAX_ELAPSED_TIME     ((uint32)300)    /* <\brief 3 minute */
 #else
-#define EO_MAX_ELAPSED_TIME     ((uint32)(60 * 60 * 24 * 4)) /* <\brief 4 days */
+#define EO_MAX_ELAPSED_TIME     ((uint32)(60 * 4)) /* <\brief 4 minutes */
 #endif
 
 /* PCDU Configuration */

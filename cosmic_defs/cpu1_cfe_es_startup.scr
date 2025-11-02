@@ -1,5 +1,4 @@
 CFE_LIB, cfe_assert,  CFE_Assert_LibInit, ASSERT_LIB,    0,   0,     0x0, 0;
-CFE_LIB, sample_lib,  SAMPLE_LIB_Init,    SAMPLE_LIB,    0,   0,     0x0, 0;
 CFE_APP, eps,         EPS_Main,           EPS,           5,   16384, 0x0, 0;
 CFE_APP, eo,          EO_Main,            EO,            6,   8192,  0x0, 0;
 CFE_APP, rpt,         RPT_Main,           RPT,          10,   16384, 0x0, 0;
@@ -18,11 +17,12 @@ CFE_APP, ds,          DS_AppMain,         DS,           44,   16384, 0x0, 0;
 CFE_APP, fm,          FM_AppMain,         FM,           45,   16384, 0x0, 0;
 CFE_APP, utrx,        UTRX_AppMain,       UTRX,         50,   16384, 0x0, 0;
 CFE_APP, strx,        STRX_AppMain,       STRX,         51,   16384, 0x0, 0;
+CFE_APP, gps,         GPS_AppMain,        GPS,          52,   16384, 0x0, 0;
 CFE_APP, payuzuc,     PAYUZUC_Main,       PAYUZUC_APP,  53,   16384, 0x0, 0;
 CFE_APP, payuzut,     PAYUZUT_Main,       PAYUZUT_APP,  54,   16384, 0x0, 0;
 CFE_APP, ftp,         FTP_Main,           FTP,          55,   16384, 0x0, 0;
 CFE_APP, uel_app,     UEL_APP_Main,       UEL_APP,      56,   16384, 0x0, 0;
-CFE_APP, sample_app,  SAMPLE_APP_Main,    SAMPLE_APP,   70,   16384, 0x0, 0;
+!CFE_APP, sample_app,  SAMPLE_APP_Main,    SAMPLE_APP,   70,   16384, 0x0, 0;
 !
 ! Startup script fields:
 ! 1. Object Type      -- CFE_APP for an Application, or CFE_LIB for a library.

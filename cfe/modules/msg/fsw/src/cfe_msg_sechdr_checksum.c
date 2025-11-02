@@ -114,7 +114,6 @@ CFE_Status_t CFE_MSG_ValidateChecksum(const CFE_MSG_Message_t *MsgPtr, bool *IsV
 
     /* Compute, valid if == 0 */
     *IsValid = (CFE_MSG_ComputeCheckSum(MsgPtr) == 0);
-    OS_printf("Is Valid ? %s\n", (*IsValid) ? "true" : "false");
 
     return CFE_SUCCESS;
 }

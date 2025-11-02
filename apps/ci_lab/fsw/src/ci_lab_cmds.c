@@ -30,6 +30,7 @@
 #include "ci_lab_version.h"
 
 #include "cfe_rf_interface_cfg.h"
+#include "rpt_interface_cfg.h"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                             */
@@ -109,6 +110,28 @@ CFE_Status_t CI_LAB_ReadUplinkCmd(const CI_LAB_ReadUplinkCmd_t *cmd)
     /* Any occurrence of this request will cause CI to read ONLY on this request thereafter */
     CI_LAB_Global.Scheduled = true;
     CI_LAB_ReadUpLink();
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t CI_LAB_GetElapsedTimeCmd(const CI_LAB_GetElapsedTimeCmd_t *cmd)
+{
+    /* Calculate the elapsed time sec */
+    CFE_TIME_SysTime_t Time = CFE_TIME_GetTime();
+    Time = CFE_TIME_Subtract(Time, CI_LAB_Global.LastContactTime);
+
+    /* Report */
+    CI_LAB_ReportTlm_t Tlm;
+    CFE_MSG_Init(CFE_MSG_PTR(Tlm.TelemetryHeader), CFE_SB_ValueToMsgId(CI_LAB_REPORT_TLM_MID), sizeof(Tlm));
+    Tlm.Payload.MsgID = CI_LAB_CMD_MID;
+    Tlm.Payload.CommandCode = CI_LAB_GET_ELAPSED_TIME_CC;
+    Tlm.Payload.ReturnType = RPT_RETTYPE_SUCCESS;
+    Tlm.Payload.ReturnCode = CFE_SUCCESS;
+    Tlm.Payload.ReturnDataSize = sizeof(Time.Seconds);
+    memcpy(Tlm.Payload.ReturnValue, &Time.Seconds, sizeof(Time.Seconds));
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(Tlm.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(Tlm.TelemetryHeader), true);
+
     return CFE_SUCCESS;
 }
 

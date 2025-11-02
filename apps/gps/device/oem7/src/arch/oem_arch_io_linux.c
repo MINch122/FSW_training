@@ -99,8 +99,9 @@ int OEM_IO_WriteCallback(int portIndex,
 {
     ssize_t b;
 
-    if (portIndex < 0 || portIndex > OEM_PHYSICAL_PORTS)
+    if (portIndex < 0 || portIndex >= OEM_PHYSICAL_PORTS) {
         return OEM_ERR_IO_PORT_INDEX;
+    }
 
     b = write(ports[portIndex].fd, buf, size);
 

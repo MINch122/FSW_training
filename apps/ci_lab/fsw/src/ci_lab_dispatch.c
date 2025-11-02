@@ -96,6 +96,13 @@ void CI_LAB_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case CI_LAB_GET_ELAPSED_TIME_CC:
+            if (CI_LAB_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CI_LAB_GetElapsedTimeCmd_t)))
+            {
+                CI_LAB_GetElapsedTimeCmd((const CI_LAB_GetElapsedTimeCmd_t *)SBBufPtr);
+            }
+            break;
+
 
         /* default case already found during FC vs length test */
         default:

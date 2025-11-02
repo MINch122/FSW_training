@@ -499,11 +499,11 @@ CFE_Status_t PAYUZUC_DownloadAllCmd(const PAYUZUC_DownloadAllCmd_t *Msg) {
         Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
         if (Status != CFE_SUCCESS) {
             ErrCnt ++;
-            PAYUZUC_HandleErrorSerial(Status, PAYUZUC_DOWNLOAD_ALL_CC, Params.RxData, Params.ReadBytes);
+            if(!Msg->Payload.IsInternal) PAYUZUC_HandleErrorSerial(Status, PAYUZUC_DOWNLOAD_ALL_CC, Params.RxData, Params.ReadBytes);
             continue;
         }
         else if (RxBuf[1] == PAYUZUC_TLM_ERR_FLAG) {
-            PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes, PAYUZUC_DOWNLOAD_ALL_CC);
+            if(!Msg->Payload.IsInternal) PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes, PAYUZUC_DOWNLOAD_ALL_CC);
             ErrCnt ++;
             PAYUZUC_Data.DeviceErrCounter ++;
             break;
@@ -578,7 +578,7 @@ report: {
     Report.Report.ReturnDataSize = sizeof(ErrCnt);
     memcpy(Report.Report.ReturnValue, &ErrCnt, sizeof(ErrCnt));
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
+    if(!Msg->Payload.IsInternal) CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
 }
 
     return CFE_SUCCESS;

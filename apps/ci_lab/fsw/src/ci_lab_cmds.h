@@ -84,6 +84,7 @@ CFE_Status_t CI_LAB_SendBcnCmd(const CI_LAB_SendHkCmd_t *cmd);
  */
 CFE_Status_t CI_LAB_ReadUplinkCmd(const CI_LAB_ReadUplinkCmd_t *cmd);
 
+CFE_Status_t CI_LAB_GetElapsedTimeCmd(const CI_LAB_GetElapsedTimeCmd_t *cmd);
 
 CFE_Status_t CI_UpdateContactTime(const CFE_RF_ContactTimeTlm_t *Msg);
 

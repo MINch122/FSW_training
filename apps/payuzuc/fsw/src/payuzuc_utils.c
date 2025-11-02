@@ -254,7 +254,7 @@ void PAYUZUC_ConfigurePacket(const void *Payload, void *Packet, uint8 ParamNum, 
 /***********************************************
  * 
  * Download task util function
- * @deprecated not used
+ * Used for internal RTS (UZURO Mission)
  * 
  ***********************************************/
 void PAYUZUC_DownloadTask(void) {
@@ -307,11 +307,11 @@ void PAYUZUC_DownloadTask(void) {
         Status = CFE_SRL_ApiRead(PAYUZUC_Data.Handle, &Params);
         if (Status != CFE_SUCCESS) {
             ErrCnt ++;
-            PAYUZUC_HandleErrorSerial(Status, PAYUZUC_DOWNLOAD_ALL_CC, Params.RxData, Params.ReadBytes);
+            // PAYUZUC_HandleErrorSerial(Status, PAYUZUC_DOWNLOAD_ALL_CC, Params.RxData, Params.ReadBytes);
             continue;
         }
         else if (RxBuf[1] == PAYUZUC_TLM_ERR_FLAG) {
-            PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes, PAYUZUC_DOWNLOAD_ALL_CC);
+            // PAYUZUC_HandleErrorPacket(RxBuf, Params.ReadBytes, PAYUZUC_DOWNLOAD_ALL_CC);
             ErrCnt ++;
             PAYUZUC_Data.DeviceErrCounter ++;
             break;
@@ -382,7 +382,7 @@ report:
         Report.Report.ReturnDataSize = sizeof(PAYUZUC_Data.ErrCount);
         memcpy(Report.Report.ReturnValue, &PAYUZUC_Data.ErrCount, sizeof(PAYUZUC_Data.ErrCount));
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
-        CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
+        // CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
     }
     return;
 }

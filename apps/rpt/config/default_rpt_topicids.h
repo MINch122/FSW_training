@@ -7,7 +7,7 @@
 
 
 #define CFE_MISSION_BCN_TLM_TOPICID         0x23
-#define CFE_MISSION_HK_TLM_TOPICID          0x24
+// #define CFE_MISSION_HK_TLM_TOPICID          0x24
 #define CFE_MISSION_OPS_TLM_TOPICID         0x27
 
 #define CFE_MISSION_RPT_REPORT_TOPICID      0x25

@@ -81,8 +81,8 @@ DS_DestFileTable_t DS_DestFileTable = {
 
             /* .FileNameType  = */ DS_BY_COUNT,
             /* .EnableState   = */ DS_ENABLED,
-            /* .MaxFileSize   = */ (143 * 10), /* 1430 bytes == 10 beacon packets*/
-            /* .MaxFileAge    = */ (30 * 10),   /* 5 minutes */
+            /* .MaxFileSize   = */ (194 * 100), /* 100 beacon packets*/
+            /* .MaxFileAge    = */ (60 * 60),   /* 1 hour */
             /* .SequenceCount = */ 1000,
         },
         /* File Index 01 -- application housekeeping packets */
@@ -94,22 +94,22 @@ DS_DestFileTable_t DS_DestFileTable = {
 
             /* .FileNameType  = */ DS_BY_COUNT,
             /* .EnableState   = */ DS_ENABLED,
-            /* .MaxFileSize   = */ (540 * 10), /* 2 M-bytes */
-            /* .MaxFileAge    = */ (60 * 60),     /* 1 hours */
+            /* .MaxFileSize   = */ (540 * 50), /* 50 report packets */
+            /* .MaxFileAge    = */ (60 * 60 * 2),     /* 2 hours */
             /* .SequenceCount = */ 1000,
         },
         /* File Index 02 -- application telemetry packets */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ "set_by_cmd_b4_enable",
-            /* .Basename      = */ "app",
-            /* .Extension     = */ ".tlm",
+            /* .Pathname      = */ "/cf/sdcard/critical",
+            /* .Basename      = */ "critical",
+            /* .Extension     = */ ".dat",
 
             /* .FileNameType  = */ DS_BY_COUNT,
-            /* .EnableState   = */ DS_DISABLED,
-            /* .MaxFileSize   = */ (1024 * 1024 * 1024 * 1), /* 1 G-byte */
+            /* .EnableState   = */ DS_ENABLED,
+            /* .MaxFileSize   = */ (540 * 50), /* 1 G-byte */
             /* .MaxFileAge    = */ (60 * 60 * 2),            /* 2 hours */
-            /* .SequenceCount = */ 2000,
+            /* .SequenceCount = */ 1000,
         },
         /* File Index 03 -- hardware telemetry packets */
         {
