@@ -202,12 +202,14 @@ static void linux_serial_free_cnt_entry(int FD) {
 }
 
 static void linux_serial_clear_cnt_entry(int FD) {
+    OS_printf("%s: FD = %d\n", __func__, FD);
     for (uint8_t i = 0; i < LINUX_SERIAL_COUNTER_TABLE_SIZE; i++) {
         if (counter_table[i].FD == FD) {
             memset(&counter_table[i].cnts, 0, sizeof(CFE_PSP_IODriver_Serial_cnt_Payload_t));
             return;
         }
     }
+    OS_printf("Not found.\n");
     return;
 }
 
@@ -337,8 +339,8 @@ int32 linux_serial_opensocket(const char *dev) {
         return CFE_PSP_IODriver_SERIAL_BIND_ERROR;
     }
 
-    // If there is no error, return socket descriptor
-    linux_serial_allocate_cnt_entry(StatusCode);
+    /* If there is no error during init, allocate the entry */
+    linux_serial_allocate_cnt_entry(sock);
 
     return sock;
 }
@@ -604,13 +606,21 @@ int32_t linux_serial_read_spi(CFE_PSP_IODriver_SerialXfer_t *Arg) {
     if (Arg->Params.TxData && Arg->Params.TxSize) {
         xfer[nmsg].tx_buf = (uint64_t)(uintptr_t)Arg->Params.TxData;
         xfer[nmsg].len = Arg->Params.TxSize;
+        
+        /* Add interval between two xfer if not zero */
+        if (Arg->Params.Interval) xfer[nmsg].delay_usecs = Arg->Params.Interval;
+        
         nmsg ++;
     }
     if (Arg->Params.RxData && Arg->Params.RxSize) {
         xfer[nmsg].rx_buf = (uint64_t)(uintptr_t)Arg->Params.RxData;
         xfer[nmsg].len = Arg->Params.RxSize;
+        
         nmsg ++;
     }
+
+    /* If there is no msg, just return */
+    if (!nmsg) return CFE_PSP_SUCCESS;
 
     StatusCode = ioctl(Arg->FD, SPI_IOC_MESSAGE(nmsg), xfer);
     if (StatusCode < 0) {
@@ -805,8 +815,10 @@ int32_t linux_serial_config_can(CFE_PSP_IODriver_Serial_cfg_t *cfg) {
             return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
         }
     }
-    else {
-        StatusCode = setsockopt(FD, SOL_CAN_RAW, CAN_RAW_FILTER, NULL, 0);
+    else { /* Receive All frame */
+        /* Temporary filter for every frame */
+        struct can_filter filter_all = {.can_id = 0, .can_mask = 0};
+        StatusCode = setsockopt(FD, SOL_CAN_RAW, CAN_RAW_FILTER, &filter_all, sizeof(filter_all));
         if (StatusCode < 0) {
             return CFE_PSP_IODriver_SERIAL_IOCTL_ERROR;
         }
@@ -1073,9 +1085,13 @@ int32_t linux_serial_DevMutex(uint32_t CommandCode, uint16_t SubsystemId, uint16
                 const CFE_PSP_IODriver_Serial_cfg_t *cfg = (CFE_PSP_IODriver_Serial_cfg_t *)Arg.Vptr;
                 hash = CFE_PSP_IODriver_HashMutex(hash, cfg->FD);    
             }
-            else {
+            else if (CommandCode == CFE_PSP_IODriver_SERIAL_IO_GET_CNTS) {
                 const CFE_PSP_IODriver_Serial_cnt_t *cnt = (CFE_PSP_IODriver_Serial_cnt_t *)Arg.Vptr;
                 hash = CFE_PSP_IODriver_HashMutex(hash, cnt->FD);    
+            }
+            else if (CommandCode == CFE_PSP_IODriver_SERIAL_IO_CLEAR_CNTS) {
+                const int FD = (int)Arg.U32;
+                hash = CFE_PSP_IODriver_HashMutex(hash, FD);
             }
         }
         else {

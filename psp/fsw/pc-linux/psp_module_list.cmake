@@ -9,4 +9,4 @@ port_notimpl
 iodriver
 linux_sysmon
 linux_serial
-linux_gpio
+# linux_gpio

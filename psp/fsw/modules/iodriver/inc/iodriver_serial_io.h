@@ -33,7 +33,8 @@ typedef struct {
     /* Size of Rx Size - No need for Write */
     size_t RxSize;
     /**
-     * Used for ApiRead - Not used in I2C, SPI
+     * Used for ApiRead - Not used in SPI
+     * Unit : millisec
      */
     uint32_t Timeout;
     /**
@@ -43,9 +44,11 @@ typedef struct {
      */
     uint32_t Addr;
     /**
-     * Used for ApiRead - Not used in I2C, SPI
+     * Used for ApiRead
      * The parameter determine the **time interval** between `Write` -> `Read`
-     * Unit : millisec
+     * Unit : millisec (Exceptionally, usec in SPI)
+     * In I2C, if this parameter is none 0, Do atomic transaction. If not, Do combined transaction
+     * 
      */
     uint32_t Interval;
 
@@ -82,6 +85,8 @@ typedef struct {
     uint8_t mode;
     uint8_t bpw;
     uint32_t speed;
+
+    uint8_t Padding[2];
 } CFE_PSP_SPI_cfg_t; // size 8
 
 /* CAN config struct */
@@ -89,6 +94,8 @@ typedef struct {
     uint32_t id;
     uint32_t mask;
     bool is_ext;
+
+    uint8_t Padding[3];
 } CFE_PSP_CAN_filter_t; // size 12
 
 typedef struct {
@@ -99,6 +106,8 @@ typedef struct {
     bool recv_own_msgs;
     bool recv_err_frame;
     bool timestamp_en; /* @deprecated by toolchain kernel restriction */
+
+    uint8_t Padding[3];
 } CFE_PSP_CAN_cfg_t; // size 16
 
 /* UART (+ RS-*) config struct */
@@ -107,6 +116,8 @@ typedef struct {
     uint8_t databits; // 5 ~ 8
     uint8_t parity; // none(0), even(1), odd(2)
     uint8_t stopbits; // 1, 2
+
+    uint8_t Padding[1];
 } CFE_PSP_UART_cfg_t; // size 8
 
 /**
@@ -122,7 +133,7 @@ typedef struct {
         CFE_PSP_CAN_cfg_t can;
         CFE_PSP_UART_cfg_t uart;
     } cfg;
-} CFE_PSP_IODriver_Serial_cfg_t; // size 24
+} __attribute__((packed)) CFE_PSP_IODriver_Serial_cfg_t; // size 17. if not packed, 24
 
 typedef union {
     uint8_t bytes[24];

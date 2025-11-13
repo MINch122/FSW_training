@@ -74,10 +74,10 @@ typedef struct
     RPT_GetOpsDataCmd_t cmd5;
 
     SC_RtsEntryHeader_t hdr6;
-    SC_EnableRtsCmd_t cmd6;
+    ADCS_GetCurrentUnixTimeCmd_t cmd6;
 
     SC_RtsEntryHeader_t hdr7;
-    ADCS_GetCurrentUnixTimeCmd_t cmd7;
+    SC_EnableRtsCmd_t cmd7;
 
 } SC_RtsStruct001_t;
 
@@ -118,17 +118,17 @@ SC_RtsTable001_t SC_Rts001 = {
     .rts.cmd5.CommandHeader =
         CFE_MSG_CMD_HDR_INIT(RPT_CMD_MID, SC_MEMBER_SIZE(cmd5), RPT_GET_OPS_DATA_CC, 0x23),
 
-    /* 6 Enable RTS 8 */
-    .rts.hdr6.WakeupCount = 0,
+    /* 6 ADCS Checkup */
+    .rts.hdr6.WakeupCount = 16, // 8 sec
     .rts.cmd6.CommandHeader = 
-        CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd6), SC_ENABLE_RTS_CC, 0x8E),
-    .rts.cmd6.Payload.RtsNum = 8,
-    .rts.cmd6.Payload.Padding = 0,
-
-    /* 7 ADCS Checkup */
-    .rts.hdr7.WakeupCount = 16, // 8 sec
+        CFE_MSG_CMD_HDR_INIT(ADCS_CMD_MID, SC_MEMBER_SIZE(cmd6), ADCS_GET_CURRENT_UNIX_TIME_INTERNAL_CC, 0x31),
+        
+    /* 7 Enable RTS 8 */
+    .rts.hdr7.WakeupCount = 0,
     .rts.cmd7.CommandHeader = 
-        CFE_MSG_CMD_HDR_INIT(ADCS_CMD_MID, SC_MEMBER_SIZE(cmd7), ADCS_GET_CURRENT_UNIX_TIME_INTERNAL_CC, 0x31)
+        CFE_MSG_CMD_HDR_INIT(SC_CMD_MID, SC_MEMBER_SIZE(cmd7), SC_ENABLE_RTS_CC, 0x8E),
+    .rts.cmd7.Payload.RtsNum = 8,
+    .rts.cmd7.Payload.Padding = 0,
 
 };
 /* Macro for table structure */

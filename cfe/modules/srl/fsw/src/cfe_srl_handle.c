@@ -17,10 +17,10 @@ int CFE_SRL_PriorInit(void) {
         CFE_ES_WriteToSysLog("%s: PSP serial driver unavailable.\n", __func__);
         return CFE_SRL_PRIOR_INIT_ERR;
     }
-    if (CFE_PSP_IODriver_FindByName(CFE_SRL_DISCRETE_DRIVER, &CFE_SRL_Global.IOdriverGpioModuleId) != CFE_PSP_SUCCESS) {
-        CFE_ES_WriteToSysLog("%s: PSP gpio driver unavailable.\n", __func__);
-        return CFE_SRL_PRIOR_INIT_ERR;
-    }
+    // if (CFE_PSP_IODriver_FindByName(CFE_SRL_DISCRETE_DRIVER, &CFE_SRL_Global.IOdriverGpioModuleId) != CFE_PSP_SUCCESS) {
+    //     CFE_ES_WriteToSysLog("%s: PSP gpio driver unavailable.\n", __func__);
+    //     return CFE_SRL_PRIOR_INIT_ERR;
+    // }
     Status = CFE_SRL_GlobalHandleMutexInit();
     if (Status != CFE_SUCCESS) {
         CFE_ES_WriteToSysLog("%s: Global Handle Mutex create failed.\n", __func__);
@@ -232,8 +232,8 @@ int CFE_SRL_HandleInit(CFE_SRL_IO_Handle_t **Handle, const char *Name, const cha
     
     /* Config comm. specification for each protocol */
     /* Set FD to Config object */
-    Config->FD = TempHandle->FD;
     if (Config) {
+        Config->FD = TempHandle->FD;
         Status = CFE_SRL_ConfigHandle(DevType, Config);
     }
     

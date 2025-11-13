@@ -3,18 +3,64 @@
         {
             "type": "i2c",
             "ready": true,
-            "name": "I2C0",
-            "DevName": "/dev/i2c-0",
+            "name": "I2C1",
+            "DevName": "/dev/i2c-1",
 
             "tenbit": false,
             "pec_en": false,
             "retries": 3
         },
         {
-            "type": "i2c",
+            "type": "uart",
             "ready": true,
+            "name": "UART",
+            "DevName": "/dev/ttyAMA0",
+            
+            "baudrate": 115200,
+            "databits": 8,
+            "parity": 0,
+            "stopbits": 1
+        },
+        {
+            "type": "spi",
+            "ready": true,
+            "name": "SPIO",
+            "DevName": "/dev/spidev0.0",
+            
+            "mode": 0,
+            "speed": 2000000,
+            "bitperword": 8
+        },
+        {
+            "type": "can",
+            "ready": true,
+            "name": "CAN0",
+            "DevName": "can0",
+
+            "filter": [
+                {
+                "id": 0,
+                "mask": 0,
+                "is_ext": false
+                },
+                {
+                "id": 1,
+                "mask": 1,
+                "is_ext": false
+                }
+            ],
+            "filter_num": 0,
+            "loopback_en": false,
+            "recv_own_msgs": false,
+            "recv_err_frame": false
+        },
+
+
+        {
+            "type": "i2c",
+            "ready": false,
             "name": "I2C1",
-            "DevName": "/dev/i2c-1",
+            "DevName": "/dev/i2c-14",
             
             "tenbit": false,
             "pec_en": false,
@@ -22,7 +68,7 @@
         },
         {
             "type": "i2c",
-            "ready": true,
+            "ready": false,
             "name": "I2C2",
             "DevName": "/dev/i2c-2",
             
@@ -32,18 +78,7 @@
         },
         {
             "type": "uart",
-            "ready": true,
-            "name": "UART",
-            "DevName": "/dev/ttyS0",
-            
-            "baudrate": 115200,
-            "databits": 8,
-            "parity": 0,
-            "stopbits": 1
-        },
-        {
-            "type": "uart",
-            "ready": true,
+            "ready": false,
             "name": "RS422",
             "DevName": "/dev/ttyS1",
             
@@ -63,44 +98,10 @@
             "parity": 0,
             "stopbits": 1
         },
-        {
-            "type": "spi",
-            "ready": false,
-            "name": "SPIO",
-            "DevName": "/dev/spidev0.0",
-            
-            "mode": 0,
-            "speed": 8000000,
-            "bitperword": 8
-        },
-        {
-            "type": "can",
-            "ready": false,
-            "name": "CAN0",
-            "DevName": "vcan0",
-
-            "filter": [
-                {
-                "id": 0,
-                "mask": 0,
-                "is_ext": false
-                },
-                {
-                "id": 1,
-                "mask": 1,
-                "is_ext": false
-                }
-            ],
-            "filter_num": 2,
-            "loopback_en": false,
-            "recv_own_msgs": false,
-            "recv_err_frame": false
-        },
-
 
         {
             "type": "gpio", 
-            "ready": true, 
+            "ready": false, 
             "name":"SP_IN",
             "DevName": "/dev/gpiochip2",
             "line": 4,
@@ -109,7 +110,7 @@
         },
         {
             "type": "gpio", 
-            "ready": true, 
+            "ready": false, 
             "name":"SP_OUT1",
             "DevName": "/dev/gpiochip2",
             "line": 3,
@@ -118,7 +119,7 @@
         },
         {
             "type": "gpio", 
-            "ready": true, 
+            "ready": false, 
             "name":"SP_OUT2",
             "DevName": "/dev/gpiochip0",
             "line": 28,
@@ -127,7 +128,7 @@
         },
         {
             "type": "gpio", 
-            "ready": true, 
+            "ready": false, 
             "name":"ADCS_EN",
             "DevName": "/dev/gpiochip0",
             "line": 29,
@@ -136,7 +137,7 @@
         },
         {
             "type": "gpio", 
-            "ready": true, 
+            "ready": false, 
             "name":"THRUSTER",
             "DevName": "/dev/gpiochip2",
             "line": 5,

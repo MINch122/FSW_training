@@ -213,8 +213,45 @@ int32 CFE_SRL_GetHandleStatusCmd(const CFE_SRL_GetHandleStatusCmd_t *Cmd) {
 
 int32 CFE_SRL_InitHandleCmd(const CFE_SRL_InitHandleCmd_t *Cmd) {
     int32 Status;
+
+    /**
+     * In this command, data interface configuration is setted to defualt
+     * Specification of data interface is shown at below as source code
+     */
+    CFE_SRL_IO_Config_t Config = {0, }; /* FD will be setted automatically */
+    switch (Cmd->Payload.DevType)
+    {
+    case SRL_DEVTYPE_I2C:
+        Config.cfg.i2c = (CFE_PSP_I2C_cfg_t) {.pec_en = false,
+                                              .retries = 3,
+                                              .tenbit = false};
+        break;
+    case SRL_DEVTYPE_SPI:
+        Config.cfg.spi = (CFE_PSP_SPI_cfg_t) {.bpw = 8,
+                                              .mode = 0,
+                                              .speed = 2000000};
+        break;
+    case SRL_DEVTYPE_CAN:
+        /**
+         * Do nothing
+         * Struct is already cleared to All-zero
+         * Off various settings (e.g. filter, loopback, etc...)
+         */
+        break;
+    case SRL_DEVTYPE_UART:
+    case SRL_DEVTYPE_RS422:
+        Config.cfg.uart = (CFE_PSP_UART_cfg_t) {.baud = 115200,
+                                                .databits = 8,
+                                                .parity = 0,
+                                                .stopbits = 1};
+        break;
+
+    default:
+        /* If not supported type, just return */
+        return CFE_SUCCESS;
+    }
     
-    Status = CFE_SRL_HandleInit(&Handles[Cmd->Payload.Indexer], Cmd->Payload.Name, Cmd->Payload.DevName, Cmd->Payload.DevType, Cmd->Payload.Indexer, (CFE_PSP_IODriver_Serial_cfg_t *)&Cmd->Payload.Config);
+    Status = CFE_SRL_HandleInit(&Handles[Cmd->Payload.Indexer], Cmd->Payload.Name, Cmd->Payload.DevName, Cmd->Payload.DevType, Cmd->Payload.Indexer, &Config);
     if (Status == CFE_SUCCESS)
         CFE_EVS_SendEvent(CFE_SRL_INIT_HANDLE_INF_EID, CFE_EVS_EventType_INFORMATION, "SRL Init Handle Cmd Success.");
     else
@@ -283,7 +320,7 @@ int32 CFE_SRL_SendHkCmd(const CFE_SRL_SendHkCmd_t *data) {
 
         if (CFE_SRL_UpdateHandleCounters(TempHandle) == CFE_SUCCESS) {
             CFE_SRL_Global.HKTlmMsg.Payload.IOHandleTxCount[i] = TempHandle->Counters.TxCnt;
-            // OS_printf("%s: %s Tx Cnt : %u || Rx Cnt : %u\n", __func__, ((const CFE_SRL_Global_Handle_t *)TempHandle)->Name, TempHandle->Counters.TxCnt, TempHandle->Counters.RxCnt);
+            OS_printf("%s: %s Tx Cnt : %u || Rx Cnt : %u || Tx Err : %u || Rx Err : %u\n", __func__, ((const CFE_SRL_Global_Handle_t *)TempHandle)->Name, TempHandle->Counters.TxCnt, TempHandle->Counters.RxCnt, TempHandle->Counters.TxErr, TempHandle->Counters.RxErr);
         }
     }
 

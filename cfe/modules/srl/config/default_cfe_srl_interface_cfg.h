@@ -30,7 +30,7 @@
 #define CFE_SRL_CSP_MAX_DEVICE_NUM  32
 
 /* Max Handle name length */
-#define CFE_SRL_HANDLE_NAME_LENGTH  16
+#define CFE_SRL_HANDLE_NAME_LENGTH  (OS_MAX_FILE_NAME - 4)
 
 typedef enum {
     SRL_DEVTYPE_I2C = 1,

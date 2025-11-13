@@ -71,6 +71,12 @@ void CFE_SRL_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
                 CFE_SRL_ResetCounterCmd((const CFE_SRL_ResetCounterCmd_t *)SBBufPtr);
             }
             break;
+        
+        case CFE_SRL_RESET_HANDLE_COUNTERS_CC:
+            if (CFE_SRL_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_SRL_ResetHandleCounterCmd_t))) {
+                CFE_SRL_ResetHandleCounterCmd((const CFE_SRL_ResetHandleCounterCmd_t *)SBBufPtr);
+            }
+            break;
 
         case CFE_SRL_GET_HANDLE_STATUS_CC:
             if (CFE_SRL_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_SRL_GetHandleStatusCmd_t))) {

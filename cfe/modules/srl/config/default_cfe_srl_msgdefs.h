@@ -17,11 +17,13 @@
 #include "iodriver_discrete_io.h"
 #include "iodriver_serial_io.h"
 
+
 typedef struct CFE_SRL_ResetHandleCounterCmd_Payload {
 
     CFE_SRL_Handle_Indexer_t Indexer;
 
 } CFE_SRL_ResetHandleCounterCmd_Payload_t;
+
 
 typedef struct CFE_SRL_GetHandleStatusCmd_Payload {
 
@@ -50,21 +52,20 @@ typedef struct CFE_SRL_HandleInitCmd_Payload {
     char Name[CFE_SRL_HANDLE_NAME_LENGTH];
     
     /**
-     * Device file path
+     * Device file path.
      */
     char DevName[CFE_SRL_HANDLE_NAME_LENGTH];
 
     /**
-     * Device(= Protocol) type
+     * Device(= Protocol) type. Look up `CFE_SRL_DevType_t`
      */
     uint8_t DevType;
 
-    /**
-     * IOdriver Serial config struct
-     */
-    CFE_SRL_IO_Config_t Config;
+    /* Explicit declaration */
+    uint8_t Padding[3];
     
-} CFE_SRL_HandleInitCmd_Payload_t;
+} CFE_SRL_HandleInitCmd_Payload_t; // size 40
+
 
 typedef struct CFE_SRL_ConfigHandleCmd_Payload {
     /**
@@ -75,6 +76,7 @@ typedef struct CFE_SRL_ConfigHandleCmd_Payload {
     CFE_SRL_IO_Config_t Config;
 
 } CFE_SRL_ConfigHandleCmd_Payload_t;
+
 
 typedef struct CFE_SRL_HousekeepingTlm_Payload {
     uint8 CommandCounter;

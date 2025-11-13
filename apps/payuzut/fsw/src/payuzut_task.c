@@ -160,7 +160,7 @@ CFE_Status_t PAYUZUT_Init(void) {
      * Get GPIO Handle Pointer
      * PC5. For thruster
      */
-    PAYUZUT_Data.GpioHandle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_THRUSTER_GPIO_INDEXER);
+    // PAYUZUT_Data.GpioHandle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_THRUSTER_GPIO_INDEXER);
     CFE_ES_WriteToSysLog("%s: GPIO Handle Ptr: %p", __func__, (void *)PAYUZUT_Data.GpioHandle);
     
     return Status;

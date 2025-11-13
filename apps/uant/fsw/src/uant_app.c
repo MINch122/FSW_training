@@ -206,7 +206,7 @@ CFE_Status_t UANT_AppInit(void)
     /**
      * Get I2C2 Handle
      */
-    UANT_Data.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_I2C2_HANDLE_INDEXER);
+    // UANT_Data.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_I2C2_HANDLE_INDEXER);
 
     if (status == CFE_SUCCESS) {
         CFE_EVS_SendEvent(UANT_INIT_EID,CFE_EVS_EventType_INFORMATION,

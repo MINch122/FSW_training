@@ -24,6 +24,10 @@ target_compile_options(sant PRIVATE -Wno-error=pedantic)
 if(CMAKE_SYSTEM_PROCESSOR	STREQUAL "arm")
     # OBC build
     target_link_libraries(sant ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/obc/lib/libcsp-client.a)
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    # For PI
+    # link csp
+    target_link_libraries(sant ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/pi/lib/libcsp-client.a)
 else()
     # CPU1 build
     target_link_libraries(sant ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/cpu1/lib/libcsp-client.a)

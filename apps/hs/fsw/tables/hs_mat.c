@@ -89,7 +89,7 @@ HS_MatTableEntry_t HS_MsgActs_Tbl[HS_MAX_MSG_ACT_TYPES] = {
      .HsMsg.cmd2  = {CFE_MSG_CMD_HDR_INIT(CFE_ES_CMD_MID, HS_MEMBER_SIZE(cmd2), CFE_ES_NOOP_CC, CFE_ES_NOOP_CKSUM)}},
     
     /*   2 - CI lab child restart */
-    {.EnableState = HS_MAT_STATE_ENABLED,
+    {.EnableState = HS_MAT_STATE_DISABLED,
      .Cooldown    = 1,
      .HsMsg.cmd1  = {CFE_MSG_CMD_HDR_INIT(CI_LAB_CMD_MID, HS_MEMBER_SIZE(cmd3), CI_LAB_CREATE_CHILD_TASK_CC, 0x34)}},
     

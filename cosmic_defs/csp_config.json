@@ -86,6 +86,16 @@
             "priority": 2,
             "timeout": 1,
             "option": "CSP_O_CRC32"
+        },
+        {
+            "name": "SOBC",
+            "node": 23,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_CRC32"
         }
     ]
 }
