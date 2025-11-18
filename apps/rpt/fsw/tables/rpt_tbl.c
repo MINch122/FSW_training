@@ -17,10 +17,10 @@
 #include "strx_msgids.h"
 #include "uant_msgids.h"
 #include "utrx_msgids.h"
-#include "gps_msgids.h"
+// #include "gps_msgids.h"
 
 #include "ftp_msgids.h"
-#include "eo_msgids.h"
+// #include "eo_msgids.h"
 #include "uel_app_msgids.h"
 
 
@@ -77,7 +77,7 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
 
     /* Entry 10 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(EO_REPORT_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
         .Entry.IsCritical = RPT_CRITICAL},
     
     /* Entry 11 */
@@ -87,7 +87,7 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
 
     /* Entry 12 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(GPS_REPORT_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 13 */

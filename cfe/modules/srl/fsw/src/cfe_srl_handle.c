@@ -17,6 +17,8 @@ int CFE_SRL_PriorInit(void) {
         CFE_ES_WriteToSysLog("%s: PSP serial driver unavailable.\n", __func__);
         return CFE_SRL_PRIOR_INIT_ERR;
     }
+
+    /* Temporarily deprecate the gpio module */
     // if (CFE_PSP_IODriver_FindByName(CFE_SRL_DISCRETE_DRIVER, &CFE_SRL_Global.IOdriverGpioModuleId) != CFE_PSP_SUCCESS) {
     //     CFE_ES_WriteToSysLog("%s: PSP gpio driver unavailable.\n", __func__);
     //     return CFE_SRL_PRIOR_INIT_ERR;

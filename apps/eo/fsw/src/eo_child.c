@@ -294,95 +294,95 @@ void EO_PCDU2ndChannelOnPhase(void) {
 
 void EO_SPDeployPhase(void) {
 
-    CFE_SRL_GPIO_Handle_t *Out1 = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_OUT1_GPIO_INDEXER);
-    CFE_SRL_GPIO_Handle_t *Out2 = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_OUT2_GPIO_INDEXER);
-    CFE_SRL_GPIO_Handle_t *In = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
+//     CFE_SRL_GPIO_Handle_t *Out1 = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_OUT1_GPIO_INDEXER);
+//     CFE_SRL_GPIO_Handle_t *Out2 = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_OUT2_GPIO_INDEXER);
+//     CFE_SRL_GPIO_Handle_t *In = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
 
-    OS_MutSemTake(EO_Data.EOMutex);
-    uint8_t Tries = EO_Data.CurrentStep.SP_tries;
-    OS_MutSemGive(EO_Data.EOMutex);
-    EO_PRINTF("%s: SP tries: %u.\n", __func__, Tries);
+//     OS_MutSemTake(EO_Data.EOMutex);
+//     uint8_t Tries = EO_Data.CurrentStep.SP_tries;
+//     OS_MutSemGive(EO_Data.EOMutex);
+//     EO_PRINTF("%s: SP tries: %u.\n", __func__, Tries);
 
-    if (Tries >= EO_SP_MAX_TRIES) { // If too many tries,
-        /* Forced to next phase */
-        OS_MutSemTake(EO_Data.EOMutex);
-        EO_Data.CurrentStep.CurrentPhase = EO_DETUMBLE_PHASE;
-        EO_Data.CurrentStep.SP_deploy = EO_NOT_DEPLOYED;
-        OS_MutSemGive(EO_Data.EOMutex);
-        return;
-    }
+//     if (Tries >= EO_SP_MAX_TRIES) { // If too many tries,
+//         /* Forced to next phase */
+//         OS_MutSemTake(EO_Data.EOMutex);
+//         EO_Data.CurrentStep.CurrentPhase = EO_DETUMBLE_PHASE;
+//         EO_Data.CurrentStep.SP_deploy = EO_NOT_DEPLOYED;
+//         OS_MutSemGive(EO_Data.EOMutex);
+//         return;
+//     }
 
-/*-------------------------------------------------------------*/
-/*                                                             */
-/*            If "NOT too many" tries, TRY deployment          */
-/*                                                             */
-/*-------------------------------------------------------------*/
-    /* Increase the SP `tries` */
-    OS_MutSemTake(EO_Data.EOMutex);
-    EO_Data.CurrentStep.SP_tries ++;
-    OS_MutSemGive(EO_Data.EOMutex);
+// /*-------------------------------------------------------------*/
+// /*                                                             */
+// /*            If "NOT too many" tries, TRY deployment          */
+// /*                                                             */
+// /*-------------------------------------------------------------*/
+//     /* Increase the SP `tries` */
+//     OS_MutSemTake(EO_Data.EOMutex);
+//     EO_Data.CurrentStep.SP_tries ++;
+//     OS_MutSemGive(EO_Data.EOMutex);
 
-    bool IsDeploy = true; /* In this phase, `false` indicate deployed */
+//     bool IsDeploy = true; /* In this phase, `false` indicate deployed */
 
-    /* Check the Vbatt */
-    if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_FOR_SP) return;
+//     /* Check the Vbatt */
+//     if (EO_Data.Vbatt <= EO_VBATT_THRESHOLD_FOR_SP) return;
 
-    /* Calculate the duration */
-    uint8_t Duration = (EO_DEFAULT_SP_DEPLOY_TIME + (Tries * 10));
-    EO_PRINTF("%s: SP duration time: %u.\n", __func__, Duration);
+//     /* Calculate the duration */
+//     uint8_t Duration = (EO_DEFAULT_SP_DEPLOY_TIME + (Tries * 10));
+//     EO_PRINTF("%s: SP duration time: %u.\n", __func__, Duration);
 
-/*------------------------------------*/
-/*              SP1 Deploy            */
-/*------------------------------------*/
-    /* Write the SP deploy time first */
-    OS_MutSemTake(EO_Data.EOMutex);
-    EO_Data.CurrentStep.SP_Sec1 += Duration;
-    OS_MutSemGive(EO_Data.EOMutex);
+// /*------------------------------------*/
+// /*              SP1 Deploy            */
+// /*------------------------------------*/
+//     /* Write the SP deploy time first */
+//     OS_MutSemTake(EO_Data.EOMutex);
+//     EO_Data.CurrentStep.SP_Sec1 += Duration;
+//     OS_MutSemGive(EO_Data.EOMutex);
 
-    EO_WriteStep();
+//     EO_WriteStep();
 
-    /* And SP1 deploy trial */
-    EO_SPDeploy(Out1, Duration);
+//     /* And SP1 deploy trial */
+//     EO_SPDeploy(Out1, Duration);
 
-    /* Check deploy status */
-    CFE_SRL_ApiGpioGet(In, &IsDeploy);
-    if (!IsDeploy) { /* If deployed, */
-        /* Goto next Phase */
-        EO_PRINTF("%s: SP deployed SUCCESS.\n", __func__);
-        /* Change to Next Phase */
-        OS_MutSemTake(EO_Data.EOMutex);
-        EO_Data.CurrentStep.CurrentPhase = EO_DETUMBLE_PHASE;
-        EO_Data.CurrentStep.SP_deploy = EO_IS_DEPLOYED;
-        OS_MutSemGive(EO_Data.EOMutex);
-        return;
-    }
-    EO_PRINTF("%s: SP NOT deployed.\n", __func__);
+//     /* Check deploy status */
+//     CFE_SRL_ApiGpioGet(In, &IsDeploy);
+//     if (!IsDeploy) { /* If deployed, */
+//         /* Goto next Phase */
+//         EO_PRINTF("%s: SP deployed SUCCESS.\n", __func__);
+//         /* Change to Next Phase */
+//         OS_MutSemTake(EO_Data.EOMutex);
+//         EO_Data.CurrentStep.CurrentPhase = EO_DETUMBLE_PHASE;
+//         EO_Data.CurrentStep.SP_deploy = EO_IS_DEPLOYED;
+//         OS_MutSemGive(EO_Data.EOMutex);
+//         return;
+//     }
+//     EO_PRINTF("%s: SP NOT deployed.\n", __func__);
 
-/*------------------------------------*/
-/*              SP2 Deploy            */
-/*------------------------------------*/
-    /* Write the SP deploy time first */
-    OS_MutSemTake(EO_Data.EOMutex);
-    EO_Data.CurrentStep.SP_Sec2 += Duration;
-    OS_MutSemGive(EO_Data.EOMutex);
+// /*------------------------------------*/
+// /*              SP2 Deploy            */
+// /*------------------------------------*/
+//     /* Write the SP deploy time first */
+//     OS_MutSemTake(EO_Data.EOMutex);
+//     EO_Data.CurrentStep.SP_Sec2 += Duration;
+//     OS_MutSemGive(EO_Data.EOMutex);
 
-    EO_WriteStep();
+//     EO_WriteStep();
 
-    /* And SP2 deploy trial */
-    EO_SPDeploy(Out2, Duration);
+//     /* And SP2 deploy trial */
+//     EO_SPDeploy(Out2, Duration);
 
-    /* Check deploy status */
-    CFE_SRL_ApiGpioGet(In, &IsDeploy);
-    if (!IsDeploy) { /* If deployed, */
-        /* Goto next Phase */
-        EO_PRINTF("%s: SP deployed SUCCESS.\n", __func__);
-        /* Change to Next Phase */
-        OS_MutSemTake(EO_Data.EOMutex);
-        EO_Data.CurrentStep.CurrentPhase = EO_DETUMBLE_PHASE;
-        EO_Data.CurrentStep.SP_deploy = EO_IS_DEPLOYED;
-        OS_MutSemGive(EO_Data.EOMutex);
-        return;
-    }
+//     /* Check deploy status */
+//     CFE_SRL_ApiGpioGet(In, &IsDeploy);
+//     if (!IsDeploy) { /* If deployed, */
+//         /* Goto next Phase */
+//         EO_PRINTF("%s: SP deployed SUCCESS.\n", __func__);
+//         /* Change to Next Phase */
+//         OS_MutSemTake(EO_Data.EOMutex);
+//         EO_Data.CurrentStep.CurrentPhase = EO_DETUMBLE_PHASE;
+//         EO_Data.CurrentStep.SP_deploy = EO_IS_DEPLOYED;
+//         OS_MutSemGive(EO_Data.EOMutex);
+//         return;
+//     }
     EO_PRINTF("%s: SP NOT deployed.\n", __func__);
 }
 

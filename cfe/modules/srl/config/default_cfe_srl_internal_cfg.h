@@ -26,8 +26,14 @@
 
 /**
  * PSP iodriver driver module name
+ * These module will be varied by underlying OS
  */
+#if defined(OS_RTEMS_4_DEPRECATED) || defined(OS_RTEMS_5) || defined(OS_RTEMS_6)
+#define CFE_SRL_SERIAL_DRIVER       "rtems_serial"
+#else
 #define CFE_SRL_SERIAL_DRIVER       "linux_serial"
+#endif
+
 #define CFE_SRL_DISCRETE_DRIVER     "linux_gpio"
 
 #endif /* CFE_SRL_INTERNAL_CFG_H */

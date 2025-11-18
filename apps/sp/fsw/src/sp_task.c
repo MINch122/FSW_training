@@ -76,16 +76,16 @@ CFE_Status_t SP_AppInit(void){
         }
     }
 
-    CFE_SRL_GPIO_Handle_t *In = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
-    bool IsDeploy;
-    if (status == CFE_SUCCESS) {
-        CFE_SRL_ApiGpioGet(In, &IsDeploy); // Ignore the ret code
-    }
+    // CFE_SRL_GPIO_Handle_t *In = CFE_SRL_ApiGetGpioHandle(CFE_SRL_SP_IN_GPIO_INDEXER);
+    // bool IsDeploy;
+    // if (status == CFE_SUCCESS) {
+    //     CFE_SRL_ApiGpioGet(In, &IsDeploy); // Ignore the ret code
+    // }
 
-    if (status == CFE_SUCCESS) {
-        SP_AppData.BcnTlm.IsDeploy = IsDeploy; // `0` indicate Deployed
-        CFE_EVS_SendEvent(SP_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "SP App Successfully Initialized.");
-    }
+    // if (status == CFE_SUCCESS) {
+    //     SP_AppData.BcnTlm.IsDeploy = IsDeploy; // `0` indicate Deployed
+    //     CFE_EVS_SendEvent(SP_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "SP App Successfully Initialized.");
+    // }
 
     return status;
 }

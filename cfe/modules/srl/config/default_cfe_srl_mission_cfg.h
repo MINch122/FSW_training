@@ -4,7 +4,6 @@
 
 #include "cfe_srl_interface_cfg.h"
 
-/* enum basically treated as `int32` */
 typedef enum {
 	CFE_SRL_I2C1_HANDLE_INDEXER,
 	CFE_SRL_UART_HANDLE_INDEXER,
