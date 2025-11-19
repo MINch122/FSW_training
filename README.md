@@ -1,6 +1,11 @@
 # FSW BASE
 - Author: Kweon HyeokJin
 
+# Update
+- 11/19: Stable version commit
+  - Deprecate libgpiod library
+  - Remove all gpio functions
+
 # Notes
 - Move serial config file (`Interface_config.json` & `csp_config.json`) to `sample_defs`
 - Add CSP configuration tool - refer `csp_config.json`
