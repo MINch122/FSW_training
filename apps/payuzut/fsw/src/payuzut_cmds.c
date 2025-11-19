@@ -148,25 +148,25 @@ CFE_Status_t PAYUZUT_GetTempCmd(const PAYUZUT_GetTempCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUT_ThrusterOnCmd(const PAYUZUT_ThrusterOnCmd_t *Msg) {
-    int32 Status = 0;
+    // int32 Status = 0;
 
-    Status = CFE_SRL_ApiGpioSet(PAYUZUT_Data.GpioHandle, true);
-    if (Status != CFE_SUCCESS) PAYUZUT_Data.ErrCounter ++;
+    // Status = CFE_SRL_ApiGpioSet(PAYUZUT_Data.GpioHandle, true);
+    // if (Status != CFE_SUCCESS) PAYUZUT_Data.ErrCounter ++;
     
-    PAYUZUT_ReportTlm_t Report = {0, };
-    CFE_MSG_Init(CFE_MSG_PTR(Report.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUT_REPORT_TLM_MID),
-                    sizeof(PAYUZUT_ReportTlm_t));
+    // PAYUZUT_ReportTlm_t Report = {0, };
+    // CFE_MSG_Init(CFE_MSG_PTR(Report.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUT_REPORT_TLM_MID),
+    //                 sizeof(PAYUZUT_ReportTlm_t));
     
-    Report.Report.MsgID = PAYUZUT_CMD_MID;
-    Report.Report.CommandCode = PAYUZUT_THRUSTER_ON_CC;
-    Report.Report.ReturnType = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
-    Report.Report.ReturnCode = Status;
-    Report.Report.ReturnDataSize = 0;
+    // Report.Report.MsgID = PAYUZUT_CMD_MID;
+    // Report.Report.CommandCode = PAYUZUT_THRUSTER_ON_CC;
+    // Report.Report.ReturnType = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
+    // Report.Report.ReturnCode = Status;
+    // Report.Report.ReturnDataSize = 0;
 
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
+    // CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
+    // CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
 
-    CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "PAYUZUT: Thruster On Cmd.\n");
+    // CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "PAYUZUT: Thruster On Cmd.\n");
 
     return CFE_SUCCESS;
 }
@@ -178,25 +178,25 @@ CFE_Status_t PAYUZUT_ThrusterOnCmd(const PAYUZUT_ThrusterOnCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUZUT_ThrusterOffCmd(const PAYUZUT_ThrusterOffCmd_t *Msg) {
-    int32 Status = 0;
+    // int32 Status = 0;
 
-    Status = CFE_SRL_ApiGpioSet(PAYUZUT_Data.GpioHandle, false);
-    if (Status != CFE_SUCCESS) PAYUZUT_Data.ErrCounter ++;
+    // Status = CFE_SRL_ApiGpioSet(PAYUZUT_Data.GpioHandle, false);
+    // if (Status != CFE_SUCCESS) PAYUZUT_Data.ErrCounter ++;
 
-    PAYUZUT_ReportTlm_t Report = {0, };
-    CFE_MSG_Init(CFE_MSG_PTR(Report.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUT_REPORT_TLM_MID),
-                    sizeof(PAYUZUT_ReportTlm_t));
+    // PAYUZUT_ReportTlm_t Report = {0, };
+    // CFE_MSG_Init(CFE_MSG_PTR(Report.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUZUT_REPORT_TLM_MID),
+    //                 sizeof(PAYUZUT_ReportTlm_t));
     
-    Report.Report.MsgID = PAYUZUT_CMD_MID;
-    Report.Report.CommandCode = PAYUZUT_THRUSTER_ON_CC;
-    Report.Report.ReturnType = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
-    Report.Report.ReturnCode = Status;
-    Report.Report.ReturnDataSize = 0;
+    // Report.Report.MsgID = PAYUZUT_CMD_MID;
+    // Report.Report.CommandCode = PAYUZUT_THRUSTER_ON_CC;
+    // Report.Report.ReturnType = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
+    // Report.Report.ReturnCode = Status;
+    // Report.Report.ReturnDataSize = 0;
 
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
+    // CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
+    // CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
 
-    CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "PAYUZUT: Thruster Off Cmd.\n");
+    // CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "PAYUZUT: Thruster Off Cmd.\n");
 
     return CFE_SUCCESS;
 }

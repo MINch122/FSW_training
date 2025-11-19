@@ -13,7 +13,7 @@
 #include "payuzuc_msgids.h"
 #include "payuzut_msgids.h"
 #include "sant_msgids.h"
-#include "sp_msgids.h"
+// #include "sp_msgids.h"
 #include "strx_msgids.h"
 #include "uant_msgids.h"
 #include "utrx_msgids.h"
@@ -52,7 +52,7 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
     
     /* Entry 5 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(SP_REPORT_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 6 */

@@ -40,8 +40,8 @@
 #include "eps_msgids.h"
 #include "eps_msg.h"
 
-#include "sp_msgids.h"
-#include "sp_msg.h"
+// #include "sp_msgids.h"
+// #include "sp_msg.h"
 
 /*************************************************************************
 ** Examples
@@ -135,10 +135,10 @@ LC_WDTEntry_t LC_WDT[LC_MAX_WATCHPOINTS] = {
      *  SP `IsRunning < 1`
      */
     {
-        .DataType                   = LC_DATA_WATCH_UBYTE,
-        .OperatorID                 = LC_OPER_LT,
-        .MessageID                  = CFE_SB_MSGID_WRAP_VALUE(SP_BCN_TLM_MID),
-        .WatchpointOffset           = offsetof(SP_BcnTlm_t, IsRunning),
+        .DataType                   = LC_DATA_WATCH_NOT_USED,
+        .OperatorID                 = LC_OPER_NONE,
+        .MessageID                  = CFE_SB_MSGID_RESERVED,
+        .WatchpointOffset           = 0,
         .BitMask                    = LC_BITMASK_NONE,
         .CustomFuncArgument         = 0,
         .ResultAgeWhenStale         = 0,
@@ -150,10 +150,10 @@ LC_WDTEntry_t LC_WDT[LC_MAX_WATCHPOINTS] = {
      * SP `IsDeploy < 1`
      * */
     {
-        .DataType                   = LC_DATA_WATCH_UBYTE,
-        .OperatorID                 = LC_OPER_LT,
-        .MessageID                  = CFE_SB_MSGID_WRAP_VALUE(SP_BCN_TLM_MID),
-        .WatchpointOffset           = offsetof(SP_BcnTlm_t, IsDeploy),
+        .DataType                   = LC_DATA_WATCH_NOT_USED,
+        .OperatorID                 = LC_OPER_NONE,
+        .MessageID                  = CFE_SB_MSGID_RESERVED,
+        .WatchpointOffset           = 0,
         .BitMask                    = LC_BITMASK_NONE,
         .CustomFuncArgument         = 0,
         .ResultAgeWhenStale         = 0,

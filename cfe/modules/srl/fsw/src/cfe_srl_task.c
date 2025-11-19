@@ -24,7 +24,7 @@ CFE_SRL_Global_t CFE_SRL_Global;
 extern CFE_SRL_IO_Handle_t *Handles[CFE_SRL_GNRL_DEVICE_NUM];
 
 /* GPIO Handle for each gpio */
-extern CFE_SRL_GPIO_Handle_t GPIO[CFE_SRL_TOT_GPIO_NUM];
+// extern CFE_SRL_GPIO_Handle_t GPIO[CFE_SRL_TOT_GPIO_NUM];
 
 void CFE_SRL_TaskMain(void) {
     int32 Status;

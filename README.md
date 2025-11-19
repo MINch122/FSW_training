@@ -1,86 +1,5 @@
-# COSMIC FSW
+# FSW BASE
 - Author: Kweon HyeokJin
-
-# ToDo
-- 1028
-  1. Modify UZURO Mission sequence (RTS 3, 4, 5) - SE should confirm
-  2. Add EO Attitude Control - Ph.D Kang should confirm
-
-# Update
-- 1102
-  1. Minor revision
-    - GPS
-    - EO scenario
-    - PAYUZUC
-  2. Add ADCS startup check
-    - If this fails, S/C power reset
-  3. Add CI command
-    - Report the elapsed sec
-  4. Revise DS table
-    - Add critical report
-    
-- 1101, 22:18
-  1. ADCS update
-    - Detumbling, Attitude control
-  2. GPS update
-    - Best XYZ callback
-  3. SC update
-    - UZURO mission sequence
-    - RTS 3, 4, 5, 6
-  4. EO update
-    - Delete MMT deploy, Attitude control
-    - Add Detumbling Phase after SP deploy
-
-- 1101
-  1. CI, TO scenario changed
-    - CI
-      1. If, CI confirm that GS connection is staled, Do sequence
-        - Send command to TO that subscribe the beacon
-        - Send command to UANT deploy
-        - Send command to TO that DUAL Emission
-    - TO
-      1. If, TO confirm that Vbatt is too low,
-        - Unsubscribe the beacon
-        - If Vbatt become enough though, TO do NOT subscribe beacon again
-        - So, beacon can be subscribed only if GS command received during Vbatt is enough
-  2. EO
-    - Disable beacon(= TO Unsubscribe beacon) when TC(= EO NOOP) received.
-- 1031
-  1. CI, TO almost verified.
-    - Checklist
-      1. S, U transmission mode corresponded to Last Contact Elapsed sec.
-      2. TO Beacon Sub/Unsub status corresponed to EPS Vbatt
-  2. EO Vbatt Threshold
-  3. Add UANT deploy functionality when Communication Emergency.
-  
-- 1030
-  1. Modify EPS TRx fucntion (Retry if comm. fail)
-  2. Add several functionality in CI
-    - Last contact time surveillance: Check the last GS command time.
-    - If 4 days are elpased, RF emission will be executed in both frequency (UHF, S)
-  3. Add several functionality in TO
-    - Vbatt inspection (Toggle the RF transmission)
-      - If Vbatt is under 13V, stop transmit beacon. (Report is still can be transmitted.)
-  4. Add beacon table
-    - CI, TO. Loop up the beacon table in NAS
-    - Modify HK, SC table
-  5. Minor modification of EO
-    - VBATT threshold, ...etc
-
-- 1029
-  1. Add Communication Emergency Handling
-  2. Append TO to Beacon - Look up the beacon table in NAS
-    - Modify HK, SC table
-    
-- 1028
-  1. Revise UEL syntax error
-  2. Add UEL download Task
-  3. Add ADCS Boot up check (add ADCS cmd, Modify HS EMT, MAT)
-  4. Add UEL, EO to beacon (modify HK, RTS8 table)
-  5. Revise cFE RF Emit (Chunked Transmission for Long packet)
-  6. Modify PAYUZUC beacon to not send report
-  7. Modify STRX report to include proper Messsage ID
-
 
 # Notes
 - Move serial config file (`Interface_config.json` & `csp_config.json`) to `sample_defs`
@@ -103,21 +22,23 @@
 
 ## Build
 - After `git pull`, execute lower scripts.
-```sh 
+```bash
+cd FSW_BASE
 git submodule update --init --recursive
 ```
-- Before cFS build, build submodules first.
-- Run `cspbuild.sh` & `gpiobuild.sh` in `script` folder.
-> Must run this script from the **top-level directory**
+- Before cFS build, build CSP submodules first.
+- Run `cspbuild.sh` in `script` folder. (**libgpiod is deprecated** in this Project)
+> Must run this script at the **top-level directory**
 > ___
-> e.g. `./script/cspbuild.sh`
+> i.e. `./script/cspbuild.sh`
 
-- After submodules, build cFS as you know
-> If you run `make distclean`, distclean of submodules also executed.<br>So, you shoud build submodules again.
+- After this, build cFS as you know
+> If you execute `make distclean`, distclean of CSP submodules also executed.<br>So, you **shoud build the submodules again.**
 
 ## Run
 - You can run `execute.sh` in `script` folder.
-> Must run this script from the **top-level directory**
+- 
+> Must run this script at the **top-level directory**
 > ___
 > Like `./script/execute.sh`
 >> This script use `gdb`, so you enter `run (r)` in `gdb`

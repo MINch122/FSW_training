@@ -35,9 +35,9 @@ CFE_SRL_IO_Handle_t *CFE_SRL_ApiGetHandle(CFE_SRL_Handle_Indexer_t Index) {
     return CFE_SRL_GetHandle(Index);
 }
 
-CFE_SRL_GPIO_Handle_t *CFE_SRL_ApiGetGpioHandle(CFE_SRL_GPIO_Indexer_t Index) {
-    return CFE_SRL_GetGpioHandle(Index);
-}
+// CFE_SRL_GPIO_Handle_t *CFE_SRL_ApiGetGpioHandle(CFE_SRL_GPIO_Indexer_t Index) {
+//     return CFE_SRL_GetGpioHandle(Index);
+// }
 
 
 /*----------------------------------------------------------------
@@ -94,11 +94,11 @@ int32 CFE_SRL_ApiClose(CFE_SRL_IO_Handle_t *Handle) {
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value) {
-    if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
+// int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value) {
+//     if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
     
-    return CFE_SRL_GpioSetValue(Handle, Value);
-}
+//     return CFE_SRL_GpioSetValue(Handle, Value);
+// }
 
 /*----------------------------------------------------------------
  *
@@ -107,11 +107,11 @@ int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value) {
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_SRL_ApiGpioGet(CFE_SRL_GPIO_Handle_t *Handle, bool *Value) {
-    if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
+// int32 CFE_SRL_ApiGpioGet(CFE_SRL_GPIO_Handle_t *Handle, bool *Value) {
+//     if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
 
-    return CFE_SRL_GpioGetValue(Handle, Value);
-}
+//     return CFE_SRL_GpioGetValue(Handle, Value);
+// }
 
 /*----------------------------------------------------------------
  *

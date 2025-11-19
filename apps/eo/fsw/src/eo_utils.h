@@ -17,8 +17,8 @@
 #include "sant_msgids.h"
 #include "sant_msg.h"
 
-#include "sp_msgids.h"
-#include "sp_msg.h"
+// #include "sp_msgids.h"
+// #include "sp_msg.h"
 
 #include "sc_msgids.h"
 #include "sc_msg.h"

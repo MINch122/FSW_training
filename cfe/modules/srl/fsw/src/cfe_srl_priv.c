@@ -25,7 +25,7 @@
 extern CFE_SRL_IO_Handle_t *Handles[CFE_SRL_GNRL_DEVICE_NUM];
 
 /* GPIO Handle for each gpio */
-extern CFE_SRL_GPIO_Handle_t GPIO[CFE_SRL_TOT_GPIO_NUM];
+// extern CFE_SRL_GPIO_Handle_t GPIO[CFE_SRL_TOT_GPIO_NUM];
 
 /**
  * Private Sleep function
@@ -55,9 +55,9 @@ CFE_SRL_IO_Handle_t *CFE_SRL_GetHandle(CFE_SRL_Handle_Indexer_t Index) {
     return Handles[Index];
 }
 
-CFE_SRL_GPIO_Handle_t *CFE_SRL_GetGpioHandle(CFE_SRL_GPIO_Indexer_t Index) {
-    return &GPIO[Index];
-}
+// CFE_SRL_GPIO_Handle_t *CFE_SRL_GetGpioHandle(CFE_SRL_GPIO_Indexer_t Index) {
+//     return &GPIO[Index];
+// }
 
 /** 
  * \brief Private Error Handling function 

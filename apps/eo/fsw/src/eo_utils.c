@@ -122,9 +122,9 @@ void EO_SantConfirm(void) {
 }
 
 void EO_SPDeploy(CFE_SRL_GPIO_Handle_t *Handle, uint8_t Duration) {
-    CFE_SRL_ApiGpioSet(Handle, true);
+    // CFE_SRL_ApiGpioSet(Handle, true);
     OS_TaskDelay(1000 * Duration);
-    CFE_SRL_ApiGpioSet(Handle, false);
+    // CFE_SRL_ApiGpioSet(Handle, false);
 }
 
 void EO_RequestMMTDeploy(void) {

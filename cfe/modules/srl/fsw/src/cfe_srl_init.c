@@ -50,9 +50,8 @@ int32 CFE_SRL_EarlyInit(void) {
 	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_I2C1_HANDLE_INDEXER], "I2C1", "/dev/i2c-1", SRL_DEVTYPE_I2C, CFE_SRL_I2C1_HANDLE_INDEXER, &Config);
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: I2C1 Initialization failed! RC=%d\n", __func__, Status);
-		return CFE_SRL_I2C1_INIT_ERR;
 	}
-	CFE_ES_WriteToSysLog("%s: I2C1 Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_I2C1_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_I2C1_HANDLE_INDEXER])->DevName);
+	else CFE_ES_WriteToSysLog("%s: I2C1 Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_I2C1_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_I2C1_HANDLE_INDEXER])->DevName);
 
 	/* UART Init */
 	Config.cfg.uart = (CFE_PSP_UART_cfg_t) {.baud = 115200,
@@ -62,9 +61,8 @@ int32 CFE_SRL_EarlyInit(void) {
 	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_UART_HANDLE_INDEXER], "UART", "/dev/ttyAMA0", SRL_DEVTYPE_UART, CFE_SRL_UART_HANDLE_INDEXER, &Config);
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: UART Initialization failed! RC=%d\n", __func__, Status);
-		return CFE_SRL_UART_INIT_ERR;
 	}
-	CFE_ES_WriteToSysLog("%s: UART Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_UART_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_UART_HANDLE_INDEXER])->DevName);
+	else CFE_ES_WriteToSysLog("%s: UART Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_UART_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_UART_HANDLE_INDEXER])->DevName);
 
 	/* SPIO Init */
 	Config.cfg.spi = (CFE_PSP_SPI_cfg_t) {.mode = 0,
@@ -73,9 +71,8 @@ int32 CFE_SRL_EarlyInit(void) {
 	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_SPIO_HANDLE_INDEXER], "SPIO", "/dev/spidev0.0", SRL_DEVTYPE_SPI, CFE_SRL_SPIO_HANDLE_INDEXER, &Config);
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: SPIO Initialization failed! RC=%d\n", __func__, Status);
-		return CFE_SRL_SPIO_INIT_ERR;
 	}
-	CFE_ES_WriteToSysLog("%s: SPIO Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_SPIO_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_SPIO_HANDLE_INDEXER])->DevName);
+	else CFE_ES_WriteToSysLog("%s: SPIO Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_SPIO_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_SPIO_HANDLE_INDEXER])->DevName);
 
 	/* CAN0 Init */
 	CFE_PSP_CAN_filter_t filters[0];
@@ -87,9 +84,8 @@ int32 CFE_SRL_EarlyInit(void) {
 	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_CAN0_HANDLE_INDEXER], "CAN0", "can0", SRL_DEVTYPE_CAN, CFE_SRL_CAN0_HANDLE_INDEXER, &Config);
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: CAN0 Initialization failed! RC=%d\n", __func__, Status);
-		return CFE_SRL_CAN0_INIT_ERR;
 	}
-	CFE_ES_WriteToSysLog("%s: CAN0 Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_CAN0_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_CAN0_HANDLE_INDEXER])->DevName);
+	else CFE_ES_WriteToSysLog("%s: CAN0 Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_CAN0_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_CAN0_HANDLE_INDEXER])->DevName);
 
 	Status = CFE_SRL_InitCSP();
 	if (Status != CFE_SUCCESS) {

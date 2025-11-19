@@ -25,7 +25,7 @@ set(APP_TABLE_FILES
   fsw/tables/sc_rts004.c # PAYUZUT RTS
   fsw/tables/sc_rts005.c # PAYUZU both RTS
   fsw/tables/sc_rts006.c # GPS RTS
-  fsw/tables/sc_rts008.c # BCN RTS
+  # fsw/tables/sc_rts008.c # BCN RTS
 )
 
 add_cfe_tables(sc ${APP_TABLE_FILES})

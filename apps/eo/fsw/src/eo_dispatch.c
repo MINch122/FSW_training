@@ -143,10 +143,10 @@ void EO_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
             EO_UpdateDataSANT((const SANT_OperationTlm_t *)SBBufPtr);
             break;
 
-        case SP_BCN_TLM_MID:
+        // case SP_BCN_TLM_MID:
             /* Check SP state */
             /* Not used. EO directly call GPIO via SRL */
-            break;
+            // break;
 
         case RPT_OPS_TLM_MID:
             /* Check Spacecraft Operation Data from RPT */
