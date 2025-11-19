@@ -90,9 +90,8 @@ int32 CFE_SRL_EarlyInit(void) {
 	Status = CFE_SRL_InitCSP();
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: CSP Initialization failed! RC=%d\n", __func__, Status);
-		return CFE_SRL_CSP_INIT_ERR;
 	}
-	CFE_ES_WriteToSysLog("%s: CSP Successfully Initialized.\n", __func__);
+	else CFE_ES_WriteToSysLog("%s: CSP Successfully Initialized.\n", __func__);
 
 return CFE_SUCCESS;
 }

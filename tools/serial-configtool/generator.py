@@ -198,9 +198,9 @@ with open('../../cfe/modules/srl/fsw/src/cfe_srl_init.c', 'w') as f:
         f.write("\tStatus = CFE_SRL_InitCSP();\n")
         f.write("\tif (Status != CFE_SUCCESS) {\n")
         f.write(f"\t\tCFE_ES_WriteToSysLog(\"%s: CSP Initialization failed! RC=%d\\n\", __func__, Status);\n")
-        f.write(f"\t\treturn CFE_SRL_CSP_INIT_ERR;\n")
+        #f.write(f"\t\treturn CFE_SRL_CSP_INIT_ERR;\n")
         f.write("\t}\n")
-        f.write(f"\tCFE_ES_WriteToSysLog(\"%s: CSP Successfully Initialized.\\n\", __func__);\n\n")
+        f.write(f"\telse CFE_ES_WriteToSysLog(\"%s: CSP Successfully Initialized.\\n\", __func__);\n\n")
     f.write("return CFE_SUCCESS;\n")
     f.write("}\n")
 
