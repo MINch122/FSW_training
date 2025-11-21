@@ -12,10 +12,10 @@
   branch = main
 [submodule "submodules/libgscsp"]
 	path = submodules/libgscsp
-	url = http://165.132.141.168:3000/ILOVEMOZART/libgscsp
+	url = https://dssacl.yonsei.ac.kr/git/DSS/libgs
 [submodule "submodules/toolchain"]
 	path = submodules/toolchain
-	url = http://165.132.141.168:3000/ILOVEMOZART/OBC_Toolchain
+	url = https://dssacl.yonsei.ac.kr/git/DSS/OBC_Toolchain
 [submodule "submodules/libgpiod"]
 	path = submodules/libgpiod
-	url = http://165.132.141.168:3000/ILOVEMOZART/libgpiod_1.6.x
+	url = https://dssacl.yonsei.ac.kr/git/DSS/libgpiod_1.6.x
