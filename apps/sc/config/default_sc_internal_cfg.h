@@ -358,7 +358,7 @@
  * \par Limits:
  *       Must be a valid RTS ID or 0
  */
-#define RTS_ID_AUTO_POWER_ON 0
+#define RTS_ID_AUTO_POWER_ON 1
 
 /**
  * \brief Autostart RTS ID after processor reset
@@ -370,7 +370,7 @@
  * \par Limits:
  *       Must be a valid RTS ID or 0
  */
-#define RTS_ID_AUTO_PROCESSOR 0
+#define RTS_ID_AUTO_PROCESSOR 1
 
 /**
  * \brief Mission specific version number for SC application

@@ -4,7 +4,7 @@
 
 
 # Sample app native can
-./cmdUtil -ELE --host=192.168.16.220 --port=1236 --pktid=0x1882 --pktfc=4
+# ./cmdUtil -ELE --host=192.168.16.220 --port=1236 --pktid=0x1882 --pktfc=4
 
 
 # SRL clear cnt
@@ -21,3 +21,5 @@
 # ./cmdUtil -ELE --host=192.168.16.220 --port=1236 --pktid=0x180D --pktfc=4\
 #             --int32=3 --string="16:CAN0" --string="16:can0"\
 #             --uint8=3  --string="3:"
+
+./cmdUtil -ELE --pktid=0x1815 --pktfc=4 --string="64:/cf/sc_rts001.tbl" --string="64:/cf/sc_rts023.tbl"
