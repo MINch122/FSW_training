@@ -174,18 +174,18 @@ void EO_UpdateOutEPS(const EPS_Output_Tlm_t *Msg) {
 
 }
 
-void EO_UpdateDataSANT(const SANT_OperationTlm_t *Msg) {
-    EO_Data.State = Msg->Payload.ReleaseStatus.State;
-    EO_Data.Status = Msg->Payload.ReleaseStatus.Status;
-    EO_Data.BurnTimeLeft = Msg->Payload.ReleaseStatus.BurnTimeLeft;
-    EO_Data.BurnTries = Msg->Payload.ReleaseStatus.BurnTries;
+// void EO_UpdateDataSANT(const SANT_OperationTlm_t *Msg) {
+//     EO_Data.State = Msg->Payload.ReleaseStatus.State;
+//     EO_Data.Status = Msg->Payload.ReleaseStatus.Status;
+//     EO_Data.BurnTimeLeft = Msg->Payload.ReleaseStatus.BurnTimeLeft;
+//     EO_Data.BurnTries = Msg->Payload.ReleaseStatus.BurnTries;
 
-    if (EO_Data.WaitingSANT) {
-        EO_Data.WaitingSANT = false;
-        EO_PRINTF("%s: SANT Sem Give.\n", __func__);
-        OS_BinSemGive(EO_Data.SANT_SemId);
-    }
-}
+//     if (EO_Data.WaitingSANT) {
+//         EO_Data.WaitingSANT = false;
+//         EO_PRINTF("%s: SANT Sem Give.\n", __func__);
+//         OS_BinSemGive(EO_Data.SANT_SemId);
+//     }
+// }
 
 void EO_ValidateOperationData(const RPT_OpsTlm_t *Msg) {
     /* Check Boot Count */

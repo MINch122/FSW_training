@@ -38,16 +38,18 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 CFE_Status_t TO_LAB_EnableOutputCmd(const TO_LAB_EnableOutputCmd_t *data)
 {
+    
     // const TO_LAB_EnableOutput_Payload_t *pCmd = &data->Payload;
-
     // (void)CFE_SB_MessageStringGet(TO_LAB_Global.tlm_dest_IP, pCmd->dest_IP, "", sizeof(TO_LAB_Global.tlm_dest_IP),
     //                               sizeof(pCmd->dest_IP));
     // TO_LAB_Global.suppress_sendto = false;
+
     CFE_EVS_SendEvent(TO_LAB_TLMOUTENA_INF_EID, CFE_EVS_EventType_INFORMATION, "TO telemetry output enabled.");
 
     if (!TO_LAB_Global.downlink_on) /* Then turn it on, otherwise we will just switch destination addresses*/
     {
         // TO_LAB_openTLM();
+        
         TO_LAB_Global.downlink_on = true;
     }
 
@@ -157,7 +159,6 @@ CFE_Status_t TO_LAB_SendDataTypesCmd(const TO_LAB_SendDataTypesCmd_t *data)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 CFE_Status_t TO_LAB_SendHkCmd(const TO_LAB_SendHkCmd_t *data)
 {
-    TO_LAB_Global.HkTlm.Payload.EmissionMode = TO_LAB_Global.EmissionMode;
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(TO_LAB_Global.HkTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(TO_LAB_Global.HkTlm.TelemetryHeader), true);
@@ -252,67 +253,18 @@ CFE_Status_t TO_CreateChildCmd(const TO_CreateChildCmd_t *Msg) {
 
 }
 
-CFE_Status_t TO_SetEmissionModeNoneCmd(const TO_SetEmissionModeNoneCmd_t *Msg) {
-
-    OS_MutSemTake(TO_LAB_Global.MutexId);
-    TO_LAB_Global.EmissionMode = TO_NO_EMISSION;
-    OS_MutSemGive(TO_LAB_Global.MutexId);
-
-    // TO_HandleReport(CFE_SUCCESS, TO_SET_NO_EMISSION_CC, NULL, 0);
-
-    return CFE_SUCCESS;
-}
-
-CFE_Status_t TO_SetEmissionModeSCmd(const TO_SetEmissionModeSCmd_t *Msg) {
-
-    OS_MutSemTake(TO_LAB_Global.MutexId);
-    TO_LAB_Global.EmissionMode = TO_S_ONLY_EMISSION;
-    OS_MutSemGive(TO_LAB_Global.MutexId);
-
-    // TO_HandleReport(CFE_SUCCESS, TO_SET_S_ONLY_EMISSION_CC, NULL, 0);
-
-    OS_printf("%s: S Only Emission.\n", __func__);
-
-    return CFE_SUCCESS;
-}
-
-CFE_Status_t TO_SetEmissionModeUCmd(const TO_SetEmissionModeUCmd_t *Msg) {
-
-    OS_MutSemTake(TO_LAB_Global.MutexId);
-    TO_LAB_Global.EmissionMode = TO_U_ONLY_EMISSION;
-    OS_MutSemGive(TO_LAB_Global.MutexId);
-
-    // TO_HandleReport(CFE_SUCCESS, TO_SET_U_ONLY_EMISSION_CC, NULL, 0);
-
-    return CFE_SUCCESS;
-}
-
-CFE_Status_t TO_SetEmissionModeDualCmd(const TO_SetEmissionModeDualCmd_t *Msg) {
-
-    OS_MutSemTake(TO_LAB_Global.MutexId);
-    TO_LAB_Global.EmissionMode = TO_DUAL_EMISSION;
-    OS_MutSemGive(TO_LAB_Global.MutexId);
-
-    // TO_HandleReport(CFE_SUCCESS, TO_SET_DUAL_EMISSION_CC, NULL, 0);
-
-    OS_printf("%s: Dual Emission.\n", __func__);
-
-    return CFE_SUCCESS;
-}
-
-
 void TO_ValidateEPS(const EPS_Vi_Tlm_t *Msg) {
     
-    /* Check EPS Vbatt, and toggle the Output state */
-    if (Msg->Vbatt <= TO_VBATT_THRESHOLD_TO_OFF_BEACON) { // If Vbatt is too low,
-        /* Unsubscribe the beacon */
-        OS_printf("%s: Vbatt is too low. Stop ingest beacon.\n", __func__);
-        CFE_SB_Unsubscribe(CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID), TO_LAB_Global.Tlm_pipe);
-    }
-    else { // If Vbatt is enough,
-        /* Subscribe the beacon */
-        /* @deprecated */
-        OS_printf("%s: Vbatt is enough. But not ingest beacon.\n", __func__);
-        // CFE_SB_SubscribeEx(CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID), TO_LAB_Global.Tlm_pipe, (CFE_SB_Qos_t){0, 0}, 4);
-    }
+    // /* Check EPS Vbatt, and toggle the Output state */
+    // if (Msg->Vbatt <= TO_VBATT_THRESHOLD_TO_OFF_BEACON) { // If Vbatt is too low,
+    //     /* Unsubscribe the beacon */
+    //     OS_printf("%s: Vbatt is too low. Stop ingest beacon.\n", __func__);
+    //     CFE_SB_Unsubscribe(CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID), TO_LAB_Global.Tlm_pipe);
+    // }
+    // else { // If Vbatt is enough,
+    //     /* Subscribe the beacon */
+    //     /* @deprecated */
+    //     OS_printf("%s: Vbatt is enough. But not ingest beacon.\n", __func__);
+    //     // CFE_SB_SubscribeEx(CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID), TO_LAB_Global.Tlm_pipe, (CFE_SB_Qos_t){0, 0}, 4);
+    // }
 }

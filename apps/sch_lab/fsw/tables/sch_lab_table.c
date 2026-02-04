@@ -70,14 +70,8 @@
 /*********************
  * COMS Header 
  ********************/
-#include "strx_msgids.h"
-#include "strx_msg.h"
-
 #include "utrx_msgids.h"
 #include "utrx_msg.h"
-
-#include "sant_msgids.h"
-#include "sant_msg.h"
 
 #include "uant_msgids.h"
 #include "uant_msg.h"
@@ -97,16 +91,6 @@
 #include "adcs_msg.h"
 /* End of ADCS Header */
 
-/*********************
- * PAYLOAD Header 
- ********************/
-// include PAY UEL...
-#include "payuzuc_msgids.h"
-#include "payuzuc_msg.h"
-
-#include "payuzut_msgids.h"
-#include "payuzut_msg.h"
-/* End of PAYLOAD Header */
 
 #include "sc_msgids.h"
 #include "sc_msg.h"

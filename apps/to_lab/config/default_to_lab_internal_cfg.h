@@ -69,16 +69,6 @@
 /**
  * @brief enum to indicate the emission mode
  */
-typedef enum {
-
-    TO_S_ONLY_EMISSION, /* S band only transmission */
-
-    TO_U_ONLY_EMISSION, /* UHF band only transmission */
-
-    TO_DUAL_EMISSION,   /* Both band transmission */
-
-    TO_NO_EMISSION,     /* No transmission */
-} TO_EmissionMode_t;
 
 /**
  * @brief TO child Task Configuration

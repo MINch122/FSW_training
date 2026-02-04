@@ -14,9 +14,6 @@
 #include "eps_msg.h"
 #include "eps_interface_cfg.h"
 
-#include "sant_msgids.h"
-#include "sant_msg.h"
-
 // #include "sp_msgids.h"
 // #include "sp_msg.h"
 
@@ -59,7 +56,7 @@ void EO_RequestOutEPS(void);
 void EO_ChildTask(void);
 void EO_ExitApps(void);
 
-void EO_SantDeploy(void);
+// void EO_SantDeploy(void);
 void EO_SantConfirm(void);
 
 void EO_TCWait(void);

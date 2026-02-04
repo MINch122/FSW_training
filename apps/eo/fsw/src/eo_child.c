@@ -95,8 +95,8 @@ void EO_SantPhase(void) {
     /* First, disable beacon - default: Subscribed */
     EO_DisableBeacon();
 
-    /* Send SANT Deploy Command */
-    EO_SantDeploy();
+    // /* Send SANT Deploy Command */
+    // EO_SantDeploy();
 
     /* Sleep for SANT Burn time */
     OS_TaskDelay(1000 * (EO_SANT_DURATION + 1)); // +1 for margin
@@ -229,10 +229,10 @@ void EO_SantConfirmPhase(void) {
             }
 
             /* If Vbatt OK && proper tries */
-            EO_PRINTF("%s: Try SANT deploy again.\n", __func__);
-            /* Send SANT Deploy Command */
-            EO_SantDeploy();
-            OS_TaskDelay(EO_SANT_DURATION + 1); /* sleep during burn. +1 for margin */
+            // EO_PRINTF("%s: Try SANT deploy again.\n", __func__);
+            // /* Send SANT Deploy Command */
+            // // EO_SantDeploy();
+            // OS_TaskDelay(EO_SANT_DURATION + 1); /* sleep during burn. +1 for margin */
         }
     }
     return;

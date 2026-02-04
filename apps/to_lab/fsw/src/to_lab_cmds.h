@@ -46,10 +46,6 @@ CFE_Status_t TO_LAB_SendDataTypesCmd(const TO_LAB_SendDataTypesCmd_t *data);
 CFE_Status_t TO_LAB_SendHkCmd(const TO_LAB_SendHkCmd_t *data);
 
 CFE_Status_t TO_CreateChildCmd(const TO_CreateChildCmd_t *Msg);
-CFE_Status_t TO_SetEmissionModeNoneCmd(const TO_SetEmissionModeNoneCmd_t *Msg);
-CFE_Status_t TO_SetEmissionModeSCmd(const TO_SetEmissionModeSCmd_t *Msg);
-CFE_Status_t TO_SetEmissionModeUCmd(const TO_SetEmissionModeUCmd_t *Msg);
-CFE_Status_t TO_SetEmissionModeDualCmd(const TO_SetEmissionModeDualCmd_t *Msg);
 
 void TO_ValidateEPS(const EPS_Vi_Tlm_t *Msg);
 /******************************************************************************/

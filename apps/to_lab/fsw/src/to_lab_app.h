@@ -63,8 +63,6 @@ typedef struct
     TO_LAB_Subs_t *  SubsTblPtr;
     CFE_TBL_Handle_t SubsTblHandle;
 
-    uint8_t EmissionMode;
-
     osal_id_t MutexId;
     CFE_ES_TaskId_t ChildId;
 

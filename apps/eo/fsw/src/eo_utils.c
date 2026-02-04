@@ -49,9 +49,9 @@ void EO_ExitApps(void) {
     /* If Early Orbit Phase done, Exit several apps */
     CFE_ES_AppId_t AppId = CFE_ES_APPID_UNDEFINED;
 
-    /* Delete SANT App */
-    Status = CFE_ES_GetAppIDByName(&AppId, "SANT");
-    if (Status == CFE_SUCCESS) CFE_ES_DeleteApp(AppId);
+    // /* Delete SANT App */
+    // Status = CFE_ES_GetAppIDByName(&AppId, "SANT");
+    // if (Status == CFE_SUCCESS) CFE_ES_DeleteApp(AppId);
 
     /* Delete SP App */
     Status = CFE_ES_GetAppIDByName(&AppId, "SP");
@@ -64,15 +64,15 @@ void EO_ExitApps(void) {
     // CFE_ES_ExitApp(CFE_ES_RunStatus_APP_EXIT);
 }
 
-void EO_SantDeploy(void) {
-    /* Send Deploy command to SANT */
-    SANT_BurnCmd_t Cmd;
-    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CmdHdr), CFE_SB_ValueToMsgId(SANT_CMD_MID), sizeof(Cmd));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CmdHdr), SANT_BURN_INTERNAL_CC);
-    Cmd.Duration = EO_SANT_DURATION;   /* 6 Seconds */
+// void EO_SantDeploy(void) {
+//     /* Send Deploy command to SANT */
+//     SANT_BurnCmd_t Cmd;
+//     CFE_MSG_Init(CFE_MSG_PTR(Cmd.CmdHdr), CFE_SB_ValueToMsgId(SANT_CMD_MID), sizeof(Cmd));
+//     CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CmdHdr), SANT_BURN_INTERNAL_CC);
+//     Cmd.Duration = EO_SANT_DURATION;   /* 6 Seconds */
 
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CmdHdr), true);
-}
+//     CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CmdHdr), true);
+// }
 
 void EO_TCWait(void) {
     // ??
@@ -112,14 +112,14 @@ void EO_DisableBeacon(void) {
     CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
 }
 
-void EO_SantConfirm(void) {
-    /* Send request deploy command to SANT */
-    SANT_SendOpCmd_t Cmd;
-    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(SANT_SEND_OP_MID), sizeof(Cmd));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), 0);
+// void EO_SantConfirm(void) {
+//     /* Send request deploy command to SANT */
+//     SANT_SendOpCmd_t Cmd;
+//     CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(SANT_SEND_OP_MID), sizeof(Cmd));
+//     CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), 0);
 
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
-}
+//     CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
+// }
 
 void EO_SPDeploy(CFE_SRL_GPIO_Handle_t *Handle, uint8_t Duration) {
     // CFE_SRL_ApiGpioSet(Handle, true);

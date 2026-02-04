@@ -34,7 +34,6 @@
 #include "to_lab_tbl.h"
 
 #include "rpt_msgids.h"
-#include "ftp_msgids.h"
 #include "hk_msgids.h"
 
 /*
@@ -301,124 +300,6 @@ void TO_LAB_openTLM(void)
     /*---------------- Add static arp entries ----------------*/
 }
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/*                                                                 */
-/* TO_LAB_forward_telemetry() -- Forward telemetry                 */
-/*                                                                 */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-void TO_LAB_forward_telemetry(void)
-{
-    // OS_SockAddr_t    d_addr;
-    // int32            OsStatus;
-    // CFE_Status_t     CfeStatus;
-    // CFE_SB_Buffer_t *SBBufPtr;
-    // const void      *NetBufPtr;
-    // size_t           NetBufSize;
-    // uint32           PktCount = 0;
-    
-    // CFE_SB_MsgId_t   MsgId = CFE_SB_INVALID_MSG_ID;
-    // uint8_t          Port = CFE_RF_DPORT_BCN;
-    // bool             EmitS = true;
-    // bool             EmitU = false;
-
-    // OS_SocketAddrInit(&d_addr, OS_SocketDomain_INET);
-    // OS_SocketAddrSetPort(&d_addr, TO_LAB_TLM_PORT);
-    // OS_SocketAddrFromString(&d_addr, TO_LAB_Global.tlm_dest_IP);
-    // OsStatus = 0;
-
-    // do
-    // {
-    //     CfeStatus = CFE_SB_ReceiveBuffer(&SBBufPtr, TO_LAB_Global.Tlm_pipe, TO_LAB_TLM_PIPE_TIMEOUT);
-    //     if ((CfeStatus == CFE_SUCCESS) && (TO_LAB_Global.suppress_sendto == false))
-    //     {
-    //         OsStatus = OS_SUCCESS;
-
-    //         if (TO_LAB_Global.downlink_on == true)
-    //         {
-    //             CFE_ES_PerfLogEntry(TO_LAB_SOCKET_SEND_PERF_ID);
-
-    //             CfeStatus = TO_LAB_EncodeOutputMessage(SBBufPtr, &NetBufPtr, &NetBufSize);
-
-    //             if (CfeStatus != CFE_SUCCESS)
-    //             {
-    //                 CFE_EVS_SendEvent(TO_LAB_ENCODE_ERR_EID, CFE_EVS_EventType_ERROR, "Error packing output: %d\n",
-    //                                   (int)CfeStatus);
-    //             }
-    //             else
-    //             {
-    //                 /* Delete this at the last */
-    //                 OsStatus = OS_SocketSendTo(TO_LAB_Global.TLMsockid, NetBufPtr, NetBufSize, &d_addr);
-    //                 /*****************************************************************
-    //                  * RT Telemetry Out
-    //                  *****************************************************************/
-    //                 /* Find out the Msgid */
-    //                 CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
-
-    //                 /* Determine the Destination Port */
-    //                 switch (CFE_SB_MsgIdToValue(MsgId))
-    //                 {
-    //                 case (CFE_SB_MsgId_Atom_t)FTP_FILE_MID:
-    //                     Port = CFE_RF_DPORT_FTP;
-    //                     break;
-
-    //                 case (CFE_SB_MsgId_Atom_t)RPT_REPORT_TLM_MID:
-    //                 case (CFE_SB_MsgId_Atom_t)RPT_CRITICAL_TLM_MID:
-    //                     Port = CFE_RF_DPORT_RPT;
-    //                     break;
-
-    //                 default:
-    //                     Port = CFE_RF_DPORT_BCN;
-    //                     break;
-    //                 }
-
-    //                 /* Determine the Emission Mode */
-    //                 switch (TO_LAB_Global.EmissionMode)
-    //                 {
-    //                 case TO_S_ONLY_EMISSION:
-    //                     EmitS = true; EmitU = false;
-    //                     break;
-    //                 case TO_U_ONLY_EMISSION:
-    //                     EmitS = false; EmitU = true;
-    //                     break;
-    //                 case TO_DUAL_EMISSION:
-    //                     EmitS = true; EmitU = true;
-    //                 default:
-    //                     EmitS = true; EmitU =false;
-    //                     break;
-    //                 }
-                    
-    //                 /* Actual Transmission */
-    //                 if (EmitS) {
-    //                     CfeStatus = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, Port); /* Eliminate `const` attr by (void *) casting */ 
-    //                     if (CfeStatus == 1) CfeStatus = CFE_SUCCESS;
-    //                     else CFE_EVS_SendErr(TO_LAB_TLMOUTSTOP_ERR_EID, "%s: RF emit error. RC=0x%08X\n", __func__, CfeStatus);
-
-    //                     OS_printf("%s: S Transmission Status : %d\n", CfeStatus);
-    //                 }
-    //                 if (EmitU) {
-    //                     CfeStatus = CFE_RF_TelemetryEmit2((void *)NetBufPtr, NetBufSize, Port); /* Eliminate `const` attr by (void *) casting */ 
-    //                     if (CfeStatus == 1) CfeStatus = CFE_SUCCESS;
-    //                     else CFE_EVS_SendErr(TO_LAB_TLMOUTSTOP_ERR_EID, "%s: RF emit error. RC=0x%08X\n", __func__, CfeStatus);
-                        
-    //                     OS_printf("%s: UHF Transmission Status : %d\n", CfeStatus);
-    //                 }
-    //             }
-
-    //             CFE_ES_PerfLogExit(TO_LAB_SOCKET_SEND_PERF_ID);
-    //         }
-
-    //         if (OsStatus < 0)
-    //         {
-    //             CFE_EVS_SendEvent(TO_LAB_TLMOUTSTOP_ERR_EID, CFE_EVS_EventType_ERROR,
-    //                               "L%d TO sendto error %d. Tlm output suppressed\n", __LINE__, (int)OsStatus);
-    //             TO_LAB_Global.suppress_sendto = true;
-    //         }
-    //     }
-    //     /* If CFE_SB_status != CFE_SUCCESS, then no packet was received from CFE_SB_ReceiveBuffer() */
-
-    //     PktCount++;
-    // } while (CfeStatus == CFE_SUCCESS && PktCount < TO_LAB_MAX_TLM_PKTS);
-}
 
 /************************/
 /*  End of File Comment */

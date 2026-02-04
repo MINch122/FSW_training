@@ -190,19 +190,3 @@ int32 CFE_RF_TelemetryEmit(void *BufPtr, size_t Size, uint8_t Port) {
     
     return Status;
 }
-
-int32 CFE_RF_TelemetryEmit2(void *BufPtr, size_t Size, uint8_t Port) {
-    int32 Status;
-    uint16_t TotSendByte = 0;
-    uint16_t SendByte = 0;
-
-    while (TotSendByte < Size) {
-        SendByte = (Size - TotSendByte > RF_MAX_MTU) ? RF_MAX_MTU : (Size - TotSendByte);
-        Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_GSTRX, Port, (void *)(((uint8_t *)BufPtr) + TotSendByte), SendByte, NULL, 0);
-        if (!Status) break;
-
-        TotSendByte += SendByte;
-    }
-    
-    return Status;
-}

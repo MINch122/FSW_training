@@ -138,10 +138,10 @@ void EO_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
             /* Update PCDU output */
             EO_UpdateOutEPS((const EPS_Output_Tlm_t *)SBBufPtr);
 
-        case SANT_OP_TLM_MID:
-            /* Check SANT state */
-            EO_UpdateDataSANT((const SANT_OperationTlm_t *)SBBufPtr);
-            break;
+        // case SANT_OP_TLM_MID:
+        //     /* Check SANT state */
+        //     EO_UpdateDataSANT((const SANT_OperationTlm_t *)SBBufPtr);
+        //     break;
 
         // case SP_BCN_TLM_MID:
             /* Check SP state */

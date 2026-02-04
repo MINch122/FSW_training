@@ -20,3 +20,43 @@ As a lab application, extensive testing is not performed prior to release and on
 For best results, submit issues:questions or issues:help wanted requests at <https://github.com/nasa/cFS>.
 
 Official cFS page: <http://cfs.gsfc.nasa.gov>
+
+===========================================================================================================================
+## RF / UDP (260204)
+
+### Switching TO_LAB Telemetry Output: RF (default) → UDP
+
+By default, **TO_LAB telemetry output is configured for RF**.  
+To switch the telemetry output to **UDP**, apply the following changes.
+
+---
+
+1. Change the child task entry function (RF → UDP)  File: `TO_LAB_init`
+    - In the `CFE_ES_CreateChildTask()` call, replace:
+    - `TO_LAB_ForwardTelemetryRF` → `TO_LAB_ForwardTelemetryUDP`
+
+2. Enable UDP destination handling in `TO_LAB_EnableOutputCmd` File: `TO_LAB_EnableOutputCmd`
+    - Uncomment the lines below:
+
+```c
+    const TO_LAB_EnableOutput_Payload_t *pCmd = &data->Payload;
+    (void)CFE_SB_MessageStringGet(TO_LAB_Global.tlm_dest_IP, pCmd->dest_IP, "",
+                                sizeof(TO_LAB_Global.tlm_dest_IP),
+                                sizeof(pCmd->dest_IP));
+    TO_LAB_Global.suppress_sendto = false;
+
+    TO_LAB_openTLM();
+
+3. Enable the payload field in TO_LAB_EnableOutputCmd_t
+    - Uncomment the payload field in the command structure so the command can carry dest_IP:
+
+```c
+    typedef struct
+    {
+        CFE_MSG_CommandHeader_t        CommandHeader; /**< \brief Command header */
+        TO_LAB_EnableOutput_Payload_t  Payload;       /**< \brief Command payload */
+        /* When using RF, keep dest_IP empty (e.g., ""). */
+    } TO_LAB_EnableOutputCmd_t;
+
+4. Enable the 'TO_LAB_ForwardTelemetryUDP' CMD
+   - Uncomment the lines below:

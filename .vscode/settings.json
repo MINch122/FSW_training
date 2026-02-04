@@ -219,5 +219,5 @@
         "to_lab_msg.h": "c",
         "rtems.h": "c"
     },
-    "cmake.sourceDirectory": "/home/hj/Documents/FSW/tools/elf2cfetbl"
+    "cmake.sourceDirectory": "/home/yosi/BASE_0203_test/FSW_BASE/apps/to_lab"
 }

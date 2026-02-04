@@ -59,12 +59,10 @@
 #include "lc_msgids.h"
 #endif
 
-#include "payuzuc_msgids.h"
 #include "rpt_msgids.h"
 
 #include "hk_msgids.h"
 
-#include "ftp_msgids.h"
 
 TO_LAB_Subs_t TO_LAB_Subs = {.Subs = {/* CFS App Subscriptions */
                                       {CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID), {0, 0}, 4}, // Beacon packet
@@ -73,7 +71,6 @@ TO_LAB_Subs_t TO_LAB_Subs = {.Subs = {/* CFS App Subscriptions */
                                       {CFE_SB_MSGID_WRAP_VALUE(FM_FILE_INFO_TLM_MID), {0, 0}, 4},
                                       {CFE_SB_MSGID_WRAP_VALUE(FM_DIR_LIST_TLM_MID), {0, 0}, 4},
                                       {CFE_SB_MSGID_WRAP_VALUE(FM_FREE_SPACE_TLM_MID), {0, 0}, 4},
-                                      {CFE_SB_MSGID_WRAP_VALUE(FTP_FILE_MID), {0, 0}, 50},
                                     //   {CFE_SB_MSGID_WRAP_VALUE(TO_LAB_HK_TLM_MID), {0, 0}, 4},
                                       
                                     //   {CFE_SB_MSGID_WRAP_VALUE(TO_LAB_DATA_TYPES_MID), {0, 0}, 4},

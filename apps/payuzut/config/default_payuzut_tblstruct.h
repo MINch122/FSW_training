@@ -1,5 +1,0 @@
-#ifndef PAYUZUT_TBLSTRUCT_H
-#define PAYUZUT_TBLSTRUCT_H
-
-
-#endif

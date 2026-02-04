@@ -10,24 +10,20 @@
 
 #include "adcs_msgids.h"
 #include "eps_msgids.h"
-#include "payuzuc_msgids.h"
-#include "payuzut_msgids.h"
-#include "sant_msgids.h"
+
 // #include "sp_msgids.h"
-#include "strx_msgids.h"
+
 #include "uant_msgids.h"
 #include "utrx_msgids.h"
 // #include "gps_msgids.h"
 
-#include "ftp_msgids.h"
 // #include "eo_msgids.h"
-#include "uel_app_msgids.h"
 
 
 RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
     /* Entry 0 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_REPORT_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 1 */
@@ -42,12 +38,12 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
         
     /* Entry 3 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(PAYUZUT_REPORT_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 4 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(SANT_REPORT_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
         .Entry.IsCritical = RPT_NOT_CRITICAL},
     
     /* Entry 5 */
@@ -57,7 +53,7 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
 
     /* Entry 6 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(STRX_RPT_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 7 */
@@ -72,7 +68,7 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
         
     /* Entry 9 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(FTP_REPORT_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 10 */
@@ -82,7 +78,7 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
     
     /* Entry 11 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(UEL_APP_RPT_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 12 */

@@ -17,27 +17,6 @@
     },
     "external" : [
         {
-            "name": "UEL_OBC",
-            "node": 1,
-            "interface": "CAN",
-            "via": null,
-
-            "priority": 2,
-            "timeout": 1,
-            "option": "CSP_O_NONE"
-        },
-        {
-            "name": "UEL_PI",
-            "node": 2,
-            "interface": "CAN",
-            "via": null,
-
-            "priority": 2,
-            "timeout": 5,
-            "option": "CSP_O_NONE"
-        },
-
-        {
             "name": "ADCS",
             "node": 4,
             "interface": "CAN",
@@ -58,26 +37,6 @@
             "option": "CSP_O_CRC32"
         },
         {
-            "name": "STRX",
-            "node": 6,
-            "interface": "CAN",
-            "via": null,
-
-            "priority": 2,
-            "timeout": 1,
-            "option": "CSP_O_CRC32"
-        },
-        {
-            "name": "GS_KISS",
-            "node": 8,
-            "interface": "CAN",
-            "via": "STRX",
-
-            "priority": 2,
-            "timeout": 1,
-            "option": "CSP_O_CRC32"
-        },
-        {
             "name": "GSTRX",
             "node": 20,
             "interface": "CAN",
@@ -88,8 +47,18 @@
             "option": "CSP_O_CRC32"
         },
         {
-            "name": "SOBC",
-            "node": 23,
+            "name": "GS_KISS",
+            "node": 8,
+            "interface": "CAN",
+            "via": "UTRX",
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_CRC32"
+        },
+        {
+            "name": "TEST",
+            "node": 9,
             "interface": "CAN",
             "via": null,
 

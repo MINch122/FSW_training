@@ -21,9 +21,6 @@ set(APP_TABLE_FILES
   fsw/tables/sc_ats1.c  
   fsw/tables/sc_rts001.c # startup RTS
   fsw/tables/sc_rts002.c # EO child RTS
-  fsw/tables/sc_rts003.c # PAYUZUC CAM RTS
-  fsw/tables/sc_rts004.c # PAYUZUT RTS
-  fsw/tables/sc_rts005.c # PAYUZU both RTS
   fsw/tables/sc_rts006.c # GPS RTS
   # fsw/tables/sc_rts008.c # BCN RTS
 )

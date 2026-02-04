@@ -34,7 +34,6 @@ typedef struct
 {
     uint8 CommandCounter;
     uint8 CommandErrorCounter;
-    uint8 EmissionMode; /* <\brief `TO_EmissionMode_t` */
     uint8 spareToAlign;
 } TO_LAB_HkTlm_Payload_t;
 

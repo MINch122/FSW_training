@@ -11,7 +11,6 @@
 #include "rpt_msg.h"
 
 #include "eps_interface_cfg.h"
-#include "sant_msg.h"
 #include "adcs_msg.h"
 
 CFE_Status_t EO_SendHKCmd(void);
@@ -32,7 +31,7 @@ void EO_WakeupTask(void);
 /* External apps data update */
 void EO_UpdateDataEPS(const EPS_Vi_Tlm_t *Msg);
 void EO_UpdateOutEPS(const EPS_Output_Tlm_t *Msg);
-void EO_UpdateDataSANT(const SANT_OperationTlm_t *Msg);
+// void EO_UpdateDataSANT(const SANT_OperationTlm_t *Msg);
 void EO_ValidateOperationData(const RPT_OpsTlm_t *Msg);
 void EO_UpdateDataADCS(const ADCS_MMTTlm_t *Msg);
 

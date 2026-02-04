@@ -179,7 +179,7 @@ CFE_Status_t SAMPLE_APP_DisplayParamCmd(const SAMPLE_APP_DisplayParamCmd_t *Msg)
     uint8_t TxBuf[12] = {0,};
     uint8_t RxBuf[32] = {0,};
     memcpy(TxBuf, "ILOVEMOZART", sizeof(TxBuf));
-    int32 Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_SOBC, 0, TxBuf, sizeof(TxBuf), RxBuf, sizeof(RxBuf));
+    int32 Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_TEST, 0, TxBuf, sizeof(TxBuf), RxBuf, sizeof(RxBuf));
     OS_printf("CSP Transaction Status: 0x%08X\n", Status);
     if (Status > 0) {
         OS_printf("Rx Data: %s\n", RxBuf);
