@@ -104,8 +104,13 @@ typedef struct{
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_Table_Save_Cmd_Payload_t Payload;
+    EPS_Table_Load_Cmd_Payload_t Payload;
 }EPS_Table_Load_Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_Param_Save_Cmd_Payload_t Payload;
+}EPS_Param_Save_Cmd_t;
 
 /*************************************************************************/
 /*

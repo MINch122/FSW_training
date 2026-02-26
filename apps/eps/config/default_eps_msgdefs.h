@@ -90,6 +90,14 @@ typedef struct{
     uint8_t table_id;
 }EPS_Table_Save_Cmd_Payload_t;
 
+/* Same fields as Save; typedef for clarity */
+typedef EPS_Table_Save_Cmd_Payload_t EPS_Table_Load_Cmd_Payload_t;
+
+/* Save all parameter tables on a node (no table_id needed) */
+typedef struct{
+    uint8_t csp_node;
+}EPS_Param_Save_Cmd_Payload_t;
+
 /*************************************************************************/
 /*
 ** Type definition (EPS housekeeping)
