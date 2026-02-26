@@ -4,13 +4,9 @@
 #include "sp_mission_cfg.h"
 #include "sp_msgdefs.h"
 #include "cfe_msg_hdr.h"
-
 #include "rpt_interface_cfg.h"
 
-typedef struct
-{
-    CFE_MSG_CommandHeader_t CommandHeader;
-} SP_SendBcnCmd_t;
+/* ---- Command messages ---- */
 
 typedef struct
 {
@@ -25,35 +21,70 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader;
+} SP_SendHkCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+} SP_GetHkCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+} SP_SendBcnCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
     SP_Deploy_Payload_t Payload;
 } SP_DeployCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader;
-} SP_Get_DeployCmd_t;
+    SP_StopBurn_Payload_t Payload;
+} SP_StopBurnCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader;
-} SP_StartDeployTaskCmd_t;
+    SP_AutoDeploy_Payload_t Payload;
+} SP_AutoDeployCmd_t;
 
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+} SP_ScanAr6Cmd_t;
 
-typedef struct 
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    SP_SetAr6Addr_Payload_t Payload;
+} SP_SetAr6AddrCmd_t;
+
+/* ---- Telemetry messages ---- */
+
+/** Full HK telemetry: detailed AR6 status for both DSPs */
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    SP_HkTlm_Payload_t Payload;
+} SP_HkTlm_t;
+
+/** Beacon telemetry: lightweight deploy status */
+typedef struct
 {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     SP_BcnTlm_Payload_t Payload;
-
-    /**
-     * Other critical operation data to construct the deploy algorithm
-     */
-    bool IsRunning; // Flag which indicate the "Running status of deploy thread"
-    bool IsDeploy;  // Flag which indicate the "Deployed status"
-    uint8 MaxTry;   // Maximum auto try [TBD]
-    
+    bool  IsRunning;     /**< Burn task active flag */
+    bool  IsDeploy[2];   /**< Deployed flag per DSP */
+    uint8 MaxTry;        /**< Burn attempt counter */
+    uint8 spare;
 } SP_BcnTlm_t;
 
-typedef struct {
+/** Report telemetry: command result forwarded to RPT app */
+typedef struct
+{
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     RPT_Report_t Report;
 } SP_ReportTlm_t;

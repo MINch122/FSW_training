@@ -11,19 +11,17 @@
 #include "sp_msgids.h"
 #include "sp_msg.h"
 
-typedef struct{
+typedef struct
+{
     uint8 CmdCounter;
     uint8 ErrCounter;
 
-    SP_BcnTlm_t BcnTlm;
-    
-    //SP_DeployCmd_t DeployCmd;
+    SP_HkTlm_t  HkTlm;   /**< Full DSP telemetry (both AR6 boards per DSP) */
+    SP_BcnTlm_t BcnTlm;  /**< Lightweight beacon deploy status */
 
     uint32 RunStatus;
 
     CFE_SB_PipeId_t CommandPipe;
-
-    CFE_ES_TaskId_t TaskId;
 
 } SP_AppData_t;
 

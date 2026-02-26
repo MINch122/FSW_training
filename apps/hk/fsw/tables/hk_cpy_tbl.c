@@ -65,14 +65,18 @@
 /* End of COMS Header */
 
 /*********************
- * EPS Header 
+ * EPS Header
  ********************/
 #include "eps_msgids.h"
 #include "eps_msg.h"
-
-// #include "sp_msgids.h"
-// #include "sp_msg.h"
 /* End of EPS Header */
+
+/*********************
+ * SP Header
+ ********************/
+#include "sp_msgids.h"
+#include "sp_msg.h"
+/* End of SP Header */
 
 /*********************
  * ADCS Header 
@@ -98,7 +102,7 @@
 #define BCN_OFFSET_5            BCN_OFFSET_4 + sizeof(UANT_BcnTlm_Payload_t)
 #define BCN_OFFSET_6            BCN_OFFSET_5 + sizeof(UTRX_BcnTlm_Payload_t)
 #define BCN_OFFSET_7            BCN_OFFSET_6 + sizeof(EPS_BcnTlm_Payload_t)
-#define BCN_OFFSET_8            BCN_OFFSET_7 //BCN_OFFSET_7 + sizeof(SP_BcnTlm_Payload_t)
+#define BCN_OFFSET_8            BCN_OFFSET_7 + sizeof(SP_BcnTlm_Payload_t)
 #define BCN_OFFSET_9            BCN_OFFSET_8 + sizeof(ADCS_BcnTlm_Payload_t)
 #define BCN_OFFSET_10           BCN_OFFSET_9
 #define BCN_OFFSET_11           BCN_OFFSET_10
@@ -210,13 +214,11 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
     },
     /*   10 : SP     */
     {
-        // CFE_SB_MSGID_WRAP_VALUE(SP_BCN_TLM_MID),
-        CFE_SB_MSGID_RESERVED,
+        CFE_SB_MSGID_WRAP_VALUE(SP_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
         BCN_OFFSET_7,
-        // sizeof(SP_BcnTlm_Payload_t),
-        0,
+        sizeof(SP_BcnTlm_Payload_t),
     },
     /*   11 : ADCS   */
     {

@@ -92,6 +92,13 @@
 /* End of BATT Header */
 
 /*********************
+ * SP Header
+ ********************/
+#include "sp_msgids.h"
+#include "sp_msg.h"
+/* End of SP Header */
+
+/*********************
  * ADCS Header 
  ********************/
 #include "adcs_msgids.h"
@@ -131,6 +138,14 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
         // {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), 10*30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), 10*30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), 10*30, 0},
+        /* EPS periodic HK request (every 10 sec) */
+        {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_HK_MID), SCH_LAB_TICK_RATE * 10, 0},
+        /* BATT periodic HK request (every 10 sec) */
+        {CFE_SB_MSGID_WRAP_VALUE(BATT_SEND_HK_MID), SCH_LAB_TICK_RATE * 10, 0},
+        /* SP periodic HK request (every 30 sec) */
+        {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_HK_MID), SCH_LAB_TICK_RATE * 30, 0},
+        /* SP beacon collection (every 30 sec) */
+        {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_SEND_HK_MID), 10*30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(PAYUZUT_SEND_BCN_MID), 10*30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), 10*30, 0, sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},

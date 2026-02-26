@@ -10,19 +10,18 @@ set(APP_SRC_FILES
 # Create the app module
 add_cfe_app(sp ${APP_SRC_FILES})
 
-target_include_directories(sp PUBLIC fsw/inc)
+target_include_directories(sp PUBLIC
+  fsw/inc
+  ../../submodules/libgscsp/lib/libgssb_client/include
+  ../../submodules/libgscsp/lib/libutil/include
+)
 
-# Include the public API from sp_lib to demonstrate how
-# to call library-provided functions
-#add_cfe_app_dependency(sp sp_lib)
+target_compile_options(sp PRIVATE -Wno-pedantic -Wno-error=pedantic)
 
-# Add table
-# add_cfe_tables(sp fsw/tables/sp_tbl.c)
-
-# If UT is enabled, then add the tests from the subdirectory
-# Note that this is an app, and therefore does not provide
-# stub functions, as other entities would not typically make
-# direct function calls into this application.
-#if (ENABLE_UNIT_TESTS)
-#  add_subdirectory(unit-test)
-#endif (ENABLE_UNIT_TESTS)
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+    # OBC build
+    target_link_libraries(sp ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/obc/lib/libcsp-client.a)
+else()
+    # CPU1 build
+    target_link_libraries(sp ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/cpu1/lib/libcsp-client.a)
+endif()

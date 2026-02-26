@@ -26,8 +26,12 @@
 #../../../../apps/payuzuc/config/default_payuzuc_msgdefs.h
 #../../../../apps/payuzuc/config/default_payuzuc_msgstruct.h
 #../../../../apps/payuzuc/config/default_payuzuc_fcncodes.h
-#../../../../apps/sp/config/default_sp_fcncodes.h
-#../../../../apps/sp/config/default_sp_msgdefs.h
+../../../../apps/sp/config/default_sp_fcncodes.h
+../../../../apps/sp/config/default_sp_msgdefs.h
+../../../../apps/sp/config/default_sp_msgstruct.h
+#../../../../apps/batt/config/default_batt_fcncodes.h
+#../../../../apps/batt/config/default_batt_msgdefs.h
+#../../../../apps/batt/config/default_batt_msgstruct.h
 #../../../../apps/payuzut/config/default_payuzut_fcncodes.h
 #../../../../apps/payuzut/config/default_payuzut_msgdefs.h
 #../../../../apps/utrx/config/default_utrx_fcncodes.h
