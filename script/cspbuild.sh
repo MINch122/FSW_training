@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# pyenv 설정
+export PATH="$HOME/.pyenv/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+export PYENV_VERSION=3.10.13
+
 cpu1_install_path=$(pwd)/submodules/libgscsp/build/cpu1
 obc_install_path=$(pwd)/submodules/libgscsp/build/obc
 pi_install_path=$(pwd)/submodules/libgscsp/build/pi
