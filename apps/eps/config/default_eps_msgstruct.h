@@ -25,17 +25,18 @@
  *   Constants and enumerated types related to these message structures
  *   are defined in cosmos_eps_msgdefs.h.
  */
-#ifndef EPS_MSGSTRUCT_H
-#define EPS_MSGSTRUCT_H
+#ifndef DEFAULT_EPS_MSGSTRUCT_H
+#define DEFAULT_EPS_MSGSTRUCT_H
 
 /************************************************************************
  * Includes
  ************************************************************************/
 
-#include "eps_mission_cfg.h"
-#include "eps_msgdefs.h"
+#include "default_eps_mission_cfg.h"
+#include "default_eps_msgdefs.h"
 #include "cfe_msg_hdr.h"
 #include "rpt_interface_cfg.h"
+#include <gs/p80/power_if.h>
 
 /*************************************************************************/
 
@@ -51,82 +52,56 @@ typedef EPS_NoArgCmd_t  EPS_NoopCmd_t;
 typedef EPS_NoArgCmd_t  EPS_ResetCountersCmd_t;
 typedef EPS_NoArgCmd_t  EPS_ReportAppDataCmd_t;
 
-typedef EPS_NoArgCmd_t  EPS_P31U_PingCmd_t;
-typedef EPS_NoArgCmd_t  EPS_P31U_ResetCountersCmd_t;
-typedef EPS_NoArgCmd_t  EPS_P31U_ResetWdtCmd_t;
-typedef EPS_NoArgCmd_t  EPS_P31U_HardResetCmd_t;
 
-typedef EPS_NoArgCmd_t  EPS_P31U_GetHkAllCmd_t;
-typedef EPS_NoArgCmd_t  EPS_P31U_GetHkOutCmd_t;
-typedef EPS_NoArgCmd_t  EPS_P31U_GetHkViCmd_t;
-typedef EPS_NoArgCmd_t  EPS_P31U_GetHkWdtCmd_t;
-typedef EPS_NoArgCmd_t  EPS_P31U_GetHkBasicCmd_t;
-typedef EPS_NoArgCmd_t  EPS_P31U_GetHkOldCmd_t;
 
-typedef struct {
+
+
+typedef struct __attribute__((packed)){
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P31U_GetHk_Payload_t Payload;
-} EPS_P31U_GetHkCmd_t;
+    EPS_Power_If_Get_Cmd_Payload_t Payload;
+}EPS_Power_If_Get_Cmd_t;
 
-typedef struct {
+typedef struct __attribute__((packed)){
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P31U_SetOutputSingle_Payload_t Payload;
-} EPS_P31U_SetOutputSingleCmd_t;
+    EPS_Power_If_Set_Cmd_Payload_t Payload;
+}EPS_Power_If_Set_Cmd_t;
 
-typedef struct {
+typedef struct __attribute__((packed)){
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P31U_SetOutputs_Payload_t Payload;
-} EPS_P31U_SetOutputsCmd_t;
+    EPS_Power_If_List_Cmd_Payload_t Payload;
+}EPS_Power_If_List_Cmd_t;
 
-typedef struct {
+typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P31U_SetPvVolt_Payload_t Payload;
-} EPS_P31U_SetPvVoltCmd_t;
+    EPS_Get_Hk_Cmd_Payload_t Payload;   
+}EPS_Get_Hk_Cmd_t;
 
-typedef struct {
+
+typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P31U_SetPvAuto_Payload_t Payload;
-} EPS_P31U_SetPvAutoCmd_t;
+    EPS_Gnd_Watchdog_Clear_Cmd_Payload_t Payload;
+}EPS_Gnd_Watchdog_Clear_Cmd_t;
 
-typedef struct {
+typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P31U_SetHeater_Payload_t Payload;
-} EPS_P31U_SetHeaterCmd_t;
+    EPS_Param_Set_Cmd_Payload_t Payload;
+}EPS_Param_Set_Cmd_t;
 
-typedef struct {
+typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P31U_Config_Payload_t Payload;
-} EPS_P31U_ConfigCmd_t;
+    EPS_Param_Get_Cmd_Payload_t Payload;
+}EPS_Param_Get_Cmd_t;
 
-typedef EPS_NoArgCmd_t EPS_P31U_GetConfigCmd_t;
-
-typedef struct {
+typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P31U_SetConfig_Payload_t Payload;
-} EPS_P31U_SetConfigCmd_t;
+    EPS_Get_Full_Table_Cmd_Payload_t Payload;
+}EPS_Get_Full_Table_Cmd_t;
 
-typedef struct {
+
+typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P31U_Config2_Payload_t Payload;
-} EPS_P31U_Config2Cmd_t;
-
-typedef EPS_NoArgCmd_t EPS_P31U_GetConfig2Cmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P31U_SetConfig2_Payload_t Payload;
-} EPS_P31U_SetConfig2Cmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P31U_SetConfig3_Payload_t Payload;
-} EPS_P31U_SetConfig3Cmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P31U_Transaction_Payload_t Payload;
-} EPS_P31U_TransactionCmd_t;
-
+    EPS_Table_Save_Cmd_Payload_t Payload;
+}EPS_Table_Save_Cmd_t;
 
 /*************************************************************************/
 /*
@@ -149,6 +124,11 @@ typedef struct {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader;
     EPS_BcnTlm_Payload_t Payload;
 } EPS_BcnTlm_t;
+
+typedef struct {
+    CFE_MSG_TelemetryHeader_t  TelemetryHeader;
+    EPS_BcnTlm_P60_Payload_t Payload;
+} EPS_BcnTlm_P60_t;
 
 #endif
       

@@ -17,30 +17,16 @@
  ************************************************************************/
 
 /**
- * @file
- *   EPS Application Private Config Definitions
- *
- * This provides default values for configurable items that are internal
- * to this module and do NOT affect the interface(s) of this module.  Changes
- * to items in this file only affect the local module and will be transparent
- * to external entities that are using the public interface(s).
- *
- * @note This file may be overridden/superceded by mission-provided defintions
- * either by overriding this header or by generating definitions from a command/data
- * dictionary tool.
+ * \file
+ *   This file contains the source code for the Sample App utility functions
  */
-#ifndef EPS_INTERNAL_CFG_H
-#define EPS_INTERNAL_CFG_H
 
-/***********************************************************************/
-#define EPS_PIPE_DEPTH 32 /* Depth of the Command Pipe for Application */
+/*
+** Include Files:
+*/
+#include "eps.h"
+#include "eps_eventids.h"
+#include "eps_tbl.h"
+#include "eps_utils.h"
 
-#define EPS_PIPE_NAME  "EPS_PIPE"
 
-#define EPS_NUMBER_OF_TABLES 1 /* Number of Example Table(s) */
-
-#define EPS_TABLE_OUT_OF_RANGE_ERR_CODE -1
-
-#define EPS_TBL_ELEMENT_1_MAX 10
-
-#endif

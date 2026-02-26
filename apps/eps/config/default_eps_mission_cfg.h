@@ -28,9 +28,11 @@
  * either by overriding this header or by generating definitions from a command/data
  * dictionary tool.
  */
-#ifndef EPS_MISSION_CFG_H
-#define EPS_MISSION_CFG_H
+#ifndef DEFAULT_EPS_MISSION_CFG_H
+#define DEFAULT_EPS_MISSION_CFG_H
 
 #include "eps_interface_cfg.h"
+
+
 
 #endif

@@ -1,7 +1,7 @@
 # EPS Application
 
 This repository contains a resusable EPS (Electrical Power System) Application,
-which includes driver support for the GomSpace P31u and P60 power systems.
+which includes driver support for the GomSpace P60 power systems.
 Migrated to the latest unreleased version of the Core Flight Executive (cFE)
 framework (equuleus).
 

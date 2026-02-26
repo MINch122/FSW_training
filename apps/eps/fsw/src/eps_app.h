@@ -65,6 +65,7 @@ typedef struct
     */
     EPS_HkTlm_t HkTlm;
     EPS_BcnTlm_t BcnTlm;
+    EPS_BcnTlm_P60_t BcnTlm_P60;
 
     /*
     ** Run Status variable used in the main processing loop
@@ -77,8 +78,6 @@ typedef struct
     ** Operational data (not reported in housekeeping)...
     */
     CFE_SB_PipeId_t CommandPipe;
-
-    CFE_SRL_IO_Handle_t *Handle;
 
 } EPS_AppData_t;
 

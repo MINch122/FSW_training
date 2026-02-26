@@ -27,12 +27,13 @@
 #include "eps_app.h"
 #include "eps_dispatch.h"
 #include "eps_eventids.h"
-#include "eps_msgids.h"
+#include "eps_msgids.h" 
 #include "eps_msg.h"
 
 #include "eps_cmds.h"
-#include "eps_cmds_p31u.h"
-
+#if EPS_MISSION_CFG_DEVICE_p80_ENABLED
+#include "eps_cmds_p80.h"
+#endif
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
@@ -42,58 +43,35 @@
 bool EPS_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
 {
     bool              result       = true;
-    size_t            ActualLength = 0;
     CFE_SB_MsgId_t    MsgId        = CFE_SB_INVALID_MSG_ID;
     CFE_MSG_FcnCode_t FcnCode      = 0;
 
-    CFE_MSG_GetSize(MsgPtr, &ActualLength);
+    struct {
+        size_t Actual;
+        size_t Expected;
+    } Lengths;
+
+    CFE_MSG_GetSize(MsgPtr, &Lengths.Actual);
 
     /*
     ** Verify the command packet length.
     */
-    if (ExpectedLength != ActualLength)
-    {
+    if (ExpectedLength != Lengths.Actual) {
         CFE_MSG_GetMsgId(MsgPtr, &MsgId);
         CFE_MSG_GetFcnCode(MsgPtr, &FcnCode);
 
         CFE_EVS_SendEvent(EPS_CMD_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
                           "Invalid Msg length: ID = 0x%X,  CC = %u, Len = %u, Expected = %u",
-                          (unsigned int)CFE_SB_MsgIdToValue(MsgId), (unsigned int)FcnCode, (unsigned int)ActualLength,
+                          (unsigned int)CFE_SB_MsgIdToValue(MsgId), (unsigned int)FcnCode, (unsigned int)Lengths.Actual,
                           (unsigned int)ExpectedLength);
 
         result = false;
 
         EPS_AppData.Counters.ErrCounter++;
+        Lengths.Expected = ExpectedLength;
 
-
-        /* RPT */
-        EPS_ReportTlm_t *BufPtr = (EPS_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(EPS_ReportTlm_t));
-        if (BufPtr == NULL) goto cleanup;
-
-        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(EPS_REPORT_MID),
-        sizeof(EPS_ReportTlm_t)) != CFE_SUCCESS) {
-            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-            goto cleanup;
-        }
-        BufPtr->Payload.MsgID = (uint16_t)CFE_SB_MsgIdToValue(MsgId);
-        BufPtr->Payload.CommandCode = (uint8_t)FcnCode;
-        BufPtr->Payload.ReturnType = RPT_RETTYPE_APP;
-        BufPtr->Payload.ReturnCode = CFE_STATUS_WRONG_MSG_LENGTH; // Error code of `Length error`
-        BufPtr->Payload.ReturnDataSize = 2 * sizeof(uint32_t);
-        
-        uint32_t Temp32 = (uint32_t)ActualLength;
-        memcpy(BufPtr->Payload.ReturnValue, &Temp32, sizeof(uint32_t));
-        Temp32 = (uint32_t)ExpectedLength;
-        memcpy(BufPtr->Payload.ReturnValue + sizeof(uint32_t), &Temp32, sizeof(uint32_t));
-
-        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
-        if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
-            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-            goto cleanup;
-        }
-        /* End of RPT */
+        EPS_SendReport(MsgPtr, &Lengths, sizeof(Lengths), CFE_STATUS_WRONG_MSG_LENGTH, RPT_RETTYPE_APP);
     }
-cleanup:
     return result;
 }
 
@@ -109,234 +87,126 @@ void EPS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
     */
     switch (CommandCode)
     {
+        /*
+        ** Basic Commands
+        */
         case EPS_NOOP_CC:
             if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_NoopCmd_t)))
             {
-                EPS_NoopCmd((const EPS_NoopCmd_t*)SBBufPtr);
+                EPS_NoopCmd((const EPS_NoopCmd_t *)SBBufPtr);
             }
             break;
 
         case EPS_RESET_COUNTERS_CC:
             if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_ResetCountersCmd_t)))
             {
-                EPS_ResetCountersCmd((const EPS_ResetCountersCmd_t*)SBBufPtr);
+                EPS_ResetCountersCmd((const EPS_ResetCountersCmd_t *)SBBufPtr);
             }
             break;
 
         case EPS_REPORT_APPDATA_CC:
             if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_ReportAppDataCmd_t)))
             {
-                // EPS_ReportAppDataCmd((const EPS_ReportAppDataCmd_t*)SBBufPtr);
+                // EPS_ReportAppDataCmd((const EPS_ReportAppDataCmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P31U_SET_OUT_SINGLE_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_SetOutputSingleCmd_t)))
+        /*
+        ** Power Interface Commands
+        */
+        case EPS_POWER_IF_GET_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Power_If_Get_Cmd_t)))
             {
-                EPS_P31U_SetOutputSingleCmd((const EPS_P31U_SetOutputSingleCmd_t *)SBBufPtr);
+                EPS_Power_If_Get_Cmd((const EPS_Power_If_Get_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P31U_SET_OUTPUTS_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_SetOutputsCmd_t)))
+        case EPS_POWER_IF_SET_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Power_If_Set_Cmd_t)))
             {
-                EPS_P31U_SetOutputsCmd((const EPS_P31U_SetOutputsCmd_t *)SBBufPtr);
+                EPS_Power_If_Set_Cmd((const EPS_Power_If_Set_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P31U_RESET_WDT_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_ResetWdtCmd_t)))
+        case EPS_POWER_IF_LIST_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Power_If_List_Cmd_t)))
             {
-                EPS_P31U_ResetWdtCmd((const EPS_P31U_ResetWdtCmd_t *)SBBufPtr);
+                EPS_Power_If_List_Cmd((const EPS_Power_If_List_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P31U_RESET_COUNTERS_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_ResetCountersCmd_t)))
+        /*
+        ** Housekeeping Command
+        */
+        case EPS_GET_HK_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Get_Hk_Cmd_t)))
             {
-                EPS_P31U_ResetCountersCmd((const EPS_P31U_ResetCountersCmd_t *)SBBufPtr);
+                EPS_Get_Hk_Cmd((const EPS_Get_Hk_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P31U_HARD_RESET_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_HardResetCmd_t)))
+        /*
+        ** Watchdog Command
+        */
+        case EPS_GND_WDT_CLEAR_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Gnd_Watchdog_Clear_Cmd_t)))
             {
-                EPS_P31U_HardResetCmd((const EPS_P31U_HardResetCmd_t *)SBBufPtr);
+                EPS_Gnd_Watchdog_Clear_Cmd((const EPS_Gnd_Watchdog_Clear_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P31U_GETHK_ALL_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetHkAllCmd_t)))
+        /*
+        ** Remote Parameter Commands
+        */
+        case EPS_PARAM_GET_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Param_Get_Cmd_t)))
             {
-                EPS_P31U_GetHkAllCmd((const EPS_P31U_GetHkAllCmd_t *)SBBufPtr);
+                EPS_Param_Get_Cmd((const EPS_Param_Get_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P31U_GETHK_OUT_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetHkOutCmd_t)))
+        case EPS_PARAM_SET_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Param_Set_Cmd_t)))
             {
-                EPS_P31U_GetHkOutCmd((const EPS_P31U_GetHkOutCmd_t *)SBBufPtr);
+                EPS_Param_Set_Cmd((const EPS_Param_Set_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P31U_GETHK_VI_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetHkViCmd_t)))
+        case EPS_GET_FULL_TABLE_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Get_Full_Table_Cmd_t)))
             {
-                EPS_P31U_GetHkViCmd((const EPS_P31U_GetHkViCmd_t *)SBBufPtr);
+                EPS_Get_Full_Table_Cmd((const EPS_Get_Full_Table_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P31U_GETHK_WDT_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetHkWdtCmd_t)))
+        /*
+        ** Table Save/Load Commands
+        */
+
+        case EPS_TABLE_SAVE_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Table_Save_Cmd_t)))
             {
-                EPS_P31U_GetHkWdtCmd((const EPS_P31U_GetHkWdtCmd_t *)SBBufPtr);
+                EPS_Table_Save_Cmd((const EPS_Table_Save_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P31U_GETHK_BASIC_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetHkBasicCmd_t)))
+        case EPS_TABLE_LOAD_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Table_Load_Cmd_t)))
             {
-                EPS_P31U_GetHkBasicCmd((const EPS_P31U_GetHkBasicCmd_t *)SBBufPtr);
+                EPS_Table_Load_Cmd((const EPS_Table_Load_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P31U_GETHK_OLD_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetHkOldCmd_t)))
-            {
-                EPS_P31U_GetHkOldCmd((const EPS_P31U_GetHkOldCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_GETHK_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetHkCmd_t)))
-            {
-                EPS_P31U_GetHkCmd((const EPS_P31U_GetHkCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_SET_PV_VOLT_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_SetPvVoltCmd_t)))
-            {
-                EPS_P31U_SetPvVoltCmd((const EPS_P31U_SetPvVoltCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_SET_PV_AUTO_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_SetPvAutoCmd_t)))
-            {
-                EPS_P31U_SetPvAutoCmd((const EPS_P31U_SetPvAutoCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_SET_HEATER_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_SetHeaterCmd_t)))
-            {
-                EPS_P31U_SetHeaterCmd((const EPS_P31U_SetHeaterCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_GET_CONFIG_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetConfigCmd_t)))
-            {
-                EPS_P31U_GetConfigCmd((const EPS_P31U_GetConfigCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_SET_CONFIG_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_SetConfigCmd_t)))
-            {
-                EPS_P31U_SetConfigCmd((const EPS_P31U_SetConfigCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_CONFIG_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_ConfigCmd_t)))
-            {
-                EPS_P31U_ConfigCmd((const EPS_P31U_ConfigCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_GET_CONFIG2_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetConfig2Cmd_t)))
-            {
-                EPS_P31U_GetConfig2Cmd((const EPS_P31U_GetConfig2Cmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_SET_CONFIG2_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_SetConfig2Cmd_t)))
-            {
-                EPS_P31U_SetConfig2Cmd((const EPS_P31U_SetConfig2Cmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_CONFIG2_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_Config2Cmd_t)))
-            {
-                EPS_P31U_Config2Cmd((const EPS_P31U_Config2Cmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_SET_CONFIG3_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_SetConfig3Cmd_t)))
-            {
-                EPS_P31U_SetConfig3Cmd((const EPS_P31U_SetConfig3Cmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_TRANSACTION_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_TransactionCmd_t)))
-            {
-                EPS_P31U_TransactionCmd((const EPS_P31U_TransactionCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_GETHK_OUT_INTERNAL_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetHkOutCmd_t)))
-            {
-                EPS_P31U_GetHkOutInternalCmd((const EPS_P31U_GetHkOutCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case EPS_P31U_GETHK_VI_INTERNAL_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_GetHkViCmd_t)))
-            {
-                EPS_P31U_GetHkViInternalCmd((const EPS_P31U_GetHkViCmd_t *)SBBufPtr);
-            }
-            break;
-        
-        case EPS_P31U_SET_OUT_SINGLE_INTERNAL_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P31U_SetOutputSingleCmd_t)))
-            {
-                EPS_P31U_SetOutputSingleInternalCmd((const EPS_P31U_SetOutputSingleCmd_t *)SBBufPtr);
-            }
-            break;
-
-        /* default case already found during FC vs length test */
+        /*
+        ** Device-specific commands (handled separately)
+        */
         default:
-            CFE_EVS_SendEvent(EPS_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
-                              CommandCode);
-
-            /* RPT */
-            EPS_ReportTlm_t *BufPtr = (EPS_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(EPS_ReportTlm_t));
-            if (BufPtr == NULL) break;
-            if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(EPS_REPORT_MID), sizeof(EPS_ReportTlm_t) != CFE_SUCCESS)) {
-                CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-                break;
-            }
-            BufPtr->Payload.MsgID = EPS_CMD_MID;
-            BufPtr->Payload.CommandCode = (uint8_t)CommandCode;
-            BufPtr->Payload.ReturnType = RPT_RETTYPE_APP;
-            BufPtr->Payload.ReturnCode = CFE_STATUS_BAD_COMMAND_CODE;
-            BufPtr->Payload.ReturnDataSize = 0;
-            CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
-            if(CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
-                CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-                break;
-            }
+            CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "EPS: invalid command packet");
             break;
     }
 }
+
 
 void EPS_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 {

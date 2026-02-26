@@ -21,88 +21,73 @@
  *   Specification for the EPS command and telemetry
  *   message constant definitions.
  */
-#ifndef EPS_MSGDEFS_H
-#define EPS_MSGDEFS_H
+#ifndef DEFAULT_EPS_MSGDEFS_H
+#define DEFAULT_EPS_MSGDEFS_H
 
 #include "common_types.h"
-#include "eps_fcncodes.h"
+#include "default_eps_fcncodes.h"
+#include <gs/p80/power_if.h>
+
+#define EPS_PACK    __attribute__((packed))
+
+
+
+/**
+ * P80 Command and Telemetry Message Definitions
+*/
 
 typedef struct {
-    uint8_t  channel;
-    uint8_t  value;
-    uint16_t delay;
-} EPS_P31U_SetOutputSingle_Payload_t;
+    uint8_t csp_node; //PMU or PDU
+    uint8_t mode;
+    uint8_t on_cnt;
+    uint8_t off_cnt;
+    char    name[POWER_IF_NAME_LEN];
+}EPS_Power_If_Set_Cmd_Payload_t;
 
 typedef struct {
-    uint8_t  mask;
-} EPS_P31U_SetOutputs_Payload_t;
+    uint8_t csp_node; //PMU or PDU
+    char    name[POWER_IF_NAME_LEN];
+}EPS_Power_If_Get_Cmd_Payload_t;
 
 typedef struct {
-    uint8_t  id;
-    uint16_t size;
-} EPS_P31U_GetHk_Payload_t;
- 
-typedef struct {
-    int16_t  voltage[3];
-} EPS_P31U_SetPvVolt_Payload_t;
+    uint8_t csp_node; //PMU or PDU
+}EPS_Power_If_List_Cmd_Payload_t;
 
-typedef struct {
-    uint8_t  mode;
-} EPS_P31U_SetPvAuto_Payload_t;
+typedef struct{
+    uint8_t csp_node; //PMU or PDU or ACU1 or ACU2
+}EPS_Gnd_Watchdog_Clear_Cmd_Payload_t;
 
-typedef struct {
-    uint8_t  cmd;
-    uint8_t  heater;
-    uint8_t  mode;
-} EPS_P31U_SetHeater_Payload_t;
+typedef struct{
+    uint8_t csp_node; //PMU or PDU or ACU1 or ACU2
+}EPS_Get_Hk_Cmd_Payload_t;
 
-typedef struct {
-    uint8_t cmd;
-} EPS_P31U_Config_Payload_t;
+typedef struct{
+    uint8_t csp_node;
+    uint8_t table_id;
+    uint16_t    addr;
+    uint8_t     type;
+    uint8_t     data[64];
+    uint16_t    size;
+}EPS_Param_Set_Cmd_Payload_t;
 
-typedef struct {
-    uint8_t  ppt_mode;
-    uint8_t  battheater_mode;
-    int8_t   battheater_low;
-    int8_t   battheater_high;
-    uint8_t  output_normal_value[8];
-    uint8_t  output_safe_value[8];
-    uint16_t output_initial_on_delay[8];
-    uint16_t output_initial_off_delay[8];
-    uint16_t vboost[3];
-} EPS_P31U_SetConfig_Payload_t;
+typedef struct{
+    uint8_t csp_node;
+    uint8_t table_id;
+    uint16_t    addr;
+    uint8_t     type;
+    uint8_t     data[64];
+    uint16_t    size;
+}EPS_Param_Get_Cmd_Payload_t;
 
-typedef struct {
-    uint8_t cmd;
-} EPS_P31U_Config2_Payload_t;
+typedef struct{
+    uint8_t csp_node;
+    uint8_t table_id;
+}EPS_Get_Full_Table_Cmd_Payload_t;
 
-typedef struct {
-    uint16_t batt_maxvoltage;
-    uint16_t batt_safevoltage;
-    uint16_t batt_criticalvoltage;
-    uint16_t batt_normalvoltage;
-    uint32_t reserved1[2];
-    uint8_t  reserved2[4];
-} EPS_P31U_SetConfig2_Payload_t;
-
-typedef struct {
-    uint8_t  version;
-    uint8_t  cmd;
-    uint8_t  length;
-    uint8_t  flags;
-    uint16_t cur_lim[8];
-    uint8_t  cur_ema_gain;
-    uint8_t  cspwdt_channel[2];
-    uint8_t  cspwdt_address[2];
-} EPS_P31U_SetConfig3_Payload_t;
-
-typedef struct {
-    uint8_t  port;
-    uint8_t  reserved;
-    uint8_t  txSize;
-    uint8_t  rxSize;
-    uint8_t  tx[128];
-} EPS_P31U_Transaction_Payload_t;
+typedef struct{
+    uint8_t csp_node;
+    uint8_t table_id;
+}EPS_Table_Save_Cmd_Payload_t;
 
 /*************************************************************************/
 /*
@@ -142,18 +127,42 @@ typedef struct __attribute__((packed)) {
     uint32 wdt_gnd_time_left;
     uint8  bootcause;
     uint8  battmode;
-
-    /**
-     * Indicate battery heater control mode (`Auto = 1` or `Manual = 0`)
-     */
-    uint8  battheater_mode;
-
-    /**
-     * Battery Temperature
-     * [0] : BP4 temperature
-     * [1] : Onboard temperature
-     */
-    int16  bp4_temp[2];
 } EPS_BcnTlm_Payload_t;
+
+typedef struct __attribute__((packed)) {
+    int16  c_out[9];
+    uint16 v_out[9];
+    uint16 out_en;
+    uint32 bootcause;
+    uint32 bootcnt;
+    uint8  batt_mode;
+    uint8  heater_on;
+    uint16 vbat_v;
+    uint16 vcc_c;
+    uint16 batt_v;
+    int16  batt_temp[2];
+    uint32 wdt_gnd_left;
+    int16  batt_chrg;
+    int16  batt_dischrg;
+} EPS_BcnTlm_P80_Dock_Payload_t;
+
+typedef struct __attribute__((packed)) {
+    int16  c_out[9];
+    uint16 v_out[9];
+    int16  vcc;
+    uint8  conv_en;
+    uint16 out_en;
+} EPS_BcnTlm_P80_PDU_Payload_t;
+
+typedef struct __attribute__((packed)) {
+    int16  c_in[6];
+    uint16 v_in[6];
+} EPS_BcnTlm_P80_ACU_Payload_t;
+
+typedef struct __attribute__((packed)) {
+    EPS_BcnTlm_P80_Dock_Payload_t  Dock;
+    EPS_BcnTlm_P80_PDU_Payload_t   PDU;
+    EPS_BcnTlm_P80_ACU_Payload_t   ACU;
+} EPS_BcnTlm_P80_Payload_t;
 
 #endif

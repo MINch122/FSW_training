@@ -25,8 +25,8 @@
  *   macro definitions.  Other definitions such as enums, typedefs, or other
  *   macros should be placed in the msgdefs.h or msg.h files.
  */
-#ifndef EPS_FCNCODES_H
-#define EPS_FCNCODES_H
+#ifndef DEFAULT_EPS_FCNCODES_H
+#define DEFAULT_EPS_FCNCODES_H
 
 /************************************************************************
  * Macro Definitions
@@ -35,57 +35,39 @@
 /*
 ** EPS App command codes
 */
-#define EPS_NOOP_CC                 0
-#define EPS_RESET_COUNTERS_CC       1
-#define EPS_GET_COUNTERS_CC         2
-#define EPS_GET_APPDATA_CC          3
-#define EPS_REPORT_APPDATA_CC       4
-
-/*
-** P31u device & channel control
-*/
-#define EPS_P31U_SET_OUT_SINGLE_CC  10
-#define EPS_P31U_SET_OUTPUTS_CC     11
-#define EPS_P31U_RESET_WDT_CC       20
-#define EPS_P31U_RESET_COUNTERS_CC  21
-#define EPS_P31U_HARD_RESET_CC      22
-
-/*
-** P31u housekeeping requests
-*/
-#define EPS_P31U_GETHK_ALL_CC       30
-#define EPS_P31U_GETHK_OUT_CC       31
-#define EPS_P31U_GETHK_VI_CC        32
-#define EPS_P31U_GETHK_WDT_CC       33
-#define EPS_P31U_GETHK_BASIC_CC     34
-#define EPS_P31U_GETHK_OLD_CC       35
-#define EPS_P31U_GETHK_CC           36
-
-/*
-** P31u config commands
-*/
-#define EPS_P31U_SET_PV_VOLT_CC     40
-#define EPS_P31U_SET_PV_AUTO_CC     41
-#define EPS_P31U_SET_HEATER_CC      42
-
-#define EPS_P31U_GET_CONFIG_CC      50
-#define EPS_P31U_SET_CONFIG_CC      51
-#define EPS_P31U_CONFIG_CC          52
-#define EPS_P31U_GET_CONFIG2_CC     53
-#define EPS_P31U_SET_CONFIG2_CC     54
-#define EPS_P31U_CONFIG2_CC         55
-#define EPS_P31U_SET_CONFIG3_CC     56
-
-/*
-** Generic transaction (plumbing)
-*/
-#define EPS_P31U_TRANSACTION_CC     99
-
 /**
- * S/C Internal command (Not invoked by GS)
+ * EPS App Command Codes
  */
-#define EPS_P31U_GETHK_VI_INTERNAL_CC   60
-#define EPS_P31U_GETHK_OUT_INTERNAL_CC  61
-#define EPS_P31U_SET_OUT_SINGLE_INTERNAL_CC 62
+typedef enum
+{
+    /* Basic Commands */
+    EPS_NOOP_CC              = 0,
+    EPS_RESET_COUNTERS_CC    = 1,
+    EPS_REPORT_APPDATA_CC    = 2,
+
+    /* Power Interface Commands */
+    EPS_POWER_IF_GET_CC      = 10,
+    EPS_POWER_IF_SET_CC      = 11,
+    EPS_POWER_IF_LIST_CC     = 12,
+
+    /* Housekeeping Commands */
+    EPS_GET_HK_CC            = 20,
+
+    /* Watchdog Commands */
+    EPS_GND_WDT_CLEAR_CC     = 30,
+
+    /* Remote Parameter Commands */
+    EPS_PARAM_GET_CC         = 40,
+    EPS_PARAM_SET_CC         = 41,
+    EPS_GET_FULL_TABLE_CC    = 42,
+
+    /* Table Save/Load Commands */
+    EPS_PARAM_SAVE_CC        = 50,
+    EPS_TABLE_SAVE_CC        = 51,
+    EPS_TABLE_LOAD_CC        = 52,
+
+} EPS_CommandCode_t;
+
+
 
 #endif

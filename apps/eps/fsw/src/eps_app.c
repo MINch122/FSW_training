@@ -28,6 +28,7 @@
 #include "eps_cmds.h"
 #include "eps_eventids.h"
 #include "eps_dispatch.h"
+#include "eps_version.h"
 
 /*
 ** global data
@@ -107,6 +108,7 @@ void EPS_Main(void)
 CFE_Status_t EPS_Init(void)
 {
     CFE_Status_t status;
+    char         VersionString[EPS_CFG_MAX_VERSION_STR_LEN];
 
     /* Zero out the global data structure */
     memset(&EPS_AppData, 0, sizeof(EPS_AppData));
@@ -129,11 +131,9 @@ CFE_Status_t EPS_Init(void)
         CFE_MSG_Init(CFE_MSG_PTR(EPS_AppData.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(EPS_HK_TLM_MID),
                      sizeof(EPS_AppData.HkTlm));
 
-        /*
-         ** Initialize housekeeping packet (clear user data area).
-         */
         CFE_MSG_Init(CFE_MSG_PTR(EPS_AppData.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(EPS_BCN_TLM_MID),
                      sizeof(EPS_AppData.BcnTlm));
+
 
         /*
          ** Create Software Bus message pipe.
@@ -186,14 +186,12 @@ CFE_Status_t EPS_Init(void)
     }
 
     if (status == CFE_SUCCESS) {
+        CFE_Config_GetVersionString(VersionString, EPS_CFG_MAX_VERSION_STR_LEN, "EPS", EPS_VERSION,
+                                    EPS_BUILD_CODENAME, EPS_LAST_OFFICIAL);
 
-        CFE_EVS_SendEvent(EPS_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "EPS P31u Successfully Initialized");
+        CFE_EVS_SendEvent(EPS_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "EPS Initialized.%s",
+                          VersionString);
     }
-
-    /**
-     * I2C1 Handle Init
-     */
-    EPS_AppData.Handle = CFE_SRL_ApiGetHandle(CFE_SRL_I2C1_HANDLE_INDEXER);
 
     return status;
 }

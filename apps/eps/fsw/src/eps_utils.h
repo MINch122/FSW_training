@@ -18,29 +18,18 @@
 
 /**
  * @file
- *   EPS Application Private Config Definitions
- *
- * This provides default values for configurable items that are internal
- * to this module and do NOT affect the interface(s) of this module.  Changes
- * to items in this file only affect the local module and will be transparent
- * to external entities that are using the public interface(s).
- *
- * @note This file may be overridden/superceded by mission-provided defintions
- * either by overriding this header or by generating definitions from a command/data
- * dictionary tool.
+ *   This file contains the prototypes for the Sample App utility functions
  */
-#ifndef EPS_INTERNAL_CFG_H
-#define EPS_INTERNAL_CFG_H
 
-/***********************************************************************/
-#define EPS_PIPE_DEPTH 32 /* Depth of the Command Pipe for Application */
+#ifndef EPS_UTILS_H
+#define EPS_UTILS_H
 
-#define EPS_PIPE_NAME  "EPS_PIPE"
+/*
+** Required header files.
+*/
+#include "eps.h"
 
-#define EPS_NUMBER_OF_TABLES 1 /* Number of Example Table(s) */
+CFE_Status_t EPS_TblValidationFunc(void *TblData);
+void         EPS_GetCrc(const char *TableName);
 
-#define EPS_TABLE_OUT_OF_RANGE_ERR_CODE -1
-
-#define EPS_TBL_ELEMENT_1_MAX 10
-
-#endif
+#endif /* EPS_UTILS_H */

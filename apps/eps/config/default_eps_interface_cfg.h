@@ -41,16 +41,9 @@
  */
 #define EPS_STRING_VAL_LEN 10
 
-
-typedef struct {
-    CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    uint16_t Vbatt;     /*<\brief Battery Voltage */
-    uint16_t CurIn[2];  /*<\brief Charged Current */
-} EPS_Vi_Tlm_t;
-
-typedef struct {
-    CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    uint8_t Output[8];     /*<\brief Output channel status */
-} EPS_Output_Tlm_t;
+#define EPS_PMU_CSP_NODE    1
+#define EPS_ACU1_CSP_NODE   2
+#define EPS_ACU2_CSP_NODE   3
+#define EPS_PDU_CSP_NODE    4
 
 #endif
