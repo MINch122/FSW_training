@@ -31,6 +31,7 @@
 #include "eps_version.h"
 #include "eps_msg.h"
 #include "cfe_srl_csp.h"
+#include <gs/param/internal/types.h>
 #include <gs/p80/p80.h>
 #include <gs/p80/power_if.h>
 #include <gs/p80/param/board.h>
@@ -44,45 +45,44 @@
 #include <gs/p80_pdu/param/calibration.h>
 #include <gs/p80_pdu/param/configuration.h>
 #include <gs/p80_pdu/param/param.h>
-#include <gs/p80_pdu/param/pdu.h>
+#include <gs/p80_pdu/pdu.h>
 #include <gs/p80_pdu/param/telemetry.h>
-#include <gs/p80_pdu/param/types.h>
 #include <gs/p80_acu/param/calibration.h>
 #include <gs/p80_acu/param/configuration.h>
 #include <gs/p80_acu/param/param.h>
-#include <gs/p80_acu/param/acu.h>
+#include <gs/p80_acu/param/p80acu.h>
 #include <gs/p80_acu/param/telemetry.h>
 #include <gs/p80_acu/param/types.h>
-#include "default_eps_interface_cfg.h"
+#include "eps_interface_cfg.h"
 
-// void EPS_SendReport(const void* cmd,
-//                     const void* data,
-//                     uint16 dataSize,
-//                     int32 retCode,
-//                     uint8 retType)
-// {
-//     CFE_SB_MsgId_t cmdMid;
-//     CFE_MSG_FcnCode_t cmdCode;
+void EPS_SendReport(const void* cmd,
+                    const void* data,
+                    uint16 dataSize,
+                    int32 retCode,
+                    uint8 retType)
+{
+    CFE_SB_MsgId_t cmdMid;
+    CFE_MSG_FcnCode_t cmdCode;
 
-//     CFE_MSG_GetMsgId(cmd, &cmdMid);
-//     CFE_MSG_GetFcnCode(cmd, &cmdCode);
+    CFE_MSG_GetMsgId(cmd, &cmdMid);
+    CFE_MSG_GetFcnCode(cmd, &cmdCode);
 
-//     CFE_MSG_Init(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader),
-//                  CFE_SB_ValueToMsgId(EPS_HK_TLM_MID), // todo: define eps report mid.
-//                  sizeof(EPS_AppData.Report) + dataSize);
-//     EPS_AppData.Report.Payload.MsgID = CFE_SB_MsgIdToValue(cmdMid);
-//     EPS_AppData.Report.Payload.CommandCode = cmdCode;
-//     EPS_AppData.Report.Payload.ReturnType = retType;
-//     EPS_AppData.Report.Payload.ReturnCode = retCode;
-//     EPS_AppData.Report.Payload.ReturnDataSize = dataSize;
-//     if (data && dataSize)
-//         memcpy(EPS_AppData.Report.Payload.ReturnValue,
-//                data,
-//                dataSize > RPT_RET_VALUE_BUF_SIZE 
-//                         ? RPT_RET_VALUE_BUF_SIZE
-//                         : dataSize);
-//    CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader), true);
-// }
+    CFE_MSG_Init(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader),
+                 CFE_SB_ValueToMsgId(EPS_REPORT_MID),
+                 sizeof(EPS_AppData.Report));
+    EPS_AppData.Report.Payload.MsgID = (uint16_t)CFE_SB_MsgIdToValue(cmdMid);
+    EPS_AppData.Report.Payload.CommandCode = cmdCode;
+    EPS_AppData.Report.Payload.ReturnType = retType;
+    EPS_AppData.Report.Payload.ReturnCode = retCode;
+    EPS_AppData.Report.Payload.ReturnDataSize = dataSize;
+    if (data && dataSize)
+        memcpy(EPS_AppData.Report.Payload.ReturnValue,
+               data,
+               dataSize > RPT_RET_VALUE_BUF_SIZE
+                        ? RPT_RET_VALUE_BUF_SIZE
+                        : dataSize);
+   CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader), true);
+}
 
 CFE_Status_t EPS_SendHkCmd(const EPS_SendHkCmd_t *Msg)
 {
@@ -105,11 +105,12 @@ CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg)
      * should not increment the command counter.
      */
 
-    EPS_p80_GetDeviceBcnData(&EPS_AppData.BcnTlm_p80.Payload);
+    /* TODO: Implement EPS_p80_GetDeviceBcnData to collect P80 beacon telemetry */
+    /* EPS_p80_GetDeviceBcnData(&EPS_AppData.BcnTlm_P80.Payload); */
 
 
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(EPS_AppData.BcnTlm_p80.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.BcnTlm_p80.TelemetryHeader), true);
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(EPS_AppData.BcnTlm_P80.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.BcnTlm_P80.TelemetryHeader), true);
 
     return CFE_SUCCESS;
 }
@@ -139,7 +140,7 @@ CFE_Status_t EPS_ResetCountersCmd(const EPS_ResetCountersCmd_t *Msg)
     EPS_AppData.Counters.GetHkErrCounter = 0;
     EPS_AppData.Counters.GetBcnErrCounter = 0;
 
-    CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_INFORMATION, "EPS: RESET command");
+    CFE_EVS_SendEvent(EPS_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "EPS: RESET command");
 
     return CFE_SUCCESS;
 }
@@ -192,7 +193,7 @@ CFE_Status_t EPS_Power_If_Set_Cmd(const EPS_Power_If_Set_Cmd_t *Msg)
     status.name[POWER_IF_NAME_LEN -1] = 0;
 
     gs_error_t err = power_if_cmd(Msg->Payload.csp_node, GS_P80_PORT_CMDCONTROL, CSP_TIMEOUT(1), POWER_IF_SET, &status);
-    if (err != GS_SUCCESS)
+    if (err != GS_OK)
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -224,7 +225,7 @@ CFE_Status_t EPS_Power_If_List_Cmd(const EPS_Power_If_List_Cmd_t *Msg)
 
 
     gs_error_t err = power_if_cmd(Msg->Payload.csp_node, GS_P80_PORT_CMDCONTROL, CSP_TIMEOUT(1), POWER_IF_LIST, &list);
-    if (err != GS_SUCCESS)
+    if (err != GS_OK)
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -259,22 +260,17 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
     switch (Msg->Payload.csp_node)
     {
         case EPS_PMU_CSP_NODE:
+        {
             gs_error_t err = p80_pmu_get_hk(&tinst, EPS_PMU_CSP_NODE, CSP_TIMEOUT(1));
-  
 
-            if (err!=GS_OK)
+            if (err != GS_OK)
             {
                 EPS_AppData.Counters.ErrCounter++;
                 CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                                 "EPS: Get PMU HK command failed, err=%d", err);
+                if (tinst.memory) free(tinst.memory);
+                if (tinst.rows) free((void*)tinst.rows);
                 return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-
-                if (tinst.memory){
-                    free(tinst.memory);
-                }
-                if (tinst.rows){
-                    free((void*)tinst.rows);
-                }   
             }
 
             uint8_t *taddr = (uint8_t *)tinst.memory;
@@ -291,18 +287,17 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                         uptime, bootcount, bootcause, resetcause);
 
                 OS_printf("[OUTPUT] IDX | EN | Volt(mV) | Curr(mA) | LatchUp | EMA(mA)\n");
-                for(i=0;i<6;i++){
+                for (int i = 0; i < 6; i++) {
                     bool en = *(bool *)(taddr + GS_P80_PMU_TELEMETRY_OUT_EN(i));
                     uint16_t volt = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_OUT_V(i));
                     int16_t curr = *(int16_t *)(taddr + GS_P80_PMU_TELEMETRY_OUT_I(i));
                     uint16_t latchup = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_LATCHUP(i));
                     uint16_t ema = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_CUR_EMA(i));
-                    
-                    OS_printf("         %3d | %2s | %8u | %8d | %7u | %7u\n", 
-                            i, en ? "ON" : "OFF", v, c, latch, ema);
+
+                    OS_printf("         %3d | %2s | %8u | %8d | %7u | %7u\n",
+                            i, en ? "ON" : "OFF", volt, curr, latchup, ema);
                 }
 
-            
                 uint16_t batt_v    = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_BATT_V);
                 int16_t  batt_i    = *(int16_t  *)(taddr + GS_P80_PMU_TELEMETRY_BATT_I);
                 uint8_t  batt_mode = *(uint8_t  *)(taddr + GS_P80_PMU_TELEMETRY_BATT_MODE);
@@ -319,80 +314,69 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 OS_printf("[PMU]    VBAT: %u mV (%d mA) | VCC: %u mV (%d mA)\n", vbat_v, vbat_i, vcc_v, vcc_i);
                 OS_printf("[TEMP]   T0: %d | T1: %d (deci-degC) | 5V_Conv: %s\n", temp[0], temp[1], conv_5v ? "ON" : "OFF");
 
-                
-
                 OS_printf("[SUBMOD] Enable: ");
-                for(i=0; i<8; i++) OS_printf("%d ", *(bool *)(taddr + GS_P80_PMU_TELEMETRY_SM_EN(i)));
+                for (int i = 0; i < 8; i++) OS_printf("%d ", *(bool *)(taddr + GS_P80_PMU_TELEMETRY_SM_EN(i)));
                 OS_printf("\n");
 
                 OS_printf("[BP_PACK] Enable: ");
-                for(i=0; i<4; i++) OS_printf("%d ", *(bool *)(taddr + GS_P80_PMU_TELEMETRY_BATT_EN(0)));
+                for (int i = 0; i < 4; i++) OS_printf("%d ", *(bool *)(taddr + GS_P80_PMU_TELEMETRY_BATT_EN(i)));
                 OS_printf("\n");
 
                 OS_printf("[DEVICE] Type: ");
-                for(i=0; i<8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_PMU_TELEMETRY_DEVICE_TYPE(i)));
+                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_PMU_TELEMETRY_DEVICE_TYPE(i)));
                 OS_printf("\n");
 
                 OS_printf("[DEVICE] Status: ");
-                for(i=0; i<8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_PMU_TELEMETRY_DEVICE_STATUS(i)));
+                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_PMU_TELEMETRY_DEVICE_STATUS(i)));
                 OS_printf("\n");
 
-            
                 uint16_t gnd_cnt = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_GND_WDT_CNT);
                 uint16_t bus_cnt = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_BUS_WDT_CNT);
                 uint32_t gnd_lft = *(uint32_t *)(taddr + GS_P80_PMU_TELEMETRY_GND_WDT_LEFT);
                 uint32_t bus_lft = *(uint32_t *)(taddr + GS_P80_PMU_TELEMETRY_BUS_WDT_LEFT);
 
                 OS_printf("[WDT]    GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n", gnd_cnt, gnd_lft, bus_cnt, bus_lft);
-                
+
                 OS_printf("[SM_WDT] Cnt : ");
-                for(i=0; i<8; i++) OS_printf("%u ", *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_SM_WDT_CNT(i)));
+                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_SM_WDT_CNT(i)));
                 OS_printf("\n         Left: ");
-                for(i=0; i<8; i++) OS_printf("%u ", *(uint8_t  *)(taddr + GS_P80_PMU_TELEMETRY_SM_WDT_LEFT(i)));
+                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t  *)(taddr + GS_P80_PMU_TELEMETRY_SM_WDT_LEFT(i)));
                 OS_printf("\n");
 
                 OS_printf("[BP_WDT] Cnt : ");
-                for(i=0; i<4; i++) OS_printf("%u ", *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_BATT_WDT_CNT(i)));
+                for (int i = 0; i < 4; i++) OS_printf("%u ", *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_BATT_WDT_CNT(i)));
                 OS_printf("\n         Left: ");
-                for(i=0; i<4; i++) OS_printf("%u ", *(uint8_t  *)(taddr + GS_P80_PMU_TELEMETRY_BATT_WDT_LEFT(i)));
+                for (int i = 0; i < 4; i++) OS_printf("%u ", *(uint8_t  *)(taddr + GS_P80_PMU_TELEMETRY_BATT_WDT_LEFT(i)));
                 OS_printf("\n");
 
                 bool dep_inhbt = *(bool *)(taddr + GS_P80_PMU_TELEMETRY_DEP_INHBT);
                 OS_printf("[DEPLOY] Inhibit: %s\n", dep_inhbt ? "YES" : "NO");
                 OS_printf("         Status: ");
-                for(i=0; i<12; i++) OS_printf("%d ", *(int32_t *)(taddr + GS_P80_PMU_TELEMETRY_AR6_STATUS(i)));
+                for (int i = 0; i < 12; i++) OS_printf("%d ", *(int32_t *)(taddr + GS_P80_PMU_TELEMETRY_AR6_STATUS(i)));
                 OS_printf("\n         Burns : ");
-                for(i=0; i<12; i++) OS_printf("%d ", *(int8_t  *)(taddr + GS_P80_PMU_TELEMETRY_AR6_BURN_TRY(i)));
+                for (int i = 0; i < 12; i++) OS_printf("%d ", *(int8_t  *)(taddr + GS_P80_PMU_TELEMETRY_AR6_BURN_TRY(i)));
                 OS_printf("\n");
 
                 OS_printf("=======================================================\n");
             }
 
-            if (tinst.memory) {
-                free(tinst.memory);
-            }
-            if (tinst.rows) {
-                free((void*)tinst.rows); 
-            }
+            if (tinst.memory) free(tinst.memory);
+            if (tinst.rows) free((void*)tinst.rows);
             break;
+        }
 
         case EPS_PDU_CSP_NODE:
+        {
             gs_error_t err = p80_pdu_get_hk(&tinst, EPS_PDU_CSP_NODE, CSP_TIMEOUT(1));
-    
 
-            if (err!=GS_OK)
+            if (err != GS_OK)
             {
                 EPS_AppData.Counters.ErrCounter++;
                 CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                                 "EPS: Get PDU HK command failed, err=%d", err);
+                if (tinst.memory) free(tinst.memory);
+                if (tinst.rows) free((void*)tinst.rows);
                 return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-
-                if (tinst.memory){
-                    free(tinst.memory);
-                }
-                if (tinst.rows){
-                    free((void*)tinst.rows);
-                }   
             }
 
             uint8_t *taddr = (uint8_t *)tinst.memory;
@@ -400,7 +384,6 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
             if (taddr != NULL)
             {
                 OS_printf("\n================[p80 PDU HK]===================\n");
-
 
                 uint32_t uptime = *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_UPTIME);
                 uint32_t bootcause = *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_BOOTCAUSE);
@@ -416,11 +399,10 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                     int16_t curr = *(int16_t *)(taddr + GS_P80_PDU_TELEMETRY_OUT_I(i));
                     uint16_t latchup = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_LATCHUP(i));
                     uint16_t ema = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_CUR_EMA(i));
-                    
+
                     OS_printf("         %3d | %2s | %8u | %8d | %7u | %7u\n",
                             i, en ? "ON" : "OFF", volt, curr, latchup, ema);
                 }
-
 
                 uint16_t vcc_v = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_VCC_V);
                 uint16_t vcc_i = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_VCC_I);
@@ -431,14 +413,12 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 OS_printf("[PDU]    VCC: %u mV (%u mA) | VBAT: %u mV\n", vcc_v, vcc_i, vbat_v);
                 OS_printf("[TEMP]   %d (deci-degC) | BattMode: %u\n", temp, batt_mode);
 
-
                 OS_printf("[CONV]   IDX | EN | Volt(mV)\n");
                 for (int i = 0; i < 4; i++) {
                     bool conv_en = *(bool *)(taddr + GS_P80_PDU_TELEMETRY_CONV_EN(i));
                     uint16_t conv_v = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_CONV_V(i));
                     OS_printf("         %3d | %2s | %8u\n", i, conv_en ? "ON" : "OFF", conv_v);
                 }
-
 
                 OS_printf("[DEVICE] Type  : ");
                 for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_PDU_TELEMETRY_DEVICE_TYPE(i)));
@@ -448,7 +428,6 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_PDU_TELEMETRY_DEVICE_STATUS(i)));
                 OS_printf("\n");
 
-
                 uint32_t gnd_wdt_cnt = *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_GND_WDT_CNT);
                 uint32_t bus_wdt_cnt = *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_BUS_WDT_CNT);
                 uint32_t gnd_wdt_left = *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_GND_WDT_LEFT);
@@ -456,7 +435,6 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
 
                 OS_printf("[WDT]    GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n",
                         gnd_wdt_cnt, gnd_wdt_left, bus_wdt_cnt, bus_wdt_left);
-
 
                 OS_printf("[CSP_WDT] Cnt : ");
                 for (int i = 0; i < 12; i++) OS_printf("%u ", *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_CSP_WDT_CNT(i)));
@@ -469,15 +447,13 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 OS_printf("=======================================================\n");
             }
 
-            if (tinst.memory) {
-                free(tinst.memory);
-            }
-            if (tinst.rows) {
-                free((void*)tinst.rows); 
-            }
+            if (tinst.memory) free(tinst.memory);
+            if (tinst.rows) free((void*)tinst.rows);
             break;
+        }
 
         case EPS_ACU1_CSP_NODE:
+        {
             gs_error_t err = p80_acu_get_hk(&tinst, EPS_ACU1_CSP_NODE, CSP_TIMEOUT(1));
 
             if (err != GS_OK)
@@ -485,13 +461,8 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 EPS_AppData.Counters.ErrCounter++;
                 CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                                 "EPS: Get ACU1 HK command failed, err=%d", err);
-                
-                if (tinst.memory) {
-                    free(tinst.memory);
-                }
-                if (tinst.rows) {
-                    free((void*)tinst.rows);
-                }
+                if (tinst.memory) free(tinst.memory);
+                if (tinst.rows) free((void*)tinst.rows);
                 return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
 
@@ -501,7 +472,6 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
             {
                 OS_printf("\n================[p80 ACU1 HK]===================\n");
 
-                
                 uint32_t uptime = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_UPTIME);
                 uint32_t bootcause = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_BOOTCAUSE);
                 uint16_t resetcause = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_RESETCAUSE);
@@ -509,7 +479,6 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
                         uptime, bootcount, bootcause, resetcause);
 
-                
                 OS_printf("[INPUT]  IDX | EN | Volt(mV) | Curr(mA) | Power(mW) | PV_Set(mV) | DAC\n");
                 for (int i = 0; i < 6; i++) {
                     bool en = *(bool *)(taddr + GS_P80_ACU_TELEMETRY_CHANNEL_EN(i));
@@ -518,12 +487,11 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                     uint16_t power = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_POWER(i));
                     uint16_t pv_set = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_PV_SETPOINT(i));
                     uint16_t dac = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_DAC_VAL(i));
-                    
+
                     OS_printf("         %3d | %2s | %8u | %8d | %9u | %10u | %5u\n",
                             i, en ? "ON" : "OFF", volt, curr, power, pv_set, dac);
                 }
 
-                
                 uint16_t vcc_v = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_VCC_V);
                 int16_t vcc_i = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_VCC_I);
                 uint16_t st5_v = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_ST5_V);
@@ -533,14 +501,12 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 OS_printf("[ACU1]    VCC: %u mV (%d mA) | ST5V: %u mV (%d mA) | VBAT: %u mV\n",
                         vcc_v, vcc_i, st5_v, st5_i, vbat_v);
 
-                
                 int16_t temp[3];
                 for (int i = 0; i < 3; i++) {
                     temp[i] = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_TEMP(i));
                 }
                 OS_printf("[TEMP]   T0: %d | T1: %d | T2: %d (deci-degC)\n", temp[0], temp[1], temp[2]);
 
-                
                 uint8_t mppt_mode = *(uint8_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_MODE);
                 uint16_t mppt_limit = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_LIMIT);
                 uint16_t mppt_time = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_TIME);
@@ -549,7 +515,6 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 OS_printf("[MPPT]   Mode: %u | Limit: %u | Time: %u | Period: %u\n",
                         mppt_mode, mppt_limit, mppt_time, mppt_period);
 
-                
                 OS_printf("[DEVICE] Type  : ");
                 for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_ACU_TELEMETRY_DEVICE_TYPE(i)));
                 OS_printf("\n");
@@ -558,7 +523,6 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_ACU_TELEMETRY_DEVICE_STATUS(i)));
                 OS_printf("\n");
 
-                
                 uint32_t gnd_wdt_cnt = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_GND_WDT_CNT);
                 uint32_t gnd_wdt_left = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_GND_WDT_LEFT);
 
@@ -567,18 +531,13 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 OS_printf("=======================================================\n");
             }
 
-            if (tinst.memory) {
-            free(tinst.memory);
-            }
-            if (tinst.rows) {
-                free((void*)tinst.rows);
-            }
-            
+            if (tinst.memory) free(tinst.memory);
+            if (tinst.rows) free((void*)tinst.rows);
             break;
+        }
 
         case EPS_ACU2_CSP_NODE:
-            
-
+        {
             gs_error_t err = p80_acu_get_hk(&tinst, EPS_ACU2_CSP_NODE, CSP_TIMEOUT(1));
 
             if (err != GS_OK)
@@ -586,13 +545,8 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 EPS_AppData.Counters.ErrCounter++;
                 CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                                 "EPS: Get ACU2 HK command failed, err=%d", err);
-                
-                if (tinst.memory) {
-                    free(tinst.memory);
-                }
-                if (tinst.rows) {
-                    free((void*)tinst.rows);
-                }
+                if (tinst.memory) free(tinst.memory);
+                if (tinst.rows) free((void*)tinst.rows);
                 return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
 
@@ -602,7 +556,6 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
             {
                 OS_printf("\n================[p80 ACU2 HK]===================\n");
 
-                
                 uint32_t uptime = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_UPTIME);
                 uint32_t bootcause = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_BOOTCAUSE);
                 uint16_t resetcause = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_RESETCAUSE);
@@ -610,7 +563,6 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
                         uptime, bootcount, bootcause, resetcause);
 
-                
                 OS_printf("[INPUT]  IDX | EN | Volt(mV) | Curr(mA) | Power(mW) | PV_Set(mV) | DAC\n");
                 for (int i = 0; i < 6; i++) {
                     bool en = *(bool *)(taddr + GS_P80_ACU_TELEMETRY_CHANNEL_EN(i));
@@ -619,12 +571,11 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                     uint16_t power = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_POWER(i));
                     uint16_t pv_set = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_PV_SETPOINT(i));
                     uint16_t dac = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_DAC_VAL(i));
-                    
+
                     OS_printf("         %3d | %2s | %8u | %8d | %9u | %10u | %5u\n",
                             i, en ? "ON" : "OFF", volt, curr, power, pv_set, dac);
                 }
 
-                
                 uint16_t vcc_v = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_VCC_V);
                 int16_t vcc_i = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_VCC_I);
                 uint16_t st5_v = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_ST5_V);
@@ -634,14 +585,12 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 OS_printf("[ACU2]    VCC: %u mV (%d mA) | ST5V: %u mV (%d mA) | VBAT: %u mV\n",
                         vcc_v, vcc_i, st5_v, st5_i, vbat_v);
 
-                
                 int16_t temp[3];
                 for (int i = 0; i < 3; i++) {
                     temp[i] = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_TEMP(i));
                 }
                 OS_printf("[TEMP]   T0: %d | T1: %d | T2: %d (deci-degC)\n", temp[0], temp[1], temp[2]);
 
-                
                 uint8_t mppt_mode = *(uint8_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_MODE);
                 uint16_t mppt_limit = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_LIMIT);
                 uint16_t mppt_time = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_TIME);
@@ -650,7 +599,6 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 OS_printf("[MPPT]   Mode: %u | Limit: %u | Time: %u | Period: %u\n",
                         mppt_mode, mppt_limit, mppt_time, mppt_period);
 
-                
                 OS_printf("[DEVICE] Type  : ");
                 for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_ACU_TELEMETRY_DEVICE_TYPE(i)));
                 OS_printf("\n");
@@ -659,7 +607,6 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_ACU_TELEMETRY_DEVICE_STATUS(i)));
                 OS_printf("\n");
 
-                
                 uint32_t gnd_wdt_cnt = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_GND_WDT_CNT);
                 uint32_t gnd_wdt_left = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_GND_WDT_LEFT);
 
@@ -668,13 +615,10 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 OS_printf("=======================================================\n");
             }
 
-            if (tinst.memory) {
-            free(tinst.memory);
-            }
-            if (tinst.rows) {
-                free((void*)tinst.rows);
-            }
+            if (tinst.memory) free(tinst.memory);
+            if (tinst.rows) free((void*)tinst.rows);
             break;
+        }
         default:
             EPS_AppData.Counters.ErrCounter++;
             CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -697,63 +641,62 @@ CFE_Status_t EPS_Gnd_Watchdog_Clear_Cmd(const EPS_Gnd_Watchdog_Clear_Cmd_t *Msg)
     switch (Msg->Payload.csp_node)
     {
         case EPS_PMU_CSP_NODE:
+        {
             gs_error_t err = p80_pmu_gndwdt_clear(EPS_PMU_CSP_NODE, CSP_TIMEOUT(1));
-
             if (err != GS_OK)
             {
                 EPS_AppData.Counters.ErrCounter++;
                 CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                                   "EPS: PMU GND WDT clear failed");
-
-                return CFE_STATUS_EXTERNAL_RESOURCE_FAIL
+                return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
             break;
+        }
 
         case EPS_PDU_CSP_NODE:
+        {
             gs_error_t err = p80_pdu_gndwdt_clear(EPS_PDU_CSP_NODE, CSP_TIMEOUT(1));
-
             if (err != GS_OK)
             {
                 EPS_AppData.Counters.ErrCounter++;
                 CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                                   "EPS: PDU GND WDT clear failed");
-
                 return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
             break;
+        }
 
         case EPS_ACU1_CSP_NODE:
+        {
             gs_error_t err = p80_acu_gndwdt_clear(EPS_ACU1_CSP_NODE, CSP_TIMEOUT(1));
-
             if (err != GS_OK)
             {
                 EPS_AppData.Counters.ErrCounter++;
                 CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                                   "EPS: ACU1 GND WDT clear failed");
-
                 return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
             break;
+        }
 
         case EPS_ACU2_CSP_NODE:
+        {
             gs_error_t err = p80_acu_gndwdt_clear(EPS_ACU2_CSP_NODE, CSP_TIMEOUT(1));
-
             if (err != GS_OK)
             {
                 EPS_AppData.Counters.ErrCounter++;
                 CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                                   "EPS: ACU2 GND WDT clear failed");
-
                 return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
             break;
+        }
 
         default:
             EPS_AppData.Counters.ErrCounter++;
             CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                             "EPS: Get Gnd Watchdog command failed (wrong node arg)");
             return CFE_STATUS_RANGE_ERROR;
-            break;
     }
 
     
@@ -782,6 +725,7 @@ CFE_Status_t EPS_Param_Set_Cmd(const EPS_Param_Set_Cmd_t *Msg)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
+    return CFE_SUCCESS;
 }
 
 CFE_Status_t EPS_Param_Get_Cmd(const EPS_Param_Get_Cmd_t *Msg)
@@ -794,7 +738,7 @@ CFE_Status_t EPS_Param_Get_Cmd(const EPS_Param_Get_Cmd_t *Msg)
                                    Msg->Payload.type,
                                    GS_RPARAM_MAGIC_CHECKSUM,
                                    CSP_TIMEOUT(1),
-                                   Msg->Payload.data, 
+                                   (void *)Msg->Payload.data,
                                    Msg->Payload.size);
 
     if(err != GS_OK)
@@ -805,6 +749,7 @@ CFE_Status_t EPS_Param_Get_Cmd(const EPS_Param_Get_Cmd_t *Msg)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
+    return CFE_SUCCESS;
 }
 
 CFE_Status_t EPS_Get_Full_Table_Cmd(const EPS_Get_Full_Table_Cmd_t *Msg)

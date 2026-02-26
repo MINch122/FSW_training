@@ -129,14 +129,13 @@ void EO_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
             break;
 
         /* Other H/W Apps Msg */
-        case EPS_VI_TLM_MID:
-            /* Update Vbatt */
-            EO_UpdateDataEPS((const EPS_Vi_Tlm_t *)SBBufPtr);
-            break;
-        
-        case EPS_OUT_TLM_MID:
-            /* Update PCDU output */
-            EO_UpdateOutEPS((const EPS_Output_Tlm_t *)SBBufPtr);
+        // TODO: Update EO to use P80 EPS telemetry types
+        // case EPS_VI_TLM_MID:
+        //     EO_UpdateDataEPS((const EPS_Vi_Tlm_t *)SBBufPtr);
+        //     break;
+        // case EPS_OUT_TLM_MID:
+        //     EO_UpdateOutEPS((const EPS_Output_Tlm_t *)SBBufPtr);
+        //     break;
 
         // case SANT_OP_TLM_MID:
         //     /* Check SANT state */

@@ -26,7 +26,8 @@
 
 #include "common_types.h"
 #include "default_eps_fcncodes.h"
-#include <gs/p80/power_if.h>
+
+#define EPS_POWER_IF_NAME_LEN 8
 
 #define EPS_PACK    __attribute__((packed))
 
@@ -41,12 +42,12 @@ typedef struct {
     uint8_t mode;
     uint8_t on_cnt;
     uint8_t off_cnt;
-    char    name[POWER_IF_NAME_LEN];
+    char    name[EPS_POWER_IF_NAME_LEN];
 }EPS_Power_If_Set_Cmd_Payload_t;
 
 typedef struct {
     uint8_t csp_node; //PMU or PDU
-    char    name[POWER_IF_NAME_LEN];
+    char    name[EPS_POWER_IF_NAME_LEN];
 }EPS_Power_If_Get_Cmd_Payload_t;
 
 typedef struct {

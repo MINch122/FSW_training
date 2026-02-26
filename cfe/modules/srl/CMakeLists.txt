@@ -60,14 +60,17 @@ if (CMAKE_SYSTEM_PROCESSOR	STREQUAL "arm")
     # For OBC
     # link csp
     target_link_libraries(srl PRIVATE ${PROJECT_SOURCE_DIR}/../../../submodules/libgscsp/build/obc/lib/libcsp-client.a)
+    target_link_libraries(srl PRIVATE socketcan)
 elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
     # For PI
     # link csp
     target_link_libraries(srl PRIVATE ${PROJECT_SOURCE_DIR}/../../../submodules/libgscsp/build/pi/lib/libcsp-client.a)
+    target_link_libraries(srl PRIVATE socketcan)
 else ()
     # For local Linux host
     # link csp
     target_link_libraries(srl PRIVATE ${PROJECT_SOURCE_DIR}/../../../submodules/libgscsp/build/cpu1/lib/libcsp-client.a)
+    target_link_libraries(srl PRIVATE socketcan)
 endif()
 
 # Add unit test coverage subdirectory

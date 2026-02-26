@@ -17,8 +17,48 @@
     },
     "external" : [
         {
+            "name": "EPS_PMU",
+            "node": 1,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_NONE"
+        },
+        {
+            "name": "EPS_ACU1",
+            "node": 2,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_NONE"
+        },
+        {
             "name": "ADCS",
             "node": 4,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_NONE"
+        },
+        {
+            "name": "EPS_ACU2",
+            "node": 6,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_NONE"
+        },
+        {
+            "name": "EPS_PDU",
+            "node": 10,
             "interface": "CAN",
             "via": null,
 
@@ -35,6 +75,16 @@
             "priority": 2,
             "timeout": 1,
             "option": "CSP_O_CRC32"
+        },
+        {
+            "name": "BATT",
+            "node": 7,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_NONE"
         },
         {
             "name": "GSTRX",

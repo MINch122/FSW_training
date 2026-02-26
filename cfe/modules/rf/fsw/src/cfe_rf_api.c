@@ -36,9 +36,7 @@ int32 CFE_RF_CommandIngestInit(CFE_ES_TaskId_t *TaskIdPtr) {
     /* First, cleanup the existing resources, if exist */
     /* These function do NOT care the resource is exist or not */
     if(Socket) csp_close(Socket);
-    csp_unbind(CFE_RF_UPORT_PING);
-    csp_unbind(CFE_RF_UPORT_TC);
-    csp_unbind(CFE_RF_UPORT_FTP);
+    /* csp_unbind does not exist in libcsp API */
 
     /* Then, start the RF ingest init */
     Socket = csp_socket(CSP_O_NONE);
@@ -164,9 +162,7 @@ void CFE_RF_CommandIngestTask(void) {
 
 void CFE_RF_Cleanup(void) {
     int32 status = csp_close(Socket);
-    csp_unbind(CFE_RF_UPORT_PING);
-    csp_unbind(CFE_RF_UPORT_TC);
-    csp_unbind(CFE_RF_UPORT_FTP);
+    /* csp_unbind does not exist in libcsp API */
     OS_printf("%s: close status: %d\n", __func__, status);
 }
 

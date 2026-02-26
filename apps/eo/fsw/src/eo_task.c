@@ -146,22 +146,10 @@ CFE_Status_t EO_Init(void) {
         /**
          * Subscribe to ground command packets
          */
-        Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(EPS_VI_TLM_MID), EO_Data.CmdPipe);
-        if (Status != CFE_SUCCESS) {
-            CFE_EVS_SendEvent(EO_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "EO: Error Subscribing to EPS Vi Tlm, RC = 0x%08lX", (unsigned long)Status);
-        }
-    }
-
-    if (Status == CFE_SUCCESS) {
-        /**
-         * Subscribe to ground command packets
-         */
-        Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(EPS_OUT_TLM_MID), EO_Data.CmdPipe);
-        if (Status != CFE_SUCCESS) {
-            CFE_EVS_SendEvent(EO_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "EO: Error Subscribing to EPS Output Tlm, RC = 0x%08lX", (unsigned long)Status);
-        }
+        // TODO: Update EO to use P80 EPS telemetry types
+        // Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(EPS_VI_TLM_MID), EO_Data.CmdPipe);
+        // Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(EPS_OUT_TLM_MID), EO_Data.CmdPipe);
+        (void)0; // placeholder
     }
 
     // if (Status == CFE_SUCCESS) {

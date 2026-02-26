@@ -65,7 +65,7 @@ typedef struct
     */
     EPS_HkTlm_t HkTlm;
     EPS_BcnTlm_t BcnTlm;
-    EPS_BcnTlm_P60_t BcnTlm_P60;
+    EPS_BcnTlm_P80_t BcnTlm_P80;
 
     /*
     ** Run Status variable used in the main processing loop

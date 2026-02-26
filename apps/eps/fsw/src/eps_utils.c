@@ -24,9 +24,8 @@
 /*
 ** Include Files:
 */
-#include "eps.h"
+#include "eps_app.h"
 #include "eps_eventids.h"
-#include "eps_tbl.h"
 #include "eps_utils.h"
 
 

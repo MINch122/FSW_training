@@ -27,7 +27,7 @@
 /*
 ** Required header files.
 */
-#include "eps.h"
+#include "eps_app.h"
 
 CFE_Status_t EPS_TblValidationFunc(void *TblData);
 void         EPS_GetCrc(const char *TableName);

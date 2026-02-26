@@ -33,11 +33,11 @@
 /**
  * @brief Send report with command result
  */
-// void EPS_SendReport(const void* cmd,
-//                     const void* data,
-//                     uint16 dataSize,
-//                     int32 retCode,
-//                     uint8 retType);
+void EPS_SendReport(const void* cmd,
+                    const void* data,
+                    uint16 dataSize,
+                    int32 retCode,
+                    uint8 retType);
 
 /*
 ** Basic Commands

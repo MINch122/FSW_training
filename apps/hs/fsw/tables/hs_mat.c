@@ -59,7 +59,7 @@ typedef union
     CFE_TBL_NoopCmd_t cmd1;   /**< \brief Desired cmd1 type */
     CFE_ES_NoopCmd_t  cmd2;   /**< \brief Desired cmd2 type */
     CI_LAB_CreateChildTaskCmd_t cmd3;
-    EPS_P31U_HardResetCmd_t cmd4;
+    EPS_NoArgCmd_t cmd4;
     TO_CreateChildCmd_t cmd5;
 
     HS_MATMsgBuf_t    MsgBuf; /**< \brief Message Buffer for alignment */
@@ -93,10 +93,10 @@ HS_MatTableEntry_t HS_MsgActs_Tbl[HS_MAX_MSG_ACT_TYPES] = {
      .Cooldown    = 1,
      .HsMsg.cmd1  = {CFE_MSG_CMD_HDR_INIT(CI_LAB_CMD_MID, HS_MEMBER_SIZE(cmd3), CI_LAB_CREATE_CHILD_TASK_CC, 0x34)}},
     
-    /*   3 - EPS Hard reset */
-    {.EnableState = HS_MAT_STATE_ENABLED,
+    /*   3 - EPS Noop (P80 has no hard reset cmd) */
+    {.EnableState = HS_MAT_STATE_DISABLED,
      .Cooldown    = 10,
-     .HsMsg.cmd1  = {CFE_MSG_CMD_HDR_INIT(EPS_CMD_MID, HS_MEMBER_SIZE(cmd4), EPS_P31U_HARD_RESET_CC, 0x41)}},
+     .HsMsg.cmd4  = {CFE_MSG_CMD_HDR_INIT(EPS_CMD_MID, HS_MEMBER_SIZE(cmd4), EPS_NOOP_CC, 0x00)}},
     
     /*   4  - TO child restart */
     {.EnableState = HS_MAT_STATE_ENABLED,

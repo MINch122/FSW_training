@@ -43,7 +43,7 @@
 
 #define EPS_PMU_CSP_NODE    1
 #define EPS_ACU1_CSP_NODE   2
-#define EPS_ACU2_CSP_NODE   3
-#define EPS_PDU_CSP_NODE    4
+#define EPS_ACU2_CSP_NODE   6
+#define EPS_PDU_CSP_NODE    10
 
 #endif

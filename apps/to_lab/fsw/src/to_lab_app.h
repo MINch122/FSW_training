@@ -37,8 +37,6 @@
 #include "to_lab_tbl.h"
 
 #include "rpt_interface_cfg.h"
-#include "eps_msgids.h"
-#include "eps_msg.h"
 #include "hk_msgids.h"
 
 /************************************************************************

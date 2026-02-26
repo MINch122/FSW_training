@@ -78,11 +78,18 @@
 /* End of COMS Header */
 
 /*********************
- * EPS Header 
+ * EPS Header
  ********************/
 #include "eps_msgids.h"
 #include "eps_msg.h"
 /* End of EPS Header */
+
+/*********************
+ * BATT Header
+ ********************/
+#include "batt_msgids.h"
+#include "batt_msg.h"
+/* End of BATT Header */
 
 /*********************
  * ADCS Header 

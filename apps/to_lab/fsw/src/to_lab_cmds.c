@@ -252,19 +252,3 @@ CFE_Status_t TO_CreateChildCmd(const TO_CreateChildCmd_t *Msg) {
                                 TO_CHILD_PRIORITY, 0);
 
 }
-
-void TO_ValidateEPS(const EPS_Vi_Tlm_t *Msg) {
-    
-    // /* Check EPS Vbatt, and toggle the Output state */
-    // if (Msg->Vbatt <= TO_VBATT_THRESHOLD_TO_OFF_BEACON) { // If Vbatt is too low,
-    //     /* Unsubscribe the beacon */
-    //     OS_printf("%s: Vbatt is too low. Stop ingest beacon.\n", __func__);
-    //     CFE_SB_Unsubscribe(CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID), TO_LAB_Global.Tlm_pipe);
-    // }
-    // else { // If Vbatt is enough,
-    //     /* Subscribe the beacon */
-    //     /* @deprecated */
-    //     OS_printf("%s: Vbatt is enough. But not ingest beacon.\n", __func__);
-    //     // CFE_SB_SubscribeEx(CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID), TO_LAB_Global.Tlm_pipe, (CFE_SB_Qos_t){0, 0}, 4);
-    // }
-}

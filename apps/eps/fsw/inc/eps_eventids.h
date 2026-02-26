@@ -27,9 +27,15 @@
 
 #define EPS_RESERVED_EID        0
 #define EPS_CMD_ERR_EID         1
-
-
-
+#define EPS_INIT_INF_EID        2
+#define EPS_NOOP_INF_EID        3
+#define EPS_RESET_INF_EID       4
+#define EPS_PIPE_ERR_EID        5
+#define EPS_CR_PIPE_ERR_EID     6
+#define EPS_SUB_HK_ERR_EID     7
+#define EPS_SUB_CMD_ERR_EID    8
+#define EPS_CMD_LEN_ERR_EID    9
+#define EPS_MID_ERR_EID        10
 
 
 #endif

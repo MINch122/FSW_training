@@ -25,8 +25,13 @@ typedef enum {
 /* CSP Node  Configuration */
 typedef enum {
 	CSP_NODE_OBC = 3,
+	CSP_NODE_EPS_PMU = 1,
+	CSP_NODE_EPS_ACU1 = 2,
 	CSP_NODE_ADCS = 4,
+	CSP_NODE_EPS_ACU2 = 6,
+	CSP_NODE_EPS_PDU = 10,
 	CSP_NODE_UTRX = 5,
+	CSP_NODE_BATT = 7,
 	CSP_NODE_GSTRX = 20,
 	CSP_NODE_GS_KISS = 8,
 	CSP_NODE_TEST = 9,

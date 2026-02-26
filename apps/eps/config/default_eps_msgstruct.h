@@ -36,7 +36,6 @@
 #include "default_eps_msgdefs.h"
 #include "cfe_msg_hdr.h"
 #include "rpt_interface_cfg.h"
-#include <gs/p80/power_if.h>
 
 /*************************************************************************/
 
@@ -103,6 +102,11 @@ typedef struct{
     EPS_Table_Save_Cmd_Payload_t Payload;
 }EPS_Table_Save_Cmd_t;
 
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_Table_Save_Cmd_Payload_t Payload;
+}EPS_Table_Load_Cmd_t;
+
 /*************************************************************************/
 /*
 ** Type definition (EPS housekeeping)
@@ -127,8 +131,8 @@ typedef struct {
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader;
-    EPS_BcnTlm_P60_Payload_t Payload;
-} EPS_BcnTlm_P60_t;
+    EPS_BcnTlm_P80_Payload_t Payload;
+} EPS_BcnTlm_P80_t;
 
 #endif
       

@@ -24,6 +24,8 @@ target_include_directories(eps PUBLIC fsw/inc)
 
 
 target_include_directories(eps PUBLIC
+../../cfe/modules/srl/fsw/src
+../../submodules/libgscsp/lib/libftp_client/include
 ../../submodules/libgscsp/lib/libgscsp/include
 ../../submodules/libgscsp/lib/libgscsp/lib/libcsp/include
 ../../submodules/libgscsp/lib/libhk_client/include
@@ -31,11 +33,25 @@ target_include_directories(eps PUBLIC
 ../../submodules/libgscsp/lib/libparam_client/include/deprecated
 ../../submodules/libgscsp/lib/libutil/include
 ../../submodules/libgscsp/build/lib/libgscsp/lib/libcsp/include
-../../submodules/libgscsp/lib/libp80_client/include 
+../../submodules/libgscsp/lib/libp80_client/include
 ../../submodules/libgscsp/lib/p80-pdu_client/include
 ../../submodules/libgscsp/lib/p80-pmu_client/include
 ../../submodules/libgscsp/lib/p80-acu_client/include
 )
+
+target_compile_options(eps PRIVATE -Wno-pedantic -Wno-error=pedantic)
+target_compile_definitions(eps PRIVATE GS_PARAM_INTERNAL_USE=1)
+
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+    # OBC build
+    target_link_libraries(eps ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/obc/lib/libcsp-client.a)
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    # For PI
+    target_link_libraries(eps ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/pi/lib/libcsp-client.a)
+else()
+    # CPU1 build
+    target_link_libraries(eps ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/cpu1/lib/libcsp-client.a)
+endif()
 
 # If UT is enabled, then add the tests from the subdirectory
 # Note that this is an app, and therefore does not provide

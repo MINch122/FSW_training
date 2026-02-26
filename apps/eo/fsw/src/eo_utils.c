@@ -15,33 +15,17 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+// TODO: Update EO to use P80 EPS command types
 void EO_RequestVbattEPS(void) {
-
-    EPS_P31U_GetHkViCmd_t Cmd;
-    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(EPS_CMD_MID), sizeof(Cmd));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), EPS_P31U_GETHK_VI_INTERNAL_CC);
-
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
+    // P31U EPS types removed - needs P80 implementation
 }
 
 void EO_RequestSetOutSingle(uint8_t Channel, uint8_t Value) {
-
-    EPS_P31U_SetOutputSingleCmd_t Cmd;
-    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(EPS_CMD_MID), sizeof(Cmd));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), EPS_P31U_SET_OUT_SINGLE_INTERNAL_CC);
-    Cmd.Payload.channel = Channel;
-    Cmd.Payload.value = Value;
-    Cmd.Payload.delay = 0;
-    
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
+    // P31U EPS types removed - needs P80 implementation
 }
 
 void EO_RequestOutEPS(void) {
-    EPS_P31U_GetHkOutCmd_t Cmd;
-    CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(EPS_CMD_MID), sizeof(Cmd));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), EPS_P31U_GETHK_OUT_INTERNAL_CC);
-
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
+    // P31U EPS types removed - needs P80 implementation
 }
 
 void EO_ExitApps(void) {

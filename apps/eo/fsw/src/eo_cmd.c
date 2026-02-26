@@ -155,24 +155,21 @@ void EO_WakeupTask(void) {
 /* EO Update values                                                           */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-void EO_UpdateDataEPS(const EPS_Vi_Tlm_t *Msg) {
-    EO_PRINTF("%s: EPS VI arrived.\n", __func__);
-    EO_Data.Vbatt = Msg->Vbatt;
-    EO_Data.CurIn[0] = Msg->CurIn[0];
-    EO_Data.CurIn[1] = Msg->CurIn[1];
+// TODO: Update EO to use P80 EPS telemetry types
+// void EO_UpdateDataEPS(const EPS_Vi_Tlm_t *Msg) {
+//     EO_PRINTF("%s: EPS VI arrived.\n", __func__);
+//     EO_Data.Vbatt = Msg->Vbatt;
+//     EO_Data.CurIn[0] = Msg->CurIn[0];
+//     EO_Data.CurIn[1] = Msg->CurIn[1];
+//     EO_PRINTF("%s: EPS Vbatt Sem Give.\n", __func__);
+//     OS_BinSemGive(EO_Data.EPS_ViSemId);
+// }
 
-    EO_PRINTF("%s: EPS Vbatt Sem Give.\n", __func__);
-    OS_BinSemGive(EO_Data.EPS_ViSemId);
-
-}
-
-void EO_UpdateOutEPS(const EPS_Output_Tlm_t *Msg) {
-    memcpy(EO_Data.Output, Msg->Output, sizeof(EO_Data.Output));
-
-    EO_PRINTF("%s: EPS Output Sem Give.\n", __func__);
-    OS_BinSemGive(EO_Data.EPS_OutSemId);
-
-}
+// void EO_UpdateOutEPS(const EPS_Output_Tlm_t *Msg) {
+//     memcpy(EO_Data.Output, Msg->Output, sizeof(EO_Data.Output));
+//     EO_PRINTF("%s: EPS Output Sem Give.\n", __func__);
+//     OS_BinSemGive(EO_Data.EPS_OutSemId);
+// }
 
 // void EO_UpdateDataSANT(const SANT_OperationTlm_t *Msg) {
 //     EO_Data.State = Msg->Payload.ReleaseStatus.State;

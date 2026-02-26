@@ -105,10 +105,6 @@ void TO_LAB_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
             TO_LAB_SendHkCmd((const TO_LAB_SendHkCmd_t *)SBBufPtr);
             break;
 
-        case EPS_VI_TLM_MID:
-            TO_ValidateEPS((const EPS_Vi_Tlm_t *)SBBufPtr);
-            break;
-
         default:
             CFE_EVS_SendEvent(TO_LAB_MID_ERR_EID, CFE_EVS_EventType_ERROR, "L%d TO: Invalid Msg ID Rcvd 0x%x",
                               __LINE__, (unsigned int)CFE_SB_MsgIdToValue(MsgId));

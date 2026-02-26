@@ -131,8 +131,8 @@ CFE_Status_t EPS_Init(void)
         CFE_MSG_Init(CFE_MSG_PTR(EPS_AppData.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(EPS_HK_TLM_MID),
                      sizeof(EPS_AppData.HkTlm));
 
-        CFE_MSG_Init(CFE_MSG_PTR(EPS_AppData.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(EPS_BCN_TLM_MID),
-                     sizeof(EPS_AppData.BcnTlm));
+        CFE_MSG_Init(CFE_MSG_PTR(EPS_AppData.BcnTlm_P80.TelemetryHeader), CFE_SB_ValueToMsgId(EPS_BCN_TLM_MID),
+                     sizeof(EPS_AppData.BcnTlm_P80));
 
 
         /*
