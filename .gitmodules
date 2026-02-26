@@ -13,6 +13,7 @@
 [submodule "submodules/libgscsp"]
 	path = submodules/libgscsp
 	url = https://dssacl.yonsei.ac.kr/git/DSS/libgs
+	branch = V2.0
 [submodule "submodules/toolchain"]
 	path = submodules/toolchain
 	url = https://dssacl.yonsei.ac.kr/git/DSS/OBC_Toolchain
