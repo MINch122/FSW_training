@@ -57,20 +57,13 @@ message(STATUS "GPIOD LIB: ${PROJECT_SOURCE_DIR}/../../../submodules/libgpiod/ob
 message(STATUS "GPIOD INCLUDE: ${PROJECT_SOURCE_DIR}/../../../submodules/libgpiod/obc/include")
 
 if (CMAKE_SYSTEM_PROCESSOR	STREQUAL "arm")
-    # For OBC
-    # link csp
+    # For OBC — libsocketcan available in toolchain sysroot
     target_link_libraries(srl PRIVATE ${PROJECT_SOURCE_DIR}/../../../submodules/libgscsp/build/obc/lib/libcsp-client.a)
     target_link_libraries(srl PRIVATE socketcan)
-elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
-    # For PI
-    # link csp
-    target_link_libraries(srl PRIVATE ${PROJECT_SOURCE_DIR}/../../../submodules/libgscsp/build/pi/lib/libcsp-client.a)
-    target_link_libraries(srl PRIVATE socketcan)
+    target_compile_definitions(srl PRIVATE HAVE_SOCKETCAN=1)
 else ()
-    # For local Linux host
-    # link csp
+    # For local Linux host — libsocketcan not installed, CAN not used on desktop
     target_link_libraries(srl PRIVATE ${PROJECT_SOURCE_DIR}/../../../submodules/libgscsp/build/cpu1/lib/libcsp-client.a)
-    target_link_libraries(srl PRIVATE socketcan)
 endif()
 
 # Add unit test coverage subdirectory

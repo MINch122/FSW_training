@@ -4,7 +4,7 @@
 #include "sp_eventids.h"
 #include "sp_dispatch.h"
 
-#include <gs/util/linux/drivers/i2c/i2c.h>
+#include <gs/util/linux/drivers/i2c/i2c_native.h>
 
 SP_AppData_t SP_AppData;
 

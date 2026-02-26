@@ -23,12 +23,19 @@ int CFE_SRL_RouteInitCSP(void) {
     /**
      * CSP CAN Initialization
      * @param bitrate meaningless
+     * Only available on OBC (ARM) where libsocketcan is present in toolchain sysroot.
+     * Disabled on desktop (cpu1) build — no CAN hardware on dev machine.
      */
+#if defined(HAVE_SOCKETCAN)
     Status = csp_can_socketcan_open_and_add_interface(CSP_CAN_DEV_NAME, "CSP CAN", 1000000, false, &InterfaceCAN);
     if (Status != CSP_ERR_NONE) {
         CFE_ES_WriteToSysLog("%s: CSP Socket CAN Init failed! RC = %d", __func__, Status);
         return CFE_SRL_CSP_CAN_INIT_ERR;
     }
+#else
+    CFE_ES_WriteToSysLog("%s: CSP CAN skipped (no socketcan on this platform)\n", __func__);
+#endif
+
     /**
      * CSP I2C Initialization
      */
@@ -39,8 +46,10 @@ int CFE_SRL_RouteInitCSP(void) {
      * CSP Routing Table Set
      */
     /* CAN */
+#if defined(HAVE_SOCKETCAN)
     Status = CFE_SRL_RtableCSP(InterfaceCAN);
     if (Status != CFE_SUCCESS) return CFE_SRL_CSP_RTABLE_SET_ERR;
+#endif
     // Status = csp_rtable_set(CSP_NODE_UTRX, CSP_ID_HOST_SIZE, InterfaceCAN, CSP_NO_VIA_ADDRESS);
     // if (Status != CSP_ERR_NONE) return CFE_SRL_CSP_RTABLE_SET_ERR;
 

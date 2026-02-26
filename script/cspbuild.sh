@@ -19,10 +19,10 @@ python3 ./tools/buildtools/gsbuildtools_bootstrap.py
 python3 waf distclean
 
 # cpu1 build (x86 host — libsocketcan not available; wscript auto-detects)
-CFLAGS='-fPIC' python3 waf configure --prefix=$cpu1_install_path
+CFLAGS='-fPIC' python3 waf configure --prefix=$cpu1_install_path --libdir=$cpu1_install_path/lib
 python3 waf build install
 
 # obc build (ARM cross-compile — libsocketcan in toolchain sysroot)
 export PKG_CONFIG_PATH=$toolchain_sysroot/usr/lib/pkgconfig:$PKG_CONFIG_PATH
-CFLAGS='-fPIC' python3 waf configure --prefix=$obc_install_path --toolchain=$toolchain_bin_path/arm-buildroot-linux-gnueabi- --arch=arm
+CFLAGS='-fPIC' python3 waf configure --prefix=$obc_install_path --libdir=$obc_install_path/lib --toolchain=$toolchain_bin_path/arm-buildroot-linux-gnueabi- --arch=arm
 python3 waf build install
