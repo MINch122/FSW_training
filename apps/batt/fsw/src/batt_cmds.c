@@ -17,6 +17,8 @@
 #include "cfe_srl_csp.h"
 #include <gs/param/internal/types.h>
 #include <gs/param/rparam.h>
+#include <gs/param/table.h>
+#include <stdbool.h>
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
@@ -117,52 +119,59 @@ CFE_Status_t BATT_GetHkCmd(const BATT_GetHkCmd_t *Msg)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    uint8_t *taddr = (uint8_t *)tinst.memory;
+    BATT_HkTlm_Payload_t *hk = &BATT_Data.HkTlm.Payload;
+    bool bat_fault = false;
+    gs_error_t perr = GS_OK;
 
-    if (taddr != NULL)
+    perr |= gs_param_get_uint32(&tinst, BATT_BP8_TLM_UPTIME,       &hk->Uptime,        0);
+    perr |= gs_param_get_uint16(&tinst, BATT_BP8_TLM_BOOTCOUNT,    &hk->BootCount,     0);
+    perr |= gs_param_get_uint16(&tinst, BATT_BP8_TLM_BOOTCAUSE,    &hk->BootCause,     0);
+    perr |= gs_param_get_uint16(&tinst, BATT_BP8_TLM_RESETCAUSE,   &hk->ResetCause,    0);
+    perr |= gs_param_get_uint16(&tinst, BATT_BP8_TLM_VBAT,         &hk->Vbat,          0);
+    perr |= gs_param_get_float (&tinst, BATT_BP8_TLM_SOC,          &hk->Soc,           0);
+    perr |= gs_param_get_float (&tinst, BATT_BP8_TLM_I,            &hk->Current,       0);
+    perr |= gs_param_get_uint16(&tinst, BATT_BP8_TLM_IN_I,         &hk->InCurrent,     0);
+    perr |= gs_param_get_uint16(&tinst, BATT_BP8_TLM_OUT_I,        &hk->OutCurrent,    0);
+    perr |= gs_param_get_uint16(&tinst, BATT_BP8_TLM_HEATER_I,     &hk->HeaterCurrent, 0);
+    perr |= gs_param_get_int16 (&tinst, BATT_BP8_TLM_INT_TEMP,     &hk->IntTemp,       0);
+    perr |= gs_param_get_float (&tinst, BATT_BP8_TLM_BAT_AVR_TEMP, &hk->BatAvrTemp,    0);
+    perr |= gs_param_get_int16 (&tinst, BATT_BP8_TLM_BAT_1_TEMP,   &hk->BatTemp[0],    0);
+    perr |= gs_param_get_int16 (&tinst, BATT_BP8_TLM_BAT_2_TEMP,   &hk->BatTemp[1],    0);
+    perr |= gs_param_get_int16 (&tinst, BATT_BP8_TLM_BAT_3_TEMP,   &hk->BatTemp[2],    0);
+    perr |= gs_param_get_int16 (&tinst, BATT_BP8_TLM_BAT_4_TEMP,   &hk->BatTemp[3],    0);
+    perr |= gs_param_get_uint16(&tinst, BATT_BP8_TLM_O_VOLT_COUNT,  &hk->OVoltCount,    0);
+    perr |= gs_param_get_bool  (&tinst, BATT_BP8_TLM_BAT_FAULT,     &bat_fault,         0);
+    hk->BatFault = (uint8_t)bat_fault;
+
+    if (perr != GS_OK)
     {
-        /* Parse telemetry data into HK payload */
-        BATT_HkTlm_Payload_t *hk = &BATT_Data.HkTlm.Payload;
-
-        hk->Uptime        = *(uint32_t *)(taddr + BATT_BP8_TLM_UPTIME);
-        hk->BootCount     = *(uint16_t *)(taddr + BATT_BP8_TLM_BOOTCOUNT);
-        hk->BootCause     = *(uint16_t *)(taddr + BATT_BP8_TLM_BOOTCAUSE);
-        hk->ResetCause    = *(uint16_t *)(taddr + BATT_BP8_TLM_RESETCAUSE);
-        hk->Vbat          = *(uint16_t *)(taddr + BATT_BP8_TLM_VBAT);
-        hk->Soc           = *(float    *)(taddr + BATT_BP8_TLM_SOC);
-        hk->Current       = *(float    *)(taddr + BATT_BP8_TLM_I);
-        hk->InCurrent     = *(uint16_t *)(taddr + BATT_BP8_TLM_IN_I);
-        hk->OutCurrent    = *(uint16_t *)(taddr + BATT_BP8_TLM_OUT_I);
-        hk->HeaterCurrent = *(uint16_t *)(taddr + BATT_BP8_TLM_HEATER_I);
-        hk->IntTemp       = *(int16_t  *)(taddr + BATT_BP8_TLM_INT_TEMP);
-        hk->BatAvrTemp    = *(float    *)(taddr + BATT_BP8_TLM_BAT_AVR_TEMP);
-        hk->BatTemp[0]    = *(int16_t  *)(taddr + BATT_BP8_TLM_BAT_1_TEMP);
-        hk->BatTemp[1]    = *(int16_t  *)(taddr + BATT_BP8_TLM_BAT_2_TEMP);
-        hk->BatTemp[2]    = *(int16_t  *)(taddr + BATT_BP8_TLM_BAT_3_TEMP);
-        hk->BatTemp[3]    = *(int16_t  *)(taddr + BATT_BP8_TLM_BAT_4_TEMP);
-        hk->OVoltCount    = *(uint16_t *)(taddr + BATT_BP8_TLM_O_VOLT_COUNT);
-        hk->BatFault      = *(uint8_t  *)(taddr + BATT_BP8_TLM_BAT_FAULT);
-
-        /* Print telemetry summary */
-        OS_printf("\n================[NanoPower BP8 Telemetry]===================\n");
-        OS_printf("[SYSTEM]  Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
-                  hk->Uptime, hk->BootCount, hk->BootCause, hk->ResetCause);
-        OS_printf("[BATTERY] Vbat: %u mV | SOC: %.2f | Current: %.3f A\n",
-                  hk->Vbat, (double)hk->Soc, (double)hk->Current);
-        OS_printf("[CURRENT] In: %u mA | Out: %u mA | Heater: %u mA\n",
-                  hk->InCurrent, hk->OutCurrent, hk->HeaterCurrent);
-        OS_printf("[TEMP]    MCU: %d ddegC | Avg: %.1f degC\n",
-                  hk->IntTemp, (double)hk->BatAvrTemp);
-        OS_printf("[TEMP]    Bat1: %d | Bat2: %d | Bat3: %d | Bat4: %d (ddegC)\n",
-                  hk->BatTemp[0], hk->BatTemp[1], hk->BatTemp[2], hk->BatTemp[3]);
-        OS_printf("[STATUS]  OVoltCount: %u | BatFault: %s\n",
-                  hk->OVoltCount, hk->BatFault ? "YES" : "NO");
-        OS_printf("=============================================================\n");
-
-        CFE_EVS_SendEvent(BATT_HK_TLM_INF_EID, CFE_EVS_EventType_INFORMATION,
-                          "BATT: BP8 Telemetry - Vbat=%u mV, SOC=%.2f, Fault=%u",
-                          hk->Vbat, (double)hk->Soc, hk->BatFault);
+        BATT_Data.ErrCounter++;
+        CFE_EVS_SendEvent(BATT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "BATT: Failed to parse BP8 telemetry params, err=%d", perr);
+        if (tinst.memory) free(tinst.memory);
+        if (tinst.rows)   free((void *)tinst.rows);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
+
+    /* Print telemetry summary */
+    OS_printf("\n================[NanoPower BP8 Telemetry]===================\n");
+    OS_printf("[SYSTEM]  Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
+              hk->Uptime, hk->BootCount, hk->BootCause, hk->ResetCause);
+    OS_printf("[BATTERY] Vbat: %u mV | SOC: %.2f | Current: %.3f A\n",
+              hk->Vbat, (double)hk->Soc, (double)hk->Current);
+    OS_printf("[CURRENT] In: %u mA | Out: %u mA | Heater: %u mA\n",
+              hk->InCurrent, hk->OutCurrent, hk->HeaterCurrent);
+    OS_printf("[TEMP]    MCU: %d ddegC | Avg: %.1f degC\n",
+              hk->IntTemp, (double)hk->BatAvrTemp);
+    OS_printf("[TEMP]    Bat1: %d | Bat2: %d | Bat3: %d | Bat4: %d (ddegC)\n",
+              hk->BatTemp[0], hk->BatTemp[1], hk->BatTemp[2], hk->BatTemp[3]);
+    OS_printf("[STATUS]  OVoltCount: %u | BatFault: %s\n",
+              hk->OVoltCount, hk->BatFault ? "YES" : "NO");
+    OS_printf("=============================================================\n");
+
+    CFE_EVS_SendEvent(BATT_HK_TLM_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "BATT: BP8 Telemetry - Vbat=%u mV, SOC=%.2f, Fault=%u",
+                      hk->Vbat, (double)hk->Soc, hk->BatFault);
 
     /* Free allocated memory */
     if (tinst.memory) free(tinst.memory);

@@ -32,6 +32,8 @@
 #include "eps_msg.h"
 #include "cfe_srl_csp.h"
 #include <gs/param/internal/types.h>
+#include <gs/param/table.h>
+#include <stdbool.h>
 #include <gs/p80/p80.h>
 #include <gs/p80/power_if.h>
 #include <gs/p80/param/board.h>
@@ -273,92 +275,106 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
 
-            uint8_t *taddr = (uint8_t *)tinst.memory;
+            gs_error_t perr = GS_OK;
+            uint32_t uptime = 0, bootcause = 0;
+            uint16_t resetcause = 0, bootcount = 0;
+            uint16_t batt_v = 0, vbat_v = 0, vcc_v = 0;
+            int16_t  batt_i = 0, vbat_i = 0, vcc_i = 0;
+            uint8_t  batt_mode = 0;
+            bool     conv_5v = false;
+            int16_t  temp[2] = {0};
+            uint16_t gnd_cnt = 0, bus_cnt = 0;
+            uint32_t gnd_lft = 0, bus_lft = 0;
+            bool     dep_inhbt = false;
 
-            if (taddr != NULL)
+            perr |= gs_param_get_uint32(&tinst, GS_P80_PMU_TELEMETRY_UPTIME,      &uptime,     0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_PMU_TELEMETRY_BOOTCAUSE,   &bootcause,  0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_RESETCAUSE,  &resetcause, 0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_BOOTCOUNT,   &bootcount,  0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_BATT_V,      &batt_v,     0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_BATT_I,      &batt_i,     0);
+            perr |= gs_param_get_uint8 (&tinst, GS_P80_PMU_TELEMETRY_BATT_MODE,   &batt_mode,  0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_VBAT_V,      &vbat_v,     0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_VBAT_I,      &vbat_i,     0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_VCC_V,       &vcc_v,      0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_VCC_I,       &vcc_i,      0);
+            perr |= gs_param_get_bool  (&tinst, GS_P80_PMU_TELEMETRY_CONV_5V_EN,  &conv_5v,    0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_TEMP(0),     &temp[0],    0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_TEMP(1),     &temp[1],    0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_GND_WDT_CNT,  &gnd_cnt,   0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_BUS_WDT_CNT,  &bus_cnt,   0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_PMU_TELEMETRY_GND_WDT_LEFT, &gnd_lft,   0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_PMU_TELEMETRY_BUS_WDT_LEFT, &bus_lft,   0);
+            perr |= gs_param_get_bool  (&tinst, GS_P80_PMU_TELEMETRY_DEP_INHBT,    &dep_inhbt, 0);
+
+            if (perr != GS_OK)
             {
-                OS_printf("\n================[p80 PMU HK]===================\n");
-
-                uint32_t uptime = *(uint32_t *)(taddr + GS_P80_PMU_TELEMETRY_UPTIME);
-                uint32_t bootcause = *(uint32_t *)(taddr + GS_P80_PMU_TELEMETRY_BOOTCAUSE);
-                uint16_t resetcause = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_RESETCAUSE);
-                uint16_t bootcount = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_BOOTCOUNT);
-                OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
-                        uptime, bootcount, bootcause, resetcause);
-
-                OS_printf("[OUTPUT] IDX | EN | Volt(mV) | Curr(mA) | LatchUp | EMA(mA)\n");
-                for (int i = 0; i < 6; i++) {
-                    bool en = *(bool *)(taddr + GS_P80_PMU_TELEMETRY_OUT_EN(i));
-                    uint16_t volt = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_OUT_V(i));
-                    int16_t curr = *(int16_t *)(taddr + GS_P80_PMU_TELEMETRY_OUT_I(i));
-                    uint16_t latchup = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_LATCHUP(i));
-                    uint16_t ema = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_CUR_EMA(i));
-
-                    OS_printf("         %3d | %2s | %8u | %8d | %7u | %7u\n",
-                            i, en ? "ON" : "OFF", volt, curr, latchup, ema);
-                }
-
-                uint16_t batt_v    = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_BATT_V);
-                int16_t  batt_i    = *(int16_t  *)(taddr + GS_P80_PMU_TELEMETRY_BATT_I);
-                uint8_t  batt_mode = *(uint8_t  *)(taddr + GS_P80_PMU_TELEMETRY_BATT_MODE);
-                uint16_t vbat_v    = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_VBAT_V);
-                int16_t  vbat_i    = *(int16_t  *)(taddr + GS_P80_PMU_TELEMETRY_VBAT_I);
-                uint16_t vcc_v     = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_VCC_V);
-                int16_t  vcc_i     = *(int16_t  *)(taddr + GS_P80_PMU_TELEMETRY_VCC_I);
-                bool     conv_5v   = *(bool     *)(taddr + GS_P80_PMU_TELEMETRY_CONV_5V_EN);
-                int16_t  temp[2];
-                temp[0]            = *(int16_t  *)(taddr + GS_P80_PMU_TELEMETRY_TEMP(0));
-                temp[1]            = *(int16_t  *)(taddr + GS_P80_PMU_TELEMETRY_TEMP(1));
-
-                OS_printf("[BATT]   Volt: %u mV | Curr: %d mA | Mode: %u\n", batt_v, batt_i, batt_mode);
-                OS_printf("[PMU]    VBAT: %u mV (%d mA) | VCC: %u mV (%d mA)\n", vbat_v, vbat_i, vcc_v, vcc_i);
-                OS_printf("[TEMP]   T0: %d | T1: %d (deci-degC) | 5V_Conv: %s\n", temp[0], temp[1], conv_5v ? "ON" : "OFF");
-
-                OS_printf("[SUBMOD] Enable: ");
-                for (int i = 0; i < 8; i++) OS_printf("%d ", *(bool *)(taddr + GS_P80_PMU_TELEMETRY_SM_EN(i)));
-                OS_printf("\n");
-
-                OS_printf("[BP_PACK] Enable: ");
-                for (int i = 0; i < 4; i++) OS_printf("%d ", *(bool *)(taddr + GS_P80_PMU_TELEMETRY_BATT_EN(i)));
-                OS_printf("\n");
-
-                OS_printf("[DEVICE] Type: ");
-                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_PMU_TELEMETRY_DEVICE_TYPE(i)));
-                OS_printf("\n");
-
-                OS_printf("[DEVICE] Status: ");
-                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_PMU_TELEMETRY_DEVICE_STATUS(i)));
-                OS_printf("\n");
-
-                uint16_t gnd_cnt = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_GND_WDT_CNT);
-                uint16_t bus_cnt = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_BUS_WDT_CNT);
-                uint32_t gnd_lft = *(uint32_t *)(taddr + GS_P80_PMU_TELEMETRY_GND_WDT_LEFT);
-                uint32_t bus_lft = *(uint32_t *)(taddr + GS_P80_PMU_TELEMETRY_BUS_WDT_LEFT);
-
-                OS_printf("[WDT]    GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n", gnd_cnt, gnd_lft, bus_cnt, bus_lft);
-
-                OS_printf("[SM_WDT] Cnt : ");
-                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_SM_WDT_CNT(i)));
-                OS_printf("\n         Left: ");
-                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t  *)(taddr + GS_P80_PMU_TELEMETRY_SM_WDT_LEFT(i)));
-                OS_printf("\n");
-
-                OS_printf("[BP_WDT] Cnt : ");
-                for (int i = 0; i < 4; i++) OS_printf("%u ", *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_BATT_WDT_CNT(i)));
-                OS_printf("\n         Left: ");
-                for (int i = 0; i < 4; i++) OS_printf("%u ", *(uint8_t  *)(taddr + GS_P80_PMU_TELEMETRY_BATT_WDT_LEFT(i)));
-                OS_printf("\n");
-
-                bool dep_inhbt = *(bool *)(taddr + GS_P80_PMU_TELEMETRY_DEP_INHBT);
-                OS_printf("[DEPLOY] Inhibit: %s\n", dep_inhbt ? "YES" : "NO");
-                OS_printf("         Status: ");
-                for (int i = 0; i < 12; i++) OS_printf("%d ", *(int32_t *)(taddr + GS_P80_PMU_TELEMETRY_AR6_STATUS(i)));
-                OS_printf("\n         Burns : ");
-                for (int i = 0; i < 12; i++) OS_printf("%d ", *(int8_t  *)(taddr + GS_P80_PMU_TELEMETRY_AR6_BURN_TRY(i)));
-                OS_printf("\n");
-
-                OS_printf("=======================================================\n");
+                EPS_AppData.Counters.ErrCounter++;
+                CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                                "EPS: Failed to parse PMU telemetry params, err=%d", perr);
+                if (tinst.memory) free(tinst.memory);
+                if (tinst.rows) free((void*)tinst.rows);
+                return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
+
+            OS_printf("\n================[p80 PMU HK]===================\n");
+
+            OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
+                    uptime, bootcount, bootcause, resetcause);
+
+            OS_printf("[OUTPUT] IDX | EN | Volt(mV) | Curr(mA) | LatchUp | EMA(mA)\n");
+            for (int i = 0; i < 6; i++) {
+                bool     en      = gs_param_get_bool_nc  (&tinst, GS_P80_PMU_TELEMETRY_OUT_EN(i),  0);
+                uint16_t volt    = gs_param_get_uint16_nc(&tinst, GS_P80_PMU_TELEMETRY_OUT_V(i),   0);
+                int16_t  curr    = gs_param_get_int16_nc (&tinst, GS_P80_PMU_TELEMETRY_OUT_I(i),   0);
+                uint16_t latchup = gs_param_get_uint16_nc(&tinst, GS_P80_PMU_TELEMETRY_LATCHUP(i), 0);
+                uint16_t ema     = gs_param_get_uint16_nc(&tinst, GS_P80_PMU_TELEMETRY_CUR_EMA(i), 0);
+                OS_printf("         %3d | %2s | %8u | %8d | %7u | %7u\n",
+                        i, en ? "ON" : "OFF", volt, curr, latchup, ema);
+            }
+
+            OS_printf("[BATT]   Volt: %u mV | Curr: %d mA | Mode: %u\n", batt_v, batt_i, batt_mode);
+            OS_printf("[PMU]    VBAT: %u mV (%d mA) | VCC: %u mV (%d mA)\n", vbat_v, vbat_i, vcc_v, vcc_i);
+            OS_printf("[TEMP]   T0: %d | T1: %d (deci-degC) | 5V_Conv: %s\n", temp[0], temp[1], conv_5v ? "ON" : "OFF");
+
+            OS_printf("[SUBMOD] Enable: ");
+            for (int i = 0; i < 8; i++) OS_printf("%d ", gs_param_get_bool_nc(&tinst, GS_P80_PMU_TELEMETRY_SM_EN(i), 0));
+            OS_printf("\n");
+
+            OS_printf("[BP_PACK] Enable: ");
+            for (int i = 0; i < 4; i++) OS_printf("%d ", gs_param_get_bool_nc(&tinst, GS_P80_PMU_TELEMETRY_BATT_EN(i), 0));
+            OS_printf("\n");
+
+            OS_printf("[DEVICE] Type: ");
+            for (int i = 0; i < 8; i++) OS_printf("%u ", gs_param_get_uint8_nc(&tinst, GS_P80_PMU_TELEMETRY_DEVICE_TYPE(i), 0));
+            OS_printf("\n");
+
+            OS_printf("[DEVICE] Status: ");
+            for (int i = 0; i < 8; i++) OS_printf("%u ", gs_param_get_uint8_nc(&tinst, GS_P80_PMU_TELEMETRY_DEVICE_STATUS(i), 0));
+            OS_printf("\n");
+
+            OS_printf("[WDT]    GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n", gnd_cnt, gnd_lft, bus_cnt, bus_lft);
+
+            OS_printf("[SM_WDT] Cnt : ");
+            for (int i = 0; i < 8; i++) OS_printf("%u ", gs_param_get_uint16_nc(&tinst, GS_P80_PMU_TELEMETRY_SM_WDT_CNT(i), 0));
+            OS_printf("\n         Left: ");
+            for (int i = 0; i < 8; i++) OS_printf("%u ", gs_param_get_uint8_nc(&tinst, GS_P80_PMU_TELEMETRY_SM_WDT_LEFT(i), 0));
+            OS_printf("\n");
+
+            OS_printf("[BP_WDT] Cnt : ");
+            for (int i = 0; i < 4; i++) OS_printf("%u ", gs_param_get_uint16_nc(&tinst, GS_P80_PMU_TELEMETRY_BATT_WDT_CNT(i), 0));
+            OS_printf("\n         Left: ");
+            for (int i = 0; i < 4; i++) OS_printf("%u ", gs_param_get_uint8_nc(&tinst, GS_P80_PMU_TELEMETRY_BATT_WDT_LEFT(i), 0));
+            OS_printf("\n");
+
+            OS_printf("[DEPLOY] Inhibit: %s\n", dep_inhbt ? "YES" : "NO");
+            OS_printf("         Status: ");
+            for (int i = 0; i < 12; i++) OS_printf("%d ", gs_param_get_int32_nc(&tinst, GS_P80_PMU_TELEMETRY_AR6_STATUS(i), 0));
+            OS_printf("\n         Burns : ");
+            for (int i = 0; i < 12; i++) OS_printf("%d ", gs_param_get_int8_nc(&tinst, GS_P80_PMU_TELEMETRY_AR6_BURN_TRY(i), 0));
+            OS_printf("\n");
+
+            OS_printf("=======================================================\n");
 
             if (tinst.memory) free(tinst.memory);
             if (tinst.rows) free((void*)tinst.rows);
@@ -379,73 +395,85 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
 
-            uint8_t *taddr = (uint8_t *)tinst.memory;
+            gs_error_t perr = GS_OK;
+            uint32_t uptime = 0, bootcause = 0, bootcount = 0;
+            uint16_t resetcause = 0;
+            uint16_t vcc_v = 0, vcc_i = 0, vbat_v = 0;
+            int16_t  temp = 0;
+            uint8_t  batt_mode = 0;
+            uint32_t gnd_wdt_cnt = 0, bus_wdt_cnt = 0;
+            uint32_t gnd_wdt_left = 0, bus_wdt_left = 0;
 
-            if (taddr != NULL)
+            perr |= gs_param_get_uint32(&tinst, GS_P80_PDU_TELEMETRY_UPTIME,       &uptime,       0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_PDU_TELEMETRY_BOOTCAUSE,    &bootcause,    0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_PDU_TELEMETRY_RESETCAUSE,   &resetcause,   0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_PDU_TELEMETRY_BOOTCOUNT,    &bootcount,    0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_PDU_TELEMETRY_VCC_V,        &vcc_v,        0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_PDU_TELEMETRY_VCC_I,        &vcc_i,        0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_PDU_TELEMETRY_VBAT_V,       &vbat_v,       0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_PDU_TELEMETRY_TEMP,         &temp,         0);
+            perr |= gs_param_get_uint8 (&tinst, GS_P80_PDU_TELEMETRY_BATT_MODE,    &batt_mode,    0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_PDU_TELEMETRY_GND_WDT_CNT,  &gnd_wdt_cnt,  0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_PDU_TELEMETRY_BUS_WDT_CNT,  &bus_wdt_cnt,  0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_PDU_TELEMETRY_GND_WDT_LEFT, &gnd_wdt_left, 0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_PDU_TELEMETRY_BUS_WDT_LEFT, &bus_wdt_left, 0);
+
+            if (perr != GS_OK)
             {
-                OS_printf("\n================[p80 PDU HK]===================\n");
-
-                uint32_t uptime = *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_UPTIME);
-                uint32_t bootcause = *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_BOOTCAUSE);
-                uint16_t resetcause = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_RESETCAUSE);
-                uint32_t bootcount = *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_BOOTCOUNT);
-                OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
-                        uptime, bootcount, bootcause, resetcause);
-
-                OS_printf("[OUTPUT] IDX | EN | Volt(mV) | Curr(mA) | LatchUp | EMA(mA)\n");
-                for (int i = 0; i < 24; i++) {
-                    bool en = *(bool *)(taddr + GS_P80_PDU_TELEMETRY_OUT_EN(i));
-                    uint16_t volt = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_OUT_V(i));
-                    int16_t curr = *(int16_t *)(taddr + GS_P80_PDU_TELEMETRY_OUT_I(i));
-                    uint16_t latchup = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_LATCHUP(i));
-                    uint16_t ema = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_CUR_EMA(i));
-
-                    OS_printf("         %3d | %2s | %8u | %8d | %7u | %7u\n",
-                            i, en ? "ON" : "OFF", volt, curr, latchup, ema);
-                }
-
-                uint16_t vcc_v = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_VCC_V);
-                uint16_t vcc_i = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_VCC_I);
-                uint16_t vbat_v = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_VBAT_V);
-                int16_t temp = *(int16_t *)(taddr + GS_P80_PDU_TELEMETRY_TEMP);
-                uint8_t batt_mode = *(uint8_t *)(taddr + GS_P80_PDU_TELEMETRY_BATT_MODE);
-
-                OS_printf("[PDU]    VCC: %u mV (%u mA) | VBAT: %u mV\n", vcc_v, vcc_i, vbat_v);
-                OS_printf("[TEMP]   %d (deci-degC) | BattMode: %u\n", temp, batt_mode);
-
-                OS_printf("[CONV]   IDX | EN | Volt(mV)\n");
-                for (int i = 0; i < 4; i++) {
-                    bool conv_en = *(bool *)(taddr + GS_P80_PDU_TELEMETRY_CONV_EN(i));
-                    uint16_t conv_v = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_CONV_V(i));
-                    OS_printf("         %3d | %2s | %8u\n", i, conv_en ? "ON" : "OFF", conv_v);
-                }
-
-                OS_printf("[DEVICE] Type  : ");
-                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_PDU_TELEMETRY_DEVICE_TYPE(i)));
-                OS_printf("\n");
-
-                OS_printf("[DEVICE] Status: ");
-                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_PDU_TELEMETRY_DEVICE_STATUS(i)));
-                OS_printf("\n");
-
-                uint32_t gnd_wdt_cnt = *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_GND_WDT_CNT);
-                uint32_t bus_wdt_cnt = *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_BUS_WDT_CNT);
-                uint32_t gnd_wdt_left = *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_GND_WDT_LEFT);
-                uint32_t bus_wdt_left = *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_BUS_WDT_LEFT);
-
-                OS_printf("[WDT]    GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n",
-                        gnd_wdt_cnt, gnd_wdt_left, bus_wdt_cnt, bus_wdt_left);
-
-                OS_printf("[CSP_WDT] Cnt : ");
-                for (int i = 0; i < 12; i++) OS_printf("%u ", *(uint32_t *)(taddr + GS_P80_PDU_TELEMETRY_CSP_WDT_CNT(i)));
-                OS_printf("\n");
-
-                OS_printf("          Left: ");
-                for (int i = 0; i < 12; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_PDU_TELEMETRY_CSP_WDT_LEFT(i)));
-                OS_printf("\n");
-
-                OS_printf("=======================================================\n");
+                EPS_AppData.Counters.ErrCounter++;
+                CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                                "EPS: Failed to parse PDU telemetry params, err=%d", perr);
+                if (tinst.memory) free(tinst.memory);
+                if (tinst.rows) free((void*)tinst.rows);
+                return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
+
+            OS_printf("\n================[p80 PDU HK]===================\n");
+
+            OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
+                    uptime, bootcount, bootcause, resetcause);
+
+            OS_printf("[OUTPUT] IDX | EN | Volt(mV) | Curr(mA) | LatchUp | EMA(mA)\n");
+            for (int i = 0; i < 24; i++) {
+                bool     en      = gs_param_get_bool_nc  (&tinst, GS_P80_PDU_TELEMETRY_OUT_EN(i),  0);
+                uint16_t volt    = gs_param_get_uint16_nc(&tinst, GS_P80_PDU_TELEMETRY_OUT_V(i),   0);
+                int16_t  curr    = gs_param_get_int16_nc (&tinst, GS_P80_PDU_TELEMETRY_OUT_I(i),   0);
+                uint16_t latchup = gs_param_get_uint16_nc(&tinst, GS_P80_PDU_TELEMETRY_LATCHUP(i), 0);
+                uint16_t ema     = gs_param_get_uint16_nc(&tinst, GS_P80_PDU_TELEMETRY_CUR_EMA(i), 0);
+                OS_printf("         %3d | %2s | %8u | %8d | %7u | %7u\n",
+                        i, en ? "ON" : "OFF", volt, curr, latchup, ema);
+            }
+
+            OS_printf("[PDU]    VCC: %u mV (%u mA) | VBAT: %u mV\n", vcc_v, vcc_i, vbat_v);
+            OS_printf("[TEMP]   %d (deci-degC) | BattMode: %u\n", temp, batt_mode);
+
+            OS_printf("[CONV]   IDX | EN | Volt(mV)\n");
+            for (int i = 0; i < 4; i++) {
+                bool     conv_en = gs_param_get_bool_nc  (&tinst, GS_P80_PDU_TELEMETRY_CONV_EN(i), 0);
+                uint16_t conv_v  = gs_param_get_uint16_nc(&tinst, GS_P80_PDU_TELEMETRY_CONV_V(i),  0);
+                OS_printf("         %3d | %2s | %8u\n", i, conv_en ? "ON" : "OFF", conv_v);
+            }
+
+            OS_printf("[DEVICE] Type  : ");
+            for (int i = 0; i < 8; i++) OS_printf("%u ", gs_param_get_uint8_nc(&tinst, GS_P80_PDU_TELEMETRY_DEVICE_TYPE(i), 0));
+            OS_printf("\n");
+
+            OS_printf("[DEVICE] Status: ");
+            for (int i = 0; i < 8; i++) OS_printf("%u ", gs_param_get_uint8_nc(&tinst, GS_P80_PDU_TELEMETRY_DEVICE_STATUS(i), 0));
+            OS_printf("\n");
+
+            OS_printf("[WDT]    GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n",
+                    gnd_wdt_cnt, gnd_wdt_left, bus_wdt_cnt, bus_wdt_left);
+
+            OS_printf("[CSP_WDT] Cnt : ");
+            for (int i = 0; i < 12; i++) OS_printf("%u ", gs_param_get_uint32_nc(&tinst, GS_P80_PDU_TELEMETRY_CSP_WDT_CNT(i), 0));
+            OS_printf("\n");
+
+            OS_printf("          Left: ");
+            for (int i = 0; i < 12; i++) OS_printf("%u ", gs_param_get_uint8_nc(&tinst, GS_P80_PDU_TELEMETRY_CSP_WDT_LEFT(i), 0));
+            OS_printf("\n");
+
+            OS_printf("=======================================================\n");
 
             if (tinst.memory) free(tinst.memory);
             if (tinst.rows) free((void*)tinst.rows);
@@ -466,70 +494,79 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
 
-            uint8_t *taddr = (uint8_t *)tinst.memory;
+            gs_error_t perr = GS_OK;
+            uint32_t uptime = 0, bootcause = 0, bootcount = 0;
+            uint16_t resetcause = 0;
+            uint16_t vcc_v = 0, st5_v = 0, vbat_v = 0;
+            int16_t  vcc_i = 0, st5_i = 0;
+            int16_t  temp[3] = {0};
+            uint8_t  mppt_mode = 0;
+            uint16_t mppt_limit = 0, mppt_time = 0, mppt_period = 0;
+            uint32_t gnd_wdt_cnt = 0, gnd_wdt_left = 0;
 
-            if (taddr != NULL)
+            perr |= gs_param_get_uint32(&tinst, GS_P80_ACU_TELEMETRY_UPTIME,      &uptime,      0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_ACU_TELEMETRY_BOOTCAUSE,   &bootcause,   0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_RESETCAUSE,  &resetcause,  0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_ACU_TELEMETRY_BOOTCOUNT,   &bootcount,   0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_VCC_V,       &vcc_v,       0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_ACU_TELEMETRY_VCC_I,       &vcc_i,       0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_ST5_V,       &st5_v,       0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_ACU_TELEMETRY_ST5_I,       &st5_i,       0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_VBAT_V,      &vbat_v,      0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_ACU_TELEMETRY_TEMP(0),     &temp[0],     0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_ACU_TELEMETRY_TEMP(1),     &temp[1],     0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_ACU_TELEMETRY_TEMP(2),     &temp[2],     0);
+            perr |= gs_param_get_uint8 (&tinst, GS_P80_ACU_TELEMETRY_MPPT_MODE,   &mppt_mode,   0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_MPPT_LIMIT,  &mppt_limit,  0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_MPPT_TIME,   &mppt_time,   0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_MPPT_PERIOD, &mppt_period, 0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_ACU_TELEMETRY_GND_WDT_CNT,  &gnd_wdt_cnt,  0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_ACU_TELEMETRY_GND_WDT_LEFT, &gnd_wdt_left, 0);
+
+            if (perr != GS_OK)
             {
-                OS_printf("\n================[p80 ACU1 HK]===================\n");
-
-                uint32_t uptime = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_UPTIME);
-                uint32_t bootcause = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_BOOTCAUSE);
-                uint16_t resetcause = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_RESETCAUSE);
-                uint32_t bootcount = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_BOOTCOUNT);
-                OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
-                        uptime, bootcount, bootcause, resetcause);
-
-                OS_printf("[INPUT]  IDX | EN | Volt(mV) | Curr(mA) | Power(mW) | PV_Set(mV) | DAC\n");
-                for (int i = 0; i < 6; i++) {
-                    bool en = *(bool *)(taddr + GS_P80_ACU_TELEMETRY_CHANNEL_EN(i));
-                    uint16_t volt = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_INPUT_V(i));
-                    int16_t curr = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_INPUT_I(i));
-                    uint16_t power = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_POWER(i));
-                    uint16_t pv_set = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_PV_SETPOINT(i));
-                    uint16_t dac = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_DAC_VAL(i));
-
-                    OS_printf("         %3d | %2s | %8u | %8d | %9u | %10u | %5u\n",
-                            i, en ? "ON" : "OFF", volt, curr, power, pv_set, dac);
-                }
-
-                uint16_t vcc_v = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_VCC_V);
-                int16_t vcc_i = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_VCC_I);
-                uint16_t st5_v = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_ST5_V);
-                int16_t st5_i = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_ST5_I);
-                uint16_t vbat_v = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_VBAT_V);
-
-                OS_printf("[ACU1]    VCC: %u mV (%d mA) | ST5V: %u mV (%d mA) | VBAT: %u mV\n",
-                        vcc_v, vcc_i, st5_v, st5_i, vbat_v);
-
-                int16_t temp[3];
-                for (int i = 0; i < 3; i++) {
-                    temp[i] = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_TEMP(i));
-                }
-                OS_printf("[TEMP]   T0: %d | T1: %d | T2: %d (deci-degC)\n", temp[0], temp[1], temp[2]);
-
-                uint8_t mppt_mode = *(uint8_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_MODE);
-                uint16_t mppt_limit = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_LIMIT);
-                uint16_t mppt_time = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_TIME);
-                uint16_t mppt_period = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_PERIOD);
-
-                OS_printf("[MPPT]   Mode: %u | Limit: %u | Time: %u | Period: %u\n",
-                        mppt_mode, mppt_limit, mppt_time, mppt_period);
-
-                OS_printf("[DEVICE] Type  : ");
-                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_ACU_TELEMETRY_DEVICE_TYPE(i)));
-                OS_printf("\n");
-
-                OS_printf("[DEVICE] Status: ");
-                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_ACU_TELEMETRY_DEVICE_STATUS(i)));
-                OS_printf("\n");
-
-                uint32_t gnd_wdt_cnt = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_GND_WDT_CNT);
-                uint32_t gnd_wdt_left = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_GND_WDT_LEFT);
-
-                OS_printf("[WDT]    GND: %u (Left: %u s)\n", gnd_wdt_cnt, gnd_wdt_left);
-
-                OS_printf("=======================================================\n");
+                EPS_AppData.Counters.ErrCounter++;
+                CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                                "EPS: Failed to parse ACU1 telemetry params, err=%d", perr);
+                if (tinst.memory) free(tinst.memory);
+                if (tinst.rows) free((void*)tinst.rows);
+                return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
+
+            OS_printf("\n================[p80 ACU1 HK]===================\n");
+
+            OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
+                    uptime, bootcount, bootcause, resetcause);
+
+            OS_printf("[INPUT]  IDX | EN | Volt(mV) | Curr(mA) | Power(mW) | PV_Set(mV) | DAC\n");
+            for (int i = 0; i < 6; i++) {
+                bool     en     = gs_param_get_bool_nc  (&tinst, GS_P80_ACU_TELEMETRY_CHANNEL_EN(i),  0);
+                uint16_t volt   = gs_param_get_uint16_nc(&tinst, GS_P80_ACU_TELEMETRY_INPUT_V(i),     0);
+                int16_t  curr   = gs_param_get_int16_nc (&tinst, GS_P80_ACU_TELEMETRY_INPUT_I(i),     0);
+                uint16_t power  = gs_param_get_uint16_nc(&tinst, GS_P80_ACU_TELEMETRY_POWER(i),       0);
+                uint16_t pv_set = gs_param_get_uint16_nc(&tinst, GS_P80_ACU_TELEMETRY_PV_SETPOINT(i), 0);
+                uint16_t dac    = gs_param_get_uint16_nc(&tinst, GS_P80_ACU_TELEMETRY_DAC_VAL(i),     0);
+                OS_printf("         %3d | %2s | %8u | %8d | %9u | %10u | %5u\n",
+                        i, en ? "ON" : "OFF", volt, curr, power, pv_set, dac);
+            }
+
+            OS_printf("[ACU1]    VCC: %u mV (%d mA) | ST5V: %u mV (%d mA) | VBAT: %u mV\n",
+                    vcc_v, vcc_i, st5_v, st5_i, vbat_v);
+            OS_printf("[TEMP]   T0: %d | T1: %d | T2: %d (deci-degC)\n", temp[0], temp[1], temp[2]);
+            OS_printf("[MPPT]   Mode: %u | Limit: %u | Time: %u | Period: %u\n",
+                    mppt_mode, mppt_limit, mppt_time, mppt_period);
+
+            OS_printf("[DEVICE] Type  : ");
+            for (int i = 0; i < 8; i++) OS_printf("%u ", gs_param_get_uint8_nc(&tinst, GS_P80_ACU_TELEMETRY_DEVICE_TYPE(i), 0));
+            OS_printf("\n");
+
+            OS_printf("[DEVICE] Status: ");
+            for (int i = 0; i < 8; i++) OS_printf("%u ", gs_param_get_uint8_nc(&tinst, GS_P80_ACU_TELEMETRY_DEVICE_STATUS(i), 0));
+            OS_printf("\n");
+
+            OS_printf("[WDT]    GND: %u (Left: %u s)\n", gnd_wdt_cnt, gnd_wdt_left);
+
+            OS_printf("=======================================================\n");
 
             if (tinst.memory) free(tinst.memory);
             if (tinst.rows) free((void*)tinst.rows);
@@ -550,70 +587,79 @@ CFE_Status_t EPS_Get_Hk_Cmd(const EPS_Get_Hk_Cmd_t *Msg)
                 return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
 
-            uint8_t *taddr = (uint8_t *)tinst.memory;
+            gs_error_t perr = GS_OK;
+            uint32_t uptime = 0, bootcause = 0, bootcount = 0;
+            uint16_t resetcause = 0;
+            uint16_t vcc_v = 0, st5_v = 0, vbat_v = 0;
+            int16_t  vcc_i = 0, st5_i = 0;
+            int16_t  temp[3] = {0};
+            uint8_t  mppt_mode = 0;
+            uint16_t mppt_limit = 0, mppt_time = 0, mppt_period = 0;
+            uint32_t gnd_wdt_cnt = 0, gnd_wdt_left = 0;
 
-            if (taddr != NULL)
+            perr |= gs_param_get_uint32(&tinst, GS_P80_ACU_TELEMETRY_UPTIME,      &uptime,      0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_ACU_TELEMETRY_BOOTCAUSE,   &bootcause,   0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_RESETCAUSE,  &resetcause,  0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_ACU_TELEMETRY_BOOTCOUNT,   &bootcount,   0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_VCC_V,       &vcc_v,       0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_ACU_TELEMETRY_VCC_I,       &vcc_i,       0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_ST5_V,       &st5_v,       0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_ACU_TELEMETRY_ST5_I,       &st5_i,       0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_VBAT_V,      &vbat_v,      0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_ACU_TELEMETRY_TEMP(0),     &temp[0],     0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_ACU_TELEMETRY_TEMP(1),     &temp[1],     0);
+            perr |= gs_param_get_int16 (&tinst, GS_P80_ACU_TELEMETRY_TEMP(2),     &temp[2],     0);
+            perr |= gs_param_get_uint8 (&tinst, GS_P80_ACU_TELEMETRY_MPPT_MODE,   &mppt_mode,   0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_MPPT_LIMIT,  &mppt_limit,  0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_MPPT_TIME,   &mppt_time,   0);
+            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_MPPT_PERIOD, &mppt_period, 0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_ACU_TELEMETRY_GND_WDT_CNT,  &gnd_wdt_cnt,  0);
+            perr |= gs_param_get_uint32(&tinst, GS_P80_ACU_TELEMETRY_GND_WDT_LEFT, &gnd_wdt_left, 0);
+
+            if (perr != GS_OK)
             {
-                OS_printf("\n================[p80 ACU2 HK]===================\n");
-
-                uint32_t uptime = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_UPTIME);
-                uint32_t bootcause = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_BOOTCAUSE);
-                uint16_t resetcause = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_RESETCAUSE);
-                uint32_t bootcount = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_BOOTCOUNT);
-                OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
-                        uptime, bootcount, bootcause, resetcause);
-
-                OS_printf("[INPUT]  IDX | EN | Volt(mV) | Curr(mA) | Power(mW) | PV_Set(mV) | DAC\n");
-                for (int i = 0; i < 6; i++) {
-                    bool en = *(bool *)(taddr + GS_P80_ACU_TELEMETRY_CHANNEL_EN(i));
-                    uint16_t volt = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_INPUT_V(i));
-                    int16_t curr = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_INPUT_I(i));
-                    uint16_t power = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_POWER(i));
-                    uint16_t pv_set = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_PV_SETPOINT(i));
-                    uint16_t dac = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_DAC_VAL(i));
-
-                    OS_printf("         %3d | %2s | %8u | %8d | %9u | %10u | %5u\n",
-                            i, en ? "ON" : "OFF", volt, curr, power, pv_set, dac);
-                }
-
-                uint16_t vcc_v = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_VCC_V);
-                int16_t vcc_i = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_VCC_I);
-                uint16_t st5_v = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_ST5_V);
-                int16_t st5_i = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_ST5_I);
-                uint16_t vbat_v = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_VBAT_V);
-
-                OS_printf("[ACU2]    VCC: %u mV (%d mA) | ST5V: %u mV (%d mA) | VBAT: %u mV\n",
-                        vcc_v, vcc_i, st5_v, st5_i, vbat_v);
-
-                int16_t temp[3];
-                for (int i = 0; i < 3; i++) {
-                    temp[i] = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_TEMP(i));
-                }
-                OS_printf("[TEMP]   T0: %d | T1: %d | T2: %d (deci-degC)\n", temp[0], temp[1], temp[2]);
-
-                uint8_t mppt_mode = *(uint8_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_MODE);
-                uint16_t mppt_limit = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_LIMIT);
-                uint16_t mppt_time = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_TIME);
-                uint16_t mppt_period = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_MPPT_PERIOD);
-
-                OS_printf("[MPPT]   Mode: %u | Limit: %u | Time: %u | Period: %u\n",
-                        mppt_mode, mppt_limit, mppt_time, mppt_period);
-
-                OS_printf("[DEVICE] Type  : ");
-                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_ACU_TELEMETRY_DEVICE_TYPE(i)));
-                OS_printf("\n");
-
-                OS_printf("[DEVICE] Status: ");
-                for (int i = 0; i < 8; i++) OS_printf("%u ", *(uint8_t *)(taddr + GS_P80_ACU_TELEMETRY_DEVICE_STATUS(i)));
-                OS_printf("\n");
-
-                uint32_t gnd_wdt_cnt = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_GND_WDT_CNT);
-                uint32_t gnd_wdt_left = *(uint32_t *)(taddr + GS_P80_ACU_TELEMETRY_GND_WDT_LEFT);
-
-                OS_printf("[WDT]    GND: %u (Left: %u s)\n", gnd_wdt_cnt, gnd_wdt_left);
-
-                OS_printf("=======================================================\n");
+                EPS_AppData.Counters.ErrCounter++;
+                CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                                "EPS: Failed to parse ACU2 telemetry params, err=%d", perr);
+                if (tinst.memory) free(tinst.memory);
+                if (tinst.rows) free((void*)tinst.rows);
+                return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             }
+
+            OS_printf("\n================[p80 ACU2 HK]===================\n");
+
+            OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
+                    uptime, bootcount, bootcause, resetcause);
+
+            OS_printf("[INPUT]  IDX | EN | Volt(mV) | Curr(mA) | Power(mW) | PV_Set(mV) | DAC\n");
+            for (int i = 0; i < 6; i++) {
+                bool     en     = gs_param_get_bool_nc  (&tinst, GS_P80_ACU_TELEMETRY_CHANNEL_EN(i),  0);
+                uint16_t volt   = gs_param_get_uint16_nc(&tinst, GS_P80_ACU_TELEMETRY_INPUT_V(i),     0);
+                int16_t  curr   = gs_param_get_int16_nc (&tinst, GS_P80_ACU_TELEMETRY_INPUT_I(i),     0);
+                uint16_t power  = gs_param_get_uint16_nc(&tinst, GS_P80_ACU_TELEMETRY_POWER(i),       0);
+                uint16_t pv_set = gs_param_get_uint16_nc(&tinst, GS_P80_ACU_TELEMETRY_PV_SETPOINT(i), 0);
+                uint16_t dac    = gs_param_get_uint16_nc(&tinst, GS_P80_ACU_TELEMETRY_DAC_VAL(i),     0);
+                OS_printf("         %3d | %2s | %8u | %8d | %9u | %10u | %5u\n",
+                        i, en ? "ON" : "OFF", volt, curr, power, pv_set, dac);
+            }
+
+            OS_printf("[ACU2]    VCC: %u mV (%d mA) | ST5V: %u mV (%d mA) | VBAT: %u mV\n",
+                    vcc_v, vcc_i, st5_v, st5_i, vbat_v);
+            OS_printf("[TEMP]   T0: %d | T1: %d | T2: %d (deci-degC)\n", temp[0], temp[1], temp[2]);
+            OS_printf("[MPPT]   Mode: %u | Limit: %u | Time: %u | Period: %u\n",
+                    mppt_mode, mppt_limit, mppt_time, mppt_period);
+
+            OS_printf("[DEVICE] Type  : ");
+            for (int i = 0; i < 8; i++) OS_printf("%u ", gs_param_get_uint8_nc(&tinst, GS_P80_ACU_TELEMETRY_DEVICE_TYPE(i), 0));
+            OS_printf("\n");
+
+            OS_printf("[DEVICE] Status: ");
+            for (int i = 0; i < 8; i++) OS_printf("%u ", gs_param_get_uint8_nc(&tinst, GS_P80_ACU_TELEMETRY_DEVICE_STATUS(i), 0));
+            OS_printf("\n");
+
+            OS_printf("[WDT]    GND: %u (Left: %u s)\n", gnd_wdt_cnt, gnd_wdt_left);
+
+            OS_printf("=======================================================\n");
 
             if (tinst.memory) free(tinst.memory);
             if (tinst.rows) free((void*)tinst.rows);
@@ -749,6 +795,8 @@ CFE_Status_t EPS_Param_Get_Cmd(const EPS_Param_Get_Cmd_t *Msg)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
+    //send report
+
     return CFE_SUCCESS;
 }
 
@@ -762,7 +810,12 @@ CFE_Status_t EPS_Get_Full_Table_Cmd(const EPS_Get_Full_Table_Cmd_t *Msg)
     gs_error_t result = gs_rparam_download_table_spec(&tinst, NULL, Msg->Payload.csp_node, Msg->Payload.table_id, CSP_TIMEOUT(1), &checksum);
 
     if (result){
-        return result;
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: RParam Download Table Spec failed, err=%d", result);
+        if (tinst.memory) free(tinst.memory);
+        if (tinst.rows) free((void*)tinst.rows);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
     gs_error_t err =  gs_rparam_get_full_table(&tinst, Msg->Payload.csp_node, Msg->Payload.table_id, checksum, CSP_TIMEOUT(1));
@@ -772,8 +825,33 @@ CFE_Status_t EPS_Get_Full_Table_Cmd(const EPS_Get_Full_Table_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam Get Full Table command failed, err=%d", err);
+        if (tinst.memory) free(tinst.memory);
+        if (tinst.rows) free((void*)tinst.rows);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
+
+    OS_printf("\n================[EPS Full Table (Node %u, Table %u)]===================\n",
+              Msg->Payload.csp_node, Msg->Payload.table_id);
+    OS_printf("  Name: %s | Rows: %u | Size: %u bytes\n",
+              tinst.name ? tinst.name : "N/A", tinst.row_count, tinst.memory_size);
+
+    for (unsigned int i = 0; i < tinst.row_count; i++)
+    {
+        const gs_param_table_row_t *row = &tinst.rows[i];
+        char buf[128] = {0};
+        unsigned int written = 0;
+        const void *value = (const uint8_t *)tinst.memory + row->addr;
+
+        gs_param_to_string(row, value, true, buf, sizeof(buf), 0, &written);
+        OS_printf("  [%3u] %-14s %s\n", row->addr, row->name, buf);
+    }
+
+    OS_printf("=======================================================\n");
+
+    //EPS_SendReport(Msg, tinst.memory, tinst.memory_size, err, RPT_RETTYPE_SUCCESS);
+
+    if (tinst.memory) free(tinst.memory);
+    if (tinst.rows) free((void*)tinst.rows);
 
     return CFE_SUCCESS;
 }
