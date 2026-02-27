@@ -70,8 +70,12 @@ CFE_Status_t EPS_Get_Full_Table_Cmd(const EPS_Get_Full_Table_Cmd_t *Msg);
 /*
 ** Table Save/Load Commands (추가됨)
 */
-
 CFE_Status_t EPS_Table_Save_Cmd(const EPS_Table_Save_Cmd_t *Msg);
 CFE_Status_t EPS_Table_Load_Cmd(const EPS_Table_Load_Cmd_t *Msg);
+
+/*
+** Param Save All Tables Command
+*/
+CFE_Status_t EPS_Param_Save_Cmd(const EPS_Param_Save_Cmd_t *Msg);
 
 #endif /* EPS_CMDS_H */

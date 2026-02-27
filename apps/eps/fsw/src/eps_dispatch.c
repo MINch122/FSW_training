@@ -197,6 +197,13 @@ void EPS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case EPS_PARAM_SAVE_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Param_Save_Cmd_t)))
+            {
+                EPS_Param_Save_Cmd((const EPS_Param_Save_Cmd_t *)SBBufPtr);
+            }
+            break;
+
         /*
         ** Device-specific commands (handled separately)
         */

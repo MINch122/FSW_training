@@ -91,8 +91,69 @@ CFE_Status_t EPS_SendHkCmd(const EPS_SendHkCmd_t *Msg)
     /**
      * This command is supposed to be called by the scheduler and
      * should not increment the command counter.
+     * Collects PMU and ACU1 housekeeping data and populates HkTlm.Payload.
      */
+    gs_param_table_instance_t tinst = {0};
+    EPS_HkTlm_Payload_t *hk = &EPS_AppData.HkTlm.Payload;
 
+    /* --- PMU: battery, output, system data --- */
+    gs_error_t err = p80_pmu_get_hk(&tinst, EPS_PMU_CSP_NODE, CSP_TIMEOUT(1));
+    if (err == GS_OK && tinst.memory != NULL)
+    {
+        uint8_t *taddr = (uint8_t *)tinst.memory;
+
+        hk->vbatt         = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_BATT_V);
+        hk->counter_boot  = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_BOOTCOUNT);
+        hk->wdt_gnd_time_left = *(uint32_t *)(taddr + GS_P80_PMU_TELEMETRY_GND_WDT_LEFT);
+        hk->bootcause     = (uint8_t)(*(uint32_t *)(taddr + GS_P80_PMU_TELEMETRY_BOOTCAUSE));
+        hk->battmode      = *(uint8_t  *)(taddr + GS_P80_PMU_TELEMETRY_BATT_MODE);
+        hk->cursys        = (uint16_t)*(int16_t *)(taddr + GS_P80_PMU_TELEMETRY_VCC_I);
+        hk->temp[0]       = *(int16_t  *)(taddr + GS_P80_PMU_TELEMETRY_TEMP(0));
+        hk->temp[1]       = *(int16_t  *)(taddr + GS_P80_PMU_TELEMETRY_TEMP(1));
+
+        /* PMU output channels (6 channels) */
+        uint8_t out_en_bits = 0;
+        for (int i = 0; i < 6; i++)
+        {
+            bool en = *(bool *)(taddr + GS_P80_PMU_TELEMETRY_OUT_EN(i));
+            hk->curout[i]  = (uint16_t)*(int16_t *)(taddr + GS_P80_PMU_TELEMETRY_OUT_I(i));
+            hk->latchup[i] = (uint8_t) *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_LATCHUP(i));
+            if (en) out_en_bits |= (uint8_t)(1u << i);
+        }
+        hk->output[0] = out_en_bits;
+    }
+    else
+    {
+        EPS_AppData.Counters.GetHkErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: SendHkCmd PMU get_hk failed, err=%d", err);
+    }
+    if (tinst.memory) free(tinst.memory);
+    if (tinst.rows)   free((void *)tinst.rows);
+
+    /* --- ACU1: solar input currents and temperature --- */
+    memset(&tinst, 0, sizeof(tinst));
+    err = p80_acu_get_hk(&tinst, EPS_ACU1_CSP_NODE, CSP_TIMEOUT(1));
+    if (err == GS_OK && tinst.memory != NULL)
+    {
+        uint8_t *taddr = (uint8_t *)tinst.memory;
+        uint16_t cursun = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            hk->curin[i] = (uint16_t)*(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_INPUT_I(i));
+            cursun += hk->curin[i];
+        }
+        hk->cursun  = cursun;
+        hk->temp[2] = *(int16_t *)(taddr + GS_P80_ACU_TELEMETRY_TEMP(0));
+    }
+    else
+    {
+        EPS_AppData.Counters.GetHkErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: SendHkCmd ACU1 get_hk failed, err=%d", err);
+    }
+    if (tinst.memory) free(tinst.memory);
+    if (tinst.rows)   free((void *)tinst.rows);
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(EPS_AppData.HkTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.HkTlm.TelemetryHeader), true);
@@ -105,11 +166,105 @@ CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg)
     /**
      * This command is supposed to be called by the scheduler and
      * should not increment the command counter.
+     * Collects beacon data from PMU (Dock), PDU, and ACU1 nodes.
      */
+    gs_param_table_instance_t tinst = {0};
+    EPS_BcnTlm_P80_Payload_t *bcn = &EPS_AppData.BcnTlm_P80.Payload;
 
-    /* TODO: Implement EPS_p80_GetDeviceBcnData to collect P80 beacon telemetry */
-    /* EPS_p80_GetDeviceBcnData(&EPS_AppData.BcnTlm_P80.Payload); */
+    /* --- PMU (Dock) beacon data --- */
+    gs_error_t err = p80_pmu_get_hk(&tinst, EPS_PMU_CSP_NODE, CSP_TIMEOUT(1));
+    if (err == GS_OK && tinst.memory != NULL)
+    {
+        uint8_t *taddr = (uint8_t *)tinst.memory;
+        uint16_t out_en_bits = 0;
 
+        for (int i = 0; i < 6; i++)
+        {
+            bool en = *(bool *)(taddr + GS_P80_PMU_TELEMETRY_OUT_EN(i));
+            bcn->Dock.c_out[i] = *(int16_t  *)(taddr + GS_P80_PMU_TELEMETRY_OUT_I(i));
+            bcn->Dock.v_out[i] = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_OUT_V(i));
+            if (en) out_en_bits |= (uint16_t)(1u << i);
+        }
+        /* channels 6-8 are zero-filled (PMU has 6 outputs) */
+
+        bcn->Dock.out_en       = out_en_bits;
+        bcn->Dock.bootcause    = *(uint32_t *)(taddr + GS_P80_PMU_TELEMETRY_BOOTCAUSE);
+        bcn->Dock.bootcnt      = (uint32_t)*(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_BOOTCOUNT);
+        bcn->Dock.batt_mode    = *(uint8_t  *)(taddr + GS_P80_PMU_TELEMETRY_BATT_MODE);
+        bcn->Dock.vbat_v       = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_VBAT_V);
+        bcn->Dock.vcc_c        = (uint16_t)*(int16_t *)(taddr + GS_P80_PMU_TELEMETRY_VCC_I);
+        bcn->Dock.batt_v       = *(uint16_t *)(taddr + GS_P80_PMU_TELEMETRY_BATT_V);
+        bcn->Dock.batt_temp[0] = *(int16_t  *)(taddr + GS_P80_PMU_TELEMETRY_TEMP(0));
+        bcn->Dock.batt_temp[1] = *(int16_t  *)(taddr + GS_P80_PMU_TELEMETRY_TEMP(1));
+        bcn->Dock.wdt_gnd_left = *(uint32_t *)(taddr + GS_P80_PMU_TELEMETRY_GND_WDT_LEFT);
+
+        int16_t batt_i         = *(int16_t  *)(taddr + GS_P80_PMU_TELEMETRY_BATT_I);
+        bcn->Dock.batt_chrg    = (batt_i > 0) ? batt_i : 0;
+        bcn->Dock.batt_dischrg = (batt_i < 0) ? (int16_t)(-batt_i) : 0;
+    }
+    else
+    {
+        EPS_AppData.Counters.GetBcnErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: SendBcnCmd PMU get_hk failed, err=%d", err);
+    }
+    if (tinst.memory) free(tinst.memory);
+    if (tinst.rows)   free((void *)tinst.rows);
+
+    /* --- PDU beacon data (first 9 of 24 output channels) --- */
+    memset(&tinst, 0, sizeof(tinst));
+    err = p80_pdu_get_hk(&tinst, EPS_PDU_CSP_NODE, CSP_TIMEOUT(1));
+    if (err == GS_OK && tinst.memory != NULL)
+    {
+        uint8_t *taddr = (uint8_t *)tinst.memory;
+        uint16_t out_en_bits = 0;
+        uint8_t  conv_en     = 0;
+
+        for (int i = 0; i < 9; i++)
+        {
+            bool en = *(bool *)(taddr + GS_P80_PDU_TELEMETRY_OUT_EN(i));
+            bcn->PDU.c_out[i] = *(int16_t  *)(taddr + GS_P80_PDU_TELEMETRY_OUT_I(i));
+            bcn->PDU.v_out[i] = *(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_OUT_V(i));
+            if (en) out_en_bits |= (uint16_t)(1u << i);
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            bool en = *(bool *)(taddr + GS_P80_PDU_TELEMETRY_CONV_EN(i));
+            if (en) conv_en |= (uint8_t)(1u << i);
+        }
+        bcn->PDU.out_en  = out_en_bits;
+        bcn->PDU.conv_en = conv_en;
+        bcn->PDU.vcc     = (int16_t)*(uint16_t *)(taddr + GS_P80_PDU_TELEMETRY_VCC_V);
+    }
+    else
+    {
+        EPS_AppData.Counters.GetBcnErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: SendBcnCmd PDU get_hk failed, err=%d", err);
+    }
+    if (tinst.memory) free(tinst.memory);
+    if (tinst.rows)   free((void *)tinst.rows);
+
+    /* --- ACU1 beacon data (6 solar input channels) --- */
+    memset(&tinst, 0, sizeof(tinst));
+    err = p80_acu_get_hk(&tinst, EPS_ACU1_CSP_NODE, CSP_TIMEOUT(1));
+    if (err == GS_OK && tinst.memory != NULL)
+    {
+        uint8_t *taddr = (uint8_t *)tinst.memory;
+        for (int i = 0; i < 6; i++)
+        {
+            bcn->ACU.c_in[i] = *(int16_t  *)(taddr + GS_P80_ACU_TELEMETRY_INPUT_I(i));
+            bcn->ACU.v_in[i] = *(uint16_t *)(taddr + GS_P80_ACU_TELEMETRY_INPUT_V(i));
+        }
+    }
+    else
+    {
+        EPS_AppData.Counters.GetBcnErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: SendBcnCmd ACU1 get_hk failed, err=%d", err);
+    }
+    if (tinst.memory) free(tinst.memory);
+    if (tinst.rows)   free((void *)tinst.rows);
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(EPS_AppData.BcnTlm_P80.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.BcnTlm_P80.TelemetryHeader), true);
@@ -881,7 +1036,7 @@ CFE_Status_t EPS_Table_Load_Cmd(const EPS_Table_Load_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
-    gs_error_t err = gs_rparam_load(Msg->Payload.csp_node, CSP_TIMEOUT(1), 0,  Msg->Payload.table_id);
+    gs_error_t err = gs_rparam_load(Msg->Payload.csp_node, CSP_TIMEOUT(1), 0, Msg->Payload.table_id);
 
     if(err != GS_OK)
     {
@@ -890,6 +1045,27 @@ CFE_Status_t EPS_Table_Load_Cmd(const EPS_Table_Load_Cmd_t *Msg)
                           "EPS: Table Load command failed, err=%d", err);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t EPS_Param_Save_Cmd(const EPS_Param_Save_Cmd_t *Msg)
+{
+    EPS_AppData.Counters.CmdCounter++;
+
+    /* Save all parameter tables (table_id = 0xFF means all tables) */
+    gs_error_t err = gs_rparam_save(Msg->Payload.csp_node, CSP_TIMEOUT(1), 0xFF, 0);
+
+    if(err != GS_OK)
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: Param Save (all tables) command failed, err=%d", err);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    CFE_EVS_SendEvent(EPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "EPS: Param Save (all tables) succeeded on node %u", Msg->Payload.csp_node);
 
     return CFE_SUCCESS;
 }
