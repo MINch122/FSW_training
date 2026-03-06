@@ -37,7 +37,6 @@
 #include "ci_lab_eventids.h"
 #include "ci_lab_dispatch.h"
 #include "ci_lab_cmds.h"
-#include "ci_lab_utils.h"
 
 #include "ci_lab_msg.h"
 

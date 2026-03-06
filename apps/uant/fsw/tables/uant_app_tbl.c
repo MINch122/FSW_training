@@ -16,27 +16,20 @@
  * limitations under the License.
  ************************************************************************/
 
-/**
- * @file
- *   Specification for the CI_LAB command function codes
- *
- * @note
- *   This file should be strictly limited to the command/function code (CC)
- *   macro definitions.  Other definitions such as enums, typedefs, or other
- *   macros should be placed in the msgdefs.h or msg.h files.
- */
-#ifndef CI_LAB_FCNCODES_H
-#define CI_LAB_FCNCODES_H
-
-/************************************************************************
- * Macro Definitions
- ************************************************************************/
+#include "cfe_tbl_filedef.h" /* Required to obtain the CFE_TBL_FILEDEF macro definition */
+#include "uant_app_tbl.h"
 
 /*
-** CI_LAB command codes
+** The following is an example of the declaration statement that defines the desired
+** contents of the table image.
 */
-#define CI_LAB_NOOP_CC                 0
-#define CI_LAB_RESET_COUNTERS_CC       1
-#define CI_LAB_CREATE_CHILD_TASK_CC    2
+UANT_APP_ExampleTable_t ExampleTable = {1, 2};
 
-#endif
+/*
+** The macro below identifies:
+**    1) the data structure type to use as the table image format
+**    2) the name of the table to be placed into the cFE Example Table File Header
+**    3) a brief description of the contents of the file image
+**    4) the desired name of the table image binary file that is cFE compatible
+*/
+CFE_TBL_FILEDEF(ExampleTable, UANT_APP.ExampleTable, Table Utility Test Table, uant_app_tbl.tbl)

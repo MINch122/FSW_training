@@ -18,24 +18,28 @@
 
 /**
  * @file
+ *   Specification for the UANT_APP table structures
  *
- * UANT Application Platform Configuration Header File
- *
- * This is a compatibility header for the "platform_cfg.h" file that has
- * traditionally provided both public and private config definitions
- * for each CFS app.
- *
- * These definitions are now provided in two separate files, one for
- * the public/mission scope and one for internal scope.
+ * Provides default definitions for UANT_APP table structures
  *
  * @note This file may be overridden/superceded by mission-provided defintions
  * either by overriding this header or by generating definitions from a command/data
  * dictionary tool.
  */
-#ifndef UANT_PLATFORM_CFG_H
-#define UANT_PLATFORM_CFG_H
+#ifndef UANT_APP_TBLSTRUCT_H
+#define UANT_APP_TBLSTRUCT_H
 
-#include "uant_mission_cfg.h"
-#include "uant_internal_cfg.h" 
+/*************************************************************************
+ * Includes
+ *************************************************************************/
+#include "uant_app_tbldefs.h"
+
+/************************************************************************
+ * Macro Definitions
+ ************************************************************************/
+
+/*************************************************************************
+ * Type Definitions
+ *************************************************************************/
 
 #endif

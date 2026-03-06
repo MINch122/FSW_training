@@ -131,13 +131,6 @@ void CI_LAB_TaskInit(void)
                               "Error subscribing to SB HK Request, RC = 0x%08X", (unsigned int)status);
         }
 
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(CI_LAB_WAKEUP_MID), CI_LAB_Global.CommandPipe);
-        if (status != CFE_SUCCESS)
-        {
-            CFE_EVS_SendEvent(CI_LAB_SB_SUBSCRIBE_UL_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "Error subscribing to SB Read Uplink Request, RC = 0x%08X", (unsigned int)status);
-        }
-
         status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(CFE_RF_TLM_MID), CI_LAB_Global.CommandPipe);
         if (status != CFE_SUCCESS)
         {
@@ -151,12 +144,6 @@ void CI_LAB_TaskInit(void)
         CFE_EVS_SendEvent(CI_LAB_CR_PIPE_ERR_EID, CFE_EVS_EventType_ERROR,
                           "Error creating SB Command Pipe, RC = 0x%08X", (unsigned int)status);
     }
-
-    /* Mutex creation for Last Contact time - Need this? */
-    OS_MutSemCreate(&CI_LAB_Global.MutexId, "CI_MUTEX", 0);
-
-    /* Read Stored Last Contact time */
-    CI_InitContactTime();
 
     status = OS_SocketOpen(&CI_LAB_Global.SocketID, OS_SocketDomain_INET, OS_SocketType_DATAGRAM);
     if (status != OS_SUCCESS)

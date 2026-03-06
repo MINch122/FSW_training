@@ -74,8 +74,8 @@
 #include "sant_msgids.h"
 #include "sant_msg.h"
 
-#include "uant_msgids.h"
-#include "uant_msg.h"
+#include "uant_app_msgids.h"
+#include "uant_app_msg.h"
 /* End of COMS Header */
 
 /*********************
@@ -133,7 +133,7 @@ typedef struct
 
     /* 6 UANT */
     SC_RtsEntryHeader_t hdr6;
-    UANT_SendBcnCmd_t cmd6;
+    uant_app_SendBcnCmd_t cmd6;
 
     /* 7 EPS */
     SC_RtsEntryHeader_t hdr7;
@@ -291,7 +291,7 @@ SC_RtsTable008_t SC_Rts008 = {
      *  6 UANT
      * */
     .rts.hdr6.WakeupCount       = 0,
-    .rts.cmd6.CommandHeader = CFE_MSG_CMD_HDR_INIT(UANT_SEND_BCN_MID, SC_MEMBER_SIZE(cmd6), 0, 0x64),
+    .rts.cmd6.CommandHeader = CFE_MSG_CMD_HDR_INIT(uant_app_SEND_BCN_MID, SC_MEMBER_SIZE(cmd6), 0, 0x64),
 
     /**
      *  7 EPS

@@ -18,31 +18,18 @@
 
 /**
  * @file
- *   UANT Application Public Definitions
- *
- * This provides default values for configurable items that affect
- * the interface(s) of this module.  This includes the CMD/TLM message
- * interface, tables definitions, and any other data products that
- * serve to exchange information with other entities. 외부와도 공유되는 값
- *
- * @note This file may be overridden/superceded by mission-provided defintions
- * either by overriding this header or by generating definitions from a command/data
- * dictionary tool.
+ *   This file contains the prototypes for the Sample App utility functions
  */
-#ifndef UANT_INTERFACE_CFG_H
-#define UANT_INTERFACE_CFG_H
 
-#include "common_types.h"
-#include "cfe.h"
-#include "rpt_interface_cfg.h"
+#ifndef UANT_APP_UTILS_H
+#define UANT_APP_UTILS_H
 
-/**
- * \brief Length of string buffer in the Display Value command
- *
- * The Display Value command offers an example of how to use command
- * parameters of different types.  This macro controls the length
- * of the string parameter.
- */
-#define UANT_STRING_VAL_LEN 10
+/*
+** Required header files.
+*/
+#include "uant_app.h"
 
-#endif
+CFE_Status_t UANT_APP_TblValidationFunc(void *TblData);
+void         UANT_APP_GetCrc(const char *TableName);
+
+#endif /* UANT_APP_UTILS_H */

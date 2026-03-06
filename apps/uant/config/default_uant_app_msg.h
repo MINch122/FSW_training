@@ -18,19 +18,21 @@
 
 /**
  * @file
+ *   Specification for the UANT_APP command and telemetry
+ *   message data types.
  *
- * UANT Application Mission Configuration Header File
- *
- * This is a compatibility header for the "mission_cfg.h" file that has
- * traditionally provided public config definitions for each CFS app.
+ * This is a compatibility header for the "uant_app_msg.h" file that has
+ * traditionally provided the message definitions for cFS apps.
  *
  * @note This file may be overridden/superceded by mission-provided defintions
  * either by overriding this header or by generating definitions from a command/data
  * dictionary tool.
  */
-#ifndef UANT_MISSION_CFG_H
-#define UANT_MISSION_CFG_H
+#ifndef UANT_APP_MSG_H
+#define UANT_APP_MSG_H
 
-#include "uant_interface_cfg.h"
+#include "uant_app_mission_cfg.h"
+#include "uant_app_msgdefs.h"
+#include "uant_app_msgstruct.h"
 
 #endif

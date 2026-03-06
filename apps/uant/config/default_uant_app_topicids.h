@@ -18,21 +18,19 @@
 
 /**
  * @file
- *   Specification for the UANT command and telemetry
- *   message data types.
- *
- * This is a compatibility header for the "uant_msg.h" file that has
- * traditionally provided the message definitions for cFS apps.
- *
- * @note This file may be overridden/superceded by mission-provided defintions
- * either by overriding this header or by generating definitions from a command/data
- * dictionary tool.
+ *   UANT_APP Application Topic IDs
  */
-#ifndef UANT_MSG_H
-#define UANT_MSG_H
+#ifndef UANT_APP_TOPICIDS_H
+#define UANT_APP_TOPICIDS_H
 
-#include "uant_mission_cfg.h"
-#include "uant_msgdefs.h"
-#include "uant_msgstruct.h"
+#define CFE_MISSION_UANT_APP_CMD_TOPICID       0x40
+#define CFE_MISSION_UANT_APP_SEND_HK_TOPICID   0x41
+#define CFE_MISSION_UANT_APP_SEND_BCN_TOPICID  0x42
+
+#define CFE_MISSION_UANT_APP_BCN_TLM_TOPICID   0x40
+#define CFE_MISSION_UANT_APP_HK_TLM_TOPICID    0x41
+#define CFE_MISSION_UANT_APP_RPT_TLM_TOPICID    0x42
+
+#define CFE_MISSION_UANT_INTERNAL_TLM_TOPIC_ID  0x43
 
 #endif

@@ -73,8 +73,8 @@
 #include "utrx_msgids.h"
 #include "utrx_msg.h"
 
-#include "uant_msgids.h"
-#include "uant_msg.h"
+#include "uant_app_msgids.h"
+#include "uant_app_msg.h"
 /* End of COMS Header */
 
 /*********************
@@ -126,29 +126,19 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
     .TickRate = SCH_LAB_TICK_RATE, // This TickRate value is equivalent to 1 sec. If `TickRate` is `10`, `10` tick is `1` sec 
     .Config   = {
         // {CFE_SB_MSGID_WRAP_VALUE(EPS_CMD_MID), SCH_LAB_TICK_RATE, EPS_P31U_GETHK_VI_CC},
-        // {CFE_SB_MSGID_WRAP_VALUE(SC_CMD_MID), SCH_LAB_TICK_RATE * 45, SC_START_RTS_CC, sizeof(SC_RtsCmd_Payload_t), {8, 0}}, // Trigger the Bcn RTS for 45 seconds
         {CFE_SB_MSGID_WRAP_VALUE(CFE_SRL_SEND_HK_MID), SCH_LAB_TICK_RATE * 20, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(EPS_CMD_MID), SCH_LAB_TICK_RATE * 5, EPS_P31U_GETHK_VI_INTERNAL_CC},
         // {CFE_SB_MSGID_WRAP_VALUE(ADCS_LOOP_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(RPT_SEND_BCN_MID), 10*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(SANT_SEND_BCN_MID), 10*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(STRX_SEND_BCN_MID), 10*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(UANT_SEND_BCN_MID), 10*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(UTRX_SEND_BCN_MID), 10*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), 10*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), 10*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), 10*30, 0},
-        /* EPS periodic HK request (every 10 sec) */
-        {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_HK_MID), SCH_LAB_TICK_RATE * 10, 0},
-        /* BATT periodic HK request (every 10 sec) */
-        {CFE_SB_MSGID_WRAP_VALUE(BATT_SEND_HK_MID), SCH_LAB_TICK_RATE * 10, 0},
-        /* SP periodic HK request (every 30 sec) */
-        {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_HK_MID), SCH_LAB_TICK_RATE * 30, 0},
-        /* SP beacon collection (every 30 sec) */
-        {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_SEND_HK_MID), 10*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(PAYUZUT_SEND_BCN_MID), 10*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), 10*30, 0, sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},
+        {CFE_SB_MSGID_WRAP_VALUE(RPT_SEND_BCN_MID), 10*5, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(UANT_APP_SEND_BCN_MID), 10*5, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(UTRX_SEND_BCN_MID), 10*5, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), 10*5, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), 10*5, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), 10*5, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), 10*5, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(BATT_SEND_HK_MID), 10*5, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), 10*5, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), 10*30, 0, sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_ES_SEND_HK_MID), 100, 0}, /* Example of a 1hz packet */
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_TBL_SEND_HK_MID), 50, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_TIME_SEND_HK_MID), 98, 0},

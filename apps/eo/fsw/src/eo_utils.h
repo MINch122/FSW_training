@@ -32,8 +32,8 @@
 #include "hk_msgids.h"
 #include "hk_msg.h"
 
-#include "uant_msgids.h"
-#include "uant_msg.h"
+#include "uant_app_msgids.h"
+#include "uant_app_msg.h"
 
 /* Debug definition */
 #ifdef EO_DEBUG

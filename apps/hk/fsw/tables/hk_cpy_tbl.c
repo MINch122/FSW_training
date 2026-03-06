@@ -60,8 +60,8 @@
 #include "utrx_msg.h"
 
 
-#include "uant_msgids.h"
-#include "uant_msg.h"
+#include "uant_app_msgids.h"
+#include "uant_app_msg.h"
 /* End of COMS Header */
 
 /*********************
@@ -99,7 +99,7 @@
 #define BCN_OFFSET_2_3          BCN_OFFSET_2_2 + sizeof(TO_LAB_HkTlm_Payload_t)
 #define BCN_OFFSET_3            BCN_OFFSET_2_3
 #define BCN_OFFSET_4            BCN_OFFSET_3
-#define BCN_OFFSET_5            BCN_OFFSET_4 + sizeof(UANT_BcnTlm_Payload_t)
+#define BCN_OFFSET_5            BCN_OFFSET_4 + sizeof(UANT_APP_BcnTlm_Payload_t)
 #define BCN_OFFSET_6            BCN_OFFSET_5 + sizeof(UTRX_BcnTlm_Payload_t)
 #define BCN_OFFSET_7            BCN_OFFSET_6 + sizeof(EPS_BcnTlm_Payload_t)
 #define BCN_OFFSET_8            BCN_OFFSET_7 + sizeof(SP_BcnTlm_Payload_t)
@@ -108,21 +108,6 @@
 #define BCN_OFFSET_11           BCN_OFFSET_10
 #define BCN_OFFSET_12           BCN_OFFSET_11
 #define BCN_OFFSET_13           BCN_OFFSET_12
-
-
-/* HouseKeeping Packet */
-#define HK_OFFSET_0            CFE_MSG_TLM_HDR_SIZE
-#define HK_OFFSET_1            HK_OFFSET_0 + sizeof(RPT_HkTlm_Payload_t)
-#define HK_OFFSET_2            HK_OFFSET_1
-#define HK_OFFSET_3            HK_OFFSET_2
-#define HK_OFFSET_4            HK_OFFSET_3 + sizeof(UANT_HkTlm_Payload_t)
-#define HK_OFFSET_5            HK_OFFSET_4 + sizeof(UTRX_HkTlm_Payload_t)
-#define HK_OFFSET_6            HK_OFFSET_5 + sizeof(EPS_HkTlm_Payload_t)
-#define HK_OFFSET_7            HK_OFFSET_6 + sizeof(ADCS_HkTlm_Payload_t)
-#define HK_OFFSET_8            HK_OFFSET_7
-#define HK_OFFSET_9            HK_OFFSET_8
-#define HK_OFFSET_10           HK_OFFSET_9
-#define HK_OFFSET_11           HK_OFFSET_10
 
 
 hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
@@ -189,11 +174,11 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
     },
     /*   7 : UANT   */
     {
-        CFE_SB_MSGID_WRAP_VALUE(UANT_BCN_TLM_MID),
+        CFE_SB_MSGID_WRAP_VALUE(UANT_APP_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
         BCN_OFFSET_4,
-        sizeof(UANT_BcnTlm_Payload_t),
+        sizeof(UANT_APP_BcnTlm_Payload_t),
     },
 
     /*   8 : UTRX   */

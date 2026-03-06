@@ -18,25 +18,39 @@
 
 /**
  * @file
- *   Specification for the CI_LAB command function codes
+ *   Specification for the UANT_APP_APP command function codes
  *
  * @note
  *   This file should be strictly limited to the command/function code (CC)
  *   macro definitions.  Other definitions such as enums, typedefs, or other
  *   macros should be placed in the msgdefs.h or msg.h files.
  */
-#ifndef CI_LAB_FCNCODES_H
-#define CI_LAB_FCNCODES_H
+#ifndef UANT_APP_APP_FCNCODES_H
+#define UANT_APP_APP_FCNCODES_H
 
-/************************************************************************
- * Macro Definitions
- ************************************************************************/
+// }uant_app_cc_n;
 
-/*
-** CI_LAB command codes
-*/
-#define CI_LAB_NOOP_CC                 0
-#define CI_LAB_RESET_COUNTERS_CC       1
-#define CI_LAB_CREATE_CHILD_TASK_CC    2
+#define    UANT_APP_NOOP_CC 0         
+#define    UANT_APP_RESET_COUNTERS_CC 1   
+#define    UANT_APP_SOFT_REBOOT_CC 2      
+
+    /* Burn control */
+#define    UANT_APP_BURN_CHANNEL_CC   3      
+#define   UANT_APP_STOP_BURN_CC   4        
+
+    /* Telemetry */
+#define    UANT_APP_GET_STATUS_CC    5        
+#define   UANT_APP_GET_BACKUP_STATUS_CC 6 
+#define   UANT_APP_GET_BOARD_STATUS_CC 7  
+#define    UANT_APP_GET_TEMPERATURE_CC 8  
+#define    UANT_APP_GET_SETTINGS_CC 9     
+#define   UANT_APP_SET_SETTINGS_CC  10
+#define   UANT_APP_AUTODEPLOY_CC   11  
+
+
+#define UANT_BURN_CHANNEL_INTERNAL_CC    23
+#define UANT_GET_STATUS_INTERNAL_CC      24
+
 
 #endif
+

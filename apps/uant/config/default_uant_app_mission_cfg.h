@@ -19,21 +19,25 @@
 /**
  * @file
  *
- * Main header file for the UANT application
+ * UANT_APP Application Mission Configuration Header File
+ *
+ * This is a compatibility header for the "mission_cfg.h" file that has
+ * traditionally provided public config definitions for each CFS app.
+ *
+ * @note This file may be overridden/superceded by mission-provided defintions
+ * either by overriding this header or by generating definitions from a command/data
+ * dictionary tool.
  */
+#ifndef UANT_APP_MISSION_CFG_H
+#define UANT_APP_MISSION_CFG_H
+#define MAX_TM_DATASIZE     170
 
-#ifndef UANT_DISPATCH_H
-#define UANT_DISPATCH_H
+#define UANT_I2C_DEV        "/dev/i2c-2"
+#define UANT_slave1_ADDR       0x05
+#define UANT_slave2_ADDR       0x06
+#define UANT_I2C_TIMEOUT_MS    1000
 
-/*
-** Required header files.
-*/
-#include "cfe.h"
-#include "uant_msg.h"
-#include "cfe_msg.h"
 
-void UANT_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr);
-void UANT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr);
-bool UANT_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength);
+#include "uant_app_interface_cfg.h"
 
-#endif /* UANT_APP_DISPATCH_H */
+#endif

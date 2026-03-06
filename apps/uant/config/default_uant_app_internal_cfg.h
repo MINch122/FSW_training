@@ -18,20 +18,30 @@
 
 /**
  * @file
- *   UANT Application Topic IDs
+ *   UANT_APP Application Private Config Definitions
+ *
+ * This provides default values for configurable items that are internal
+ * to this module and do NOT affect the interface(s) of this module.  Changes
+ * to items in this file only affect the local module and will be transparent
+ * to external entities that are using the public interface(s).
+ *
+ * @note This file may be overridden/superceded by mission-provided defintions
+ * either by overriding this header or by generating definitions from a command/data
+ * dictionary tool.
  */
+#ifndef UANT_APP_INTERNAL_CFG_H
+#define UANT_APP_INTERNAL_CFG_H
 
- // msgid는 앱에서 구독했을 때 dispatch에서 분기되어 처리되는 것들. 
-#ifndef UANT_TOPICIDS_H
-#define UANT_TOPICIDS_H
+/***********************************************************************/
+#define UANT_APP_PIPE_DEPTH 32 /* Depth of the Command Pipe for Application */
 
-#define CFE_MISSION_UANT_CMD_TOPICID       0x40
-#define CFE_MISSION_UANT_SEND_HK_TOPICID   0x41
-#define CFE_MISSION_UANT_SEND_BCN_TOPICID  0x42
+#define UANT_APP_NUMBER_OF_TABLES 1 /* Number of Example Table(s) */
 
-#define CFE_MISSION_UANT_HK_TLM_TOPICID    0x40
-#define CFE_MISSION_UANT_BCN_TLM_TOPICID   0x41
-#define CFE_MISSION_UANT_RPT_TLM_TOPICID   0x42
+#define UANT_APP_TABLE_OUT_OF_RANGE_ERR_CODE -1
 
+#define UANT_APP_TBL_ELEMENT_1_MAX 10
+
+
+#define GS_GSSB_INTERNAL_USE 1
 
 #endif

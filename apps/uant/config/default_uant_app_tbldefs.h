@@ -18,25 +18,28 @@
 
 /**
  * @file
- *   Specification for the CI_LAB command function codes
+ *   Specification for the UANT_APP table related
+ *   constant definitions.
  *
  * @note
- *   This file should be strictly limited to the command/function code (CC)
- *   macro definitions.  Other definitions such as enums, typedefs, or other
- *   macros should be placed in the msgdefs.h or msg.h files.
+ *   These Macro definitions have been put in this file (instead of
+ *   uant_app_tbl.h). DO NOT PUT ANY TYPEDEFS OR
+ *   STRUCTURE DEFINITIONS IN THIS FILE!
+ *   ADD THEM TO uant_app_tbl.h IF NEEDED!
  */
-#ifndef CI_LAB_FCNCODES_H
-#define CI_LAB_FCNCODES_H
+#ifndef UANT_APP_TBLDEFS_H
+#define UANT_APP_TBLDEFS_H
 
-/************************************************************************
- * Macro Definitions
- ************************************************************************/
+#include "common_types.h"
+#include "uant_app_mission_cfg.h"
 
 /*
-** CI_LAB command codes
+** Example Table structure
 */
-#define CI_LAB_NOOP_CC                 0
-#define CI_LAB_RESET_COUNTERS_CC       1
-#define CI_LAB_CREATE_CHILD_TASK_CC    2
+typedef struct
+{
+    uint16 Int1;
+    uint16 Int2;
+} UANT_APP_ExampleTable_t;
 
 #endif

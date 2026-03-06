@@ -22,8 +22,8 @@
  * Main header file for the Sample application
  */
 
-#ifndef UANT_H
-#define UANT_H
+#ifndef UANT_APP_H
+#define UANT_APP_H
 
 /*
 ** Required header files.
@@ -32,12 +32,12 @@
 #include "cfe_config.h"
 #include "cfe_msg.h"
 
-#include "uant_mission_cfg.h"
-#include "uant_platform_cfg.h"
+#include "uant_app_mission_cfg.h"
+#include "uant_app_platform_cfg.h"
 
-#include "uant_perfids.h"
-#include "uant_msgids.h"
-#include "uant_msg.h"
+#include "uant_app_perfids.h"
+#include "uant_app_msgids.h"
+#include "uant_app_msg.h"
 
 /************************************************************************
 ** Type Definitions
@@ -54,16 +54,12 @@ typedef struct
     uint8 CmdCounter;
     uint8 ErrCounter;
 
-    //beacon telemetry packet
-    UANT_BcnTlm_t bcn;
-
     /*
     ** Housekeeping telemetry packet...
     */
-    UANT_HkTlm_t HkTlm;
-
+    UANT_APP_HkTlm_t HkTlm;
+    UANT_APP_bcnTlm_t bcn;
     UANT_RPT_Tlm_t rpt;
-
     /*
     ** Run Status variable used in the main processing loop
     */
@@ -80,22 +76,22 @@ typedef struct
     char   PipeName[CFE_MISSION_MAX_API_LEN];
     uint16 PipeDepth;
 
-    CFE_SRL_IO_Handle_t *Handle;
-} UANT_Data_t;
+    CFE_TBL_Handle_t TblHandles[UANT_APP_NUMBER_OF_TABLES];
+} UANT_APP_Data_t;
 
 /*
 ** Global data structure
 */
-extern UANT_Data_t UANT_Data;
+extern UANT_APP_Data_t UANT_APP_Data; // 메모리를 한 번만 할당하기 위해
 
 /****************************************************************************/
 /*
 ** Local function prototypes.
 **
-** Note: Except for the entry point (UANT_Main), these
+** Note: Except for the entry point (UANT_APP_Main), these
 **       functions are not called from any other source module.
 */
-void         UANT_AppMain(void);
-CFE_Status_t UANT_AppInit(void);
+void         UANT_APP_Main(void);
+CFE_Status_t UANT_APP_Init(void);
 
-#endif /* UANT_H */
+#endif /* UANT_APP_H */

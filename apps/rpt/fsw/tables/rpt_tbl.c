@@ -13,7 +13,7 @@
 
 // #include "sp_msgids.h"
 
-#include "uant_msgids.h"
+#include "uant_app_msgids.h"
 #include "utrx_msgids.h"
 // #include "gps_msgids.h"
 
@@ -58,7 +58,7 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
 
     /* Entry 7 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(UANT_RPT_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(UANT_APP_RPT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 8 */

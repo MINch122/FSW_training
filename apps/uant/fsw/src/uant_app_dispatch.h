@@ -18,11 +18,26 @@
 
 /**
  * @file
- *   Define TO Lab Performance IDs
+ *
+ * Main header file for the UANT application
  */
-#ifndef UANT_PERFIDS_H
-#define UANT_PERFIDS_H
 
-#define UANT_PERF_ID 45
+#ifndef UANT_APP_DISPATCH_H
+#define UANT_APP_DISPATCH_H
 
-#endif
+/*
+** Required header files.
+*/
+#include "cfe.h"
+#include "uant_app_msg.h"
+#include "cfe_msg.h"
+
+
+
+
+
+void UANT_APP_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr);
+void UANT_APP_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr);
+bool UANT_APP_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength);
+
+#endif /* UANT_APP_DISPATCH_H */

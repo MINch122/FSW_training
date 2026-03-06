@@ -18,27 +18,19 @@
 
 /**
  * @file
- *   Specification for the UANT command and telemetry 
- *   message constant definitions.
+ *   Specification for the UANT_APP table structures
  *
- *  For UANT this is only the function/command code definitions
+ * @note
+ *   Constants and enumerated types related to these table structures
+ *   are defined in uant_app_tbldefs.h.
  */
-#ifndef UANT_MSGDEFS_H
-#define UANT_MSGDEFS_H
+#ifndef UANT_APP_TBL_H
+#define UANT_APP_TBL_H
 
-#include "common_types.h"
-#include "uant_fcncodes.h"
+#include "uant_app_tbldefs.h"
+#include "uant_app_tblstruct.h"
 
-typedef struct {
-    uint16  deploystatus;
-    uint8 ant1actvcnt;
-    uint8 ant2actvcnt;
-    uint8 ant3actvcnt;
-    uint8 ant4actvcnt;
-} UANT_HkTlm_Payload_t;
-
-typedef struct {
-    uint16  deploystatus;
-} UANT_BcnTlm_Payload_t;
+/* Define filenames of default data images for tables */
+#define UANT_APP_TABLE_FILE "/cf/uant_app_tbl.tbl"
 
 #endif
