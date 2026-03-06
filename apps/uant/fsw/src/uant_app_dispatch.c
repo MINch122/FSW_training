@@ -139,17 +139,6 @@ void UANT_APP_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
-
-                /* ---------- ANT‑6 자동 전개 ---------- */
-        case UANT_APP_AUTODEPLOY_CC:
-
-            if (UANT_APP_VerifyCmdLength(&SBBufPtr->Msg, sizeof(UANT_APP_AutodeployCmd_t)))
-            {
-                UANT_APP_AutoDeploy((const UANT_APP_AutodeployCmd_t *)SBBufPtr);
-            }
-            break;
-
-
         /* ---------- BOARD‑STATUS (uptime, reboot‑cnt) ---------- */
             //디스패치 , cmd 분리하기, 텔레메트리는 지상콜과 스케줄러가 주는 것 두가지가있음 << 분리해야함 각각 다른 버퍼에 담아서 뿌리기
         case UANT_APP_GET_BOARD_STATUS_CC:

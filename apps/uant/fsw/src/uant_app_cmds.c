@@ -328,58 +328,59 @@ gs_error_t UANT_APP_StopBurn(const UANT_APP_StopBurnCmd_t *Msg)
 }
 
 
+// autodeploy can not work , need to edit
 
-gs_error_t UANT_APP_AutoDeploy(const UANT_APP_AutodeployCmd_t *Msg)
-{
-    int16 gs_st = gs_autodeploy_six_u(Msg->SecondsDelay,
-                                      Msg->AddrAnt6_0,
-                                      Msg->AddrAnt6_1,
-                                      0x00, 0x00, 0x00, 0x00);
+// gs_error_t UANT_APP_AutoDeploy(const UANT_APP_AutodeployCmd_t *Msg)
+// {
+//     int16 gs_st = gs_autodeploy_six_u(Msg->SecondsDelay,
+//                                       Msg->AddrAnt6_0,
+//                                       Msg->AddrAnt6_1,
+//                                       0x00, 0x00, 0x00, 0x00);
 
-    switch (gs_st)
-    {
-        case STARTING:
-            CFE_EVS_SendEvent(UANT_APP_AUTODEPLOY_START_EID, CFE_EVS_EventType_INFORMATION,
-                              "ANT-6 autodeploy START (delay=%u s)", Msg->SecondsDelay);
-            UANT_APP_Data.CmdCounter++;
-            break;
+//     switch (gs_st)
+//     {
+//         case STARTING:
+//             CFE_EVS_SendEvent(UANT_APP_AUTODEPLOY_START_EID, CFE_EVS_EventType_INFORMATION,
+//                               "ANT-6 autodeploy START (delay=%u s)", Msg->SecondsDelay);
+//             UANT_APP_Data.CmdCounter++;
+//             break;
 
-        case RUNNING:
-            CFE_EVS_SendEvent(UANT_APP_AUTODEPLOY_RUN_EID, CFE_EVS_EventType_DEBUG,
-                              "ANT-6 autodeploy already RUNNING");
-            break;
+//         case RUNNING:
+//             CFE_EVS_SendEvent(UANT_APP_AUTODEPLOY_RUN_EID, CFE_EVS_EventType_DEBUG,
+//                               "ANT-6 autodeploy already RUNNING");
+//             break;
 
-        case FINISHED_SUCCESSFULLY:
-            CFE_EVS_SendEvent(UANT_APP_AUTODEPLOY_DONE_EID, CFE_EVS_EventType_INFORMATION,
-                              "ANT-6 autodeploy FINISHED OK");
-            UANT_APP_Data.CmdCounter++;
-            break;
+//         case FINISHED_SUCCESSFULLY:
+//             CFE_EVS_SendEvent(UANT_APP_AUTODEPLOY_DONE_EID, CFE_EVS_EventType_INFORMATION,
+//                               "ANT-6 autodeploy FINISHED OK");
+//             UANT_APP_Data.CmdCounter++;
+//             break;
 
-        default:
-            CFE_EVS_SendEvent(UANT_APP_AUTODEPLOY_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "ANT-6 autodeploy FAILED, state=%d", gs_st);
-            UANT_APP_Data.ErrCounter++;
-            break;
-    }
+//         default:
+//             CFE_EVS_SendEvent(UANT_APP_AUTODEPLOY_ERR_EID, CFE_EVS_EventType_ERROR,
+//                               "ANT-6 autodeploy FAILED, state=%d", gs_st);
+//             UANT_APP_Data.ErrCounter++;
+//             break;
+//     }
 
-    /* RPT 데이터 구성: 전체를 0으로 초기화 후 필요한 필드만 설정 */
-    RPT_Report_t report = (RPT_Report_t){0};
-    report.MsgID          = UANT_APP_CMD_MID;
-    report.CommandCode    = UANT_APP_AUTODEPLOY_CC;
-    report.ReturnCode     = (int32)gs_st;
-    report.ReturnDataSize = 0;
-    report.ReturnType     = ((gs_st == STARTING) || (gs_st == FINISHED_SUCCESSFULLY))
-                                ? RPT_RETTYPE_SUCCESS
-                                : RPT_RETTYPE_LIB;
-    /* report.ReturnValue 등 나머지 버퍼 필드는 위의 0 초기화로 모두 0 */
+//     /* RPT 데이터 구성: 전체를 0으로 초기화 후 필요한 필드만 설정 */
+//     RPT_Report_t report = (RPT_Report_t){0};
+//     report.MsgID          = UANT_APP_CMD_MID;
+//     report.CommandCode    = UANT_APP_AUTODEPLOY_CC;
+//     report.ReturnCode     = (int32)gs_st;
+//     report.ReturnDataSize = 0;
+//     report.ReturnType     = ((gs_st == STARTING) || (gs_st == FINISHED_SUCCESSFULLY))
+//                                 ? RPT_RETTYPE_SUCCESS
+//                                 : RPT_RETTYPE_LIB;
+//     /* report.ReturnValue 등 나머지 버퍼 필드는 위의 0 초기화로 모두 0 */
 
-    /* 전역 RPT 패킷으로 전송 */
-    UANT_APP_Data.rpt.Payload = report;
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(UANT_APP_Data.rpt.TelemetryHeader));
-    (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_APP_Data.rpt.TelemetryHeader), true);
+//     /* 전역 RPT 패킷으로 전송 */
+//     UANT_APP_Data.rpt.Payload = report;
+//     CFE_SB_TimeStampMsg(CFE_MSG_PTR(UANT_APP_Data.rpt.TelemetryHeader));
+//     (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_APP_Data.rpt.TelemetryHeader), true);
 
-    return gs_st;
-}
+//     return gs_st;
+// }
 
 
 

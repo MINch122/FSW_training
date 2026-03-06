@@ -43,7 +43,7 @@ CFE_Status_t UANT_APP_NoopCmd(const UANT_APP_NoopCmd_t *Msg);
 gs_error_t   UANT_APP_SoftReboot(const UANT_APP_SoftRebootCmd_t *Msg);
 gs_error_t   UANT_APP_BurnChannel(const UANT_APP_BurnChannelCmd_t *Msg);
 gs_error_t   UANT_APP_StopBurn(const UANT_APP_StopBurnCmd_t *Msg);
-gs_error_t   UANT_APP_AutoDeploy(const UANT_APP_AutodeployCmd_t *Msg);
+// gs_error_t   UANT_APP_AutoDeploy(const UANT_APP_AutodeployCmd_t *Msg);
 
 gs_error_t   UANT_APP_GetBoardStatus(const UANT_APP_GetBoardStatusCmd_t *Msg);
 gs_error_t   UANT_APP_GetTemperature(const UANT_APP_GetTemperatureCmd_t *Msg);
