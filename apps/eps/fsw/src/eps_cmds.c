@@ -86,272 +86,272 @@ void EPS_SendReport(const void* cmd,
    CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader), true);
 }
 
-CFE_Status_t EPS_SendHkCmd(const EPS_SendHkCmd_t *Msg)
-{
-    /**
-     * This command is supposed to be called by the scheduler and
-     * should not increment the command counter.
-     * Collects PMU and ACU1 housekeeping data and populates HkTlm.Payload.
-     */
-    gs_param_table_instance_t tinst = {0};
-    EPS_HkTlm_Payload_t *hk = &EPS_AppData.HkTlm.Payload;
-    gs_error_t perr;
+// CFE_Status_t EPS_SendHkCmd(const EPS_SendHkCmd_t *Msg)
+// {
+//     /**
+//      * This command is supposed to be called by the scheduler and
+//      * should not increment the command counter.
+//      * Collects PMU and ACU1 housekeeping data and populates HkTlm.Payload.
+//      */
+//     gs_param_table_instance_t tinst = {0};
+//     EPS_HkTlm_Payload_t *hk = &EPS_AppData.HkTlm.Payload;
+//     gs_error_t perr;
 
-    /* --- PMU: battery, output, system data --- */
-    gs_error_t err = p80_pmu_get_hk(&tinst, EPS_PMU_CSP_NODE, CSP_TIMEOUT(1));
-    if (err == GS_OK && tinst.memory != NULL)
-    {
-        uint32_t bootcause_raw = 0;
-        int16_t  vcc_i = 0;
+//     /* --- PMU: battery, output, system data --- */
+//     gs_error_t err = p80_pmu_get_hk(&tinst, EPS_PMU_CSP_NODE, CSP_TIMEOUT(1));
+//     if (err == GS_OK && tinst.memory != NULL)
+//     {
+//         uint32_t bootcause_raw = 0;
+//         int16_t  vcc_i = 0;
 
-        perr  = GS_OK;
-        perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_BATT_V,        &hk->vbatt,              0);
-        perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_BOOTCOUNT,     &hk->counter_boot,       0);
-        perr |= gs_param_get_uint32(&tinst, GS_P80_PMU_TELEMETRY_GND_WDT_LEFT,  &hk->wdt_gnd_time_left,  0);
-        perr |= gs_param_get_uint32(&tinst, GS_P80_PMU_TELEMETRY_BOOTCAUSE,     &bootcause_raw,          0);
-        hk->bootcause = (uint8_t)bootcause_raw;
-        perr |= gs_param_get_uint8 (&tinst, GS_P80_PMU_TELEMETRY_BATT_MODE,     &hk->battmode,           0);
-        perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_VCC_I,         &vcc_i,                  0);
-        hk->cursys = (uint16_t)vcc_i;
-        perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_TEMP(0),       &hk->temp[0],            0);
-        perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_TEMP(1),       &hk->temp[1],            0);
+//         perr  = GS_OK;
+//         perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_BATT_V,        &hk->vbatt,              0);
+//         perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_BOOTCOUNT,     &hk->counter_boot,       0);
+//         perr |= gs_param_get_uint32(&tinst, GS_P80_PMU_TELEMETRY_GND_WDT_LEFT,  &hk->wdt_gnd_time_left,  0);
+//         perr |= gs_param_get_uint32(&tinst, GS_P80_PMU_TELEMETRY_BOOTCAUSE,     &bootcause_raw,          0);
+//         hk->bootcause = (uint8_t)bootcause_raw;
+//         perr |= gs_param_get_uint8 (&tinst, GS_P80_PMU_TELEMETRY_BATT_MODE,     &hk->battmode,           0);
+//         perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_VCC_I,         &vcc_i,                  0);
+//         hk->cursys = (uint16_t)vcc_i;
+//         perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_TEMP(0),       &hk->temp[0],            0);
+//         perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_TEMP(1),       &hk->temp[1],            0);
 
-        /* PMU output channels (6 channels) */
-        uint8_t out_en_bits = 0;
-        for (int i = 0; i < 6; i++)
-        {
-            bool en = false;
-            int16_t out_i = 0;
-            uint16_t latchup_raw = 0;
-            perr |= gs_param_get_bool  (&tinst, GS_P80_PMU_TELEMETRY_OUT_EN(i),  &en,          0);
-            perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_OUT_I(i),   &out_i,       0);
-            perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_LATCHUP(i), &latchup_raw, 0);
-            hk->curout[i]  = (uint16_t)out_i;
-            hk->latchup[i] = (uint8_t)latchup_raw;
-            if (en) out_en_bits |= (uint8_t)(1u << i);
-        }
-        hk->output[0] = out_en_bits;
+//         /* PMU output channels (6 channels) */
+//         uint8_t out_en_bits = 0;
+//         for (int i = 0; i < 6; i++)
+//         {
+//             bool en = false;
+//             int16_t out_i = 0;
+//             uint16_t latchup_raw = 0;
+//             perr |= gs_param_get_bool  (&tinst, GS_P80_PMU_TELEMETRY_OUT_EN(i),  &en,          0);
+//             perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_OUT_I(i),   &out_i,       0);
+//             perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_LATCHUP(i), &latchup_raw, 0);
+//             hk->curout[i]  = (uint16_t)out_i;
+//             hk->latchup[i] = (uint8_t)latchup_raw;
+//             if (en) out_en_bits |= (uint8_t)(1u << i);
+//         }
+//         hk->output[0] = out_en_bits;
 
-        if (perr != GS_OK)
-        {
-            CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "EPS: SendHkCmd PMU param parse error, err=%d", perr);
-        }
-    }
-    else
-    {
-        EPS_AppData.Counters.GetHkErrCounter++;
-        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: SendHkCmd PMU get_hk failed, err=%d", err);
-    }
-    if (tinst.memory) free(tinst.memory);
-    if (tinst.rows)   free((void *)tinst.rows);
+//         if (perr != GS_OK)
+//         {
+//             CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+//                               "EPS: SendHkCmd PMU param parse error, err=%d", perr);
+//         }
+//     }
+//     else
+//     {
+//         EPS_AppData.Counters.GetHkErrCounter++;
+//         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+//                           "EPS: SendHkCmd PMU get_hk failed, err=%d", err);
+//     }
+//     if (tinst.memory) free(tinst.memory);
+//     if (tinst.rows)   free((void *)tinst.rows);
 
-    /* --- ACU1: solar input currents and temperature --- */
-    memset(&tinst, 0, sizeof(tinst));
-    err = p80_acu_get_hk(&tinst, EPS_ACU1_CSP_NODE, CSP_TIMEOUT(1));
-    if (err == GS_OK && tinst.memory != NULL)
-    {
-        perr = GS_OK;
-        uint16_t cursun = 0;
-        for (int i = 0; i < 3; i++)
-        {
-            int16_t input_i = 0;
-            perr |= gs_param_get_int16(&tinst, GS_P80_ACU_TELEMETRY_INPUT_I(i), &input_i, 0);
-            hk->curin[i] = (uint16_t)input_i;
-            cursun += hk->curin[i];
-        }
-        hk->cursun = cursun;
-        perr |= gs_param_get_int16(&tinst, GS_P80_ACU_TELEMETRY_TEMP(0), &hk->temp[2], 0);
+//     /* --- ACU1: solar input currents and temperature --- */
+//     memset(&tinst, 0, sizeof(tinst));
+//     err = p80_acu_get_hk(&tinst, EPS_ACU1_CSP_NODE, CSP_TIMEOUT(1));
+//     if (err == GS_OK && tinst.memory != NULL)
+//     {
+//         perr = GS_OK;
+//         uint16_t cursun = 0;
+//         for (int i = 0; i < 3; i++)
+//         {
+//             int16_t input_i = 0;
+//             perr |= gs_param_get_int16(&tinst, GS_P80_ACU_TELEMETRY_INPUT_I(i), &input_i, 0);
+//             hk->curin[i] = (uint16_t)input_i;
+//             cursun += hk->curin[i];
+//         }
+//         hk->cursun = cursun;
+//         perr |= gs_param_get_int16(&tinst, GS_P80_ACU_TELEMETRY_TEMP(0), &hk->temp[2], 0);
 
-        if (perr != GS_OK)
-        {
-            CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "EPS: SendHkCmd ACU1 param parse error, err=%d", perr);
-        }
-    }
-    else
-    {
-        EPS_AppData.Counters.GetHkErrCounter++;
-        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: SendHkCmd ACU1 get_hk failed, err=%d", err);
-    }
-    if (tinst.memory) free(tinst.memory);
-    if (tinst.rows)   free((void *)tinst.rows);
+//         if (perr != GS_OK)
+//         {
+//             CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+//                               "EPS: SendHkCmd ACU1 param parse error, err=%d", perr);
+//         }
+//     }
+//     else
+//     {
+//         EPS_AppData.Counters.GetHkErrCounter++;
+//         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+//                           "EPS: SendHkCmd ACU1 get_hk failed, err=%d", err);
+//     }
+//     if (tinst.memory) free(tinst.memory);
+//     if (tinst.rows)   free((void *)tinst.rows);
 
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(EPS_AppData.HkTlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.HkTlm.TelemetryHeader), true);
+//     CFE_SB_TimeStampMsg(CFE_MSG_PTR(EPS_AppData.HkTlm.TelemetryHeader));
+//     CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.HkTlm.TelemetryHeader), true);
 
-    return CFE_SUCCESS;
-}
+//     return CFE_SUCCESS;
+// }
 
-CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg)
-{
-    /**
-     * This command is supposed to be called by the scheduler and
-     * should not increment the command counter.
-     * Collects beacon data from PMU (Dock), PDU, and ACU1 nodes.
-     */
-    gs_param_table_instance_t tinst = {0};
-    EPS_BcnTlm_P80_Payload_t *bcn = &EPS_AppData.BcnTlm_P80.Payload;
-    gs_error_t perr;
+// CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg)
+// {
+//     /**
+//      * This command is supposed to be called by the scheduler and
+//      * should not increment the command counter.
+//      * Collects beacon data from PMU (Dock), PDU, and ACU1 nodes.
+//      */
+//     gs_param_table_instance_t tinst = {0};
+//     EPS_BcnTlm_P80_Payload_t *bcn = &EPS_AppData.BcnTlm_P80.Payload;
+//     gs_error_t perr;
 
-    /* --- PMU (Dock) beacon data --- */
-    gs_error_t err = p80_pmu_get_hk(&tinst, EPS_PMU_CSP_NODE, CSP_TIMEOUT(1));
-    if (err == GS_OK && tinst.memory != NULL)
-    {
-        perr = GS_OK;
-        uint16_t out_en_bits = 0;
+//     /* --- PMU (Dock) beacon data --- */
+//     gs_error_t err = p80_pmu_get_hk(&tinst, EPS_PMU_CSP_NODE, CSP_TIMEOUT(1));
+//     if (err == GS_OK && tinst.memory != NULL)
+//     {
+//         perr = GS_OK;
+//         uint16_t out_en_bits = 0;
 
-        for (int i = 0; i < 6; i++)
-        {
-            bool en = false;
-            int16_t  c_out_tmp = 0;
-            uint16_t v_out_tmp = 0;
-            perr |= gs_param_get_bool  (&tinst, GS_P80_PMU_TELEMETRY_OUT_EN(i), &en,        0);
-            perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_OUT_I(i),  &c_out_tmp, 0);
-            perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_OUT_V(i),  &v_out_tmp, 0);
-            bcn->Dock.c_out[i] = c_out_tmp;
-            bcn->Dock.v_out[i] = v_out_tmp;
-            if (en) out_en_bits |= (uint16_t)(1u << i);
-        }
-        /* channels 6-8 are zero-filled (PMU has 6 outputs) */
+//         for (int i = 0; i < 6; i++)
+//         {
+//             bool en = false;
+//             int16_t  c_out_tmp = 0;
+//             uint16_t v_out_tmp = 0;
+//             perr |= gs_param_get_bool  (&tinst, GS_P80_PMU_TELEMETRY_OUT_EN(i), &en,        0);
+//             perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_OUT_I(i),  &c_out_tmp, 0);
+//             perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_OUT_V(i),  &v_out_tmp, 0);
+//             bcn->Dock.c_out[i] = c_out_tmp;
+//             bcn->Dock.v_out[i] = v_out_tmp;
+//             if (en) out_en_bits |= (uint16_t)(1u << i);
+//         }
+//         /* channels 6-8 are zero-filled (PMU has 6 outputs) */
 
-        bcn->Dock.out_en = out_en_bits;
+//         bcn->Dock.out_en = out_en_bits;
 
-        uint32_t bootcause_tmp = 0;
-        uint16_t bootcount_raw = 0;
-        uint8_t  batt_mode_tmp = 0;
-        uint16_t vbat_v_tmp = 0;
-        int16_t  vcc_i = 0;
-        uint16_t batt_v_tmp = 0;
-        int16_t  batt_temp0 = 0, batt_temp1 = 0;
-        uint32_t wdt_gnd_left_tmp = 0;
-        int16_t  batt_i = 0;
+//         uint32_t bootcause_tmp = 0;
+//         uint16_t bootcount_raw = 0;
+//         uint8_t  batt_mode_tmp = 0;
+//         uint16_t vbat_v_tmp = 0;
+//         int16_t  vcc_i = 0;
+//         uint16_t batt_v_tmp = 0;
+//         int16_t  batt_temp0 = 0, batt_temp1 = 0;
+//         uint32_t wdt_gnd_left_tmp = 0;
+//         int16_t  batt_i = 0;
 
-        perr |= gs_param_get_uint32(&tinst, GS_P80_PMU_TELEMETRY_BOOTCAUSE,    &bootcause_tmp,    0);
-        perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_BOOTCOUNT,    &bootcount_raw,    0);
-        perr |= gs_param_get_uint8 (&tinst, GS_P80_PMU_TELEMETRY_BATT_MODE,    &batt_mode_tmp,    0);
-        perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_VBAT_V,       &vbat_v_tmp,       0);
-        perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_VCC_I,        &vcc_i,            0);
-        perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_BATT_V,       &batt_v_tmp,       0);
-        perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_TEMP(0),      &batt_temp0,       0);
-        perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_TEMP(1),      &batt_temp1,       0);
-        perr |= gs_param_get_uint32(&tinst, GS_P80_PMU_TELEMETRY_GND_WDT_LEFT, &wdt_gnd_left_tmp, 0);
-        perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_BATT_I,       &batt_i,           0);
+//         perr |= gs_param_get_uint32(&tinst, GS_P80_PMU_TELEMETRY_BOOTCAUSE,    &bootcause_tmp,    0);
+//         perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_BOOTCOUNT,    &bootcount_raw,    0);
+//         perr |= gs_param_get_uint8 (&tinst, GS_P80_PMU_TELEMETRY_BATT_MODE,    &batt_mode_tmp,    0);
+//         perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_VBAT_V,       &vbat_v_tmp,       0);
+//         perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_VCC_I,        &vcc_i,            0);
+//         perr |= gs_param_get_uint16(&tinst, GS_P80_PMU_TELEMETRY_BATT_V,       &batt_v_tmp,       0);
+//         perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_TEMP(0),      &batt_temp0,       0);
+//         perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_TEMP(1),      &batt_temp1,       0);
+//         perr |= gs_param_get_uint32(&tinst, GS_P80_PMU_TELEMETRY_GND_WDT_LEFT, &wdt_gnd_left_tmp, 0);
+//         perr |= gs_param_get_int16 (&tinst, GS_P80_PMU_TELEMETRY_BATT_I,       &batt_i,           0);
 
-        bcn->Dock.bootcause    = bootcause_tmp;
-        bcn->Dock.bootcnt      = (uint32_t)bootcount_raw;
-        bcn->Dock.batt_mode    = batt_mode_tmp;
-        bcn->Dock.vbat_v       = vbat_v_tmp;
-        bcn->Dock.vcc_c        = (uint16_t)vcc_i;
-        bcn->Dock.batt_v       = batt_v_tmp;
-        bcn->Dock.batt_temp[0] = batt_temp0;
-        bcn->Dock.batt_temp[1] = batt_temp1;
-        bcn->Dock.wdt_gnd_left = wdt_gnd_left_tmp;
-        bcn->Dock.batt_chrg    = (batt_i > 0) ? batt_i : 0;
-        bcn->Dock.batt_dischrg = (batt_i < 0) ? (int16_t)(-batt_i) : 0;
+//         bcn->Dock.bootcause    = bootcause_tmp;
+//         bcn->Dock.bootcnt      = (uint32_t)bootcount_raw;
+//         bcn->Dock.batt_mode    = batt_mode_tmp;
+//         bcn->Dock.vbat_v       = vbat_v_tmp;
+//         bcn->Dock.vcc_c        = (uint16_t)vcc_i;
+//         bcn->Dock.batt_v       = batt_v_tmp;
+//         bcn->Dock.batt_temp[0] = batt_temp0;
+//         bcn->Dock.batt_temp[1] = batt_temp1;
+//         bcn->Dock.wdt_gnd_left = wdt_gnd_left_tmp;
+//         bcn->Dock.batt_chrg    = (batt_i > 0) ? batt_i : 0;
+//         bcn->Dock.batt_dischrg = (batt_i < 0) ? (int16_t)(-batt_i) : 0;
 
-        if (perr != GS_OK)
-        {
-            CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "EPS: SendBcnCmd PMU param parse error, err=%d", perr);
-        }
-    }
-    else
-    {
-        EPS_AppData.Counters.GetBcnErrCounter++;
-        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: SendBcnCmd PMU get_hk failed, err=%d", err);
-    }
-    if (tinst.memory) free(tinst.memory);
-    if (tinst.rows)   free((void *)tinst.rows);
+//         if (perr != GS_OK)
+//         {
+//             CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+//                               "EPS: SendBcnCmd PMU param parse error, err=%d", perr);
+//         }
+//     }
+//     else
+//     {
+//         EPS_AppData.Counters.GetBcnErrCounter++;
+//         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+//                           "EPS: SendBcnCmd PMU get_hk failed, err=%d", err);
+//     }
+//     if (tinst.memory) free(tinst.memory);
+//     if (tinst.rows)   free((void *)tinst.rows);
 
-    /* --- PDU beacon data (first 9 of 24 output channels) --- */
-    memset(&tinst, 0, sizeof(tinst));
-    err = p80_pdu_get_hk(&tinst, EPS_PDU_CSP_NODE, CSP_TIMEOUT(1));
-    if (err == GS_OK && tinst.memory != NULL)
-    {
-        perr = GS_OK;
-        uint16_t out_en_bits = 0;
-        uint8_t  conv_en     = 0;
+//     /* --- PDU beacon data (first 9 of 24 output channels) --- */
+//     memset(&tinst, 0, sizeof(tinst));
+//     err = p80_pdu_get_hk(&tinst, EPS_PDU_CSP_NODE, CSP_TIMEOUT(1));
+//     if (err == GS_OK && tinst.memory != NULL)
+//     {
+//         perr = GS_OK;
+//         uint16_t out_en_bits = 0;
+//         uint8_t  conv_en     = 0;
 
-        for (int i = 0; i < 9; i++)
-        {
-            bool en = false;
-            int16_t  c_out_tmp = 0;
-            uint16_t v_out_tmp = 0;
-            perr |= gs_param_get_bool  (&tinst, GS_P80_PDU_TELEMETRY_OUT_EN(i), &en,        0);
-            perr |= gs_param_get_int16 (&tinst, GS_P80_PDU_TELEMETRY_OUT_I(i),  &c_out_tmp, 0);
-            perr |= gs_param_get_uint16(&tinst, GS_P80_PDU_TELEMETRY_OUT_V(i),  &v_out_tmp, 0);
-            bcn->PDU.c_out[i] = c_out_tmp;
-            bcn->PDU.v_out[i] = v_out_tmp;
-            if (en) out_en_bits |= (uint16_t)(1u << i);
-        }
-        for (int i = 0; i < 4; i++)
-        {
-            bool en = false;
-            perr |= gs_param_get_bool(&tinst, GS_P80_PDU_TELEMETRY_CONV_EN(i), &en, 0);
-            if (en) conv_en |= (uint8_t)(1u << i);
-        }
-        bcn->PDU.out_en  = out_en_bits;
-        bcn->PDU.conv_en = conv_en;
+//         for (int i = 0; i < 9; i++)
+//         {
+//             bool en = false;
+//             int16_t  c_out_tmp = 0;
+//             uint16_t v_out_tmp = 0;
+//             perr |= gs_param_get_bool  (&tinst, GS_P80_PDU_TELEMETRY_OUT_EN(i), &en,        0);
+//             perr |= gs_param_get_int16 (&tinst, GS_P80_PDU_TELEMETRY_OUT_I(i),  &c_out_tmp, 0);
+//             perr |= gs_param_get_uint16(&tinst, GS_P80_PDU_TELEMETRY_OUT_V(i),  &v_out_tmp, 0);
+//             bcn->PDU.c_out[i] = c_out_tmp;
+//             bcn->PDU.v_out[i] = v_out_tmp;
+//             if (en) out_en_bits |= (uint16_t)(1u << i);
+//         }
+//         for (int i = 0; i < 4; i++)
+//         {
+//             bool en = false;
+//             perr |= gs_param_get_bool(&tinst, GS_P80_PDU_TELEMETRY_CONV_EN(i), &en, 0);
+//             if (en) conv_en |= (uint8_t)(1u << i);
+//         }
+//         bcn->PDU.out_en  = out_en_bits;
+//         bcn->PDU.conv_en = conv_en;
 
-        uint16_t vcc_v = 0;
-        perr |= gs_param_get_uint16(&tinst, GS_P80_PDU_TELEMETRY_VCC_V, &vcc_v, 0);
-        bcn->PDU.vcc = (int16_t)vcc_v;
+//         uint16_t vcc_v = 0;
+//         perr |= gs_param_get_uint16(&tinst, GS_P80_PDU_TELEMETRY_VCC_V, &vcc_v, 0);
+//         bcn->PDU.vcc = (int16_t)vcc_v;
 
-        if (perr != GS_OK)
-        {
-            CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "EPS: SendBcnCmd PDU param parse error, err=%d", perr);
-        }
-    }
-    else
-    {
-        EPS_AppData.Counters.GetBcnErrCounter++;
-        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: SendBcnCmd PDU get_hk failed, err=%d", err);
-    }
-    if (tinst.memory) free(tinst.memory);
-    if (tinst.rows)   free((void *)tinst.rows);
+//         if (perr != GS_OK)
+//         {
+//             CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+//                               "EPS: SendBcnCmd PDU param parse error, err=%d", perr);
+//         }
+//     }
+//     else
+//     {
+//         EPS_AppData.Counters.GetBcnErrCounter++;
+//         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+//                           "EPS: SendBcnCmd PDU get_hk failed, err=%d", err);
+//     }
+//     if (tinst.memory) free(tinst.memory);
+//     if (tinst.rows)   free((void *)tinst.rows);
 
-    /* --- ACU1 beacon data (6 solar input channels) --- */
-    memset(&tinst, 0, sizeof(tinst));
-    err = p80_acu_get_hk(&tinst, EPS_ACU1_CSP_NODE, CSP_TIMEOUT(1));
-    if (err == GS_OK && tinst.memory != NULL)
-    {
-        perr = GS_OK;
-        for (int i = 0; i < 6; i++)
-        {
-            int16_t  c_in_tmp = 0;
-            uint16_t v_in_tmp = 0;
-            perr |= gs_param_get_int16 (&tinst, GS_P80_ACU_TELEMETRY_INPUT_I(i), &c_in_tmp, 0);
-            perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_INPUT_V(i), &v_in_tmp, 0);
-            bcn->ACU.c_in[i] = c_in_tmp;
-            bcn->ACU.v_in[i] = v_in_tmp;
-        }
+//     /* --- ACU1 beacon data (6 solar input channels) --- */
+//     memset(&tinst, 0, sizeof(tinst));
+//     err = p80_acu_get_hk(&tinst, EPS_ACU1_CSP_NODE, CSP_TIMEOUT(1));
+//     if (err == GS_OK && tinst.memory != NULL)
+//     {
+//         perr = GS_OK;
+//         for (int i = 0; i < 6; i++)
+//         {
+//             int16_t  c_in_tmp = 0;
+//             uint16_t v_in_tmp = 0;
+//             perr |= gs_param_get_int16 (&tinst, GS_P80_ACU_TELEMETRY_INPUT_I(i), &c_in_tmp, 0);
+//             perr |= gs_param_get_uint16(&tinst, GS_P80_ACU_TELEMETRY_INPUT_V(i), &v_in_tmp, 0);
+//             bcn->ACU.c_in[i] = c_in_tmp;
+//             bcn->ACU.v_in[i] = v_in_tmp;
+//         }
 
-        if (perr != GS_OK)
-        {
-            CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "EPS: SendBcnCmd ACU1 param parse error, err=%d", perr);
-        }
-    }
-    else
-    {
-        EPS_AppData.Counters.GetBcnErrCounter++;
-        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: SendBcnCmd ACU1 get_hk failed, err=%d", err);
-    }
-    if (tinst.memory) free(tinst.memory);
-    if (tinst.rows)   free((void *)tinst.rows);
+//         if (perr != GS_OK)
+//         {
+//             CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+//                               "EPS: SendBcnCmd ACU1 param parse error, err=%d", perr);
+//         }
+//     }
+//     else
+//     {
+//         EPS_AppData.Counters.GetBcnErrCounter++;
+//         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+//                           "EPS: SendBcnCmd ACU1 get_hk failed, err=%d", err);
+//     }
+//     if (tinst.memory) free(tinst.memory);
+//     if (tinst.rows)   free((void *)tinst.rows);
 
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(EPS_AppData.BcnTlm_P80.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.BcnTlm_P80.TelemetryHeader), true);
+//     CFE_SB_TimeStampMsg(CFE_MSG_PTR(EPS_AppData.BcnTlm_P80.TelemetryHeader));
+//     CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.BcnTlm_P80.TelemetryHeader), true);
 
-    return CFE_SUCCESS;
-}
+//     return CFE_SUCCESS;
+// }
 
 // CFE_Status_t EPS_ReportAppDataCmd(const EPS_ReportAppDataCmd_t *Msg)
 // {
