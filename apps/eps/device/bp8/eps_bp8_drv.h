@@ -1,0 +1,101 @@
+/**
+ * @file
+ *   EPS BP8 (NanoPower Battery Pack) Device Driver Interface
+ *
+ * Provides hardware-level functions for communicating with GomSpace
+ * NanoPower BP8 battery pack via CSP/rparam.
+ * This driver is independent of cFE command/telemetry structures.
+ */
+#ifndef EPS_BP8_DRV_H
+#define EPS_BP8_DRV_H
+
+#include <stdint.h>
+#include <gs/util/error.h>
+
+/**
+ * BP8 Table IDs
+ */
+#define EPS_BP8_TABLE_BOARD          0
+#define EPS_BP8_TABLE_CONFIGURATION  1
+#define EPS_BP8_TABLE_CALIBRATION    2
+#define EPS_BP8_TABLE_CONTROL        3
+#define EPS_BP8_TABLE_TELEMETRY      4
+
+/**
+ * BP8 Telemetry Table Parameter Addresses
+ */
+#define EPS_BP8_TLM_UPTIME       0x00
+#define EPS_BP8_TLM_BOOTCOUNT    0x04
+#define EPS_BP8_TLM_BOOTCAUSE    0x06
+#define EPS_BP8_TLM_RESETCAUSE   0x08
+#define EPS_BP8_TLM_SOC          0x0C
+#define EPS_BP8_TLM_INT_TEMP     0x10
+#define EPS_BP8_TLM_BAT_AVR_TEMP 0x14
+#define EPS_BP8_TLM_BAT_1_TEMP   0x18
+#define EPS_BP8_TLM_BAT_2_TEMP   0x1A
+#define EPS_BP8_TLM_BAT_3_TEMP   0x1C
+#define EPS_BP8_TLM_BAT_4_TEMP   0x1E
+#define EPS_BP8_TLM_VBAT         0x20
+#define EPS_BP8_TLM_I            0x24
+#define EPS_BP8_TLM_IN_I         0x28
+#define EPS_BP8_TLM_HEATER_I     0x2A
+#define EPS_BP8_TLM_OUT_I        0x2C
+#define EPS_BP8_TLM_O_VOLT_COUNT 0x2E
+#define EPS_BP8_TLM_BAT_FAULT    0x30
+
+/**
+ * BP8 Control Table Parameter Addresses
+ */
+#define EPS_BP8_CTRL_SOC_RESET    0x00
+#define EPS_BP8_CTRL_FAULT_RESET  0x01
+#define EPS_BP8_CTRL_FUSE_BURN    0x02
+#define EPS_BP8_CTRL_HEAT_MANUAL  0x12
+
+/**
+ * BP8 Housekeeping Telemetry Structure (driver-level, no cFE dependency)
+ */
+typedef struct {
+    uint32_t Uptime;
+    uint16_t BootCount;
+    uint16_t BootCause;
+    uint16_t ResetCause;
+    uint16_t Vbat;          /* mV */
+    float    Soc;           /* 0.0-1.0 */
+    float    Current;       /* A */
+    uint16_t InCurrent;     /* mA */
+    uint16_t OutCurrent;    /* mA */
+    uint16_t HeaterCurrent; /* mA */
+    int16_t  IntTemp;       /* ddegC */
+    float    BatAvrTemp;    /* degC */
+    int16_t  BatTemp[4];    /* ddegC */
+    uint16_t OVoltCount;
+    uint8_t  BatFault;
+} EPS_BP8_Drv_HkTlm_t;
+
+/**
+ * Get BP8 housekeeping telemetry data.
+ * @param csp_node   CSP node address of the BP8
+ * @param hk         Output: parsed telemetry data
+ * @param timeout_ms CSP timeout in milliseconds
+ * @return GS_OK on success, error code on failure
+ */
+gs_error_t EPS_BP8_Drv_GetHk(uint8_t csp_node, EPS_BP8_Drv_HkTlm_t *hk, uint32_t timeout_ms);
+
+/**
+ * Set BP8 manual heater duration.
+ * @param csp_node   CSP node address of the BP8
+ * @param duration   Heater duration in seconds (1-600, 0=stop)
+ * @param timeout_ms CSP timeout in milliseconds
+ * @return GS_OK on success, error code on failure
+ */
+gs_error_t EPS_BP8_Drv_SetHeater(uint8_t csp_node, uint16_t duration, uint32_t timeout_ms);
+
+/**
+ * Reset BP8 battery fault flag.
+ * @param csp_node   CSP node address of the BP8
+ * @param timeout_ms CSP timeout in milliseconds
+ * @return GS_OK on success, error code on failure
+ */
+gs_error_t EPS_BP8_Drv_ResetFault(uint8_t csp_node, uint32_t timeout_ms);
+
+#endif /* EPS_BP8_DRV_H */

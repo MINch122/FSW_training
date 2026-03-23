@@ -41,9 +41,15 @@
  */
 #define EPS_STRING_VAL_LEN 10
 
-#define EPS_PMU_CSP_NODE    1
-#define EPS_ACU1_CSP_NODE   2
-#define EPS_ACU2_CSP_NODE   6
-#define EPS_PDU_CSP_NODE    10
+#define EPS_P80_PMU_CSP_NODE    1
+#define EPS_P80_ACU1_CSP_NODE   2
+#define EPS_P80_ACU2_CSP_NODE   6
+#define EPS_P80_PDU_CSP_NODE    10
+
+/**
+ * \brief NanoPower BP8 Battery Pack CSP node address
+ *        (Table IDs and register addresses are defined in eps_bp8_drv.h)
+ */
+#define EPS_BP8_CSP_NODE           7
 
 #endif

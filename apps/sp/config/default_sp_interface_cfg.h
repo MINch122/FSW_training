@@ -52,6 +52,18 @@
 #define SP_DSP2_AR6A_I2C_ADDR   0x13  /**< TBD: DSP2 AR6 Board A address (confirm from HW ICD) */
 #define SP_DSP2_AR6B_I2C_ADDR   0x14  /**< TBD: DSP2 AR6 Board B address (confirm from HW ICD) */
 
+/**
+ * NanoPower DSP beacon status I2C addresses (I2C1 bus).
+ * These devices provide status/backup_status for beacon telemetry.
+ * Confirmed from beacon packet ICD.
+ */
+#define SP_DSP_BCN_COUNT            4
+
+#define SP_DSP_BCN_I2C_ADDR_0      0x07  /**< NanoPower DSP (I2C1 0x07) */
+#define SP_DSP_BCN_I2C_ADDR_1      0x08  /**< NanoPower DSP (I2C1 0x08) */
+#define SP_DSP_BCN_I2C_ADDR_2      0x09  /**< NanoPower DSP (I2C1 0x09) */
+#define SP_DSP_BCN_I2C_ADDR_3      0x10  /**< NanoPower DSP (I2C1 0x10) */
+
 /** Default burn-wire activation duration [s] for manual deploy */
 #define SP_DSP_BURN_DURATION_S          5
 

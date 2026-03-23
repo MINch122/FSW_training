@@ -46,25 +46,33 @@ typedef enum
     EPS_REPORT_APPDATA_CC    = 2,
 
     /* Power Interface Commands */
-    EPS_POWER_IF_GET_CC      = 10,
-    EPS_POWER_IF_SET_CC      = 11,
-    EPS_POWER_IF_LIST_CC     = 12,
+    EPS_P80_POWER_IF_GET_CC      = 10,
+    EPS_P80_POWER_IF_SET_CC      = 11,
+    EPS_P80_POWER_IF_LIST_CC     = 12,
 
     /* Housekeeping Commands */
-    EPS_GET_HK_CC            = 20,
+    EPS_P80_GET_HK_CC            = 20,
 
     /* Watchdog Commands */
-    EPS_GND_WDT_CLEAR_CC     = 30,
+    EPS_P80_GND_WDT_CLEAR_CC     = 30,
 
     /* Remote Parameter Commands */
-    EPS_PARAM_GET_CC         = 40,
-    EPS_PARAM_SET_CC         = 41,
-    EPS_GET_FULL_TABLE_CC    = 42,
+    EPS_P80_PARAM_GET_CC         = 40,
+    EPS_P80_PARAM_SET_CC         = 41,
+    EPS_P80_GET_FULL_TABLE_CC    = 42,
 
     /* Table Save/Load Commands */
-    EPS_PARAM_SAVE_CC        = 50,
-    EPS_TABLE_SAVE_CC        = 51,
-    EPS_TABLE_LOAD_CC        = 52,
+    EPS_P80_PARAM_SAVE_CC        = 50,
+    EPS_P80_TABLE_SAVE_CC        = 51,
+    EPS_P80_TABLE_LOAD_CC        = 52,
+
+    /* Beacon Report Command */
+    EPS_REPORT_BCN_CC            = 70,
+
+    /* BP8 Battery Pack Commands */
+    EPS_BP8_GET_HK_CC        = 60,
+    EPS_BP8_SET_HEATER_CC    = 61,
+    EPS_BP8_RESET_FAULT_CC   = 62,
 
 } EPS_CommandCode_t;
 

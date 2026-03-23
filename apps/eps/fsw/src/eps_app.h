@@ -64,8 +64,23 @@ typedef struct
     ** Housekeeping telemetry packet...
     */
     EPS_HkTlm_t HkTlm;
+
+    /*
+    ** Beacon telemetry packet (PMU + PDU + ACU + BP8)
+    */
     EPS_BcnTlm_t BcnTlm;
-    EPS_BcnTlm_P80_t BcnTlm_P80;
+
+    /*
+    ** P80 per-node HK telemetry
+    */
+    EPS_P80_PMU_HkTlm_t PMU_HkTlm;
+    EPS_P80_PDU_HkTlm_t PDU_HkTlm;
+    EPS_P80_ACU_HkTlm_t ACU_HkTlm;
+
+    /*
+    ** BP8 Battery Pack telemetry
+    */
+    EPS_BP8_HkTlm_t BP8_HkTlm;
 
     /*
     ** Run Status variable used in the main processing loop

@@ -76,11 +76,21 @@ typedef struct SP_StopBurn_Payload
 } SP_StopBurn_Payload_t;
 
 /**
- * Beacon telemetry payload - lightweight deploy status for housekeeping.
+ * Per-DSP beacon status (one per NanoPower DSP device on I2C1).
  */
-typedef struct SP_BcnTlm_Payload
+typedef struct __attribute__((packed)) SP_DSP_BcnStatus
 {
-    uint8 DeployStatus[2]; /**< Index 0=DSP1, 1=DSP2. 1=Released, 0=Not released */
+    uint8 status;          /**< Release status: 1=Released, 0=Held */
+    uint8 backup_status;   /**< Backup release status */
+} SP_DSP_BcnStatus_t;
+
+/**
+ * Beacon telemetry payload.
+ * 4 DSP devices (I2C1 0x07, 0x08, 0x09, 0x10) × 2 bytes = 8 bytes total.
+ */
+typedef struct __attribute__((packed)) SP_BcnTlm_Payload
+{
+    SP_DSP_BcnStatus_t Dsp[SP_DSP_BCN_COUNT]; /**< Index 0-3: DSP device status */
 } SP_BcnTlm_Payload_t;
 
 /**

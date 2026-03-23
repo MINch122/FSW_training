@@ -59,6 +59,11 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader;
+} SP_ReportBcnCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
     SP_SetAr6Addr_Payload_t Payload;
 } SP_SetAr6AddrCmd_t;
 
@@ -71,13 +76,13 @@ typedef struct
     SP_HkTlm_Payload_t Payload;
 } SP_HkTlm_t;
 
-/** Beacon telemetry: lightweight deploy status */
+/** Beacon telemetry: DSP status for 4 devices */
 typedef struct
 {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     SP_BcnTlm_Payload_t Payload;
     bool  IsRunning;     /**< Burn task active flag */
-    bool  IsDeploy[2];   /**< Deployed flag per DSP */
+    bool  IsDeploy[2];   /**< Deployed flag per DSP (AR6 pair) */
     uint8 MaxTry;        /**< Burn attempt counter */
     uint8 spare;
 } SP_BcnTlm_t;

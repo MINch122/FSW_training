@@ -45,8 +45,56 @@ CFE_Status_t SP_SendHkCmd(const SP_SendHkCmd_t *Msg)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 CFE_Status_t SP_SendBcnCmd(const SP_SendBcnCmd_t *Msg)
 {
+    static const uint8_t dsp_addrs[SP_DSP_BCN_COUNT] = {
+        SP_DSP_BCN_I2C_ADDR_0,
+        SP_DSP_BCN_I2C_ADDR_1,
+        SP_DSP_BCN_I2C_ADDR_2,
+        SP_DSP_BCN_I2C_ADDR_3
+    };
+
+    for (int i = 0; i < SP_DSP_BCN_COUNT; i++)
+    {
+        gs_gssb_ar6_release_status_t rel = {0};
+        gs_error_t err = gs_gssb_ar6_get_release_status(dsp_addrs[i], SP_DSP_I2C_TIMEOUT_MS, &rel);
+        if (err == GS_OK)
+        {
+            SP_AppData.BcnTlm.Payload.Dsp[i].status        = rel.status;
+            SP_AppData.BcnTlm.Payload.Dsp[i].backup_status = rel.state;
+        }
+        else
+        {
+            SP_AppData.BcnTlm.Payload.Dsp[i].status        = 0;
+            SP_AppData.BcnTlm.Payload.Dsp[i].backup_status = 0;
+        }
+    }
+
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(SP_AppData.BcnTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(SP_AppData.BcnTlm.TelemetryHeader), true);
+
+    return CFE_SUCCESS;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+CFE_Status_t SP_ReportBcnCmd(const SP_ReportBcnCmd_t *Msg)
+{
+    SP_BcnTlm_Payload_t *bcn = &SP_AppData.BcnTlm.Payload;
+
+    OS_printf("\n================[SP BCN Report]===================\n");
+    for (int i = 0; i < SP_DSP_BCN_COUNT; i++)
+    {
+        OS_printf("[DSP%d] Status: %u | BackupStatus: %u\n",
+                  i, bcn->Dsp[i].status, bcn->Dsp[i].backup_status);
+    }
+    OS_printf("[SP] IsRunning: %u | IsDeploy: %u / %u | MaxTry: %u\n",
+              SP_AppData.BcnTlm.IsRunning,
+              SP_AppData.BcnTlm.IsDeploy[0], SP_AppData.BcnTlm.IsDeploy[1],
+              SP_AppData.BcnTlm.MaxTry);
+    OS_printf("=======================================================\n");
+
+    SP_HandleReport(CFE_SUCCESS, SP_REPORT_BCN_CC, bcn, sizeof(*bcn));
+
+    CFE_EVS_SendEvent(SP_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "SP: BCN report sent (%u bytes)", (unsigned)sizeof(*bcn));
 
     return CFE_SUCCESS;
 }
@@ -142,8 +190,7 @@ CFE_Status_t SP_GetHkCmd(const SP_GetHkCmd_t *Msg)
 
         /* Update beacon deploy status: both boards must be released */
         bool deployed = (relA.status == 1) && (relB.status == 1);
-        SP_AppData.BcnTlm.Payload.DeployStatus[dsp] = deployed ? 1 : 0;
-        SP_AppData.BcnTlm.IsDeploy[dsp]             = deployed;
+        SP_AppData.BcnTlm.IsDeploy[dsp] = deployed;
 
         OS_printf("\n===[SP DSP%d Status (addrA=0x%02X, addrB=0x%02X)]===\n",
                   dsp + 1, addrA, addrB);
@@ -212,6 +259,9 @@ CFE_Status_t SP_DeployCmd(const SP_DeployCmd_t *Msg)
                                                      : CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     SP_HandleReport(status, SP_DEPLOY_CC, NULL, 0);
 
+    OS_printf("[SP] Deploy DSP%d addrA=0x%02X addrB=0x%02X burn=%us errA=%d errB=%d\n",
+              dspNum + 1, addrA, addrB, burnDur, errA, errB);
+
     CFE_EVS_SendEvent(SP_DEPLOY_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "SP: Deploy DSP%d (addrA=0x%02X addrB=0x%02X burn=%us) A_err=%d B_err=%d",
                       dspNum + 1, addrA, addrB, burnDur, errA, errB);
@@ -253,6 +303,9 @@ CFE_Status_t SP_StopBurnCmd(const SP_StopBurnCmd_t *Msg)
 
     if (errA == GS_OK && errB == GS_OK)
         SP_AppData.BcnTlm.IsRunning = false;
+
+    OS_printf("[SP] StopBurn DSP%d addrA=0x%02X addrB=0x%02X errA=%d errB=%d\n",
+              dspNum + 1, addrA, addrB, errA, errB);
 
     CFE_EVS_SendEvent(SP_STOP_BURN_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "SP: Stop burn DSP%d (addrA=0x%02X addrB=0x%02X) A_err=%d B_err=%d",
@@ -298,12 +351,16 @@ CFE_Status_t SP_AutoDeployCmd(const SP_AutoDeployCmd_t *Msg)
 
     if (err == GS_OK)
     {
+        OS_printf("[SP] AutoDeploy OK start=%us inc=%us max=%us\n",
+                  startBurn, increment, maxBurn);
         CFE_EVS_SendEvent(SP_AUTO_DEPLOY_INF_EID, CFE_EVS_EventType_INFORMATION,
                           "SP: Auto deploy complete (start=%us inc=%us max=%us)",
                           startBurn, increment, maxBurn);
     }
     else
     {
+        OS_printf("[SP] AutoDeploy FAILED err=%d start=%us inc=%us max=%us\n",
+                  err, startBurn, increment, maxBurn);
         SP_AppData.ErrCounter++;
         CFE_EVS_SendEvent(SP_AUTO_DEPLOY_ERR_EID, CFE_EVS_EventType_ERROR,
                           "SP: Auto deploy failed, err=%d (start=%us inc=%us max=%us)",
@@ -347,6 +404,8 @@ CFE_Status_t SP_ScanAr6Cmd(const SP_ScanAr6Cmd_t *Msg)
 
     gs_gssb_bus_scan(1, 127, SP_DSP_I2C_TIMEOUT_MS, devices);
 
+    OS_printf("\n================[SP I2C Bus Scan]===================\n");
+
     int found = 0;
     for (int addr = 1; addr <= 127; addr++)
     {
@@ -359,18 +418,23 @@ CFE_Status_t SP_ScanAr6Cmd(const SP_ScanAr6Cmd_t *Msg)
 
             if (merr == GS_OK)
             {
+                OS_printf("[SCAN] addr=0x%02X model=%s\n", addr, SP_GssbModelName(model));
                 CFE_EVS_SendEvent(SP_SCAN_AR6_INF_EID, CFE_EVS_EventType_INFORMATION,
                                   "SP: GSSB device found at I2C addr 0x%02X model=%s",
                                   addr, SP_GssbModelName(model));
             }
             else
             {
+                OS_printf("[SCAN] addr=0x%02X model=? (err=%d)\n", addr, merr);
                 CFE_EVS_SendEvent(SP_SCAN_AR6_INF_EID, CFE_EVS_EventType_INFORMATION,
                                   "SP: GSSB device found at I2C addr 0x%02X (model query failed err=%d)",
                                   addr, merr);
             }
         }
     }
+
+    OS_printf("[SCAN] Total devices found: %d\n", found);
+    OS_printf("====================================================\n");
 
     if (found == 0)
     {
@@ -408,6 +472,8 @@ CFE_Status_t SP_SetAr6AddrCmd(const SP_SetAr6AddrCmd_t *Msg)
         CFE_EVS_SendEvent(SP_SET_ADDR_ERR_EID, CFE_EVS_EventType_ERROR,
                           "SP: Set I2C addr failed (cur=0x%02X new=0x%02X err=%d)",
                           curAddr, newAddr, err);
+        OS_printf("[SP] SetAr6Addr FAILED set cur=0x%02X new=0x%02X err=%d\n",
+                  curAddr, newAddr, err);
         return CFE_SUCCESS;
     }
 
@@ -417,8 +483,11 @@ CFE_Status_t SP_SetAr6AddrCmd(const SP_SetAr6AddrCmd_t *Msg)
         SP_AppData.ErrCounter++;
         CFE_EVS_SendEvent(SP_SET_ADDR_ERR_EID, CFE_EVS_EventType_ERROR,
                           "SP: Commit I2C addr failed (new=0x%02X err=%d)", newAddr, err);
+        OS_printf("[SP] SetAr6Addr FAILED commit new=0x%02X err=%d\n", newAddr, err);
         return CFE_SUCCESS;
     }
+
+    OS_printf("[SP] SetAr6Addr OK 0x%02X -> 0x%02X (NVM committed)\n", curAddr, newAddr);
 
     CFE_EVS_SendEvent(SP_SET_ADDR_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "SP: AR6 addr programmed 0x%02X -> 0x%02X (committed to NVM)",

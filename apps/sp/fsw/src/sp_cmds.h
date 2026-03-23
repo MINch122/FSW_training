@@ -50,5 +50,6 @@ CFE_Status_t SP_AutoDeployCmd(const SP_AutoDeployCmd_t *Msg);
  */
 CFE_Status_t SP_ScanAr6Cmd(const SP_ScanAr6Cmd_t *Msg);
 CFE_Status_t SP_SetAr6AddrCmd(const SP_SetAr6AddrCmd_t *Msg);
+CFE_Status_t SP_ReportBcnCmd(const SP_ReportBcnCmd_t *Msg);
 
 #endif

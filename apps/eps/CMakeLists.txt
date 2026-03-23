@@ -5,6 +5,8 @@ set(APP_SRC_FILES
   fsw/src/eps_app.c
   fsw/src/eps_cmds.c
   fsw/src/eps_utils.c
+  device/p80/eps_p80_drv.c
+  device/bp8/eps_bp8_drv.c
 )
 
 if (CFE_EDS_ENABLED_BUILD)
@@ -21,6 +23,7 @@ endif()
 add_cfe_app(eps ${APP_SRC_FILES})
 
 target_include_directories(eps PUBLIC fsw/inc)
+target_include_directories(eps PUBLIC device/p80 device/bp8)
 
 
 target_include_directories(eps PUBLIC

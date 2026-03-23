@@ -57,60 +57,60 @@ typedef EPS_NoArgCmd_t  EPS_ReportAppDataCmd_t;
 
 typedef struct __attribute__((packed)){
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_Power_If_Get_Cmd_Payload_t Payload;
-}EPS_Power_If_Get_Cmd_t;
+    EPS_P80_Power_If_Get_Cmd_Payload_t Payload;
+}EPS_P80_Power_If_Get_Cmd_t;
 
 typedef struct __attribute__((packed)){
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_Power_If_Set_Cmd_Payload_t Payload;
-}EPS_Power_If_Set_Cmd_t;
+    EPS_P80_Power_If_Set_Cmd_Payload_t Payload;
+}EPS_P80_Power_If_Set_Cmd_t;
 
 typedef struct __attribute__((packed)){
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_Power_If_List_Cmd_Payload_t Payload;
-}EPS_Power_If_List_Cmd_t;
+    EPS_P80_Power_If_List_Cmd_Payload_t Payload;
+}EPS_P80_Power_If_List_Cmd_t;
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_Get_Hk_Cmd_Payload_t Payload;   
-}EPS_Get_Hk_Cmd_t;
-
-
-typedef struct{
-    CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_Gnd_Watchdog_Clear_Cmd_Payload_t Payload;
-}EPS_Gnd_Watchdog_Clear_Cmd_t;
-
-typedef struct{
-    CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_Param_Set_Cmd_Payload_t Payload;
-}EPS_Param_Set_Cmd_t;
-
-typedef struct{
-    CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_Param_Get_Cmd_Payload_t Payload;
-}EPS_Param_Get_Cmd_t;
-
-typedef struct{
-    CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_Get_Full_Table_Cmd_Payload_t Payload;
-}EPS_Get_Full_Table_Cmd_t;
+    EPS_P80_Get_Hk_Cmd_Payload_t Payload;   
+}EPS_P80_Get_Hk_Cmd_t;
 
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_Table_Save_Cmd_Payload_t Payload;
-}EPS_Table_Save_Cmd_t;
+    EPS_P80_Gnd_Watchdog_Clear_Cmd_Payload_t Payload;
+}EPS_P80_Gnd_Watchdog_Clear_Cmd_t;
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_Table_Load_Cmd_Payload_t Payload;
-}EPS_Table_Load_Cmd_t;
+    EPS_P80_Param_Set_Cmd_Payload_t Payload;
+}EPS_P80_Param_Set_Cmd_t;
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_Param_Save_Cmd_Payload_t Payload;
-}EPS_Param_Save_Cmd_t;
+    EPS_P80_Param_Get_Cmd_Payload_t Payload;
+}EPS_P80_Param_Get_Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_P80_Get_Full_Table_Cmd_Payload_t Payload;
+}EPS_P80_Get_Full_Table_Cmd_t;
+
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_P80_Table_Save_Cmd_Payload_t Payload;
+}EPS_P80_Table_Save_Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_P80_Table_Load_Cmd_Payload_t Payload;
+}EPS_P80_Table_Load_Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_P80_Param_Save_Cmd_Payload_t Payload;
+}EPS_P80_Param_Save_Cmd_t;
 
 /*************************************************************************/
 /*
@@ -118,6 +118,7 @@ typedef struct{
 */
 typedef EPS_NoArgCmd_t  EPS_SendHkCmd_t;
 typedef EPS_NoArgCmd_t  EPS_SendBcnCmd_t;
+typedef EPS_NoArgCmd_t  EPS_ReportBcnCmd_t;
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
@@ -131,13 +132,42 @@ typedef struct {
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader;
-    EPS_BcnTlm_Payload_t Payload;
+    EPS_BcnTlm_Full_Payload_t Payload;
 } EPS_BcnTlm_t;
+
+/**
+ * P80 per-node HK telemetry structures
+ */
+typedef struct {
+    CFE_MSG_TelemetryHeader_t  TelemetryHeader;
+    EPS_P80_PMU_HkTlm_Payload_t Payload;
+} EPS_P80_PMU_HkTlm_t;
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader;
-    EPS_BcnTlm_P80_Payload_t Payload;
-} EPS_BcnTlm_P80_t;
+    EPS_P80_PDU_HkTlm_Payload_t Payload;
+} EPS_P80_PDU_HkTlm_t;
+
+typedef struct {
+    CFE_MSG_TelemetryHeader_t  TelemetryHeader;
+    EPS_P80_ACU_HkTlm_Payload_t Payload;
+} EPS_P80_ACU_HkTlm_t;
+
+/**
+ * BP8 Battery Pack command/telemetry structures
+ */
+typedef EPS_NoArgCmd_t  EPS_BP8_GetHkCmd_t;
+typedef EPS_NoArgCmd_t  EPS_BP8_ResetFaultCmd_t;
+
+typedef struct {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_BP8_SetHeater_Payload_t Payload;
+} EPS_BP8_SetHeaterCmd_t;
+
+typedef struct {
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    EPS_BP8_HkTlm_Payload_t Payload;
+} EPS_BP8_HkTlm_t;
 
 #endif
       

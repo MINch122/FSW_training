@@ -79,6 +79,11 @@ void SP_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
                 SP_SetAr6AddrCmd((const SP_SetAr6AddrCmd_t *)SBBufPtr);
             break;
 
+        case SP_REPORT_BCN_CC:
+            if (SP_VerifyCmdLength(&SBBufPtr->Msg, sizeof(SP_ReportBcnCmd_t)))
+                SP_ReportBcnCmd((const SP_ReportBcnCmd_t *)SBBufPtr);
+            break;
+
         default:
             CFE_EVS_SendEvent(SP_CC_ERR_EID, CFE_EVS_EventType_ERROR,
                               "SP: Invalid ground command code: CC = %d", CommandCode);

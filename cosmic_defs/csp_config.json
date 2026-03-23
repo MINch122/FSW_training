@@ -77,7 +77,7 @@
             "option": "CSP_O_CRC32"
         },
         {
-            "name": "BATT",
+            "name": "BP8",
             "node": 7,
             "interface": "CAN",
             "via": null,
