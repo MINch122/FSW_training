@@ -16,7 +16,7 @@ CFE_SRL_IO_Handle_t *Handles[CFE_SRL_GNRL_DEVICE_NUM];
 /**************************************************
  * Index of Each device
  * 0 : I2C1 Handle
- * 1 : UART Handle
+ * 1 : RS485 Handle
  * 2 : SPIO Handle
  * 3 : CAN0 Handle
  **************************************************/
@@ -53,16 +53,16 @@ int32 CFE_SRL_EarlyInit(void) {
 	}
 	else CFE_ES_WriteToSysLog("%s: I2C1 Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_I2C1_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_I2C1_HANDLE_INDEXER])->DevName);
 
-	/* UART Init */
+	/* RS485 Init */
 	Config.cfg.uart = (CFE_PSP_UART_cfg_t) {.baud = 115200,
             							    .databits = 8,
             							    .parity = 0,
             							    .stopbits = 1};
-	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_UART_HANDLE_INDEXER], "UART", "/dev/ttyAMA0", SRL_DEVTYPE_UART, CFE_SRL_UART_HANDLE_INDEXER, &Config);
+	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_RS485_HANDLE_INDEXER], "RS485", "/dev/ttyS1", SRL_DEVTYPE_UART, CFE_SRL_RS485_HANDLE_INDEXER, &Config);
 	if (Status != CFE_SUCCESS) {
-		CFE_ES_WriteToSysLog("%s: UART Initialization failed! RC=%d\n", __func__, Status);
+		CFE_ES_WriteToSysLog("%s: RS485 Initialization failed! RC=%d\n", __func__, Status);
 	}
-	else CFE_ES_WriteToSysLog("%s: UART Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_UART_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_UART_HANDLE_INDEXER])->DevName);
+	else CFE_ES_WriteToSysLog("%s: RS485 Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_RS485_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_RS485_HANDLE_INDEXER])->DevName);
 
 	/* SPIO Init */
 	Config.cfg.spi = (CFE_PSP_SPI_cfg_t) {.mode = 0,

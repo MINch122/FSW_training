@@ -34,14 +34,10 @@ typedef struct {
     /* 보드 A (I2C 0x05) */
     uint8 ch0_status_A;      /* release_status.channel_0_status */
     uint8 ch1_status_A;      /* release_status.channel_1_status */
-    uint8 backup_active_A;   /* backup_settings.backup_active   */
-    // uint8 state_A;           /* backup_status.state             */
 
     /* 보드 B (I2C 0x06) */
     uint8 ch0_status_B;      /* release_status.channel_0_status */
     uint8 ch1_status_B;      /* release_status.channel_1_status */
-    uint8 backup_active_B;   /* backup_settings.backup_active   */
-    // uint8 state_B;           /* backup_status.state             */
     
 } UANT_APP_BcnTlm_Payload_t;
 

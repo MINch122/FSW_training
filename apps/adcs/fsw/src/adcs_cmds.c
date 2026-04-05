@@ -56,6 +56,7 @@ CFE_Status_t ADCS_SendBcnCmd(const ADCS_SendBcnCmd_t *Msg)
     ADCS_PowerStateTlm_Payload_t PwrStt = {0,};
     ADCS_ControlModeTlm_Payload_t CtrlMode = {0,};
     ADCS_CalibratedGYRSensorTlm_Payload_t CalGYR = {0,};
+    ADCS_RawCSSSensorTlm_Payload_t CssStt = {0,};
 
     Status = ADCS_GetPowerState(&PwrStt);
     if (Status == CFE_SUCCESS) {
@@ -79,6 +80,13 @@ CFE_Status_t ADCS_SendBcnCmd(const ADCS_SendBcnCmd_t *Msg)
         ADCS_AppData.BcnTlm.Payload.GYR0CalibratedRateXComponent = CalGYR.GYR0CalibratedRateX;
         ADCS_AppData.BcnTlm.Payload.GYR0CalibratedRateYComponent = CalGYR.GYR0CalibratedRateY;
         ADCS_AppData.BcnTlm.Payload.GYR0CalibratedRateZComponent = CalGYR.GYR0CalibratedRateZ;
+    }
+    
+    Status = ADCS_GetRawCSSSensor(&CssStt);
+    if (Status == CFE_SUCCESS) {
+        ADCS_AppData.BcnTlm.Payload.CSS0Raw = CssStt.CSS0;
+        ADCS_AppData.BcnTlm.Payload.CSS1Raw = CssStt.CSS1;
+        ADCS_AppData.BcnTlm.Payload.CSS2Raw = CssStt.CSS2;
     }
     
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(ADCS_AppData.BcnTlm.TelemetryHeader));
@@ -238,7 +246,7 @@ CFE_Status_t ADCS_SetReset(void){
 
 /********************************************************
  * 
- * COSMIC Actual invoked command function
+ * BASE5TH Actual invoked command function
  * Upper functions are just the references
  * 
  ********************************************************/
@@ -812,7 +820,7 @@ CFE_Status_t ADCS_SetInitiateEventLogTransferCmd(const ADCS_InitiateEventLogTran
 
 /********************************************************
  * 
- * COSMIC Actual Get Command Function (Get tlm)
+ * BASE5TH Actual Get Command Function (Get tlm)
  * 
  ********************************************************/
 CFE_Status_t ADCS_GetErrorLogSettingCmd(void) {
@@ -1720,6 +1728,8 @@ CFE_Status_t ADCS_GetRawCSSSensorCmd(void) {
     OS_printf("TimeSec : %u || TimeNanoSec : %u\n", RetVal.TimeSeconds, RetVal.TimeNanoSeconds);
     OS_printf("CSS 0 : %u, 1 : %u, 2 : %u, 3 : %u, 4 : %u, 5 : %u, 6 : %u, 7 : %u, 8 : %u, 9 : %u",
                 RetVal.CSS0, RetVal.CSS1, RetVal.CSS2, RetVal.CSS3, RetVal.CSS4, RetVal.CSS5, RetVal.CSS6, RetVal.CSS7, RetVal.CSS8, RetVal.CSS9);
+    
+    
     
     return CFE_SUCCESS;
 }

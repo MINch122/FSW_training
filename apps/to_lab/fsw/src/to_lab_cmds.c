@@ -39,16 +39,16 @@
 CFE_Status_t TO_LAB_EnableOutputCmd(const TO_LAB_EnableOutputCmd_t *data)
 {
     
-    // const TO_LAB_EnableOutput_Payload_t *pCmd = &data->Payload;
-    // (void)CFE_SB_MessageStringGet(TO_LAB_Global.tlm_dest_IP, pCmd->dest_IP, "", sizeof(TO_LAB_Global.tlm_dest_IP),
-    //                               sizeof(pCmd->dest_IP));
-    // TO_LAB_Global.suppress_sendto = false;
+    const TO_LAB_EnableOutput_Payload_t *pCmd = &data->Payload;
+    (void)CFE_SB_MessageStringGet(TO_LAB_Global.tlm_dest_IP, pCmd->dest_IP, "", sizeof(TO_LAB_Global.tlm_dest_IP),
+                                  sizeof(pCmd->dest_IP));
+    TO_LAB_Global.suppress_sendto = false;
 
     CFE_EVS_SendEvent(TO_LAB_TLMOUTENA_INF_EID, CFE_EVS_EventType_INFORMATION, "TO telemetry output enabled.");
 
     if (!TO_LAB_Global.downlink_on) /* Then turn it on, otherwise we will just switch destination addresses*/
     {
-        // TO_LAB_openTLM();
+        TO_LAB_openTLM();
         
         TO_LAB_Global.downlink_on = true;
     }

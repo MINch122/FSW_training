@@ -81,8 +81,8 @@ DS_DestFileTable_t DS_DestFileTable = {
 
             /* .FileNameType  = */ DS_BY_COUNT,
             /* .EnableState   = */ DS_ENABLED,
-            /* .MaxFileSize   = */ (194 * 100), /* 100 beacon packets*/
-            /* .MaxFileAge    = */ (60 * 60),   /* 1 hour */
+            /* .MaxFileSize   = */ (200 * 100), /* 100 beacon packets*/
+            /* .MaxFileAge    = */ (60 * 60* 8),   /* 1 hour */
             /* .SequenceCount = */ 1000,
         },
         /* File Index 01 -- application housekeeping packets */

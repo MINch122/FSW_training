@@ -140,21 +140,21 @@ void EO_AdcsDetumble(void) {
 
 
 void EO_EnableRTS2(void) {
-    SC_EnableRtsCmd_t Cmd1;
-    CFE_MSG_Init(CFE_MSG_PTR(Cmd1.CommandHeader), CFE_SB_ValueToMsgId(SC_CMD_MID), sizeof(Cmd1));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd1.CommandHeader), SC_ENABLE_RTS_CC);
-    Cmd1.Payload.RtsNum = 2;
-    Cmd1.Payload.Padding = 0;
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd1.CommandHeader), true);
+    // SC_EnableRtsCmd_t Cmd1;
+    // CFE_MSG_Init(CFE_MSG_PTR(Cmd1.CommandHeader), CFE_SB_ValueToMsgId(SC_CMD_MID), sizeof(Cmd1));
+    // CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd1.CommandHeader), SC_ENABLE_RTS_CC);
+    // Cmd1.Payload.RtsNum = 2;
+    // Cmd1.Payload.Padding = 0;
+    // CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd1.CommandHeader), true);
 }
 
 void EO_StartRTS2(void) {
-    SC_StartRtsCmd_t Cmd1;
-    CFE_MSG_Init(CFE_MSG_PTR(Cmd1.CommandHeader), CFE_SB_ValueToMsgId(SC_CMD_MID), sizeof(Cmd1));
-    CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd1.CommandHeader), SC_START_RTS_CC);
-    Cmd1.Payload.RtsNum = 2;
-    Cmd1.Payload.Padding = 0;
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd1.CommandHeader), true);
+    // SC_StartRtsCmd_t Cmd1;
+    // CFE_MSG_Init(CFE_MSG_PTR(Cmd1.CommandHeader), CFE_SB_ValueToMsgId(SC_CMD_MID), sizeof(Cmd1));
+    // CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd1.CommandHeader), SC_START_RTS_CC);
+    // Cmd1.Payload.RtsNum = 2;
+    // Cmd1.Payload.Padding = 0;
+    // CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd1.CommandHeader), true);
 }
 
 

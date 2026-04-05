@@ -62,14 +62,19 @@
 /*********************
  * FSW Header 
  ********************/
-#include "cfe_srl_msg.h"
 #include "rpt_msgids.h"
 #include "rpt_msg.h"
+
+#include "eo_msgids.h"
+#include "eo_msg.h"
 /* End of FSW Header */
 
 /*********************
  * COMS Header 
  ********************/
+#include "stx_msgids.h"
+#include "stx_msg.h"
+
 #include "utrx_msgids.h"
 #include "utrx_msg.h"
 
@@ -98,10 +103,6 @@
 #include "adcs_msg.h"
 /* End of ADCS Header */
 
-
-#include "sc_msgids.h"
-#include "sc_msg.h"
-
 #include "hk_msgids.h"
 #include "hk_msg.h"
 
@@ -118,19 +119,19 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
         /* MID, Tick, CC, PayloadSz, Param */
     .TickRate = SCH_LAB_TICK_RATE, // This TickRate value is equivalent to 1 sec. If `TickRate` is `10`, `10` tick is `1` sec 
     .Config   = {
-        // {CFE_SB_MSGID_WRAP_VALUE(EPS_CMD_MID), SCH_LAB_TICK_RATE, EPS_P31U_GETHK_VI_CC},
-        {CFE_SB_MSGID_WRAP_VALUE(CFE_SRL_SEND_HK_MID), SCH_LAB_TICK_RATE * 20, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(EPS_CMD_MID), SCH_LAB_TICK_RATE * 5, EPS_P31U_GETHK_VI_INTERNAL_CC},
-        // {CFE_SB_MSGID_WRAP_VALUE(ADCS_LOOP_MID), SCH_LAB_TICK_RATE * 30, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(RPT_SEND_BCN_MID), 10*5, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(UANT_APP_SEND_BCN_MID), 10*5, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(UTRX_SEND_BCN_MID), 10*5, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), 10*5, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), 10*5, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), 10*5, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), 10*5, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), 10*5, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), 10*30, 0, sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},
+
+        // Beacon packets
+        {CFE_SB_MSGID_WRAP_VALUE(RPT_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(EO_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(STX_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(UANT_APP_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(UTRX_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), SCH_LAB_TICK_RATE*1, 0, sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},
+
+        /* Example of including additional open source apps */
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_ES_SEND_HK_MID), 100, 0}, /* Example of a 1hz packet */
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_TBL_SEND_HK_MID), 50, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_TIME_SEND_HK_MID), 98, 0},

@@ -270,7 +270,7 @@ cleanup:
 
 /********************************************************
  * 
- * COSMIC Actual Set Command Function
+ * BASE5TH Actual Set Command Function
  * 
  ********************************************************/
 /* TC Functions, ID: 0 ~ 127 */
@@ -1194,7 +1194,7 @@ int32 ADCS_SetInitiateEventLogTransfer(const ADCS_InitiateEventLogTransferCmd_Pa
 
 /********************************************************
  * 
- * COSMIC Actual Get Command Function (Get tlm)
+ * BASE5TH Actual Get Command Function (Get tlm)
  * 
  ********************************************************/
 int32 ADCS_GetErrorLogSetting(ADCS_ErrorLogSettingTlm_Payload_t *returnVal)
@@ -2289,7 +2289,7 @@ void ADCS_HandleEvent(const ADCS_EventEntry_t *Event) {
 				OS_printf("0x%02X\t", Event->EventData[i]);
 			}
 			OS_printf("\n");
-			ADCS_AppData.BcnTlm.IsSunlight = Event->EventData[0] ? true : false;
+			// ADCS_AppData.BcnTlm.IsSunlight = Event->EventData[0] ? true : false;
 			break;
 		case 139:
 			

@@ -248,36 +248,13 @@ CFE_Status_t TO_LAB_init(void)
     
     if (OsStatus == OS_SUCCESS) {
         /* Create Child Task */
-        status = CFE_ES_CreateChildTask(&TO_LAB_Global.ChildId, TO_CHILD_NAME, TO_LAB_ForwardTelemetryRF,
+        status = CFE_ES_CreateChildTask(&TO_LAB_Global.ChildId, TO_CHILD_NAME, TO_LAB_ForwardTelemetryUDP,
                                         CFE_ES_TASK_STACK_ALLOCATE, TO_CHILD_STACK_SIZE(3),
                                         TO_CHILD_PRIORITY, 0);
         OS_printf("%s: TO child Created Status: 0x%08X\n", __func__, status);
     }
 
     return status;
-}
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/*                                                                 */
-/* TO_LAB_process_commands() -- Process command pipe message       */
-/*                                                                 */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-void TO_LAB_process_commands(void)
-{
-    // CFE_SB_Buffer_t *SBBufPtr;
-    // CFE_Status_t     Status;
-
-    // /* Exit command processing loop if no message received. */
-    // while (1)
-    // {
-    //     Status = CFE_SB_ReceiveBuffer(&SBBufPtr, TO_LAB_Global.Cmd_pipe, CFE_SB_POLL);
-    //     if (Status != CFE_SUCCESS)
-    //     {
-    //         break;
-    //     }
-
-    //     TO_LAB_TaskPipe(SBBufPtr);
-    // }
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

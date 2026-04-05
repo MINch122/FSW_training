@@ -50,6 +50,10 @@ typedef struct
     float GYR0CalibratedRateYComponent;
     float GYR0CalibratedRateZComponent; // ID 207, 12bytes
 
+    uint8 CSS0Raw;
+    uint8 CSS1Raw;
+    uint8 CSS2Raw;
+
 } __attribute__((packed)) ADCS_BcnTlm_Payload_t; /* Total 14 bytes */
 
 typedef struct

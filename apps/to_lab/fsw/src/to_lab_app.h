@@ -52,8 +52,9 @@ typedef struct
     CFE_SB_PipeId_t Cmd_pipe;
     osal_id_t       TLMsockid;
     bool            downlink_on;
-    // char            tlm_dest_IP[17];
-    // bool            suppress_sendto;
+    
+    char            tlm_dest_IP[17];
+    bool            suppress_sendto;
 
     TO_LAB_HkTlm_t        HkTlm;
     TO_ReportTlm_t        ReportTlm;
@@ -73,7 +74,6 @@ typedef struct
 void  TO_LAB_AppMain(void);
 void  TO_LAB_openTLM(void);
 int32 TO_LAB_init(void);
-void  TO_LAB_process_commands(void);
 void  TO_LAB_forward_telemetry(void);
 
 /******************************************************************************/

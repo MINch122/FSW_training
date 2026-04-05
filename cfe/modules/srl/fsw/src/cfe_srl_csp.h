@@ -28,7 +28,7 @@
 #define CSP_TIMEOUT(x)              (x)*1000
 
 /**
- * COSMIC CSP Nodes
+ * BASE5TH CSP Nodes
  * 
  * SANT is GomSpace but, doesn't need CSP
  * Consider CubeSpace's ADCS Solution.

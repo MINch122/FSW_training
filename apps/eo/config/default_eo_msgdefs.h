@@ -6,10 +6,13 @@
 
 
 typedef struct EO_HkTlm_Payload{
-    uint8 CmdCounter;
-    uint8 CmdErrCounter;
-
-    EO_CurrentStep_t PhaseInfo;
+    
+    uint16_t TBD1;
+    uint16_t TBD2;
+    uint8_t TBD3;
+    
+    uint8_t CmdCounter;
+    uint8_t CmdErrCounter;
 
 }__attribute__((packed)) EO_BcnTlm_Payload_t;
 

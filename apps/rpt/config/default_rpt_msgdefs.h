@@ -6,21 +6,11 @@
 
 
 typedef struct RPT_HkTlm_Payload{
-    uint8 CmdCounter;
-    uint8 CmdErrCounter;
-
-    /**
-     * Queue Info
-     */
-    uint8 ReportQueueCnt;
-    uint8 CriticalQueueCnt;
 
     /**
      * Operation Data
      */
     uint16 BootCount;
-    uint32 TimeSec;
-    uint32 TimeSubsec;
     uint32 Sequence; /* Backup data numbering */
 
     /**

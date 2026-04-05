@@ -30,4 +30,4 @@ ES MEMSTATS Tlm,           GenericTelemetry.py,     0x810,   cfe-es-memstats-tlm
 ES BlockStats Tlm 1,       GenericTelemetry.py,     0x810,   cfe-es-blockstats_1-tlm.txt
 PAYUZUC Tlm,               GenericTelemetry.py,     0x830,   payuzuc-tlm.txt
 RPT Tlm,                   GenericTelemetry.py,     0x825,   rpt-tlm.txt
-COSMIC BCN,                GenericTelemetry.py,     0x81A,   cosmic-bcn-tlm.txt
+BASE5TH BCN,                GenericTelemetry.py,     0x81A,   base5th-bcn-tlm.txt

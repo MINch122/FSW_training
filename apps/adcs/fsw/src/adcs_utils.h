@@ -118,7 +118,7 @@ int32 ADCS_Reset(void);
 
 /********************************************************
  * 
- * COSMIC Actual Set Command Function
+ * BASE5TH Actual Set Command Function
  * 
  ********************************************************/
 int32 ADCS_SetCurrentUnixTime(const ADCS_CurrentUnixTimeCmd_Payload_t *setVal);		// 2
@@ -158,7 +158,7 @@ int32 ADCS_SetInitiateEventLogTransfer(const ADCS_InitiateEventLogTransferCmd_Pa
 
 /********************************************************
  * 
- * COSMIC Actual Get Command Function (Get tlm)
+ * BASE5TH Actual Get Command Function (Get tlm)
  * 
  ********************************************************/
 int32 ADCS_GetErrorLogSetting(ADCS_ErrorLogSettingTlm_Payload_t *returnVal);	// 132

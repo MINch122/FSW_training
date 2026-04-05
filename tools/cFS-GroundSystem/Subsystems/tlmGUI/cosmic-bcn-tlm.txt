@@ -1,4 +1,4 @@
-# combined-cosmic-bcn-tlm (aligned)
+# combined-base5th-bcn-tlm (aligned)
 CCSDS Message ID                , 0  , 2, H, Hex, NULL, NULL, NULL, NULL
 CCSDS Sequence                  , 2  , 2, H, Hex, NULL, NULL, NULL, NULL
 CCSDS Length                    , 4  , 2, H, Dec, NULL, NULL, NULL, NULL

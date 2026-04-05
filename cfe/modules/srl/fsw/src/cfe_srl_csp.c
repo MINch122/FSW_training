@@ -1,6 +1,6 @@
 #include "cfe_srl_module_all.h"
 
-const char *SatName = "COSMIC"; // Revise name according to specific misison
+const char *SatName = "BASE5TH"; // Revise name according to specific misison
 
 static csp_iface_t *InterfaceCAN = NULL;
 

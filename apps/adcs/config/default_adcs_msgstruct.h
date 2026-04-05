@@ -94,7 +94,7 @@ typedef struct
 
 /********************************************************
  * 
- * COSMIC Actual Set Command structure
+ * BASE5TH Actual Set Command structure
  * Upper functions are just the references
  * 
  ********************************************************/
@@ -258,7 +258,7 @@ typedef struct { // ID 120
 
 /********************************************************
  * 
- * COSMIC Actual Get Command structure
+ * BASE5TH Actual Get Command structure
  * Everything is No arguments
  * 
  ********************************************************/
@@ -421,7 +421,6 @@ typedef struct
 {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
     ADCS_BcnTlm_Payload_t Payload;         /**< \brief Telemetry payload */
-    bool IsSunlight;
 } ADCS_BcnTlm_t;
 
 /* Housekeeping SB MSG */

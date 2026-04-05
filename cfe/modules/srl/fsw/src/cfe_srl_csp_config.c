@@ -58,7 +58,7 @@ void CFE_SRL_ConfigHost(csp_conf_t *Conf) {
 
 	Conf->address = CSP_NODE_OBC;
 	Conf->hostname = "OBC";
-	Conf->model = "COSMIC";
+	Conf->model = "BASE5TH";
 	Conf->revision = "mozart";
 	Conf->conn_max = 10;
 	Conf->conn_queue_length = 10;

@@ -17,8 +17,9 @@ void TO_LAB_ForwardTelemetryRF(void) {
     CFE_SB_Buffer_t *SBBufPtr;
     const void      *NetBufPtr;
     size_t           NetBufSize;
-    uint32_t         PktCount = 0;
-
+    uint32_t         BCN_PktCount = 0;
+    uint8_t         beacon_delay_pattern[] = {2,5,10,20};   // BEE  
+    // uint8_t        beacon_delay_patter[] = (10, 15, 18, 20); // UYS
     CFE_SB_MsgId_t   MsgId = CFE_SB_INVALID_MSG_ID;
     uint8_t          Port = CFE_RF_DPORT_BCN;
 
@@ -49,6 +50,19 @@ void TO_LAB_ForwardTelemetryRF(void) {
                 case (CFE_SB_MsgId_Atom_t)RPT_CRITICAL_TLM_MID:
                     Port = CFE_RF_DPORT_RPT;
                     break;
+                case (CFE_SB_MsgId_Atom_t)HK_COMBINED_PKT1_MID:
+                    Port = CFE_RF_DPORT_BCN;
+                    uint32_t beacon_slot = BCN_PktCount % 20;
+                    BCN_PktCount++;
+
+                    if (beacon_slot != beacon_delay_pattern[0] &&
+                        beacon_slot != beacon_delay_pattern[1] &&
+                        beacon_slot != beacon_delay_pattern[2] &&
+                        beacon_slot != beacon_delay_pattern[3])
+                    {
+                        continue;
+                    }
+                    break;
 
                 default:
                     Port = CFE_RF_DPORT_BCN;
@@ -62,69 +76,91 @@ void TO_LAB_ForwardTelemetryRF(void) {
                 CFE_EVS_SendErr(TO_LAB_TLMOUTSTOP_ERR_EID, "%s: RF emit error. RC=0x%08X\n", __func__, Status);
             }
 
-            PktCount ++;
+            OS_TaskDelay(10);
 
-            if (PktCount >= TO_LAB_MAX_TLM_PKTS) OS_TaskDelay(5); /* Prevent Hogging */
         }
 
     }
     CFE_EVS_SendCrit(TO_LAB_END_CHILD_CRIT_EID, "TO child Task finished. Should be restarted.");
 }
 
-// void TO_LAB_forward_telemetryUDP(void)
-// {
-//     OS_SockAddr_t    d_addr;
-//     int32            OsStatus;
-//     CFE_Status_t     CfeStatus;
-//     CFE_SB_Buffer_t *SBBufPtr;
-//     const void      *NetBufPtr;
-//     size_t           NetBufSize;
-//     uint32           PktCount = 0;
+void TO_LAB_ForwardTelemetryUDP(void)
+{
+    OS_SockAddr_t    d_addr;
+    int32            OsStatus;
+    CFE_Status_t     CfeStatus;
+    CFE_SB_Buffer_t *SBBufPtr;
+    const void      *NetBufPtr;
+    size_t           NetBufSize;
+    CFE_SB_MsgId_t   MsgId = CFE_SB_INVALID_MSG_ID;
 
-//     OS_SocketAddrInit(&d_addr, OS_SocketDomain_INET);
-//     OS_SocketAddrSetPort(&d_addr, TO_LAB_TLM_PORT);
-//     OS_SocketAddrFromString(&d_addr, TO_LAB_Global.tlm_dest_IP);
-//     OsStatus = 0;
+    uint32_t         BCN_PktCount = 0;
+    uint8_t         beacon_delay_pattern[] = {2,5,10,20};   // BEE  
+    // uint8_t        beacon_delay_patter[] = (10, 15, 18, 20); // UYS
 
-//     do
-//     {
-//         CfeStatus = CFE_SB_ReceiveBuffer(&SBBufPtr, TO_LAB_Global.Tlm_pipe, TO_LAB_TLM_PIPE_TIMEOUT);
+    OS_printf("%s: TO child start.\n", __func__);
 
-//         if ((CfeStatus == CFE_SUCCESS) && (TO_LAB_Global.suppress_sendto == false))
-//         {
-//             OsStatus = OS_SUCCESS;
+    OS_SocketAddrInit(&d_addr, OS_SocketDomain_INET);
+    OS_SocketAddrSetPort(&d_addr, TO_LAB_TLM_PORT);
+    OS_SocketAddrFromString(&d_addr, TO_LAB_Global.tlm_dest_IP);
+    OsStatus = 0;
 
-//             if (TO_LAB_Global.downlink_on == true)
-//             {
-//                 CFE_ES_PerfLogEntry(TO_LAB_SOCKET_SEND_PERF_ID);
+    for(; ; ){
+ 
+        CfeStatus = CFE_SB_ReceiveBuffer(&SBBufPtr, TO_LAB_Global.Tlm_pipe, TO_LAB_TLM_PIPE_TIMEOUT);
 
-//                 CfeStatus = TO_LAB_EncodeOutputMessage(SBBufPtr, &NetBufPtr, &NetBufSize);
+        if ((CfeStatus == CFE_SUCCESS) && (TO_LAB_Global.suppress_sendto == false))
+        {
+            OsStatus = OS_SUCCESS;
 
-//                 if (CfeStatus != CFE_SUCCESS)
-//                 {
-//                     CFE_EVS_SendEvent(TO_LAB_ENCODE_ERR_EID, CFE_EVS_EventType_ERROR, "Error packing output: %d\n",
-//                                       (int)CfeStatus);
-//                 }
-//                 else
-//                 {
-//                     OsStatus = OS_SocketSendTo(TO_LAB_Global.TLMsockid, NetBufPtr, NetBufSize, &d_addr);
-//                 }
+            if (TO_LAB_Global.downlink_on == true)
+            {
+                CFE_ES_PerfLogEntry(TO_LAB_SOCKET_SEND_PERF_ID);
 
-//                 CFE_ES_PerfLogExit(TO_LAB_SOCKET_SEND_PERF_ID);
-//             }
+                CfeStatus = TO_LAB_EncodeOutputMessage(SBBufPtr, &NetBufPtr, &NetBufSize);
 
-//             if (OsStatus < 0)
-//             {
-//                 CFE_EVS_SendEvent(TO_LAB_TLMOUTSTOP_ERR_EID, CFE_EVS_EventType_ERROR,
-//                                   "L%d TO sendto error %d. Tlm output suppressed\n", __LINE__, (int)OsStatus);
-//                 TO_LAB_Global.suppress_sendto = true;
-//             }
-//         }
-//         /* If CFE_SB_status != CFE_SUCCESS, then no packet was received from CFE_SB_ReceiveBuffer() */
+                if (CfeStatus != CFE_SUCCESS)
+                {
+                    CFE_EVS_SendEvent(TO_LAB_ENCODE_ERR_EID, CFE_EVS_EventType_ERROR, "Error packing output: %d\n",
+                                      (int)CfeStatus);
+                }
+                else
+                {
 
-//         PktCount++;
-//     } while (CfeStatus == CFE_SUCCESS && PktCount < TO_LAB_MAX_TLM_PKTS);
-// }
+                    CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
+                    if (CFE_SB_MsgIdToValue(MsgId) == (CFE_SB_MsgId_Atom_t)HK_COMBINED_PKT1_MID)
+                    {
+                        uint32_t beacon_slot = BCN_PktCount % 20;
+                        BCN_PktCount++;
+
+                        if (beacon_slot != beacon_delay_pattern[0] &&
+                            beacon_slot != beacon_delay_pattern[1] &&
+                            beacon_slot != beacon_delay_pattern[2] &&
+                            beacon_slot != beacon_delay_pattern[3])
+                        {
+                            continue;
+                        }
+                        
+                    }
+                    
+                    OsStatus = OS_SocketSendTo(TO_LAB_Global.TLMsockid, NetBufPtr, NetBufSize, &d_addr);
+                }
+
+                CFE_ES_PerfLogExit(TO_LAB_SOCKET_SEND_PERF_ID);
+            }
+
+            if (OsStatus < 0)
+            {
+                CFE_EVS_SendEvent(TO_LAB_TLMOUTSTOP_ERR_EID, CFE_EVS_EventType_ERROR,
+                                  "L%d TO sendto error %d. Tlm output suppressed\n", __LINE__, (int)OsStatus);
+                TO_LAB_Global.suppress_sendto = true;
+            }
+        }
+        /* If CFE_SB_status != CFE_SUCCESS, then no packet was received from CFE_SB_ReceiveBuffer() */
+
+    }
+    OS_printf("%s: TO child terminated.\n", __func__);
+}
 
 void TO_HandleReport(int32 Status, uint8 CC, const void *Data, size_t DataSize) {
     TO_LAB_Global.ReportTlm.Payload.MsgID = TO_LAB_CMD_MID;

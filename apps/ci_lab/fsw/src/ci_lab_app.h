@@ -40,7 +40,6 @@
 
 #include "ci_lab_msg.h"
 
-#include "sc_msgids.h"
 #include "rpt_msgids.h"
 #include "rpt_interface_cfg.h"
 #include "rpt_msg.h"

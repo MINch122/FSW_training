@@ -60,21 +60,15 @@ CFE_Status_t UANT_APP_SendBcnCmd(const UANT_APP_SendBcnCmd_t *Msg)
     /* 원천 데이터 */
     gs_gssb_ant6_release_status_t relA = (gs_gssb_ant6_release_status_t){0};
     gs_gssb_ant6_release_status_t relB = (gs_gssb_ant6_release_status_t){0};
-    gs_gssb_backup_settings_t      bksA = (gs_gssb_backup_settings_t){0};
-    gs_gssb_backup_settings_t      bksB = (gs_gssb_backup_settings_t){0};
 
-    /* 보드 A 읽기 */
+
     bool ok_relA = (gs_gssb_ant6_get_release_status(ADDR_A, UANT_I2C_TIMEOUT_MS, &relA) == GS_OK);
-    bool ok_bksA = (gs_gssb_ant6_get_backup_settings(ADDR_A, UANT_I2C_TIMEOUT_MS, &bksA) == GS_OK);
-    // bool ok_bstA = (gs_gssb_ant6_get_backup_status (ADDR_A, UANT_I2C_TIMEOUT_MS, &bstA) == GS_OK);
 
-    /* 보드 B 읽기 */
     bool ok_relB = (gs_gssb_ant6_get_release_status(ADDR_B, UANT_I2C_TIMEOUT_MS, &relB) == GS_OK);
-    bool ok_bksB = (gs_gssb_ant6_get_backup_settings(ADDR_B, UANT_I2C_TIMEOUT_MS, &bksB) == GS_OK);
-    // bool ok_bstB = (gs_gssb_ant6_get_backup_status (ADDR_B, UANT_I2C_TIMEOUT_MS, &bstB) == GS_OK);
+
 
     /* 하나라도 실패하면 공통 에러 한 번만 기록 */
-    if (!(ok_relA && ok_bksA && ok_relB && ok_bksB)) {
+    if (!(ok_relA && ok_relB )) {
         CFE_EVS_SendEvent(UANT_APP_BCN_ERR_EID, CFE_EVS_EventType_ERROR,
                           "Beacon read error (A=0x%02X, B=0x%02X)", ADDR_A, ADDR_B);
         UANT_APP_Data.ErrCounter++;
@@ -84,14 +78,10 @@ CFE_Status_t UANT_APP_SendBcnCmd(const UANT_APP_SendBcnCmd_t *Msg)
     /* 보드 A (0x05) */
     UANT_APP_Data.bcn.Payload.ch0_status_A    = ok_relA ? relA.channel_0_status : (uint8)GS_ERROR_NO_DATA;
     UANT_APP_Data.bcn.Payload.ch1_status_A    = ok_relA ? relA.channel_1_status : (uint8)GS_ERROR_NO_DATA;
-    UANT_APP_Data.bcn.Payload.backup_active_A = ok_bksA ? bksA.backup_active    : (uint8)GS_ERROR_NO_DATA;
-    // UANT_APP_Data.bcn.state_A         = ok_bstA ? bstA.state            : (uint8)GS_ERROR_NO_DATA;
 
     /* 보드 B (0x06) */
     UANT_APP_Data.bcn.Payload.ch0_status_B    = ok_relB ? relB.channel_0_status : (uint8)GS_ERROR_NO_DATA;
     UANT_APP_Data.bcn.Payload.ch1_status_B    = ok_relB ? relB.channel_1_status : (uint8)GS_ERROR_NO_DATA;
-    UANT_APP_Data.bcn.Payload.backup_active_B = ok_bksB ? bksB.backup_active    : (uint8)GS_ERROR_NO_DATA;
-    // UANT_APP_Data.bcn.state_B         = ok_bstB ? bstB.state            : (uint8)GS_ERROR_NO_DATA;
 
     /* 전송 */
     CFE_MSG_SetSize(CFE_MSG_PTR(UANT_APP_Data.bcn.TelemetryHeader), sizeof(UANT_APP_bcnTlm_t));

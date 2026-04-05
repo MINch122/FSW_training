@@ -119,18 +119,6 @@ typedef struct {
     uint8_t MMT_tries;
     uint8_t IsExecuteDetumble;
 
-    // /* UANT */
-    // uint8_t U_deploy; /* <\brief `EO_NOT_DEPLOYED` or `EO_IS_DEPLOYED` */
-    // uint8_t U_tries;
-
-    /*
-     * " TC receive flag "
-     * The "IsTC" member is marked volatile to help
-     * ensure that an optimizing compiler does not rearrange
-     * or eliminate reads/writes of this value.  It is read
-     * outside of any locking to determine whether or not
-     * the performance log function is enabled.
-     */
     volatile bool IsTC;
 
 } EO_CurrentStep_t;

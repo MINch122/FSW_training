@@ -22,10 +22,6 @@ CFE_Status_t EO_SendBeaconCmd(void) {
     EO_Data.BcnTlm.Payload.CmdCounter = EO_Data.CmdCounter;
     EO_Data.BcnTlm.Payload.CmdErrCounter = EO_Data.ErrCounter;
 
-    OS_MutSemTake(EO_Data.EOMutex);
-    EO_Data.BcnTlm.Payload.PhaseInfo = EO_Data.CurrentStep;
-    OS_MutSemGive(EO_Data.EOMutex);
-
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(EO_Data.BcnTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(EO_Data.BcnTlm.TelemetryHeader), true);
 

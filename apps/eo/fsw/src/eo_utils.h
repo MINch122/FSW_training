@@ -17,9 +17,6 @@
 // #include "sp_msgids.h"
 // #include "sp_msg.h"
 
-#include "sc_msgids.h"
-#include "sc_msg.h"
-
 #include "rpt_msgids.h"
 #include "rpt_msg.h"
 

@@ -16,24 +16,9 @@ CFE_Status_t RPT_SendHKCmd(void) {
 
 CFE_Status_t RPT_SendBeaconCmd(void) {
 
-    
-    RPT_Data.HkTlm.Payload.CmdCounter = RPT_Data.CmdCounter;
-    RPT_Data.HkTlm.Payload.CmdErrCounter = RPT_Data.ErrCounter;
-
-
-    OS_MutSemTake(RPT_Data.ReportMutexID);
-    RPT_Data.HkTlm.Payload.ReportQueueCnt = RPT_Data.RptQueue.Count;
-    OS_MutSemGive(RPT_Data.ReportMutexID);
-    
-    OS_MutSemTake(RPT_Data.CritMutexID);
-    RPT_Data.HkTlm.Payload.CriticalQueueCnt = RPT_Data.CritQueue.Count;
-    OS_MutSemGive(RPT_Data.CritMutexID);
-
     OS_MutSemTake(RPT_Data.OpsMutexID);
     RPT_Data.HkTlm.Payload.ResetCause = RPT_Data.OpsData.ResetCause;
     RPT_Data.HkTlm.Payload.BootCount = RPT_Data.OpsData.BootCount;
-    RPT_Data.HkTlm.Payload.TimeSec = RPT_Data.OpsData.TimeSec;
-    RPT_Data.HkTlm.Payload.TimeSubsec = RPT_Data.OpsData.TimeSubsec;
     RPT_Data.HkTlm.Payload.Sequence = RPT_Data.OpsData.Sequence;
     OS_MutSemGive(RPT_Data.OpsMutexID);
 

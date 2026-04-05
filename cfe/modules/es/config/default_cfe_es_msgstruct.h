@@ -80,6 +80,12 @@ typedef struct CFE_ES_SendHkCmd
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
 } CFE_ES_SendHkCmd_t;
 
+typedef struct CFE_ES_SendBcnCmd
+{
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+} CFE_ES_SendBcnCmd_t;
+
+
 /**
  * \brief Restart cFE Command
  */
@@ -281,5 +287,11 @@ typedef struct CFE_ES_HousekeepingTlm
     CFE_MSG_TelemetryHeader_t        TelemetryHeader; /**< \brief Telemetry header */
     CFE_ES_HousekeepingTlm_Payload_t Payload;         /**< \brief Telemetry payload */
 } CFE_ES_HousekeepingTlm_t;
+
+typedef struct CFE_ES_BeaconTlm
+{
+    CFE_MSG_TelemetryHeader_t        TelemetryHeader; /**< \brief Telemetry header */
+    CFE_ES_BeaconTlm_Payload_t Payload;         /**< \brief Telemetry payload */
+} CFE_ES_BeaconTlm_t;
 
 #endif
