@@ -90,9 +90,6 @@ void CFE_ES_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
             CFE_ES_SendHkCmd((const CFE_ES_SendHkCmd_t *)SBBufPtr);
             break;
 
-        case CFE_ES_SEND_BCN_MID:
-            CFE_ES_SendBcnCmd((const CFE_ES_SendBcnCmd_t *)SBBufPtr);
-            break;
         /*
         ** ES task ground commands
         */

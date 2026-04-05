@@ -313,8 +313,6 @@ int32 CFE_ES_TaskInit(void)
     CFE_MSG_Init(CFE_MSG_PTR(CFE_ES_Global.TaskData.HkPacket.TelemetryHeader), CFE_SB_ValueToMsgId(CFE_ES_HK_TLM_MID),
                  sizeof(CFE_ES_Global.TaskData.HkPacket));
 
-    CFE_MSG_Init(CFE_MSG_PTR(CFE_ES_Global.TaskData.BcnPacket.TelemetryHeader), CFE_SB_ValueToMsgId(CFE_ES_BCN_TLM_MID),
-                 sizeof(CFE_ES_Global.TaskData.BcnPacket));
     /*
     ** Initialize single application telemetry packet
     */
@@ -347,12 +345,6 @@ int32 CFE_ES_TaskInit(void)
         return Status;
     }
 
-    Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(CFE_ES_SEND_BCN_MID), CFE_ES_Global.TaskData.CmdPipe);
-    if (Status != CFE_SUCCESS)
-    {
-        CFE_ES_WriteToSysLog("%s: Cannot Subscribe to BCN packet, RC = 0x%08X\n", __func__, (unsigned int)Status);
-        return Status;
-    }
     /*
     ** Subscribe to ES task ground command packets
     */
@@ -554,22 +546,6 @@ int32 CFE_ES_SendHkCmd(const CFE_ES_SendHkCmd_t *data)
     /*
     ** This command does not affect the command execution counter.
     */
-
-    return CFE_SUCCESS;
-}
-
-int32 CFE_ES_SendBcnCmd(const CFE_ES_SendBcnCmd_t *data)
-{
-    CFE_ES_Global.TaskData.BcnPacket.Payload.ResetType       = CFE_ES_Global.ResetDataPtr->ResetVars.ResetType;
-    CFE_ES_Global.TaskData.BcnPacket.Payload.ResetSubtype    = CFE_ES_Global.ResetDataPtr->ResetVars.ResetSubtype;
-    CFE_ES_Global.TaskData.BcnPacket.Payload.ProcessorResets = CFE_ES_Global.ResetDataPtr->ResetVars.ProcessorResetCount;
-    CFE_ES_Global.TaskData.BcnPacket.Payload.BootSource = CFE_ES_Global.ResetDataPtr->ResetVars.BootSource;
-
-    /*
-    ** Send beacon telemetry packet.
-    */
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(CFE_ES_Global.TaskData.BcnPacket.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(CFE_ES_Global.TaskData.BcnPacket.TelemetryHeader), true);
 
     return CFE_SUCCESS;
 }

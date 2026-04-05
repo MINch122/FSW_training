@@ -124,8 +124,6 @@ void CFE_ES_BackgroundCleanup(void);
 */
 int32 CFE_ES_SendHkCmd(const CFE_ES_SendHkCmd_t *data);
 
-int32 CFE_ES_SendBcnCmd(const CFE_ES_SendBcnCmd_t *data);
-
 /*---------------------------------------------------------------------------------------*/
 /**
  * \brief ES task ground command (NO-OP)

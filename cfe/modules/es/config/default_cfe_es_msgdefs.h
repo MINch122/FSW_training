@@ -358,16 +358,4 @@ typedef struct CFE_ES_HousekeepingTlm_Payload
 } CFE_ES_HousekeepingTlm_Payload_t;
 
 
-typedef struct CFE_ES_BeaconTlm_Payload
-{
-    uint32 ResetType;          /**< \cfetlmmnemonic \ES_RESETTYPE
-                                    \brief Reset type ( PROCESSOR or POWERON ) */
-    uint32 ResetSubtype;       /**< \cfetlmmnemonic \ES_RESETSUBTYPE
-                                    \brief Reset Sub Type */
-    uint32 ProcessorResets;    /**< \cfetlmmnemonic \ES_PROCRESETCNT
-                                    \brief Number of processor resets since last power on */
-    uint32 BootSource;         /**< \cfetlmmnemonic \ES_BOOTSOURCE
-                                    \brief Boot source ( as provided from BSP ) */
-} CFE_ES_BeaconTlm_Payload_t;
-
 #endif

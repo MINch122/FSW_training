@@ -107,7 +107,6 @@ typedef struct
     */
     CFE_ES_HousekeepingTlm_t HkPacket;
 
-    CFE_ES_BeaconTlm_t BcnPacket;
     /*
     ** Single application telemetry
     */
