@@ -157,7 +157,7 @@ void TO_LAB_ForwardTelemetryUDP(void)
             }
         }
         /* If CFE_SB_status != CFE_SUCCESS, then no packet was received from CFE_SB_ReceiveBuffer() */
-
+        OS_TaskDelay(10);
     }
     OS_printf("%s: TO child terminated.\n", __func__);
 }
