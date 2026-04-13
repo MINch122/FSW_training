@@ -20,9 +20,6 @@
 [submodule "submodules/libgpiod"]
 	path = submodules/libgpiod
 	url = https://dssacl.yonsei.ac.kr/git/DSS/libgpiod_1.6.x
-[submodule "app/sample_app"]
-	path = app/sample_app
-	url = https://github.com/nasa/sample_app
 [submodule "apps/sample_app"]
 	path = apps/sample_app
 	url = https://github.com/nasa/sample_app
