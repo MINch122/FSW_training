@@ -34,13 +34,13 @@ CFE_Status_t ADCS_SendHkCmd(const ADCS_SendHkCmd_t *Msg);
 CFE_Status_t ADCS_SendBcnCmd(const ADCS_SendBcnCmd_t *Msg);
 CFE_Status_t ADCS_NoopCmd(const ADCS_NoopCmd_t *Msg);
 CFE_Status_t ADCS_ResetCountersCmd(const ADCS_ResetCountersCmd_t *Msg);
-
+/*
 CFE_Status_t ADCS_EN_HighCmd(void);
 CFE_Status_t ADCS_EN_LowCmd(void);
 CFE_Status_t ADCS_Boot_HighCmd(void);
 CFE_Status_t ADCS_Boot_LowCmd(void);
 CFE_Status_t ADCS_ExitBootloader(void);
-
+*/
 
 
 /*******************************************
@@ -86,7 +86,7 @@ CFE_Status_t ADCS_SetInitiateEventLogTransferCmd(const ADCS_InitiateEventLogTran
 /* Get function */
 CFE_Status_t ADCS_GetErrorLogSettingCmd(void);	// 132
 CFE_Status_t ADCS_GetCurrentUnixTimeCmd(void);	// 133
-CFE_Status_t ADCS_GetCurrentUnixTimeInternalCmd(void); // 133 (Internal function)
+CFE_Status_t ADCS_GetCurrentUnixTimeInternalCmd(void); // 133
 CFE_Status_t ADCS_GetPersistConfigDiagnosticCmd(void);	// 134
 CFE_Status_t ADCS_GetCommunicationStatusCmd(void);	// 135
 CFE_Status_t ADCS_GetControlEstimationModeCmd(void);	// 150

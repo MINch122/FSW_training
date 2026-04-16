@@ -36,10 +36,9 @@
 #define EPS_SUB_CMD_ERR_EID    8
 #define EPS_CMD_LEN_ERR_EID    9
 #define EPS_MID_ERR_EID        10
+#define EPS_SUB_BCN_ERR_EID    11
 
 /* BP8 Battery Pack event IDs */
 #define EPS_BP8_HK_INF_EID        20
-#define EPS_BP8_HEATER_INF_EID    21
-#define EPS_BP8_FAULT_INF_EID     22
 
 #endif

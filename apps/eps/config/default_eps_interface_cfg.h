@@ -43,8 +43,8 @@
 
 #define EPS_P80_PMU_CSP_NODE    1
 #define EPS_P80_ACU1_CSP_NODE   2
-#define EPS_P80_ACU2_CSP_NODE   6
-#define EPS_P80_PDU_CSP_NODE    10
+#define EPS_P80_ACU2_CSP_NODE   3
+#define EPS_P80_PDU_CSP_NODE    4
 
 /**
  * \brief NanoPower BP8 Battery Pack CSP node address

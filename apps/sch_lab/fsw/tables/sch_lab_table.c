@@ -129,7 +129,7 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
         // {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), SCH_LAB_TICK_RATE*100, 0, sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},
+        {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), SCH_LAB_TICK_RATE*10000, 0, sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},
 
         /* Example of including additional open source apps */
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_ES_SEND_HK_MID), 100, 0}, /* Example of a 1hz packet */

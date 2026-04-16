@@ -62,6 +62,6 @@
 #define ADCS_ENABLE_OBC_BOOT_PIN_ERR_EID 28
 #define ADCS_DISABLE_OBC_BOOT_PIN_ERR_EID 29
 
-#define ADCS_BOOTUP_CHECK_ERR_EID       114
+#define ADCS_BOOTUP_CHECK_ERR_EID          114
 
 #endif /* _adcs_app_events_h_ */

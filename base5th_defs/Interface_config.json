@@ -78,9 +78,9 @@
         },
         {
             "type": "uart",
-            "ready": false,
+            "ready": true,
             "name": "RS422",
-            "DevName": "/dev/ttyS1",
+            "DevName": "/dev/ttyS2",
             
             "baudrate": 115200,
             "databits": 8,

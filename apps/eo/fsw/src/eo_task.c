@@ -174,16 +174,16 @@ CFE_Status_t EO_Init(void) {
         }
     }
 
-    if (Status == CFE_SUCCESS) {
-        /**
-         * Subscribe to ground command packets
-         */
-        Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(ADCS_MMT_TLM_MID), EO_Data.CmdPipe);
-        if (Status != CFE_SUCCESS) {
-            CFE_EVS_SendEvent(EO_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "EO: Error Subscribing to RPT Ops Tlm, RC = 0x%08lX", (unsigned long)Status);
-        }
-    }
+    // if (Status == CFE_SUCCESS) {
+    //     /**
+    //      * Subscribe to ground command packets
+    //      */
+    //     Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(ADCS_MMT_TLM_MID), EO_Data.CmdPipe);
+    //     if (Status != CFE_SUCCESS) {
+    //         CFE_EVS_SendEvent(EO_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+    //                           "EO: Error Subscribing to RPT Ops Tlm, RC = 0x%08lX", (unsigned long)Status);
+    //     }
+    // }
 
     /********************************
      * 

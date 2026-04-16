@@ -30,6 +30,11 @@
 #define EPS_P80_POWER_IF_NAME_LEN 8
 
 #define EPS_PACK    __attribute__((packed))
+#define EPS_BCN_ACU_COUNT 2
+#define EPS_RPARAM_DATA_MAX_LEN 128
+/* Matches libgscsp RPARAM store/slot fields: 25 chars plus NUL. */
+#define EPS_RPARAM_STORE_NAME_LEN 26
+#define EPS_RPARAM_STORE_SLOT_LEN 26
 
 
 
@@ -37,7 +42,16 @@
  * P80 Command and Telemetry Message Definitions
 */
 
-typedef struct {
+/*
+ * P80 Power_If_Set payload:
+ * csp_node = P80 PMU(1) or P80 PDU(4).
+ * mode     = GomSpace power_if SET mode.
+ * on_cnt   = GomSpace power_if SET on counter.
+ * off_cnt  = GomSpace power_if SET off counter.
+ * name     = target power-if channel name; CACTUS string input is
+ *            fixed-length and NUL-padded to EPS_P80_POWER_IF_NAME_LEN.
+ */
+typedef struct EPS_PACK {
     uint8_t csp_node; //PMU or PDU
     uint8_t mode;
     uint8_t on_cnt;
@@ -45,58 +59,192 @@ typedef struct {
     char    name[EPS_P80_POWER_IF_NAME_LEN];
 }EPS_P80_Power_If_Set_Cmd_Payload_t;
 
-typedef struct {
+/*
+ * P80 Power_If_Get payload:
+ * csp_node = P80 PMU(1) or P80 PDU(4).
+ * name     = power-if channel name, up to EPS_P80_POWER_IF_NAME_LEN bytes.
+ */
+typedef struct EPS_PACK {
     uint8_t csp_node; //PMU or PDU
     char    name[EPS_P80_POWER_IF_NAME_LEN];
 }EPS_P80_Power_If_Get_Cmd_Payload_t;
 
-typedef struct {
+/*
+ * P80 Power_If_List payload:
+ * csp_node = P80 PMU(1) or P80 PDU(4).
+ */
+typedef struct EPS_PACK {
     uint8_t csp_node; //PMU or PDU
 }EPS_P80_Power_If_List_Cmd_Payload_t;
 
-typedef struct{
+/*
+ * P80 Ground Watchdog Clear payload:
+ * csp_node = P80 PMU(1), P80 ACU1(2), P80 ACU2(3), or P80 PDU(4).
+ * BP8(7) is not valid for this command.
+ */
+typedef struct EPS_PACK {
     uint8_t csp_node; //PMU or PDU or ACU1 or ACU2
 }EPS_P80_Gnd_Watchdog_Clear_Cmd_Payload_t;
 
-typedef struct{
-    uint8_t csp_node; //PMU or PDU or ACU1 or ACU2
-}EPS_P80_Get_Hk_Cmd_Payload_t;
+/*
+ * Get HK payload:
+ * csp_node = P80 PMU(1), P80 ACU1(2), P80 ACU2(3), P80 PDU(4), or BP8(7).
+ */
+typedef struct EPS_PACK {
+    uint8_t csp_node; //PMU or PDU or ACU1 or ACU2 or BP8
+}EPS_Get_HK_Cmd_Payload_t;
 
-typedef struct{
+/*
+ * RParam Set payload:
+ * csp_node = P80 PMU(1), P80 ACU1(2), P80 ACU2(3), P80 PDU(4), or BP8(7).
+ * table_id = board(0), configuration(1), calibration(2), telemetry(4);
+ *            BP8 also supports control(3).
+ * addr     = parameter offset in that table.
+ * type     = gs_param_type_t from gs/param/types.h:
+ *            UINT8=0, UINT16=1, UINT32=2, UINT64=3,
+ *            INT8=4, INT16=5, INT32=6, INT64=7,
+ *            DOUBLE=12, FLOAT=13, STRING=14, DATA=15, BOOL=16.
+ * data     = raw bytes. In CACTUS bytes[128], enter hex such as "01" or
+ *            "01 00"; CACTUS pads shorter input with 00.
+ * size     = valid byte count; should match the selected type/array/string
+ *            length. size > 128 is rejected.
+ */
+typedef struct EPS_PACK {
+    uint8_t csp_node;
+    uint8_t table_id;
+    uint16_t    addr;
+    uint8_t     type; 
+    uint8_t     data[EPS_RPARAM_DATA_MAX_LEN];
+    uint16_t    size;
+}EPS_RParam_Set_Cmd_Payload_t;
+
+/*
+ * RParam Get payload:
+ * csp_node = same mapping as RParam Set.
+ * table_id = same mapping as RParam Set.
+ * addr     = same mapping as RParam Set.
+ * type     = same mapping as RParam Set.
+ * data     = unused by the EPS app for GET but remains in the fixed layout.
+ * size     = number of bytes to read, max EPS_RPARAM_DATA_MAX_LEN(128).
+ */
+typedef struct EPS_PACK {
     uint8_t csp_node;
     uint8_t table_id;
     uint16_t    addr;
     uint8_t     type;
-    uint8_t     data[64];
+    uint8_t     data[EPS_RPARAM_DATA_MAX_LEN];
     uint16_t    size;
-}EPS_P80_Param_Set_Cmd_Payload_t;
+}EPS_RParam_Get_Cmd_Payload_t;
 
-typedef struct{
+/*
+ * RParam Get Full Table payload:
+ * csp_node = target EPS node.
+ * table_id = remote parameter table id using the same table mapping as
+ *            RParam Set.
+ */
+typedef struct EPS_PACK {
     uint8_t csp_node;
     uint8_t table_id;
-    uint16_t    addr;
-    uint8_t     type;
-    uint8_t     data[64];
-    uint16_t    size;
-}EPS_P80_Param_Get_Cmd_Payload_t;
+}EPS_RParam_Get_Full_Table_Cmd_Payload_t;
 
-typedef struct{
+/*
+ * RParam Table Save payload:
+ * csp_node = same mapping as RParam Set.
+ * table_id = same mapping as RParam Set.
+ * action   = saves one remote table to its primary/default store.
+ */
+typedef struct EPS_PACK {
     uint8_t csp_node;
     uint8_t table_id;
-}EPS_P80_Get_Full_Table_Cmd_Payload_t;
-
-typedef struct{
-    uint8_t csp_node;
-    uint8_t table_id;
-}EPS_P80_Table_Save_Cmd_Payload_t;
+}EPS_RParam_Table_Save_Cmd_Payload_t;
 
 /* Same fields as Save; typedef for clarity */
-typedef EPS_P80_Table_Save_Cmd_Payload_t EPS_P80_Table_Load_Cmd_Payload_t;
+typedef EPS_RParam_Table_Save_Cmd_Payload_t EPS_RParam_Table_Load_Cmd_Payload_t;
+
+/*
+ * RParam Save/Load Store payload:
+ * csp_node = same mapping as RParam Set.
+ * table_id = same mapping as RParam Set.
+ * store    = required param-4 store name.
+ * slot     = optional slot name; leave empty to request the default slot.
+ */
+typedef struct EPS_PACK {
+    uint8_t csp_node;
+    uint8_t table_id;
+    char    store[EPS_RPARAM_STORE_NAME_LEN];
+    char    slot[EPS_RPARAM_STORE_SLOT_LEN];
+}EPS_RParam_Store_Cmd_Payload_t;
+
+typedef EPS_RParam_Store_Cmd_Payload_t EPS_RParam_Save_To_Store_Cmd_Payload_t;
+typedef EPS_RParam_Store_Cmd_Payload_t EPS_RParam_Load_From_Store_Cmd_Payload_t;
 
 /* Save all parameter tables on a node (no table_id needed) */
-typedef struct{
+/*
+ * RParam Save All payload:
+ * csp_node = target EPS node.
+ * action   = persists all parameter tables on that node.
+ */
+typedef struct EPS_PACK {
     uint8_t csp_node;
-}EPS_P80_Param_Save_Cmd_Payload_t;
+}EPS_RParam_Save_All_Cmd_Payload_t;
+
+/*
+ * CSP PS payload:
+ * csp_node = target CSP address.
+ * action   = requests the remote task/process list and prints it.
+ */
+typedef struct EPS_PACK {
+    uint8_t csp_node;
+}EPS_CSP_PS_Cmd_Payload_t;
+
+/*
+ * CSP MemFree payload:
+ * csp_node = target CSP address.
+ * action   = queries free memory on the remote node.
+ */
+typedef struct EPS_PACK {
+    uint8_t csp_node;
+}EPS_CSP_MemFree_Cmd_Payload_t;
+
+/*
+ * CSP BufFree payload:
+ * csp_node = target CSP address.
+ * action   = queries free CSP buffer count on the remote node.
+ */
+typedef struct EPS_PACK {
+    uint8_t csp_node;
+}EPS_CSP_BufFree_Cmd_Payload_t;
+
+/*
+ * CSP Uptime payload:
+ * csp_node = target CSP address.
+ * action   = queries uptime in seconds on the remote node.
+ */
+typedef struct EPS_PACK {
+    uint8_t csp_node;
+}EPS_CSP_Uptime_Cmd_Payload_t;
+
+/*
+ * CSP Ping payload:
+ * csp_node = target CSP address.
+ * size     = ping payload bytes; 0 means EPS default 1 byte, max is 128.
+ * opts     = CSP ping option bitmask.
+ */
+typedef struct EPS_PACK {
+    uint8_t  csp_node;
+    uint16_t size;
+    uint8_t  opts;
+}EPS_CSP_Ping_Cmd_Payload_t;
+
+/*
+ * CSP Reboot payload:
+ * csp_node = target CSP address.
+ * action   = requests a remote device reboot; use carefully because this does
+ *            not wait for an application-level response.
+ */
+typedef struct EPS_PACK {
+    uint8_t csp_node;
+}EPS_CSP_Reboot_Cmd_Payload_t;
 
 /*************************************************************************/
 /*
@@ -106,7 +254,7 @@ typedef struct{
 /**
  * @brief EPS housekeeping packet payload.
  */
-typedef struct {
+typedef struct EPS_PACK {
     uint16 vbatt;
     uint8  output[8];
     uint16 curout[6];
@@ -124,7 +272,7 @@ typedef struct {
 /**
  * P80 PMU Housekeeping telemetry payload.
  */
-typedef struct {
+typedef struct EPS_PACK {
     uint32 uptime;
     uint32 bootcause;
     uint16 resetcause;
@@ -148,7 +296,7 @@ typedef struct {
 /**
  * P80 PDU Housekeeping telemetry payload.
  */
-typedef struct {
+typedef struct EPS_PACK {
     uint32 uptime;
     uint32 bootcause;
     uint32 bootcount;
@@ -170,7 +318,7 @@ typedef struct {
 /**
  * P80 ACU Housekeeping telemetry payload.
  */
-typedef struct {
+typedef struct EPS_PACK {
     uint32 uptime;
     uint32 bootcause;
     uint32 bootcount;
@@ -191,7 +339,7 @@ typedef struct {
  *        Packed attribute is mandatory due to the uint32 member.
  *        (2-byte tail padding with natural alignment)
  */
-typedef struct __attribute__((packed)) {
+typedef struct EPS_PACK {
     uint16 vbatt;
     uint8  output[8];
     uint16 curout[6];
@@ -210,7 +358,7 @@ typedef struct __attribute__((packed)) {
  */
 
 /* PMU Beacon - 43 bytes */
-typedef struct __attribute__((packed)) {
+typedef struct EPS_PACK {
     uint32 bootcause;          /* PMU addr 0x04 */
     uint16 resetcause;         /* PMU addr 0x08 */
     uint16 bootcount;          /* PMU addr 0x0A */
@@ -227,19 +375,19 @@ typedef struct __attribute__((packed)) {
 } EPS_BcnTlm_PMU_Payload_t;
 
 /* PDU Beacon - 24 bytes */
-typedef struct __attribute__((packed)) {
+typedef struct EPS_PACK {
     uint8  out_en[24];         /* PDU addr 0x70, bool × 24 */
 } EPS_BcnTlm_PDU_Payload_t;
 
 /* ACU Beacon - 25 bytes */
-typedef struct __attribute__((packed)) {
+typedef struct EPS_PACK {
     int16  input_i[6];         /* ACU addr 0x10, int16 × 6 */
     uint16 input_v[6];         /* ACU addr 0x1C, uint16 × 6 */
     uint8  mppt_mode;          /* ACU addr 0x38 */
 } EPS_BcnTlm_ACU_Payload_t;
 
 /* BP8 Beacon - 22 bytes */
-typedef struct __attribute__((packed)) {
+typedef struct EPS_PACK {
     uint16 bootcount;          /* BP8 addr 0x04 */
     uint16 bootcause;          /* BP8 addr 0x06 */
     uint16 resetcause;         /* BP8 addr 0x08 */
@@ -250,23 +398,18 @@ typedef struct __attribute__((packed)) {
     uint16 heater_i;           /* BP8 addr 0x2A */
 } EPS_BcnTlm_BP8_Payload_t;
 
-/* Full EPS Beacon Payload: PMU(43) + PDU(24) + ACU(25) + BP8(22) = 114 bytes */
-typedef struct __attribute__((packed)) {
+/* Full EPS Beacon Payload: PMU(43) + PDU(24) + ACU(25) * 2 + BP8(22) = 139 bytes */
+typedef struct EPS_PACK {
     EPS_BcnTlm_PMU_Payload_t  PMU;
     EPS_BcnTlm_PDU_Payload_t  PDU;
-    EPS_BcnTlm_ACU_Payload_t  ACU;
+    EPS_BcnTlm_ACU_Payload_t  ACU[EPS_BCN_ACU_COUNT];
     EPS_BcnTlm_BP8_Payload_t  BP8;
 } EPS_BcnTlm_Full_Payload_t;
 
 /**
  * BP8 Battery Pack Command and Telemetry Definitions
  */
-typedef struct {
-    uint16 Duration;  /* Heater duration in seconds (1-600, 0=stop) */
-    uint16 spare;
-} EPS_BP8_SetHeater_Payload_t;
-
-typedef struct {
+typedef struct EPS_PACK {
     uint32 Uptime;
     uint16 BootCount;
     uint16 BootCause;

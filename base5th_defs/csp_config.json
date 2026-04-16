@@ -2,7 +2,7 @@
     "host" :
     {
         "ready": true,
-        "address": 3,
+        "address": 10,
         "hostname": "OBC",
         "model": "BASE5TH",
         "revision": "mozart",
@@ -38,16 +38,6 @@
         },
         {
             "name": "ADCS",
-            "node": 4,
-            "interface": "CAN",
-            "via": null,
-
-            "priority": 2,
-            "timeout": 1,
-            "option": "CSP_O_NONE"
-        },
-        {
-            "name": "EPS_ACU2",
             "node": 6,
             "interface": "CAN",
             "via": null,
@@ -57,8 +47,18 @@
             "option": "CSP_O_NONE"
         },
         {
+            "name": "EPS_ACU2",
+            "node": 3,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_NONE"
+        },
+        {
             "name": "EPS_PDU",
-            "node": 10,
+            "node": 4,
             "interface": "CAN",
             "via": null,
 

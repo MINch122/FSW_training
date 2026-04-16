@@ -34,7 +34,7 @@ void EO_WakeupTask(void);
 // void EO_UpdateOutEPS(const EPS_Output_Tlm_t *Msg);
 // void EO_UpdateDataSANT(const SANT_OperationTlm_t *Msg);
 void EO_ValidateOperationData(const RPT_OpsTlm_t *Msg);
-void EO_UpdateDataADCS(const ADCS_MMTTlm_t *Msg);
+// void EO_UpdateDataADCS(const ADCS_MMTTlm_t *Msg);
 
 
 #endif

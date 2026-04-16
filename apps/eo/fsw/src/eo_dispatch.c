@@ -152,10 +152,10 @@ void EO_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
             EO_ValidateOperationData((const RPT_OpsTlm_t *)SBBufPtr);
             break;
 
-        case ADCS_MMT_TLM_MID:
-            /* Check MMT deploy data */
-            EO_UpdateDataADCS((const ADCS_MMTTlm_t *)SBBufPtr);
-            break;
+        // case ADCS_MMT_TLM_MID:
+        //     /* Check MMT deploy data */
+        //     EO_UpdateDataADCS((const ADCS_MMTTlm_t *)SBBufPtr);
+        //     break;
         
         default:
             CFE_EVS_SendEvent(EO_MID_ERR_EID, CFE_EVS_EventType_ERROR,

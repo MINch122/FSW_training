@@ -131,35 +131,35 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
         case ADCS_GPIO_ENABLE_HIGH_CC:
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GpioEnHighCmd_t)))
             {
-                ADCS_EN_HighCmd();
+                // ADCS_EN_HighCmd();
             }            
             break;
 
         case ADCS_GPIO_ENABLE_LOW_CC:
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GpioEnLowCmd_t)))
             {
-                ADCS_EN_LowCmd();
+                // ADCS_EN_LowCmd();
             } 
             break;
 
         case ADCS_GPIO_BOOT_HIGH_CC:
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GpioBootHighCmd_t)))
             {
-                ADCS_Boot_HighCmd();
+                // ADCS_Boot_HighCmd();
             } 
             break;
         
         case ADCS_GPIO_BOOT_LOW_CC:
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GpioBootLowCmd_t)))
             {
-                ADCS_Boot_LowCmd();
+                // ADCS_Boot_LowCmd();
             } 
             break;
 
         case ADCS_EXIT_BOOTLOADER_CC:
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_ExitBootLoaderCmd_t)))
             {
-                ADCS_ExitBootloader();
+                // ADCS_ExitBootloader();
             }
             break;
 
@@ -694,7 +694,7 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 
         case ADCS_GET_CURRENT_UNIX_TIME_INTERNAL_CC:
             // ID 133
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetCurrentUnixTimeCmd_t))) {
+			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetCurrentUnixTimeCmd_t))) {
                 ADCS_GetCurrentUnixTimeInternalCmd();
             }
             break;

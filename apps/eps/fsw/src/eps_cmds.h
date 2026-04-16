@@ -30,60 +30,134 @@
 #include "cfe_error.h"
 #include "eps_msg.h"
 
-/**
- * @brief Send report with command result
+/*
+** Common command handlers.
+*/
+/*
+ * NOOP: health check for the EPS app. No payload fields; increments the EPS
+ * command counter and emits the app version event.
  */
-void EPS_SendReport(const void* cmd,
-                    const void* data,
-                    uint16 dataSize,
-                    int32 retCode,
-                    uint8 retType);
-
-/*
-** Basic Commands
-*/
-CFE_Status_t EPS_SendHkCmd(const EPS_SendHkCmd_t *Msg);
-CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg);
-CFE_Status_t EPS_ReportBcnCmd(const EPS_ReportBcnCmd_t *Msg);
-CFE_Status_t EPS_ResetCountersCmd(const EPS_ResetCountersCmd_t *Msg);
 CFE_Status_t EPS_NoopCmd(const EPS_NoopCmd_t *Msg);
+/*
+ * ResetCounters: clears EPS command/error/HK/beacon error counters. No payload
+ * fields.
+ */
+CFE_Status_t EPS_ResetCountersCmd(const EPS_ResetCountersCmd_t *Msg);
+/* CFE_Status_t EPS_SendHkCmd(const EPS_SendHkCmd_t *Msg); */ /* Disabled: EPS_SendHkCmd is not implemented */
+/*
+ * SendBcn: refreshes EPS beacon data from hardware and transmits the beacon
+ * telemetry packet on the software bus. No payload fields.
+ */
+CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg);
+/*
+ * ReportBcn: refreshes beacon data and prints a human-readable beacon report.
+ */
+CFE_Status_t EPS_ReportBcnCmd(const EPS_ReportBcnCmd_t *Msg);
 
 /*
-** Power Interface Commands
+** P80 power interface command handlers.
 */
+/*
+ * P80 Power_If_Get: read one P80 named power interface channel.
+ */
 CFE_Status_t EPS_P80_Power_If_Get_Cmd(const EPS_P80_Power_If_Get_Cmd_t *Msg);
+/*
+ * P80 Power_If_Set: set one P80 named power interface channel.
+ */
 CFE_Status_t EPS_P80_Power_If_Set_Cmd(const EPS_P80_Power_If_Set_Cmd_t *Msg);
+/*
+ * P80 Power_If_List: list available named power interface channels.
+ */
 CFE_Status_t EPS_P80_Power_If_List_Cmd(const EPS_P80_Power_If_List_Cmd_t *Msg);
 
 /*
-** Housekeeping & Watchdog Commands
+** Housekeeping and P80 watchdog command handlers.
 */
-CFE_Status_t EPS_P80_Get_Hk_Cmd(const EPS_P80_Get_Hk_Cmd_t *Msg);
+/*
+ * Get_HK: read and print housekeeping for one EPS node.
+ */
+CFE_Status_t EPS_Get_HK_Cmd(const EPS_Get_HK_Cmd_t *Msg);
+/*
+ * Get_HK_All: read and print housekeeping for PMU, PDU, ACU1, ACU2, and BP8.
+ * No payload fields.
+ */
+CFE_Status_t EPS_Get_HK_All_Cmd(const EPS_Get_HK_All_Cmd_t *Msg);
+/*
+ * P80_Gnd_Watchdog_Clear: clear the ground watchdog on one P80 node.
+ */
 CFE_Status_t EPS_P80_Gnd_Watchdog_Clear_Cmd(const EPS_P80_Gnd_Watchdog_Clear_Cmd_t *Msg);
+/*
+ * P80_Gnd_Watchdog_Clear_All: clear ground watchdogs on all P80 nodes.
+ */
+CFE_Status_t EPS_P80_Gnd_Watchdog_Clear_All_Cmd(const EPS_P80_Gnd_Watchdog_Clear_All_Cmd_t *Msg);
 
 /*
-** Remote Parameter Commands (추가됨)
+** Remote parameter command handlers.
 */
-CFE_Status_t EPS_P80_Param_Set_Cmd(const EPS_P80_Param_Set_Cmd_t *Msg);
-CFE_Status_t EPS_P80_Param_Get_Cmd(const EPS_P80_Param_Get_Cmd_t *Msg);
-CFE_Status_t EPS_P80_Get_Full_Table_Cmd(const EPS_P80_Get_Full_Table_Cmd_t *Msg);
+/*
+ * RParam_Set: write one remote parameter by table address.
+ */
+CFE_Status_t EPS_RParam_Set_Cmd(const EPS_RParam_Set_Cmd_t *Msg);
+/*
+ * RParam_Get: read one remote parameter by table address and print raw bytes.
+ */
+CFE_Status_t EPS_RParam_Get_Cmd(const EPS_RParam_Get_Cmd_t *Msg);
+/*
+ * RParam_Get_Full_Table: download table specification and values, then print
+ * each row with decoded type/value.
+ */
+CFE_Status_t EPS_RParam_Get_Full_Table_Cmd(const EPS_RParam_Get_Full_Table_Cmd_t *Msg);
+/*
+ * RParam_Save_All: persist all parameter tables on a node.
+ */
+CFE_Status_t EPS_RParam_Save_All_Cmd(const EPS_RParam_Save_All_Cmd_t *Msg);
+/*
+ * RParam_Save_To_Store: save one remote table to a named param-4 store.
+ */
+CFE_Status_t EPS_RParam_Save_To_Store_Cmd(const EPS_RParam_Save_To_Store_Cmd_t *Msg);
+/*
+ * RParam_Load_From_Store: load one remote table from a named param-4 store.
+ */
+CFE_Status_t EPS_RParam_Load_From_Store_Cmd(const EPS_RParam_Load_From_Store_Cmd_t *Msg);
 
 /*
-** Table Save/Load Commands (추가됨)
+** Remote parameter table command handlers.
 */
-CFE_Status_t EPS_P80_Table_Save_Cmd(const EPS_P80_Table_Save_Cmd_t *Msg);
-CFE_Status_t EPS_P80_Table_Load_Cmd(const EPS_P80_Table_Load_Cmd_t *Msg);
+/*
+ * RParam_Table_Save: persist one remote table to its primary/default store.
+ */
+CFE_Status_t EPS_RParam_Table_Save_Cmd(const EPS_RParam_Table_Save_Cmd_t *Msg);
+/*
+ * RParam_Table_Load: reload one remote table from its primary/default store.
+ */
+CFE_Status_t EPS_RParam_Table_Load_Cmd(const EPS_RParam_Table_Load_Cmd_t *Msg);
 
 /*
-** Param Save All Tables Command
+** CSP standard service command handlers.
 */
-CFE_Status_t EPS_P80_Param_Save_Cmd(const EPS_P80_Param_Save_Cmd_t *Msg);
-
 /*
-** BP8 Battery Pack Commands
-*/
-CFE_Status_t EPS_BP8_GetHkCmd(const EPS_BP8_GetHkCmd_t *Msg);
-CFE_Status_t EPS_BP8_SetHeaterCmd(const EPS_BP8_SetHeaterCmd_t *Msg);
-CFE_Status_t EPS_BP8_ResetFaultCmd(const EPS_BP8_ResetFaultCmd_t *Msg);
+ * CSP_PS: request and print the remote task/process list.
+ */
+CFE_Status_t EPS_CSP_PS_Cmd(const EPS_CSP_PS_Cmd_t *Msg);
+/*
+ * CSP_MemFree: query free memory on one EPS node.
+ */
+CFE_Status_t EPS_CSP_MemFree_Cmd(const EPS_CSP_MemFree_Cmd_t *Msg);
+/*
+ * CSP_BufFree: query free CSP buffer count on one EPS node.
+ */
+CFE_Status_t EPS_CSP_BufFree_Cmd(const EPS_CSP_BufFree_Cmd_t *Msg);
+/*
+ * CSP_Uptime: query uptime on one EPS node.
+ */
+CFE_Status_t EPS_CSP_Uptime_Cmd(const EPS_CSP_Uptime_Cmd_t *Msg);
+/*
+ * CSP_Ping: send a CSP ping to one EPS node.
+ */
+CFE_Status_t EPS_CSP_Ping_Cmd(const EPS_CSP_Ping_Cmd_t *Msg);
+/*
+ * CSP_Reboot: send a CSP reboot request to one EPS node.
+ */
+CFE_Status_t EPS_CSP_Reboot_Cmd(const EPS_CSP_Reboot_Cmd_t *Msg);
 
 #endif /* EPS_CMDS_H */

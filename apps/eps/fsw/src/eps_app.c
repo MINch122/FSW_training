@@ -146,29 +146,30 @@ CFE_Status_t EPS_Init(void)
         }
     }
 
-    if (status == CFE_SUCCESS)
-    {
-        /*
-        ** Subscribe to Housekeeping request commands
-        */
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(EPS_SEND_HK_MID), EPS_AppData.CommandPipe);
-        if (status != CFE_SUCCESS)
-        {
-            CFE_EVS_SendEvent(EPS_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "EPS: Error Subscribing to HK request, RC = 0x%08lX", (unsigned long)status);
-        }
-    }
+    /*
+    ** Disabled: EPS_SendHkCmd is not implemented.
+    **
+    ** if (status == CFE_SUCCESS)
+    ** {
+    **     status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(EPS_SEND_HK_MID), EPS_AppData.CommandPipe);
+    **     if (status != CFE_SUCCESS)
+    **     {
+    **         CFE_EVS_SendEvent(EPS_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
+    **                           "EPS: Error Subscribing to HK request, RC = 0x%08lX", (unsigned long)status);
+    **     }
+    ** }
+    */
 
     if (status == CFE_SUCCESS)
     {
         /*
-        ** Subscribe to Housekeeping request commands
+        ** Subscribe to beacon request commands
         */
         status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(EPS_SEND_BCN_MID), EPS_AppData.CommandPipe);
         if (status != CFE_SUCCESS)
         {
-            CFE_EVS_SendEvent(EPS_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "EPS: Error Subscribing to HK request, RC = 0x%08lX", (unsigned long)status);
+            CFE_EVS_SendEvent(EPS_SUB_BCN_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "EPS: Error Subscribing to BCN request, RC = 0x%08lX", (unsigned long)status);
         }
     }
 

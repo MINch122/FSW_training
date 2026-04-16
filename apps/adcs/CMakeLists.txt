@@ -23,6 +23,7 @@ target_include_directories(adcs PUBLIC
   ../../submodules/libgscsp/lib/librgosh_client/include
   ../../submodules/libgscsp/lib/libutil/include
   ../../submodules/libgscsp/build/lib/libgscsp/lib/libcsp/include
+  ../stx/fsw/inc
 )
 
 target_compile_options(adcs PRIVATE -Wno-pedantic -Wno-error=pedantic)
@@ -30,10 +31,6 @@ target_compile_options(adcs PRIVATE -Wno-pedantic -Wno-error=pedantic)
 if(CMAKE_SYSTEM_PROCESSOR	STREQUAL "arm")
     # OBC build
     target_link_libraries(adcs ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/obc/lib/libcsp-client.a)
-elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
-    # For PI
-    # link csp
-    target_link_libraries(adcs ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/pi/lib/libcsp-client.a)
 else()
     # CPU1 build
     target_link_libraries(adcs ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/cpu1/lib/libcsp-client.a)

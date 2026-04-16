@@ -30,129 +30,25 @@
 #include "eps_eventids.h"
 #include "eps_version.h"
 #include "eps_msg.h"
+#include "eps_utils.h"
 #include "cfe_srl_csp.h"
 #include "eps_interface_cfg.h"
+
+#include <gs/param/internal/types.h>
+#include <gs/param/table.h>
+#include <string.h>
 
 #include "eps_p80_drv.h"
 #include "eps_bp8_drv.h"
 
-void EPS_SendReport(const void* cmd,
-                    const void* data,
-                    uint16 dataSize,
-                    int32 retCode,
-                    uint8 retType)
-{
-    CFE_SB_MsgId_t cmdMid;
-    CFE_MSG_FcnCode_t cmdCode;
-
-    CFE_MSG_GetMsgId(cmd, &cmdMid);
-    CFE_MSG_GetFcnCode(cmd, &cmdCode);
-
-    CFE_MSG_Init(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader),
-                 CFE_SB_ValueToMsgId(EPS_REPORT_MID),
-                 sizeof(EPS_AppData.Report));
-    EPS_AppData.Report.Payload.MsgID = (uint16_t)CFE_SB_MsgIdToValue(cmdMid);
-    EPS_AppData.Report.Payload.CommandCode = cmdCode;
-    EPS_AppData.Report.Payload.ReturnType = retType;
-    EPS_AppData.Report.Payload.ReturnCode = retCode;
-    EPS_AppData.Report.Payload.ReturnDataSize = dataSize;
-    if (data && dataSize)
-        memcpy(EPS_AppData.Report.Payload.ReturnValue,
-               data,
-               dataSize > RPT_RET_VALUE_BUF_SIZE
-                        ? RPT_RET_VALUE_BUF_SIZE
-                        : dataSize);
-   CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader), true);
-}
-
-// CFE_Status_t EPS_SendHkCmd(const EPS_SendHkCmd_t *Msg)
-// {
-//     /* TODO: re-implement using driver functions */
-//     return CFE_SUCCESS;
-// }
+#define EPS_CSP_PING_DEFAULT_SIZE 1U
+#define EPS_CSP_PING_MAX_SIZE     128U
 
 CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg)
 {
-    EPS_BcnTlm_Full_Payload_t *bcn = &EPS_AppData.BcnTlm.Payload;
-    gs_error_t err;
+    (void)Msg;
 
-    /* --- PMU Beacon (node 1) --- */
-    EPS_P80_Drv_PMU_BcnTlm_t pmu_bcn = {0};
-    err = EPS_P80_Drv_PMU_GetBcn(EPS_P80_PMU_CSP_NODE, &pmu_bcn, CSP_TIMEOUT(1));
-    if (err != GS_OK)
-    {
-        EPS_AppData.Counters.GetBcnErrCounter++;
-        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: BCN PMU fetch failed, err=%d", err);
-    }
-    else
-    {
-        bcn->PMU.bootcause    = pmu_bcn.bootcause;
-        bcn->PMU.resetcause   = pmu_bcn.resetcause;
-        bcn->PMU.bootcount    = pmu_bcn.bootcount;
-        memcpy(bcn->PMU.out_en, pmu_bcn.out_en, sizeof(bcn->PMU.out_en));
-        bcn->PMU.temp[0]      = pmu_bcn.temp[0];
-        bcn->PMU.temp[1]      = pmu_bcn.temp[1];
-        bcn->PMU.batt_mode    = pmu_bcn.batt_mode;
-        bcn->PMU.batt_i       = pmu_bcn.batt_i;
-        bcn->PMU.batt_v       = pmu_bcn.batt_v;
-        memcpy(bcn->PMU.sm_en, pmu_bcn.sm_en, sizeof(bcn->PMU.sm_en));
-        bcn->PMU.gnd_wdt_cnt  = pmu_bcn.gnd_wdt_cnt;
-        bcn->PMU.bus_wdt_cnt  = pmu_bcn.bus_wdt_cnt;
-        bcn->PMU.gnd_wdt_left = pmu_bcn.gnd_wdt_left;
-        bcn->PMU.bus_wdt_left = pmu_bcn.bus_wdt_left;
-    }
-
-    /* --- PDU Beacon (node 10) --- */
-    EPS_P80_Drv_PDU_BcnTlm_t pdu_bcn = {0};
-    err = EPS_P80_Drv_PDU_GetBcn(EPS_P80_PDU_CSP_NODE, &pdu_bcn, CSP_TIMEOUT(1));
-    if (err != GS_OK)
-    {
-        EPS_AppData.Counters.GetBcnErrCounter++;
-        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: BCN PDU fetch failed, err=%d", err);
-    }
-    else
-    {
-        memcpy(bcn->PDU.out_en, pdu_bcn.out_en, sizeof(bcn->PDU.out_en));
-    }
-
-    /* --- ACU Beacon (node 2) --- */
-    EPS_P80_Drv_ACU_BcnTlm_t acu_bcn = {0};
-    err = EPS_P80_Drv_ACU_GetBcn(EPS_P80_ACU1_CSP_NODE, &acu_bcn, CSP_TIMEOUT(1));
-    if (err != GS_OK)
-    {
-        EPS_AppData.Counters.GetBcnErrCounter++;
-        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: BCN ACU fetch failed, err=%d", err);
-    }
-    else
-    {
-        memcpy(bcn->ACU.input_i, acu_bcn.input_i, sizeof(bcn->ACU.input_i));
-        memcpy(bcn->ACU.input_v, acu_bcn.input_v, sizeof(bcn->ACU.input_v));
-        bcn->ACU.mppt_mode = acu_bcn.mppt_mode;
-    }
-
-    /* --- BP8 Beacon (node 7) --- */
-    EPS_BP8_Drv_HkTlm_t bp8_hk = {0};
-    err = EPS_BP8_Drv_GetHk(EPS_BP8_CSP_NODE, &bp8_hk, CSP_TIMEOUT(1));
-    if (err != GS_OK)
-    {
-        EPS_AppData.Counters.GetBcnErrCounter++;
-        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: BCN BP8 fetch failed, err=%d", err);
-    }
-    else
-    {
-        bcn->BP8.bootcount    = bp8_hk.BootCount;
-        bcn->BP8.bootcause    = bp8_hk.BootCause;
-        bcn->BP8.resetcause   = bp8_hk.ResetCause;
-        bcn->BP8.soc          = bp8_hk.Soc;
-        bcn->BP8.bat_avr_temp = bp8_hk.BatAvrTemp;
-        bcn->BP8.vbat         = bp8_hk.Vbat;
-        bcn->BP8.current      = bp8_hk.Current;
-        bcn->BP8.heater_i     = bp8_hk.HeaterCurrent;
-    }
+    EPS_UpdateBcnTlmFromHw();
 
     /* Timestamp and transmit beacon on SB */
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(EPS_AppData.BcnTlm.TelemetryHeader));
@@ -160,51 +56,16 @@ CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg)
 
     return CFE_SUCCESS;
 }
-
-// CFE_Status_t EPS_ReportAppDataCmd(const EPS_ReportAppDataCmd_t *Msg)
-// {
-//     CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader), true);
-//     return CFE_SUCCESS;
-// }
-
 CFE_Status_t EPS_ReportBcnCmd(const EPS_ReportBcnCmd_t *Msg)
 {
     EPS_BcnTlm_Full_Payload_t *bcn = &EPS_AppData.BcnTlm.Payload;
 
-    OS_printf("\n================[EPS BCN Report]===================\n");
-    OS_printf("[PMU] BootCause: %u | ResetCause: %u | BootCount: %u\n",
-              bcn->PMU.bootcause, bcn->PMU.resetcause, bcn->PMU.bootcount);
-    OS_printf("[PMU] BattV: %u mV | BattI: %d mA | Mode: %u\n",
-              bcn->PMU.batt_v, bcn->PMU.batt_i, bcn->PMU.batt_mode);
-    OS_printf("[PMU] Temp: %d / %d (ddegC)\n", bcn->PMU.temp[0], bcn->PMU.temp[1]);
-    OS_printf("[PMU] OutEn: ");
-    for (int i = 0; i < 6; i++) OS_printf("%u ", bcn->PMU.out_en[i]);
-    OS_printf("\n");
-    OS_printf("[PMU] SmEn: ");
-    for (int i = 0; i < 8; i++) OS_printf("%u ", bcn->PMU.sm_en[i]);
-    OS_printf("\n");
-    OS_printf("[PMU] WDT GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n",
-              bcn->PMU.gnd_wdt_cnt, bcn->PMU.gnd_wdt_left,
-              bcn->PMU.bus_wdt_cnt, bcn->PMU.bus_wdt_left);
-    OS_printf("[PDU] OutEn: ");
-    for (int i = 0; i < 24; i++) OS_printf("%u ", bcn->PDU.out_en[i]);
-    OS_printf("\n");
-    OS_printf("[ACU] InputI(mA): ");
-    for (int i = 0; i < 6; i++) OS_printf("%d ", bcn->ACU.input_i[i]);
-    OS_printf("\n");
-    OS_printf("[ACU] InputV(mV): ");
-    for (int i = 0; i < 6; i++) OS_printf("%u ", bcn->ACU.input_v[i]);
-    OS_printf("\n");
-    OS_printf("[ACU] MPPT Mode: %u\n", bcn->ACU.mppt_mode);
-    OS_printf("[BP8] BootCount: %u | BootCause: %u | ResetCause: %u\n",
-              bcn->BP8.bootcount, bcn->BP8.bootcause, bcn->BP8.resetcause);
-    OS_printf("[BP8] SOC: %.2f | Vbat: %u mV | Current: %.3f A | HeaterI: %u mA\n",
-              (double)bcn->BP8.soc, bcn->BP8.vbat,
-              (double)bcn->BP8.current, bcn->BP8.heater_i);
-    OS_printf("[BP8] BatAvrTemp: %.1f degC\n", (double)bcn->BP8.bat_avr_temp);
-    OS_printf("=======================================================\n");
+    (void)Msg;
 
-    EPS_SendReport(Msg, bcn, sizeof(*bcn), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
+    EPS_UpdateBcnTlmFromHw();
+    EPS_PrintBcnReport(bcn);
+
+    //EPS_SendReport(Msg, bcn, sizeof(*bcn), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
     CFE_EVS_SendEvent(EPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "EPS: BCN report sent (%u bytes)", (unsigned)sizeof(*bcn));
@@ -229,7 +90,7 @@ CFE_Status_t EPS_ResetCountersCmd(const EPS_ResetCountersCmd_t *Msg)
     EPS_AppData.Counters.GetHkErrCounter = 0;
     EPS_AppData.Counters.GetBcnErrCounter = 0;
 
-    CFE_EVS_SendEvent(EPS_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "EPS: RESET command");
+    CFE_EVS_SendEvent(EPS_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "EPS: RESET Counters command");
 
     return CFE_SUCCESS;
 }
@@ -243,7 +104,9 @@ CFE_Status_t EPS_P80_Power_If_Get_Cmd(const EPS_P80_Power_If_Get_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
-    gs_error_t err = EPS_P80_Drv_PowerIfGet(Msg->Payload.csp_node, Msg->Payload.name, CSP_TIMEOUT(1));
+    power_if_ch_status_t status = {0};
+    gs_error_t err = EPS_P80_Drv_PowerIfGet(Msg->Payload.csp_node, Msg->Payload.name,
+                                             &status, CSP_TIMEOUT(1));
     if (err != GS_OK)
     {
         EPS_AppData.Counters.ErrCounter++;
@@ -252,6 +115,8 @@ CFE_Status_t EPS_P80_Power_If_Get_Cmd(const EPS_P80_Power_If_Get_Cmd_t *Msg)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
+    EPS_PrintP80PowerIfStatus("EPS: Power Interface Get command succeeded", &status);
+
     return CFE_SUCCESS;
 }
 
@@ -259,9 +124,10 @@ CFE_Status_t EPS_P80_Power_If_Set_Cmd(const EPS_P80_Power_If_Set_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
+    power_if_ch_status_t status = {0};
     gs_error_t err = EPS_P80_Drv_PowerIfSet(Msg->Payload.csp_node, Msg->Payload.name,
                                              Msg->Payload.mode, Msg->Payload.on_cnt,
-                                             Msg->Payload.off_cnt, CSP_TIMEOUT(1));
+                                             Msg->Payload.off_cnt, &status, CSP_TIMEOUT(1));
     if (err != GS_OK)
     {
         EPS_AppData.Counters.ErrCounter++;
@@ -269,6 +135,8 @@ CFE_Status_t EPS_P80_Power_If_Set_Cmd(const EPS_P80_Power_If_Set_Cmd_t *Msg)
                           "EPS: Power Interface Set command failed, err=%d", err);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
+
+    EPS_PrintP80PowerIfStatus("EPS Power_If_Set Response Succeeded", &status);
 
     return CFE_SUCCESS;
 }
@@ -278,7 +146,8 @@ CFE_Status_t EPS_P80_Power_If_List_Cmd(const EPS_P80_Power_If_List_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
-    gs_error_t err = EPS_P80_Drv_PowerIfList(Msg->Payload.csp_node, CSP_TIMEOUT(1));
+    power_if_cmd_list_response_t list = {0};
+    gs_error_t err = EPS_P80_Drv_PowerIfList(Msg->Payload.csp_node, &list, CSP_TIMEOUT(1));
     if (err != GS_OK)
     {
         EPS_AppData.Counters.ErrCounter++;
@@ -287,115 +156,84 @@ CFE_Status_t EPS_P80_Power_If_List_Cmd(const EPS_P80_Power_If_List_Cmd_t *Msg)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
+    EPS_PrintP80PowerIfList(&list);
+
     return CFE_SUCCESS;
 }
 
 
 /* ========================================================================== */
-/*  P80 Housekeeping Command                                                  */
+/*  Housekeeping Command                                                      */
 /* ========================================================================== */
 
-CFE_Status_t EPS_P80_Get_Hk_Cmd(const EPS_P80_Get_Hk_Cmd_t *Msg)
+CFE_Status_t EPS_Get_HK_Cmd(const EPS_Get_HK_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
-    gs_error_t err;
-
-    switch (Msg->Payload.csp_node)
-    {
-        case EPS_P80_PMU_CSP_NODE:
-        {
-            EPS_P80_Drv_PMU_HkTlm_t drv_hk = {0};
-            err = EPS_P80_Drv_PMU_GetHk(EPS_P80_PMU_CSP_NODE, &drv_hk, CSP_TIMEOUT(1));
-            if (err == GS_OK)
-            {
-                EPS_P80_PMU_HkTlm_Payload_t *hk = &EPS_AppData.PMU_HkTlm.Payload;
-                hk->uptime       = drv_hk.uptime;
-                hk->bootcause    = drv_hk.bootcause;
-                hk->resetcause   = drv_hk.resetcause;
-                hk->bootcount    = drv_hk.bootcount;
-                hk->batt_v       = drv_hk.batt_v;
-                hk->batt_i       = drv_hk.batt_i;
-                hk->batt_mode    = drv_hk.batt_mode;
-                hk->vbat_v       = drv_hk.vbat_v;
-                hk->vcc_v        = drv_hk.vcc_v;
-                hk->temp[0]      = drv_hk.temp[0];
-                hk->temp[1]      = drv_hk.temp[1];
-                memcpy(hk->out_en, drv_hk.out_en, sizeof(hk->out_en));
-                memcpy(hk->out_i,  drv_hk.out_i,  sizeof(hk->out_i));
-                memcpy(hk->sm_en,  drv_hk.sm_en,  sizeof(hk->sm_en));
-                hk->gnd_wdt_cnt  = drv_hk.gnd_wdt_cnt;
-                hk->bus_wdt_cnt  = drv_hk.bus_wdt_cnt;
-                hk->gnd_wdt_left = drv_hk.gnd_wdt_left;
-                hk->bus_wdt_left = drv_hk.bus_wdt_left;
-            }
-            break;
-        }
-
-        case EPS_P80_PDU_CSP_NODE:
-        {
-            EPS_P80_Drv_PDU_HkTlm_t drv_hk = {0};
-            err = EPS_P80_Drv_PDU_GetHk(EPS_P80_PDU_CSP_NODE, &drv_hk, CSP_TIMEOUT(1));
-            if (err == GS_OK)
-            {
-                EPS_P80_PDU_HkTlm_Payload_t *hk = &EPS_AppData.PDU_HkTlm.Payload;
-                hk->uptime       = drv_hk.uptime;
-                hk->bootcause    = drv_hk.bootcause;
-                hk->bootcount    = drv_hk.bootcount;
-                hk->resetcause   = drv_hk.resetcause;
-                hk->vcc_v        = drv_hk.vcc_v;
-                hk->vcc_i        = drv_hk.vcc_i;
-                hk->vbat_v       = drv_hk.vbat_v;
-                hk->temp         = drv_hk.temp;
-                hk->batt_mode    = drv_hk.batt_mode;
-                memcpy(hk->out_en, drv_hk.out_en, sizeof(hk->out_en));
-                memcpy(hk->out_i,  drv_hk.out_i,  sizeof(hk->out_i));
-                hk->gnd_wdt_cnt  = drv_hk.gnd_wdt_cnt;
-                hk->bus_wdt_cnt  = drv_hk.bus_wdt_cnt;
-                hk->gnd_wdt_left = drv_hk.gnd_wdt_left;
-                hk->bus_wdt_left = drv_hk.bus_wdt_left;
-            }
-            break;
-        }
-
-        case EPS_P80_ACU1_CSP_NODE:
-        case EPS_P80_ACU2_CSP_NODE:
-        {
-            EPS_P80_Drv_ACU_HkTlm_t drv_hk = {0};
-            err = EPS_P80_Drv_ACU_GetHk(Msg->Payload.csp_node, &drv_hk, CSP_TIMEOUT(1));
-            if (err == GS_OK)
-            {
-                EPS_P80_ACU_HkTlm_Payload_t *hk = &EPS_AppData.ACU_HkTlm.Payload;
-                hk->uptime       = drv_hk.uptime;
-                hk->bootcause    = drv_hk.bootcause;
-                hk->bootcount    = drv_hk.bootcount;
-                hk->resetcause   = drv_hk.resetcause;
-                memcpy(hk->input_i, drv_hk.input_i, sizeof(hk->input_i));
-                memcpy(hk->input_v, drv_hk.input_v, sizeof(hk->input_v));
-                hk->vcc_v        = drv_hk.vcc_v;
-                hk->vbat_v       = drv_hk.vbat_v;
-                hk->temp[0]      = drv_hk.temp[0];
-                hk->temp[1]      = drv_hk.temp[1];
-                hk->temp[2]      = drv_hk.temp[2];
-                hk->mppt_mode    = drv_hk.mppt_mode;
-                hk->gnd_wdt_cnt  = drv_hk.gnd_wdt_cnt;
-                hk->gnd_wdt_left = drv_hk.gnd_wdt_left;
-            }
-            break;
-        }
-
-        default:
-            EPS_AppData.Counters.ErrCounter++;
-            CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "EPS: Get HK command failed (wrong node arg)");
-            return CFE_STATUS_RANGE_ERROR;
-    }
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    gs_error_t err = EPS_ReadHk(Msg->Payload.csp_node, CSP_TIMEOUT(1));
 
     if (err != GS_OK)
     {
         EPS_AppData.Counters.ErrCounter++;
+        if (err == GS_ERROR_ARG)
+        {
+            CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "EPS: Get HK command failed (wrong node arg)");
+            return CFE_STATUS_RANGE_ERROR;
+        }
+
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: Get HK command failed on node %u, err=%d",
-                          Msg->Payload.csp_node, err);
+                          "EPS: Get HK command failed on %s node %u, err=%d",
+                          device, Msg->Payload.csp_node, err);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    EPS_PrintHk(Msg->Payload.csp_node);
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t EPS_Get_HK_All_Cmd(const EPS_Get_HK_All_Cmd_t *Msg)
+{
+    const uint8_t nodes[] = {
+        EPS_P80_PMU_CSP_NODE,
+        EPS_P80_PDU_CSP_NODE,
+        EPS_P80_ACU1_CSP_NODE,
+        EPS_P80_ACU2_CSP_NODE,
+        EPS_BP8_CSP_NODE,
+    };
+    uint8_t fail_count = 0;
+
+    (void)Msg;
+    EPS_AppData.Counters.CmdCounter++;
+
+    OS_printf("\n================[EPS HK ALL]===================\n");
+    for (size_t i = 0; i < (sizeof(nodes) / sizeof(nodes[0])); i++)
+    {
+        uint8_t node = nodes[i];
+        const char *device = EPS_GetCspNodeDeviceName(node);
+        gs_error_t err = EPS_ReadHk(node, CSP_TIMEOUT(1));
+
+        if (err != GS_OK)
+        {
+            fail_count++;
+            OS_printf("[EPS] Get HK All FAILED device=%s node=%u err=%d\n", device, node, err);
+        }
+        else
+        {
+            EPS_PrintHk(node);
+        }
+    }
+    OS_printf("[EPS] Get HK All DONE success=%u fail=%u\n",
+              (unsigned int)((sizeof(nodes) / sizeof(nodes[0])) - fail_count),
+              (unsigned int)fail_count);
+    OS_printf("=======================================================\n");
+
+    if (fail_count > 0)
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: Get HK All failed on %u node(s)", fail_count);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
@@ -411,6 +249,7 @@ CFE_Status_t EPS_P80_Gnd_Watchdog_Clear_Cmd(const EPS_P80_Gnd_Watchdog_Clear_Cmd
 {
     EPS_AppData.Counters.CmdCounter++;
     gs_error_t err;
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
 
     switch (Msg->Payload.csp_node)
     {
@@ -441,169 +280,371 @@ CFE_Status_t EPS_P80_Gnd_Watchdog_Clear_Cmd(const EPS_P80_Gnd_Watchdog_Clear_Cmd
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: GND WDT clear failed on node %u, err=%d",
-                          Msg->Payload.csp_node, err);
-        OS_printf("[EPS] GND WDT Clear FAILED on node %u, err=%d\n",
-                  Msg->Payload.csp_node, err);
+                          "EPS: GND WDT clear failed on %s node %u, err=%d",
+                          device, Msg->Payload.csp_node, err);
+        OS_printf("[EPS] GND WDT Clear FAILED device=%s node=%u err=%d\n",
+                  device, Msg->Payload.csp_node, err);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    OS_printf("[EPS] GND WDT Clear OK on node %u\n", Msg->Payload.csp_node);
+    OS_printf("[EPS] GND WDT Clear OK device=%s node=%u\n", device, Msg->Payload.csp_node);
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t EPS_P80_Gnd_Watchdog_Clear_All_Cmd(const EPS_P80_Gnd_Watchdog_Clear_All_Cmd_t *Msg)
+{
+    const uint8_t nodes[] = {
+        EPS_P80_PMU_CSP_NODE,
+        EPS_P80_PDU_CSP_NODE,
+        EPS_P80_ACU1_CSP_NODE,
+        EPS_P80_ACU2_CSP_NODE,
+    };
+    uint8_t fail_count = 0;
+
+    (void)Msg;
+    EPS_AppData.Counters.CmdCounter++;
+
+    for (size_t i = 0; i < (sizeof(nodes) / sizeof(nodes[0])); i++)
+    {
+        uint8_t node = nodes[i];
+        const char *device = EPS_GetCspNodeDeviceName(node);
+        gs_error_t err;
+
+        switch (node)
+        {
+            case EPS_P80_PMU_CSP_NODE:
+                err = EPS_P80_Drv_PMU_GndWdtClear(node, CSP_TIMEOUT(1));
+                break;
+
+            case EPS_P80_PDU_CSP_NODE:
+                err = EPS_P80_Drv_PDU_GndWdtClear(node, CSP_TIMEOUT(1));
+                break;
+
+            case EPS_P80_ACU1_CSP_NODE:
+            case EPS_P80_ACU2_CSP_NODE:
+                err = EPS_P80_Drv_ACU_GndWdtClear(node, CSP_TIMEOUT(1));
+                break;
+
+            default:
+                err = GS_ERROR_ARG;
+                break;
+        }
+
+        if (err != GS_OK)
+        {
+            fail_count++;
+            OS_printf("[EPS] GND WDT Clear All FAILED device=%s node=%u err=%d\n", device, node, err);
+        }
+        else
+        {
+            OS_printf("[EPS] GND WDT Clear All OK device=%s node=%u\n", device, node);
+        }
+    }
+
+    if (fail_count > 0)
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: GND WDT clear all failed on %u P80 node(s)", fail_count);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
 
     return CFE_SUCCESS;
 }
 
 
 /* ========================================================================== */
-/*  P80 Remote Parameter Commands                                             */
+/*  Remote Parameter Commands                                                 */
 /* ========================================================================== */
 
-CFE_Status_t EPS_P80_Param_Set_Cmd(const EPS_P80_Param_Set_Cmd_t *Msg)
+CFE_Status_t EPS_RParam_Set_Cmd(const EPS_RParam_Set_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
-    gs_error_t err = EPS_P80_Drv_ParamSet(Msg->Payload.csp_node,
-                                           Msg->Payload.table_id,
-                                           Msg->Payload.addr,
-                                           Msg->Payload.type,
-                                           Msg->Payload.data,
-                                           Msg->Payload.size,
-                                           CSP_TIMEOUT(1));
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    const char *table = EPS_GetRParamTableName(Msg->Payload.csp_node, Msg->Payload.table_id);
+
+    if (Msg->Payload.size > sizeof(Msg->Payload.data))
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: RParam Set size too large, size=%u max=%u",
+                          Msg->Payload.size, (unsigned int)sizeof(Msg->Payload.data));
+        OS_printf("[EPS] RParam Set REJECTED device=%s node=%u table=%u(%s) addr=%u size=%u max=%u\n",
+                  device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
+                  Msg->Payload.addr, Msg->Payload.size, (unsigned int)sizeof(Msg->Payload.data));
+        return CFE_STATUS_RANGE_ERROR;
+    }
+
+    gs_error_t err = EPS_RParamSet(Msg->Payload.csp_node,
+                                    Msg->Payload.table_id,
+                                    Msg->Payload.addr,
+                                    Msg->Payload.type,
+                                    Msg->Payload.data,
+                                    Msg->Payload.size,
+                                    CSP_TIMEOUT(1));
     if (err != GS_OK)
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam Set command failed, err=%d", err);
-        OS_printf("[EPS] RParam Set FAILED node=%u table=%u addr=%u type=%u size=%u err=%d\n",
-                  Msg->Payload.csp_node, Msg->Payload.table_id,
-                  Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size, err);
+        OS_printf("[EPS] RParam Set FAILED device=%s node=%u table=%u(%s) addr=%u type=%u size=%u data=",
+                  device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
+                  Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size);
+        for (uint16_t i = 0; i < Msg->Payload.size && i < sizeof(Msg->Payload.data); i++)
+            OS_printf("%02X ", Msg->Payload.data[i]);
+        OS_printf("err=%d\n", err);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    OS_printf("[EPS] RParam Set OK node=%u table=%u addr=%u type=%u size=%u\n",
-              Msg->Payload.csp_node, Msg->Payload.table_id,
+    OS_printf("[EPS] RParam Set OK device=%s node=%u table=%u(%s) addr=%u type=%u size=%u data=",
+              device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
               Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size);
-
-    return CFE_SUCCESS;
-}
-
-CFE_Status_t EPS_P80_Param_Get_Cmd(const EPS_P80_Param_Get_Cmd_t *Msg)
-{
-    EPS_AppData.Counters.CmdCounter++;
-
-    gs_error_t err = EPS_P80_Drv_ParamGet(Msg->Payload.csp_node,
-                                           Msg->Payload.table_id,
-                                           Msg->Payload.addr,
-                                           Msg->Payload.type,
-                                           (uint8_t *)Msg->Payload.data,
-                                           Msg->Payload.size,
-                                           CSP_TIMEOUT(1));
-    if (err != GS_OK)
-    {
-        EPS_AppData.Counters.ErrCounter++;
-        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: RParam Get command failed, err=%d", err);
-        OS_printf("[EPS] RParam Get FAILED node=%u table=%u addr=%u type=%u size=%u err=%d\n",
-                  Msg->Payload.csp_node, Msg->Payload.table_id,
-                  Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size, err);
-        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-    }
-
-    OS_printf("[EPS] RParam Get OK node=%u table=%u addr=%u type=%u size=%u data=",
-              Msg->Payload.csp_node, Msg->Payload.table_id,
-              Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size);
-    for (uint16_t i = 0; i < Msg->Payload.size && i < 32; i++)
+    for (uint16_t i = 0; i < Msg->Payload.size && i < sizeof(Msg->Payload.data); i++)
         OS_printf("%02X ", Msg->Payload.data[i]);
     OS_printf("\n");
 
     return CFE_SUCCESS;
 }
 
-CFE_Status_t EPS_P80_Get_Full_Table_Cmd(const EPS_P80_Get_Full_Table_Cmd_t *Msg)
+CFE_Status_t EPS_RParam_Get_Cmd(const EPS_RParam_Get_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
-    gs_error_t err = EPS_P80_Drv_GetFullTable(Msg->Payload.csp_node,
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    const char *table = EPS_GetRParamTableName(Msg->Payload.csp_node, Msg->Payload.table_id);
+    uint8_t data[EPS_RPARAM_DATA_MAX_LEN] = {0};
+
+    if (Msg->Payload.size > sizeof(Msg->Payload.data))
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: RParam Get size too large, size=%u max=%u",
+                          Msg->Payload.size, (unsigned int)sizeof(Msg->Payload.data));
+        OS_printf("[EPS] RParam Get REJECTED device=%s node=%u table=%u(%s) addr=%u size=%u max=%u\n",
+                  device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
+                  Msg->Payload.addr, Msg->Payload.size, (unsigned int)sizeof(Msg->Payload.data));
+        return CFE_STATUS_RANGE_ERROR;
+    }
+
+    gs_error_t err = EPS_RParamGet(Msg->Payload.csp_node,
+                                    Msg->Payload.table_id,
+                                    Msg->Payload.addr,
+                                    Msg->Payload.type,
+                                    data,
+                                    Msg->Payload.size,
+                                    CSP_TIMEOUT(1));
+    if (err != GS_OK)
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: RParam Get command failed, err=%d", err);
+        OS_printf("[EPS] RParam Get FAILED device=%s node=%u table=%u(%s) addr=%u type=%u size=%u err=%d\n",
+                  device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
+                  Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size, err);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    OS_printf("[EPS] RParam Get OK device=%s node=%u table=%u(%s) addr=%u type=%u size=%u data=",
+              device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
+              Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size);
+    for (uint16_t i = 0; i < Msg->Payload.size && i < sizeof(data); i++)
+        OS_printf("%02X ", data[i]);
+    OS_printf("\n");
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t EPS_RParam_Get_Full_Table_Cmd(const EPS_RParam_Get_Full_Table_Cmd_t *Msg)
+{
+    EPS_AppData.Counters.CmdCounter++;
+
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    const char *table = EPS_GetRParamTableName(Msg->Payload.csp_node, Msg->Payload.table_id);
+    gs_param_table_instance_t tinst = {0};
+    gs_error_t err = EPS_RParamFetchFullTable(Msg->Payload.csp_node,
                                                Msg->Payload.table_id,
+                                               &tinst,
                                                CSP_TIMEOUT(1));
     if (err != GS_OK)
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam Get Full Table command failed, err=%d", err);
+        OS_printf("[EPS] RParam Get Full Table FAILED device=%s node=%u table=%u(%s) err=%d\n",
+                  device, Msg->Payload.csp_node, Msg->Payload.table_id, table, err);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
+
+    EPS_PrintRParamFullTable(Msg->Payload.csp_node, Msg->Payload.table_id, &tinst);
+    gs_param_table_free(&tinst);
 
     return CFE_SUCCESS;
 }
 
 
 /* ========================================================================== */
-/*  P80 Table Save/Load Commands                                              */
+/*  Table Save/Load Commands                                                  */
 /* ========================================================================== */
 
-CFE_Status_t EPS_P80_Table_Save_Cmd(const EPS_P80_Table_Save_Cmd_t *Msg)
+CFE_Status_t EPS_RParam_Table_Save_Cmd(const EPS_RParam_Table_Save_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
-    gs_error_t err = EPS_P80_Drv_TableSave(Msg->Payload.csp_node,
-                                            Msg->Payload.table_id,
-                                            CSP_TIMEOUT(1));
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    const char *table = EPS_GetRParamTableName(Msg->Payload.csp_node, Msg->Payload.table_id);
+    gs_error_t err = EPS_RParamTableSave(Msg->Payload.csp_node,
+                                          Msg->Payload.table_id,
+                                          CSP_TIMEOUT(1));
     if (err != GS_OK)
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: Table Save command failed, err=%d", err);
-        OS_printf("[EPS] Table Save FAILED node=%u table=%u err=%d\n",
-                  Msg->Payload.csp_node, Msg->Payload.table_id, err);
+        OS_printf("[EPS] Table Save FAILED device=%s node=%u table=%u(%s) err=%d\n",
+                  device, Msg->Payload.csp_node, Msg->Payload.table_id, table, err);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    OS_printf("[EPS] Table Save OK node=%u table=%u\n",
-              Msg->Payload.csp_node, Msg->Payload.table_id);
+    OS_printf("[EPS] Table Save OK device=%s node=%u table=%u(%s)\n",
+              device, Msg->Payload.csp_node, Msg->Payload.table_id, table);
 
     return CFE_SUCCESS;
 }
 
-CFE_Status_t EPS_P80_Table_Load_Cmd(const EPS_P80_Table_Load_Cmd_t *Msg)
+CFE_Status_t EPS_RParam_Table_Load_Cmd(const EPS_RParam_Table_Load_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
-    gs_error_t err = EPS_P80_Drv_TableLoad(Msg->Payload.csp_node,
-                                            Msg->Payload.table_id,
-                                            CSP_TIMEOUT(1));
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    const char *table = EPS_GetRParamTableName(Msg->Payload.csp_node, Msg->Payload.table_id);
+    gs_error_t err = EPS_RParamTableLoad(Msg->Payload.csp_node,
+                                          Msg->Payload.table_id,
+                                          CSP_TIMEOUT(1));
     if (err != GS_OK)
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: Table Load command failed, err=%d", err);
-        OS_printf("[EPS] Table Load FAILED node=%u table=%u err=%d\n",
-                  Msg->Payload.csp_node, Msg->Payload.table_id, err);
+        OS_printf("[EPS] Table Load FAILED device=%s node=%u table=%u(%s) err=%d\n",
+                  device, Msg->Payload.csp_node, Msg->Payload.table_id, table, err);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    OS_printf("[EPS] Table Load OK node=%u table=%u\n",
-              Msg->Payload.csp_node, Msg->Payload.table_id);
+    OS_printf("[EPS] Table Load OK device=%s node=%u table=%u(%s)\n",
+              device, Msg->Payload.csp_node, Msg->Payload.table_id, table);
 
     return CFE_SUCCESS;
 }
 
-CFE_Status_t EPS_P80_Param_Save_Cmd(const EPS_P80_Param_Save_Cmd_t *Msg)
+CFE_Status_t EPS_RParam_Save_To_Store_Cmd(const EPS_RParam_Save_To_Store_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
-    gs_error_t err = EPS_P80_Drv_ParamSaveAll(Msg->Payload.csp_node, CSP_TIMEOUT(1));
+    char store[EPS_RPARAM_STORE_NAME_LEN];
+    char slot[EPS_RPARAM_STORE_SLOT_LEN];
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    const char *table = EPS_GetRParamTableName(Msg->Payload.csp_node, Msg->Payload.table_id);
+
+    EPS_CopyCmdString(store, sizeof(store), Msg->Payload.store, sizeof(Msg->Payload.store));
+    EPS_CopyCmdString(slot, sizeof(slot), Msg->Payload.slot, sizeof(Msg->Payload.slot));
+
+    if (store[0] == '\0')
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: RParam SaveToStore rejected, empty store");
+        OS_printf("[EPS] RParam SaveToStore REJECTED device=%s node=%u table=%u(%s): empty store\n",
+                  device, Msg->Payload.csp_node, Msg->Payload.table_id, table);
+        return CFE_STATUS_RANGE_ERROR;
+    }
+
+    const char *slot_arg = (slot[0] == '\0') ? NULL : slot;
+    const char *slot_print = (slot_arg == NULL) ? "<default>" : slot_arg;
+    gs_error_t err = EPS_RParamSaveToStore(Msg->Payload.csp_node,
+                                           Msg->Payload.table_id,
+                                           store,
+                                           slot_arg,
+                                           CSP_TIMEOUT(1));
+    if (err != GS_OK)
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: RParam SaveToStore command failed, err=%d", err);
+        OS_printf("[EPS] RParam SaveToStore FAILED device=%s node=%u table=%u(%s) store=%s slot=%s err=%d\n",
+                  device, Msg->Payload.csp_node, Msg->Payload.table_id, table, store, slot_print, err);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    OS_printf("[EPS] RParam SaveToStore OK device=%s node=%u table=%u(%s) store=%s slot=%s\n",
+              device, Msg->Payload.csp_node, Msg->Payload.table_id, table, store, slot_print);
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t EPS_RParam_Load_From_Store_Cmd(const EPS_RParam_Load_From_Store_Cmd_t *Msg)
+{
+    EPS_AppData.Counters.CmdCounter++;
+
+    char store[EPS_RPARAM_STORE_NAME_LEN];
+    char slot[EPS_RPARAM_STORE_SLOT_LEN];
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    const char *table = EPS_GetRParamTableName(Msg->Payload.csp_node, Msg->Payload.table_id);
+
+    EPS_CopyCmdString(store, sizeof(store), Msg->Payload.store, sizeof(Msg->Payload.store));
+    EPS_CopyCmdString(slot, sizeof(slot), Msg->Payload.slot, sizeof(Msg->Payload.slot));
+
+    if (store[0] == '\0')
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: RParam LoadFromStore rejected, empty store");
+        OS_printf("[EPS] RParam LoadFromStore REJECTED device=%s node=%u table=%u(%s): empty store\n",
+                  device, Msg->Payload.csp_node, Msg->Payload.table_id, table);
+        return CFE_STATUS_RANGE_ERROR;
+    }
+
+    const char *slot_arg = (slot[0] == '\0') ? NULL : slot;
+    const char *slot_print = (slot_arg == NULL) ? "<default>" : slot_arg;
+    gs_error_t err = EPS_RParamLoadFromStore(Msg->Payload.csp_node,
+                                             Msg->Payload.table_id,
+                                             store,
+                                             slot_arg,
+                                             CSP_TIMEOUT(1));
+    if (err != GS_OK)
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: RParam LoadFromStore command failed, err=%d", err);
+        OS_printf("[EPS] RParam LoadFromStore FAILED device=%s node=%u table=%u(%s) store=%s slot=%s err=%d\n",
+                  device, Msg->Payload.csp_node, Msg->Payload.table_id, table, store, slot_print, err);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    OS_printf("[EPS] RParam LoadFromStore OK device=%s node=%u table=%u(%s) store=%s slot=%s\n",
+              device, Msg->Payload.csp_node, Msg->Payload.table_id, table, store, slot_print);
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t EPS_RParam_Save_All_Cmd(const EPS_RParam_Save_All_Cmd_t *Msg)
+{
+    EPS_AppData.Counters.CmdCounter++;
+
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    gs_error_t err = EPS_RParamSaveAll(Msg->Payload.csp_node, CSP_TIMEOUT(1));
     if (err != GS_OK)
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: Param Save (all tables) command failed, err=%d", err);
-        OS_printf("[EPS] Param SaveAll FAILED node=%u err=%d\n",
-                  Msg->Payload.csp_node, err);
+        OS_printf("[EPS] Param SaveAll FAILED device=%s node=%u err=%d\n",
+                  device, Msg->Payload.csp_node, err);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    OS_printf("[EPS] Param SaveAll OK node=%u\n", Msg->Payload.csp_node);
+    OS_printf("[EPS] Param SaveAll OK device=%s node=%u\n", device, Msg->Payload.csp_node);
 
     CFE_EVS_SendEvent(EPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "EPS: Param Save (all tables) succeeded on node %u", Msg->Payload.csp_node);
@@ -613,107 +654,199 @@ CFE_Status_t EPS_P80_Param_Save_Cmd(const EPS_P80_Param_Save_Cmd_t *Msg)
 
 
 /* ========================================================================== */
-/*  BP8 Battery Pack Command Handlers                                         */
+/*  CSP Standard Service Commands                                             */
 /* ========================================================================== */
 
-CFE_Status_t EPS_BP8_GetHkCmd(const EPS_BP8_GetHkCmd_t *Msg)
+static int EPS_CSP_PrintPs(uint8_t node, uint32_t timeout)
+{
+    bool         received_any = false;
+    csp_conn_t  *conn         = csp_connect(CSP_PRIO_NORM, node, CSP_PS, 0, 0);
+    csp_packet_t *packet;
+
+    if (conn == NULL)
+    {
+        return CSP_ERR_TIMEDOUT;
+    }
+
+    packet = csp_buffer_get(1);
+    if (packet == NULL)
+    {
+        csp_close(conn);
+        return CSP_ERR_NOMEM;
+    }
+
+    packet->data[0] = 0x55;
+    packet->length = 1;
+
+    if (!csp_send(conn, packet, 0))
+    {
+        csp_buffer_free(packet);
+        csp_close(conn);
+        return CSP_ERR_TIMEDOUT;
+    }
+
+    packet = NULL;
+
+    while ((packet = csp_read(conn, timeout)) != NULL)
+    {
+        size_t data_len = csp_buffer_data_size();
+        size_t text_len = (packet->length < data_len) ? packet->length : (data_len - 1U);
+
+        packet->data[text_len] = 0;
+        OS_printf("%s", (char *)packet->data);
+
+        csp_buffer_free(packet);
+        packet = NULL;
+        received_any = true;
+    }
+
+    csp_close(conn);
+
+    return received_any ? CSP_ERR_NONE : CSP_ERR_TIMEDOUT;
+}
+
+CFE_Status_t EPS_CSP_PS_Cmd(const EPS_CSP_PS_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
-    EPS_BP8_Drv_HkTlm_t drv_hk = {0};
-    gs_error_t err = EPS_BP8_Drv_GetHk(EPS_BP8_CSP_NODE, &drv_hk, CSP_TIMEOUT(1));
-    if (err != GS_OK)
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    int         err    = 0;
+
+    OS_printf("[EPS] CSP PS BEGIN device=%s node=%u\n", device, Msg->Payload.csp_node);
+    err = EPS_CSP_PrintPs(Msg->Payload.csp_node, CSP_TIMEOUT(1));
+    if (err != CSP_ERR_NONE)
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: BP8 GetHk command failed, err=%d", err);
+                          "EPS: CSP PS failed on node %u, err=%d", Msg->Payload.csp_node, err);
+        OS_printf("[EPS] CSP PS FAILED device=%s node=%u err=%d\n",
+                  device, Msg->Payload.csp_node, err);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    /* Copy driver HK data to app telemetry payload */
-    EPS_BP8_HkTlm_Payload_t *hk = &EPS_AppData.BP8_HkTlm.Payload;
-    hk->Uptime        = drv_hk.Uptime;
-    hk->BootCount     = drv_hk.BootCount;
-    hk->BootCause     = drv_hk.BootCause;
-    hk->ResetCause    = drv_hk.ResetCause;
-    hk->Vbat          = drv_hk.Vbat;
-    hk->Soc           = drv_hk.Soc;
-    hk->Current       = drv_hk.Current;
-    hk->InCurrent     = drv_hk.InCurrent;
-    hk->OutCurrent    = drv_hk.OutCurrent;
-    hk->HeaterCurrent = drv_hk.HeaterCurrent;
-    hk->IntTemp       = drv_hk.IntTemp;
-    hk->BatAvrTemp    = drv_hk.BatAvrTemp;
-    hk->BatTemp[0]    = drv_hk.BatTemp[0];
-    hk->BatTemp[1]    = drv_hk.BatTemp[1];
-    hk->BatTemp[2]    = drv_hk.BatTemp[2];
-    hk->BatTemp[3]    = drv_hk.BatTemp[3];
-    hk->OVoltCount    = drv_hk.OVoltCount;
-    hk->BatFault      = drv_hk.BatFault;
-
-    OS_printf("\n================[EPS BP8 HK]===================\n");
-    OS_printf("[BP8] Uptime: %u s | BootCount: %u | BootCause: %u | ResetCause: %u\n",
-              hk->Uptime, hk->BootCount, hk->BootCause, hk->ResetCause);
-    OS_printf("[BP8] Vbat: %u mV | SOC: %.2f | Current: %.3f A\n",
-              hk->Vbat, (double)hk->Soc, (double)hk->Current);
-    OS_printf("[BP8] InCurrent: %.3f A | OutCurrent: %.3f A | HeaterI: %u mA\n",
-              (double)hk->InCurrent, (double)hk->OutCurrent, hk->HeaterCurrent);
-    OS_printf("[BP8] IntTemp: %.1f | BatAvrTemp: %.1f degC\n",
-              (double)hk->IntTemp, (double)hk->BatAvrTemp);
-    OS_printf("[BP8] BatTemp: %.1f / %.1f / %.1f / %.1f degC\n",
-              (double)hk->BatTemp[0], (double)hk->BatTemp[1],
-              (double)hk->BatTemp[2], (double)hk->BatTemp[3]);
-    OS_printf("[BP8] OVoltCount: %u | BatFault: %u\n", hk->OVoltCount, hk->BatFault);
-    OS_printf("=================================================\n");
-
-    CFE_EVS_SendEvent(EPS_BP8_HK_INF_EID, CFE_EVS_EventType_INFORMATION,
-                      "EPS: BP8 Telemetry - Vbat=%u mV, SOC=%.2f, Fault=%u",
-                      hk->Vbat, (double)hk->Soc, hk->BatFault);
+    OS_printf("\n[EPS] CSP PS END device=%s node=%u\n", device, Msg->Payload.csp_node);
 
     return CFE_SUCCESS;
 }
 
-CFE_Status_t EPS_BP8_SetHeaterCmd(const EPS_BP8_SetHeaterCmd_t *Msg)
+CFE_Status_t EPS_CSP_MemFree_Cmd(const EPS_CSP_MemFree_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
-    uint16_t duration = Msg->Payload.Duration;
-    gs_error_t err = EPS_BP8_Drv_SetHeater(EPS_BP8_CSP_NODE, duration, CSP_TIMEOUT(1));
-    if (err != GS_OK)
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    uint32_t    memfree = 0;
+    int         err     = csp_get_memfree(Msg->Payload.csp_node, CSP_TIMEOUT(1), &memfree);
+
+    if (err != CSP_ERR_NONE)
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: BP8 set heater command failed, err=%d", err);
-        OS_printf("[EPS] BP8 SetHeater FAILED duration=%u err=%d\n", duration, err);
+                          "EPS: CSP MemFree failed on node %u, err=%d", Msg->Payload.csp_node, err);
+        OS_printf("[EPS] CSP MemFree FAILED device=%s node=%u err=%d\n",
+                  device, Msg->Payload.csp_node, err);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    OS_printf("[EPS] BP8 SetHeater OK duration=%u s\n", duration);
-
-    CFE_EVS_SendEvent(EPS_BP8_HEATER_INF_EID, CFE_EVS_EventType_INFORMATION,
-                      "EPS: BP8 manual heater set to %u seconds", duration);
+    OS_printf("[EPS] CSP MemFree OK device=%s node=%u bytes=%lu\n",
+              device, Msg->Payload.csp_node, (unsigned long)memfree);
 
     return CFE_SUCCESS;
 }
 
-CFE_Status_t EPS_BP8_ResetFaultCmd(const EPS_BP8_ResetFaultCmd_t *Msg)
+CFE_Status_t EPS_CSP_BufFree_Cmd(const EPS_CSP_BufFree_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
-    gs_error_t err = EPS_BP8_Drv_ResetFault(EPS_BP8_CSP_NODE, CSP_TIMEOUT(1));
-    if (err != GS_OK)
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    uint32_t    buf_free = 0;
+    int         err      = csp_get_buf_free(Msg->Payload.csp_node, CSP_TIMEOUT(1), &buf_free);
+
+    if (err != CSP_ERR_NONE)
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "EPS: BP8 reset fault command failed, err=%d", err);
-        OS_printf("[EPS] BP8 ResetFault FAILED err=%d\n", err);
+                          "EPS: CSP BufFree failed on node %u, err=%d", Msg->Payload.csp_node, err);
+        OS_printf("[EPS] CSP BufFree FAILED device=%s node=%u err=%d\n",
+                  device, Msg->Payload.csp_node, err);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    OS_printf("[EPS] BP8 ResetFault OK\n");
+    OS_printf("[EPS] CSP BufFree OK device=%s node=%u buffers=%lu\n",
+              device, Msg->Payload.csp_node, (unsigned long)buf_free);
 
-    CFE_EVS_SendEvent(EPS_BP8_FAULT_INF_EID, CFE_EVS_EventType_INFORMATION,
-                      "EPS: BP8 battery fault reset command sent");
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t EPS_CSP_Uptime_Cmd(const EPS_CSP_Uptime_Cmd_t *Msg)
+{
+    EPS_AppData.Counters.CmdCounter++;
+
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    uint32_t    uptime = 0;
+    int         err    = csp_get_uptime(Msg->Payload.csp_node, CSP_TIMEOUT(1), &uptime);
+
+    if (err != CSP_ERR_NONE)
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: CSP Uptime failed on node %u, err=%d", Msg->Payload.csp_node, err);
+        OS_printf("[EPS] CSP Uptime FAILED device=%s node=%u err=%d\n",
+                  device, Msg->Payload.csp_node, err);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    OS_printf("[EPS] CSP Uptime OK device=%s node=%u seconds=%lu\n",
+              device, Msg->Payload.csp_node, (unsigned long)uptime);
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t EPS_CSP_Ping_Cmd(const EPS_CSP_Ping_Cmd_t *Msg)
+{
+    EPS_AppData.Counters.CmdCounter++;
+
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    unsigned int size = (Msg->Payload.size == 0) ? EPS_CSP_PING_DEFAULT_SIZE : Msg->Payload.size;
+
+    if (size > EPS_CSP_PING_MAX_SIZE)
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: CSP Ping size too large, size=%u max=%u",
+                          size, EPS_CSP_PING_MAX_SIZE);
+        OS_printf("[EPS] CSP Ping REJECTED device=%s node=%u size=%u max=%u\n",
+                  device, Msg->Payload.csp_node, size, EPS_CSP_PING_MAX_SIZE);
+        return CFE_STATUS_RANGE_ERROR;
+    }
+
+    int elapsed_ms = csp_ping(Msg->Payload.csp_node, CSP_TIMEOUT(1), size, Msg->Payload.opts);
+    if (elapsed_ms < 0)
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: CSP Ping failed on node %u", Msg->Payload.csp_node);
+        OS_printf("[EPS] CSP Ping FAILED device=%s node=%u size=%u opts=0x%02X\n",
+                  device, Msg->Payload.csp_node, size, Msg->Payload.opts);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    OS_printf("[EPS] CSP Ping OK device=%s node=%u size=%u opts=0x%02X rtt=%d ms\n",
+              device, Msg->Payload.csp_node, size, Msg->Payload.opts, elapsed_ms);
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t EPS_CSP_Reboot_Cmd(const EPS_CSP_Reboot_Cmd_t *Msg)
+{
+    EPS_AppData.Counters.CmdCounter++;
+
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+
+    csp_reboot(Msg->Payload.csp_node);
+
+    OS_printf("[EPS] CSP Reboot sent device=%s node=%u\n", device, Msg->Payload.csp_node);
+    CFE_EVS_SendEvent(EPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "EPS: CSP Reboot sent to node %u", Msg->Payload.csp_node);
 
     return CFE_SUCCESS;
 }

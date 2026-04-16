@@ -28,8 +28,48 @@
 ** Required header files.
 */
 #include "eps_app.h"
+#include "eps_p80_drv.h"
+#include "eps_bp8_drv.h"
+
+#include <stddef.h>
+#include <stdint.h>
+#include <gs/param/table.h>
+#include <gs/param/types.h>
+#include <gs/util/error.h>
 
 CFE_Status_t EPS_TblValidationFunc(void *TblData);
 void         EPS_GetCrc(const char *TableName);
+void         EPS_UpdateBcnTlmFromHw(void);
+void         EPS_SendReport(const void *cmd, const void *data, uint16 dataSize, int32 retCode, uint8 retType);
+const char  *EPS_GetCspNodeDeviceName(uint8 cspNode);
+const char  *EPS_GetRParamTableName(uint8 cspNode, uint8 tableId);
+void         EPS_CopyCmdString(char *dst, size_t dst_size, const char *src, size_t src_size);
+void         EPS_PrintP80PowerIfStatus(const char *title, const power_if_ch_status_t *status);
+void         EPS_PrintP80PowerIfList(const power_if_cmd_list_response_t *list);
+void         EPS_PrintP80PmuHk(const EPS_P80_PMU_HkTlm_Payload_t *hk);
+void         EPS_PrintP80PduHk(const EPS_P80_PDU_HkTlm_Payload_t *hk);
+void         EPS_PrintP80AcuHk(uint8_t cspNode, const EPS_P80_ACU_HkTlm_Payload_t *hk);
+void         EPS_PrintBcnReport(const EPS_BcnTlm_Full_Payload_t *bcn);
+void         EPS_PrintBP8Hk(const EPS_BP8_HkTlm_Payload_t *hk);
+void         EPS_PrintHk(uint8_t cspNode);
+gs_error_t   EPS_ReadHk(uint8_t cspNode, uint32_t timeoutMs);
+void         EPS_PrintParamTable(const char *title, uint8 cspNode, uint8 tableId,
+                                  const char *tableName, const gs_param_table_instance_t *tinst);
+void         EPS_PrintRParamFullTable(uint8_t cspNode, uint8_t tableId,
+                                       const gs_param_table_instance_t *tinst);
+gs_error_t   EPS_RParamSet(uint8_t cspNode, uint8_t tableId, uint16_t addr, uint8_t type,
+                            const uint8_t *data, uint16_t size, uint32_t timeoutMs);
+gs_error_t   EPS_RParamGet(uint8_t cspNode, uint8_t tableId, uint16_t addr, uint8_t type,
+                            uint8_t *data, uint16_t size, uint32_t timeoutMs);
+gs_error_t   EPS_RParamFetchFullTable(uint8_t cspNode, uint8_t tableId,
+                                       gs_param_table_instance_t *tinst, uint32_t timeoutMs);
+gs_error_t   EPS_RParamTableSave(uint8_t cspNode, uint8_t tableId, uint32_t timeoutMs);
+gs_error_t   EPS_RParamTableLoad(uint8_t cspNode, uint8_t tableId, uint32_t timeoutMs);
+gs_error_t   EPS_RParamSaveAll(uint8_t cspNode, uint32_t timeoutMs);
+gs_error_t   EPS_RParamSaveToStore(uint8_t cspNode, uint8_t tableId, const char *store,
+                                    const char *slot, uint32_t timeoutMs);
+gs_error_t   EPS_RParamLoadFromStore(uint8_t cspNode, uint8_t tableId, const char *store,
+                                      const char *slot, uint32_t timeoutMs);
+CFE_Status_t EPS_ReportAppDataCmd(const EPS_ReportAppDataCmd_t *Msg);
 
 #endif /* EPS_UTILS_H */

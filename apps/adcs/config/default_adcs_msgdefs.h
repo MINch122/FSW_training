@@ -50,10 +50,6 @@ typedef struct
     float GYR0CalibratedRateYComponent;
     float GYR0CalibratedRateZComponent; // ID 207, 12bytes
 
-    uint8 CSS0Raw;
-    uint8 CSS1Raw;
-    uint8 CSS2Raw;
-
 } __attribute__((packed)) ADCS_BcnTlm_Payload_t; /* Total 14 bytes */
 
 typedef struct
@@ -1499,14 +1495,5 @@ typedef struct
     } Identifier;
     uint8_t EventData[8];
 } __attribute__((packed)) ADCS_Frame_t;
-
-
-/* MMT status to EO */
-typedef struct {
-    uint8_t Mag0DeployPinState  : 1;
-    uint8_t Mag0BurnPinState    : 1;
-    uint8_t Mag0DeployTimeout   : 1;
-    uint8_t Padding1            : 5;
-} ADCS_MMTTlm_Payload_t;
 
 #endif

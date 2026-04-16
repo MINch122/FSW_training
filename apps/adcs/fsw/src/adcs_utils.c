@@ -270,7 +270,7 @@ cleanup:
 
 /********************************************************
  * 
- * BASE5TH Actual Set Command Function
+ * COSMIC Actual Set Command Function
  * 
  ********************************************************/
 /* TC Functions, ID: 0 ~ 127 */
@@ -1194,7 +1194,7 @@ int32 ADCS_SetInitiateEventLogTransfer(const ADCS_InitiateEventLogTransferCmd_Pa
 
 /********************************************************
  * 
- * BASE5TH Actual Get Command Function (Get tlm)
+ * COSMIC Actual Get Command Function (Get tlm)
  * 
  ********************************************************/
 int32 ADCS_GetErrorLogSetting(ADCS_ErrorLogSettingTlm_Payload_t *returnVal)
@@ -2243,7 +2243,8 @@ void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSi
 	Report->Report.ReturnCode = Status; // `adcs_cube_error_typedefs.h`
 	Report->Report.ReturnDataSize = ReadSize;
 	if (ReadSize && ReadData) {
-		memcpy(Report->Report.ReturnValue, ReadData, ReadSize);
+		memcpy(Report->Report.ReturnValue, ReadData,
+				(ReadSize > RPT_RET_VALUE_BUF_SIZE) ? RPT_RET_VALUE_BUF_SIZE : ReadSize);
 	}
 
 	CFE_SB_TimeStampMsg((CFE_MSG_PTR(Report->TelemetryHeader)));
@@ -2289,7 +2290,7 @@ void ADCS_HandleEvent(const ADCS_EventEntry_t *Event) {
 				OS_printf("0x%02X\t", Event->EventData[i]);
 			}
 			OS_printf("\n");
-			// ADCS_AppData.BcnTlm.IsSunlight = Event->EventData[0] ? true : false;
+			ADCS_AppData.BcnTlm.IsSunlight = Event->EventData[0] ? true : false;
 			break;
 		case 139:
 			

@@ -278,20 +278,31 @@ int32 CFE_SRL_CloseHandleCmd(const CFE_SRL_CloseHandleCmd_t *Cmd) {
 int32 CFE_SRL_ConfigHandleCmd(const CFE_SRL_ConfigHandleCmd_t *Cmd) {
     int32 Status;
     CFE_SRL_DevType_t DevType;
+    CFE_SRL_IO_Handle_t *Handle;
 
     /* Validataion */
-    if (Handles[Cmd->Payload.Indexer] == NULL) {
+    Handle = Handles[Cmd->Payload.Indexer];
+    if (Handle == NULL) {
         CFE_EVS_SendErr(CFE_SRL_CONFIG_HANDLE_INF_EID, "SRL Config failed. Not initialized FD.");
         return CFE_SUCCESS;
     }
-    if (Handles[Cmd->Payload.Indexer]->FD != Cmd->Payload.Config.FD) {
+
+    Status = CFE_SRL_MutexLock(Handle);
+    if (Status != CFE_SUCCESS) {
+        CFE_EVS_SendEvent(CFE_SRL_CONFIG_HANDLE_INF_EID, CFE_EVS_EventType_ERROR, "SRL Config Handle lock failed. RC=0x%08X", Status);
+        return CFE_SUCCESS;
+    }
+
+    if (Handle->FD != Cmd->Payload.Config.FD) {
         CFE_EVS_SendErr(CFE_SRL_CONFIG_HANDLE_INF_EID, "SRL Config failed. Wrong FD.");
+        CFE_SRL_MutexUnlock(Handle);
         return CFE_SUCCESS;
     }
 
     /* Config function */
-    DevType = CFE_SRL_GetHandleDevType(Handles[Cmd->Payload.Indexer]);
+    DevType = CFE_SRL_GetHandleDevType(Handle);
     Status = CFE_SRL_ConfigHandle(DevType, (CFE_PSP_IODriver_Serial_cfg_t *)&Cmd->Payload.Config);
+    CFE_SRL_MutexUnlock(Handle);
 
     if(Status == CFE_SUCCESS) {
         CFE_EVS_SendEvent(CFE_SRL_CONFIG_HANDLE_INF_EID, CFE_EVS_EventType_INFORMATION, "SRL Config Handle Cmd Success.");

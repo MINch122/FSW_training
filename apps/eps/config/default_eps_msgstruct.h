@@ -43,7 +43,7 @@
 /**
  * Noarg cmd template.
  */
-typedef struct {
+typedef struct EPS_PACK {
     CFE_MSG_CommandHeader_t CommandHeader;
 } EPS_NoArgCmd_t;
 
@@ -55,82 +55,125 @@ typedef EPS_NoArgCmd_t  EPS_ReportAppDataCmd_t;
 
 
 
-typedef struct __attribute__((packed)){
+typedef struct EPS_PACK {
     CFE_MSG_CommandHeader_t CommandHeader;
     EPS_P80_Power_If_Get_Cmd_Payload_t Payload;
 }EPS_P80_Power_If_Get_Cmd_t;
 
-typedef struct __attribute__((packed)){
+typedef struct EPS_PACK {
     CFE_MSG_CommandHeader_t CommandHeader;
     EPS_P80_Power_If_Set_Cmd_Payload_t Payload;
 }EPS_P80_Power_If_Set_Cmd_t;
 
-typedef struct __attribute__((packed)){
+typedef struct EPS_PACK {
     CFE_MSG_CommandHeader_t CommandHeader;
     EPS_P80_Power_If_List_Cmd_Payload_t Payload;
 }EPS_P80_Power_If_List_Cmd_t;
 
-typedef struct{
+typedef struct EPS_PACK {
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P80_Get_Hk_Cmd_Payload_t Payload;   
-}EPS_P80_Get_Hk_Cmd_t;
+    EPS_Get_HK_Cmd_Payload_t Payload;
+}EPS_Get_HK_Cmd_t;
 
+typedef EPS_NoArgCmd_t EPS_Get_HK_All_Cmd_t;
 
-typedef struct{
+typedef struct EPS_PACK {
     CFE_MSG_CommandHeader_t CommandHeader;
     EPS_P80_Gnd_Watchdog_Clear_Cmd_Payload_t Payload;
 }EPS_P80_Gnd_Watchdog_Clear_Cmd_t;
 
-typedef struct{
-    CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P80_Param_Set_Cmd_Payload_t Payload;
-}EPS_P80_Param_Set_Cmd_t;
+typedef EPS_NoArgCmd_t EPS_P80_Gnd_Watchdog_Clear_All_Cmd_t;
 
-typedef struct{
+typedef struct EPS_PACK {
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P80_Param_Get_Cmd_Payload_t Payload;
-}EPS_P80_Param_Get_Cmd_t;
+    EPS_RParam_Set_Cmd_Payload_t Payload;
+}EPS_RParam_Set_Cmd_t;
 
-typedef struct{
+typedef struct EPS_PACK {
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P80_Get_Full_Table_Cmd_Payload_t Payload;
-}EPS_P80_Get_Full_Table_Cmd_t;
+    EPS_RParam_Get_Cmd_Payload_t Payload;
+}EPS_RParam_Get_Cmd_t;
 
-
-typedef struct{
+typedef struct EPS_PACK {
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P80_Table_Save_Cmd_Payload_t Payload;
-}EPS_P80_Table_Save_Cmd_t;
+    EPS_RParam_Get_Full_Table_Cmd_Payload_t Payload;
+}EPS_RParam_Get_Full_Table_Cmd_t;
 
-typedef struct{
-    CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P80_Table_Load_Cmd_Payload_t Payload;
-}EPS_P80_Table_Load_Cmd_t;
 
-typedef struct{
+typedef struct EPS_PACK {
     CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_P80_Param_Save_Cmd_Payload_t Payload;
-}EPS_P80_Param_Save_Cmd_t;
+    EPS_RParam_Table_Save_Cmd_Payload_t Payload;
+}EPS_RParam_Table_Save_Cmd_t;
+
+typedef struct EPS_PACK {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_RParam_Table_Load_Cmd_Payload_t Payload;
+}EPS_RParam_Table_Load_Cmd_t;
+
+typedef struct EPS_PACK {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_RParam_Save_To_Store_Cmd_Payload_t Payload;
+}EPS_RParam_Save_To_Store_Cmd_t;
+
+typedef struct EPS_PACK {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_RParam_Load_From_Store_Cmd_Payload_t Payload;
+}EPS_RParam_Load_From_Store_Cmd_t;
+
+typedef struct EPS_PACK {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_RParam_Save_All_Cmd_Payload_t Payload;
+}EPS_RParam_Save_All_Cmd_t;
+
+typedef struct EPS_PACK {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_CSP_PS_Cmd_Payload_t Payload;
+}EPS_CSP_PS_Cmd_t;
+
+typedef struct EPS_PACK {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_CSP_MemFree_Cmd_Payload_t Payload;
+}EPS_CSP_MemFree_Cmd_t;
+
+typedef struct EPS_PACK {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_CSP_BufFree_Cmd_Payload_t Payload;
+}EPS_CSP_BufFree_Cmd_t;
+
+typedef struct EPS_PACK {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_CSP_Uptime_Cmd_Payload_t Payload;
+}EPS_CSP_Uptime_Cmd_t;
+
+typedef struct EPS_PACK {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_CSP_Ping_Cmd_Payload_t Payload;
+}EPS_CSP_Ping_Cmd_t;
+
+typedef struct EPS_PACK {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    EPS_CSP_Reboot_Cmd_Payload_t Payload;
+}EPS_CSP_Reboot_Cmd_t;
 
 /*************************************************************************/
 /*
 ** Type definition (EPS housekeeping)
 */
-typedef EPS_NoArgCmd_t  EPS_SendHkCmd_t;
+/* typedef EPS_NoArgCmd_t  EPS_SendHkCmd_t; */ /* Disabled: EPS_SendHkCmd is not implemented */
 typedef EPS_NoArgCmd_t  EPS_SendBcnCmd_t;
 typedef EPS_NoArgCmd_t  EPS_ReportBcnCmd_t;
 
-typedef struct {
+typedef struct EPS_PACK {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     RPT_Report_t Payload;
 } EPS_ReportTlm_t;
 
-typedef struct {
+typedef struct EPS_PACK {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader;
     EPS_HkTlm_Payload_t Payload;
 } EPS_HkTlm_t;
 
-typedef struct {
+typedef struct EPS_PACK {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader;
     EPS_BcnTlm_Full_Payload_t Payload;
 } EPS_BcnTlm_t;
@@ -138,36 +181,24 @@ typedef struct {
 /**
  * P80 per-node HK telemetry structures
  */
-typedef struct {
+typedef struct EPS_PACK {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader;
     EPS_P80_PMU_HkTlm_Payload_t Payload;
 } EPS_P80_PMU_HkTlm_t;
 
-typedef struct {
+typedef struct EPS_PACK {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader;
     EPS_P80_PDU_HkTlm_Payload_t Payload;
 } EPS_P80_PDU_HkTlm_t;
 
-typedef struct {
+typedef struct EPS_PACK {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader;
     EPS_P80_ACU_HkTlm_Payload_t Payload;
 } EPS_P80_ACU_HkTlm_t;
 
-/**
- * BP8 Battery Pack command/telemetry structures
- */
-typedef EPS_NoArgCmd_t  EPS_BP8_GetHkCmd_t;
-typedef EPS_NoArgCmd_t  EPS_BP8_ResetFaultCmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t CommandHeader;
-    EPS_BP8_SetHeater_Payload_t Payload;
-} EPS_BP8_SetHeaterCmd_t;
-
-typedef struct {
+typedef struct EPS_PACK {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     EPS_BP8_HkTlm_Payload_t Payload;
 } EPS_BP8_HkTlm_t;
 
 #endif
-      

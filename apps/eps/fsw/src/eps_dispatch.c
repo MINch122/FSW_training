@@ -31,6 +31,7 @@
 #include "eps_msg.h"
 
 #include "eps_cmds.h"
+#include "eps_utils.h"
 #if EPS_MISSION_CFG_DEVICE_p80_ENABLED
 #include "eps_cmds_p80.h"
 #endif
@@ -104,12 +105,7 @@ void EPS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
-        case EPS_REPORT_APPDATA_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_ReportAppDataCmd_t)))
-            {
-                // EPS_ReportAppDataCmd((const EPS_ReportAppDataCmd_t *)SBBufPtr);
-            }
-            break;
+
 
         /*
         ** Power Interface Commands
@@ -138,10 +134,17 @@ void EPS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
         /*
         ** Housekeeping Command
         */
-        case EPS_P80_GET_HK_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P80_Get_Hk_Cmd_t)))
+        case EPS_GET_HK_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Get_HK_Cmd_t)))
             {
-                EPS_P80_Get_Hk_Cmd((const EPS_P80_Get_Hk_Cmd_t *)SBBufPtr);
+                EPS_Get_HK_Cmd((const EPS_Get_HK_Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case EPS_GET_HK_ALL_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_Get_HK_All_Cmd_t)))
+            {
+                EPS_Get_HK_All_Cmd((const EPS_Get_HK_All_Cmd_t *)SBBufPtr);
             }
             break;
 
@@ -155,27 +158,34 @@ void EPS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case EPS_P80_GND_WDT_CLEAR_ALL_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P80_Gnd_Watchdog_Clear_All_Cmd_t)))
+            {
+                EPS_P80_Gnd_Watchdog_Clear_All_Cmd((const EPS_P80_Gnd_Watchdog_Clear_All_Cmd_t *)SBBufPtr);
+            }
+            break;
+
         /*
         ** Remote Parameter Commands
         */
-        case EPS_P80_PARAM_GET_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P80_Param_Get_Cmd_t)))
+        case EPS_RPARAM_GET_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_RParam_Get_Cmd_t)))
             {
-                EPS_P80_Param_Get_Cmd((const EPS_P80_Param_Get_Cmd_t *)SBBufPtr);
+                EPS_RParam_Get_Cmd((const EPS_RParam_Get_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P80_PARAM_SET_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P80_Param_Set_Cmd_t)))
+        case EPS_RPARAM_SET_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_RParam_Set_Cmd_t)))
             {
-                EPS_P80_Param_Set_Cmd((const EPS_P80_Param_Set_Cmd_t *)SBBufPtr);
+                EPS_RParam_Set_Cmd((const EPS_RParam_Set_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P80_GET_FULL_TABLE_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P80_Get_Full_Table_Cmd_t)))
+        case EPS_RPARAM_GET_FULL_TABLE_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_RParam_Get_Full_Table_Cmd_t)))
             {
-                EPS_P80_Get_Full_Table_Cmd((const EPS_P80_Get_Full_Table_Cmd_t *)SBBufPtr);
+                EPS_RParam_Get_Full_Table_Cmd((const EPS_RParam_Get_Full_Table_Cmd_t *)SBBufPtr);
             }
             break;
 
@@ -183,30 +193,41 @@ void EPS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
         ** Table Save/Load Commands
         */
 
-        case EPS_P80_TABLE_SAVE_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P80_Table_Save_Cmd_t)))
+        case EPS_RPARAM_TABLE_SAVE_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_RParam_Table_Save_Cmd_t)))
             {
-                EPS_P80_Table_Save_Cmd((const EPS_P80_Table_Save_Cmd_t *)SBBufPtr);
+                EPS_RParam_Table_Save_Cmd((const EPS_RParam_Table_Save_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P80_TABLE_LOAD_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P80_Table_Load_Cmd_t)))
+        case EPS_RPARAM_TABLE_LOAD_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_RParam_Table_Load_Cmd_t)))
             {
-                EPS_P80_Table_Load_Cmd((const EPS_P80_Table_Load_Cmd_t *)SBBufPtr);
+                EPS_RParam_Table_Load_Cmd((const EPS_RParam_Table_Load_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_P80_PARAM_SAVE_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_P80_Param_Save_Cmd_t)))
+        case EPS_RPARAM_SAVE_TO_STORE_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_RParam_Save_To_Store_Cmd_t)))
             {
-                EPS_P80_Param_Save_Cmd((const EPS_P80_Param_Save_Cmd_t *)SBBufPtr);
+                EPS_RParam_Save_To_Store_Cmd((const EPS_RParam_Save_To_Store_Cmd_t *)SBBufPtr);
             }
             break;
 
-        /*
-        ** BP8 Battery Pack Commands
-        */
+        case EPS_RPARAM_LOAD_FROM_STORE_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_RParam_Load_From_Store_Cmd_t)))
+            {
+                EPS_RParam_Load_From_Store_Cmd((const EPS_RParam_Load_From_Store_Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case EPS_RPARAM_SAVE_ALL_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_RParam_Save_All_Cmd_t)))
+            {
+                EPS_RParam_Save_All_Cmd((const EPS_RParam_Save_All_Cmd_t *)SBBufPtr);
+            }
+            break;
+
         /*
         ** Beacon Report Command
         */
@@ -218,26 +239,47 @@ void EPS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             break;
 
         /*
-        ** BP8 Battery Pack Commands
+        ** CSP Standard Service Commands
         */
-        case EPS_BP8_GET_HK_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_BP8_GetHkCmd_t)))
+        case EPS_CSP_PING_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_CSP_Ping_Cmd_t)))
             {
-                EPS_BP8_GetHkCmd((const EPS_BP8_GetHkCmd_t *)SBBufPtr);
+                EPS_CSP_Ping_Cmd((const EPS_CSP_Ping_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_BP8_SET_HEATER_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_BP8_SetHeaterCmd_t)))
+        case EPS_CSP_REBOOT_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_CSP_Reboot_Cmd_t)))
             {
-                EPS_BP8_SetHeaterCmd((const EPS_BP8_SetHeaterCmd_t *)SBBufPtr);
+                EPS_CSP_Reboot_Cmd((const EPS_CSP_Reboot_Cmd_t *)SBBufPtr);
             }
             break;
 
-        case EPS_BP8_RESET_FAULT_CC:
-            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_BP8_ResetFaultCmd_t)))
+        case EPS_CSP_PS_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_CSP_PS_Cmd_t)))
             {
-                EPS_BP8_ResetFaultCmd((const EPS_BP8_ResetFaultCmd_t *)SBBufPtr);
+                EPS_CSP_PS_Cmd((const EPS_CSP_PS_Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case EPS_CSP_MEMFREE_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_CSP_MemFree_Cmd_t)))
+            {
+                EPS_CSP_MemFree_Cmd((const EPS_CSP_MemFree_Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case EPS_CSP_BUF_FREE_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_CSP_BufFree_Cmd_t)))
+            {
+                EPS_CSP_BufFree_Cmd((const EPS_CSP_BufFree_Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case EPS_CSP_UPTIME_CC:
+            if (EPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(EPS_CSP_Uptime_Cmd_t)))
+            {
+                EPS_CSP_Uptime_Cmd((const EPS_CSP_Uptime_Cmd_t *)SBBufPtr);
             }
             break;
 
@@ -261,9 +303,13 @@ void EPS_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
             EPS_ProcessGroundCommand(SBBufPtr);
             break;
 
-        case EPS_SEND_HK_MID:
-            EPS_SendHkCmd((const EPS_SendHkCmd_t *)SBBufPtr);
-            break;
+        /*
+        ** Disabled: EPS_SendHkCmd is not implemented.
+        **
+        ** case EPS_SEND_HK_MID:
+        **     EPS_SendHkCmd((const EPS_SendHkCmd_t *)SBBufPtr);
+        **     break;
+        */
 
         case EPS_SEND_BCN_MID:
             EPS_SendBcnCmd((const EPS_SendBcnCmd_t *)SBBufPtr);

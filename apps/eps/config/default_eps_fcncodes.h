@@ -43,7 +43,9 @@ typedef enum
     /* Basic Commands */
     EPS_NOOP_CC              = 0,
     EPS_RESET_COUNTERS_CC    = 1,
-    EPS_REPORT_APPDATA_CC    = 2,
+
+    /* Utility helpers are not dispatched command codes. */
+    /* EPS_REPORT_APPDATA_CC    = 2, */ /* EPS_ReportAppDataCmd lives in eps_utils.c */
 
     /* Power Interface Commands */
     EPS_P80_POWER_IF_GET_CC      = 10,
@@ -51,28 +53,35 @@ typedef enum
     EPS_P80_POWER_IF_LIST_CC     = 12,
 
     /* Housekeeping Commands */
-    EPS_P80_GET_HK_CC            = 20,
+    EPS_GET_HK_CC                = 20,
+    EPS_GET_HK_ALL_CC            = 21,
 
     /* Watchdog Commands */
     EPS_P80_GND_WDT_CLEAR_CC     = 30,
+    EPS_P80_GND_WDT_CLEAR_ALL_CC = 31,
 
     /* Remote Parameter Commands */
-    EPS_P80_PARAM_GET_CC         = 40,
-    EPS_P80_PARAM_SET_CC         = 41,
-    EPS_P80_GET_FULL_TABLE_CC    = 42,
+    EPS_RPARAM_GET_CC            = 40,
+    EPS_RPARAM_SET_CC            = 41,
+    EPS_RPARAM_GET_FULL_TABLE_CC = 42,
 
     /* Table Save/Load Commands */
-    EPS_P80_PARAM_SAVE_CC        = 50,
-    EPS_P80_TABLE_SAVE_CC        = 51,
-    EPS_P80_TABLE_LOAD_CC        = 52,
+    EPS_RPARAM_SAVE_ALL_CC       = 50,
+    EPS_RPARAM_TABLE_SAVE_CC     = 51,
+    EPS_RPARAM_TABLE_LOAD_CC     = 52,
+    EPS_RPARAM_SAVE_TO_STORE_CC  = 53,
+    EPS_RPARAM_LOAD_FROM_STORE_CC = 54,
 
     /* Beacon Report Command */
     EPS_REPORT_BCN_CC            = 70,
 
-    /* BP8 Battery Pack Commands */
-    EPS_BP8_GET_HK_CC        = 60,
-    EPS_BP8_SET_HEATER_CC    = 61,
-    EPS_BP8_RESET_FAULT_CC   = 62,
+    /* CSP Standard Service Commands */
+    EPS_CSP_PING_CC              = 80,
+    EPS_CSP_REBOOT_CC            = 81,
+    EPS_CSP_PS_CC                = 82,
+    EPS_CSP_MEMFREE_CC           = 83,
+    EPS_CSP_BUF_FREE_CC          = 84,
+    EPS_CSP_UPTIME_CC            = 85,
 
 } EPS_CommandCode_t;
 

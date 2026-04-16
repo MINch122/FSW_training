@@ -76,7 +76,7 @@ typedef struct
 
     CFE_ES_TaskId_t TaskId;
 
-    uint8 BootUpCheckCounter; /* Get Unix Time Counter */
+    uint8_t BootUpCheckCounter;
 
 } ADCS_AppData_t;
 

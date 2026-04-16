@@ -206,14 +206,14 @@ void EO_ValidateOperationData(const RPT_OpsTlm_t *Msg) {
     }
 }
 
-void EO_UpdateDataADCS(const ADCS_MMTTlm_t *Msg) {
-    EO_Data.MagDeployPinState = Msg->Payload.Mag0DeployPinState;
-    EO_Data.MagBurnPinState = Msg->Payload.Mag0BurnPinState;
-    EO_Data.MagDeployTimeout = Msg->Payload.Mag0DeployTimeout;
+// void EO_UpdateDataADCS(const ADCS_MMTTlm_t *Msg) {
+//     EO_Data.MagDeployPinState = Msg->Payload.Mag0DeployPinState;
+//     EO_Data.MagBurnPinState = Msg->Payload.Mag0BurnPinState;
+//     EO_Data.MagDeployTimeout = Msg->Payload.Mag0DeployTimeout;
 
-    if (EO_Data.WaitingADCS) {
-        EO_Data.WaitingADCS = false;
-        EO_PRINTF("%s: ADCS Sem Give.\n", __func__);
-        OS_BinSemGive(EO_Data.ADCS_SemId);
-    }
-}
+//     if (EO_Data.WaitingADCS) {
+//         EO_Data.WaitingADCS = false;
+//         EO_PRINTF("%s: ADCS Sem Give.\n", __func__);
+//         OS_BinSemGive(EO_Data.ADCS_SemId);
+//     }
+// }

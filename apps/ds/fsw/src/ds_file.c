@@ -116,7 +116,7 @@ bool DS_IsPacketFiltered(CFE_MSG_Message_t *MessagePtr, uint16 FilterType, uint1
             ** Create packet filter value from packet sequence count...
             */
             CFE_MSG_GetSequenceCount(MessagePtr, &SeqCnt);
-            OS_printf("!!!!!!!seq cnt : %u\n",SeqCnt);
+            OS_printf("seq cnt : %u\n",SeqCnt);
             PacketValue = (uint16)SeqCnt;
         }
         else

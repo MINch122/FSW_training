@@ -10,12 +10,18 @@
 #define EPS_P80_DRV_H
 
 #include <stdint.h>
+#include <gs/param/types.h>
+#include <gs/p80/power_if.h>
 #include <gs/util/error.h>
+
+#ifndef EPS_P80_DRV_PACK
+#define EPS_P80_DRV_PACK __attribute__((packed))
+#endif
 
 /**
  * PMU Housekeeping data structure (driver-level, no cFE dependency)
  */
-typedef struct {
+typedef struct EPS_P80_DRV_PACK {
     uint32_t uptime;
     uint32_t bootcause;
     uint16_t resetcause;
@@ -38,7 +44,7 @@ typedef struct {
 /**
  * PDU Housekeeping data structure (driver-level, no cFE dependency)
  */
-typedef struct {
+typedef struct EPS_P80_DRV_PACK {
     uint32_t uptime;
     uint32_t bootcause;
     uint32_t bootcount;
@@ -59,7 +65,7 @@ typedef struct {
 /**
  * ACU Housekeeping data structure (driver-level, no cFE dependency)
  */
-typedef struct {
+typedef struct EPS_P80_DRV_PACK {
     uint32_t uptime;
     uint32_t bootcause;
     uint32_t bootcount;
@@ -77,7 +83,7 @@ typedef struct {
 /**
  * Beacon data structures (driver-level, no cFE dependency)
  */
-typedef struct {
+typedef struct EPS_P80_DRV_PACK {
     uint32_t bootcause;
     uint16_t resetcause;
     uint16_t bootcount;
@@ -93,11 +99,11 @@ typedef struct {
     uint32_t bus_wdt_left;
 } EPS_P80_Drv_PMU_BcnTlm_t;
 
-typedef struct {
+typedef struct EPS_P80_DRV_PACK {
     uint8_t out_en[24];
 } EPS_P80_Drv_PDU_BcnTlm_t;
 
-typedef struct {
+typedef struct EPS_P80_DRV_PACK {
     int16_t  input_i[6];
     uint16_t input_v[6];
     uint8_t  mppt_mode;
@@ -106,11 +112,13 @@ typedef struct {
 /**
  * Power Interface Commands
  */
-gs_error_t EPS_P80_Drv_PowerIfGet(uint8_t csp_node, const char *name, uint32_t timeout_ms);
+gs_error_t EPS_P80_Drv_PowerIfGet(uint8_t csp_node, const char *name,
+                                   power_if_ch_status_t *status, uint32_t timeout_ms);
 gs_error_t EPS_P80_Drv_PowerIfSet(uint8_t csp_node, const char *name,
                                    uint8_t mode, uint8_t on_cnt, uint8_t off_cnt,
-                                   uint32_t timeout_ms);
-gs_error_t EPS_P80_Drv_PowerIfList(uint8_t csp_node, uint32_t timeout_ms);
+                                   power_if_ch_status_t *status, uint32_t timeout_ms);
+gs_error_t EPS_P80_Drv_PowerIfList(uint8_t csp_node, power_if_cmd_list_response_t *list,
+                                    uint32_t timeout_ms);
 
 /**
  * Housekeeping - per node type
@@ -145,7 +153,8 @@ gs_error_t EPS_P80_Drv_ParamGet(uint8_t csp_node, uint8_t table_id,
                                  uint16_t addr, uint8_t type,
                                  uint8_t *data, uint16_t size,
                                  uint32_t timeout_ms);
-gs_error_t EPS_P80_Drv_GetFullTable(uint8_t csp_node, uint8_t table_id, uint32_t timeout_ms);
+gs_error_t EPS_P80_Drv_GetFullTable(uint8_t csp_node, uint8_t table_id,
+                                     gs_param_table_instance_t *tinst, uint32_t timeout_ms);
 
 /**
  * Table Save/Load Commands

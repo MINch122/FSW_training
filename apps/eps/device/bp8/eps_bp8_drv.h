@@ -10,7 +10,13 @@
 #define EPS_BP8_DRV_H
 
 #include <stdint.h>
+#include <gs/param/table.h>
+#include <gs/param/types.h>
 #include <gs/util/error.h>
+
+#ifndef EPS_BP8_DRV_PACK
+#define EPS_BP8_DRV_PACK __attribute__((packed))
+#endif
 
 /**
  * BP8 Table IDs
@@ -54,7 +60,7 @@
 /**
  * BP8 Housekeeping Telemetry Structure (driver-level, no cFE dependency)
  */
-typedef struct {
+typedef struct EPS_BP8_DRV_PACK {
     uint32_t Uptime;
     uint16_t BootCount;
     uint16_t BootCause;
@@ -82,20 +88,24 @@ typedef struct {
 gs_error_t EPS_BP8_Drv_GetHk(uint8_t csp_node, EPS_BP8_Drv_HkTlm_t *hk, uint32_t timeout_ms);
 
 /**
- * Set BP8 manual heater duration.
- * @param csp_node   CSP node address of the BP8
- * @param duration   Heater duration in seconds (1-600, 0=stop)
- * @param timeout_ms CSP timeout in milliseconds
- * @return GS_OK on success, error code on failure
+ * Remote Parameter Commands
  */
-gs_error_t EPS_BP8_Drv_SetHeater(uint8_t csp_node, uint16_t duration, uint32_t timeout_ms);
+gs_error_t EPS_BP8_Drv_ParamSet(uint8_t csp_node, uint8_t table_id,
+                                 uint16_t addr, uint8_t type,
+                                 const uint8_t *data, uint16_t size,
+                                 uint32_t timeout_ms);
+gs_error_t EPS_BP8_Drv_ParamGet(uint8_t csp_node, uint8_t table_id,
+                                 uint16_t addr, uint8_t type,
+                                 uint8_t *data, uint16_t size,
+                                 uint32_t timeout_ms);
+gs_error_t EPS_BP8_Drv_GetFullTable(uint8_t csp_node, uint8_t table_id,
+                                     gs_param_table_instance_t *tinst, uint32_t timeout_ms);
 
 /**
- * Reset BP8 battery fault flag.
- * @param csp_node   CSP node address of the BP8
- * @param timeout_ms CSP timeout in milliseconds
- * @return GS_OK on success, error code on failure
+ * Table Save/Load Commands
  */
-gs_error_t EPS_BP8_Drv_ResetFault(uint8_t csp_node, uint32_t timeout_ms);
+gs_error_t EPS_BP8_Drv_TableSave(uint8_t csp_node, uint8_t table_id, uint32_t timeout_ms);
+gs_error_t EPS_BP8_Drv_TableLoad(uint8_t csp_node, uint8_t table_id, uint32_t timeout_ms);
+gs_error_t EPS_BP8_Drv_ParamSaveAll(uint8_t csp_node, uint32_t timeout_ms);
 
 #endif /* EPS_BP8_DRV_H */

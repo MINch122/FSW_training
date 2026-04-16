@@ -56,7 +56,6 @@ CFE_Status_t ADCS_SendBcnCmd(const ADCS_SendBcnCmd_t *Msg)
     ADCS_PowerStateTlm_Payload_t PwrStt = {0,};
     ADCS_ControlModeTlm_Payload_t CtrlMode = {0,};
     ADCS_CalibratedGYRSensorTlm_Payload_t CalGYR = {0,};
-    ADCS_RawCSSSensorTlm_Payload_t CssStt = {0,};
 
     Status = ADCS_GetPowerState(&PwrStt);
     if (Status == CFE_SUCCESS) {
@@ -80,13 +79,6 @@ CFE_Status_t ADCS_SendBcnCmd(const ADCS_SendBcnCmd_t *Msg)
         ADCS_AppData.BcnTlm.Payload.GYR0CalibratedRateXComponent = CalGYR.GYR0CalibratedRateX;
         ADCS_AppData.BcnTlm.Payload.GYR0CalibratedRateYComponent = CalGYR.GYR0CalibratedRateY;
         ADCS_AppData.BcnTlm.Payload.GYR0CalibratedRateZComponent = CalGYR.GYR0CalibratedRateZ;
-    }
-    
-    Status = ADCS_GetRawCSSSensor(&CssStt);
-    if (Status == CFE_SUCCESS) {
-        ADCS_AppData.BcnTlm.Payload.CSS0Raw = CssStt.CSS0;
-        ADCS_AppData.BcnTlm.Payload.CSS1Raw = CssStt.CSS1;
-        ADCS_AppData.BcnTlm.Payload.CSS2Raw = CssStt.CSS2;
     }
     
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(ADCS_AppData.BcnTlm.TelemetryHeader));
@@ -137,76 +129,76 @@ CFE_Status_t ADCS_ResetCountersCmd(const ADCS_ResetCountersCmd_t *Msg)
 /* ADCS RELATED COMMANDS COME HERE                                            */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-
+/*
 CFE_Status_t ADCS_EN_HighCmd(void) {
-    // CFE_Status_t               status;
+    CFE_Status_t               status;
 
-    // CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_EN_GPIO_INDEXER);
-    // status = CFE_SRL_ApiGpioSet(Handle, true);
+    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_EN_GPIO_INDEXER);
+    status = CFE_SRL_ApiGpioSet(Handle, true);
 
-    // // ADCS_HandleReport(status, ADCS_GPIO_ENABLE_HIGH_CC, NULL, 0);
+    ADCS_HandleReport(status, ADCS_GPIO_ENABLE_HIGH_CC, NULL, 0);
 
-    // if (status != CFE_SUCCESS)
-    // {
-    //     CFE_ES_WriteToSysLog("Adcs App: Fail to Enable Enable pin: 0x%08lx", (unsigned long)status);
-    //     return status;
-    // }
-    // OS_printf("GPIO EN HIGH success.\n");
-	// OS_TaskDelay(10000);
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Enable Enable pin: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("GPIO EN HIGH success.\n");
+	OS_TaskDelay(10000);
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t ADCS_EN_LowCmd(void){
-    // CFE_Status_t               status;
+    CFE_Status_t               status;
 
-    // CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_EN_GPIO_INDEXER);
-    // status = CFE_SRL_ApiGpioSet(Handle, false);
+    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_EN_GPIO_INDEXER);
+    status = CFE_SRL_ApiGpioSet(Handle, false);
 
-    // // ADCS_HandleReport(status, ADCS_GPIO_ENABLE_LOW_CC, NULL, 0);
+    ADCS_HandleReport(status, ADCS_GPIO_ENABLE_LOW_CC, NULL, 0);
 
-    // if (status != CFE_SUCCESS)
-    // {
-    //     CFE_ES_WriteToSysLog("Adcs App: Fail to Disable Enable pin: 0x%08lx", (unsigned long)status);
-    //     return status;
-    // }
-    // OS_printf("GPIO EN LOW success.\n");
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Disable Enable pin: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("GPIO EN LOW success.\n");
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t ADCS_Boot_HighCmd(void){
-    // CFE_Status_t               status;
+    CFE_Status_t               status;
 
-    // CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_THRUSTER_GPIO_INDEXER);
-    // status = CFE_SRL_ApiGpioSet(Handle, true);
+    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_THRUSTER_GPIO_INDEXER);
+    status = CFE_SRL_ApiGpioSet(Handle, true);
 
-    // // ADCS_HandleReport(status, ADCS_GPIO_BOOT_HIGH_CC, NULL, 0);
+    ADCS_HandleReport(status, ADCS_GPIO_BOOT_HIGH_CC, NULL, 0);
 
-    // if (status != CFE_SUCCESS)
-    // {
-    //     CFE_ES_WriteToSysLog("Adcs App: Fail to Enable Boot pin: 0x%08lx", (unsigned long)status);
-    //     return status;
-    // }
-    // OS_printf("GPIO BOOT high success.\n");
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Enable Boot pin: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("GPIO BOOT high success.\n");
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t ADCS_Boot_LowCmd(void){
-    // CFE_Status_t               status;
+    CFE_Status_t               status;
 
-    // CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_THRUSTER_GPIO_INDEXER);
-    // status = CFE_SRL_ApiGpioSet(Handle, false);
+    CFE_SRL_GPIO_Handle_t *Handle = CFE_SRL_ApiGetGpioHandle(CFE_SRL_THRUSTER_GPIO_INDEXER);
+    status = CFE_SRL_ApiGpioSet(Handle, false);
 
-    // // ADCS_HandleReport(status, ADCS_GPIO_BOOT_LOW_CC, NULL, 0);
+    ADCS_HandleReport(status, ADCS_GPIO_BOOT_LOW_CC, NULL, 0);
 
-    // if (status != CFE_SUCCESS)
-    // {
-    //     CFE_ES_WriteToSysLog("Adcs App: Fail to Disable Boot pin: 0x%08lx", (unsigned long)status);
-    //     return status;
-    // }
-    // OS_printf("GPIO BOOT Low success.\n");
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Disable Boot pin: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("GPIO BOOT Low success.\n");
 
     return CFE_SUCCESS;
 }
@@ -224,14 +216,14 @@ CFE_Status_t ADCS_ExitBootloader(void){
 
     return CFE_SUCCESS;
 }
-
+*/
 CFE_Status_t ADCS_SetReset(void){
     // This command has no reply
     CFE_Status_t               status;
 
     status = ADCS_Reset();
 
-    // ADCS_HandleReport(status, ADCS_SET_RESET_CC, NULL, 0);
+    ADCS_HandleReport(status, ADCS_SET_RESET_CC, NULL, 0);
 
     if (status != CFE_SUCCESS)
     {
@@ -246,7 +238,7 @@ CFE_Status_t ADCS_SetReset(void){
 
 /********************************************************
  * 
- * BASE5TH Actual invoked command function
+ * COSMIC Actual invoked command function
  * Upper functions are just the references
  * 
  ********************************************************/
@@ -820,7 +812,7 @@ CFE_Status_t ADCS_SetInitiateEventLogTransferCmd(const ADCS_InitiateEventLogTran
 
 /********************************************************
  * 
- * BASE5TH Actual Get Command Function (Get tlm)
+ * COSMIC Actual Get Command Function (Get tlm)
  * 
  ********************************************************/
 CFE_Status_t ADCS_GetErrorLogSettingCmd(void) {
@@ -865,6 +857,7 @@ CFE_Status_t ADCS_GetErrorLogSettingCmd(void) {
     return CFE_SUCCESS;
 }
 
+
 CFE_Status_t ADCS_GetCurrentUnixTimeInternalCmd(void) {
     // ID 133
     /* Check ADCS comm. status */
@@ -872,8 +865,6 @@ CFE_Status_t ADCS_GetCurrentUnixTimeInternalCmd(void) {
     /* HS will ingest this, and send Hard Reset to EPS */
     CFE_Status_t               status;
     ADCS_CurrentUnixTimeTlm_Payload_t RetVal = {0,};
-    
-    OS_printf("%s: ADCS checkup start.\n", __func__);
 
     for (uint8_t i = 0; i < 5; i++) {
         status = ADCS_GetCurrentUnixTime(&RetVal);
@@ -889,6 +880,7 @@ CFE_Status_t ADCS_GetCurrentUnixTimeInternalCmd(void) {
     
     return CFE_SUCCESS;
 }
+
 
 CFE_Status_t ADCS_GetPersistConfigDiagnosticCmd(void) {
     // ID 134
@@ -1036,15 +1028,6 @@ CFE_Status_t ADCS_GetHealthTlmMMTCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Health Telemetry MMT: 0x%08lx", (unsigned long)status);
         return status;
     }
-
-    ADCS_MMTTlm_t Tlm;
-    CFE_MSG_Init(CFE_MSG_PTR(Tlm.TelemetryHeader), CFE_SB_ValueToMsgId(ADCS_MMT_TLM_MID), sizeof(Tlm));
-    Tlm.Payload.Mag0BurnPinState = RetVal.Mag0BurnPinState;
-    Tlm.Payload.Mag0DeployPinState = RetVal.Mag0DeployPinState;
-    Tlm.Payload.Mag0DeployTimeout = RetVal.Mag0DeployTimeout;
-
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(Tlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Tlm.TelemetryHeader), true);
     
     // Handling Retval
     OS_printf("MAG0::\n");
@@ -1058,7 +1041,6 @@ CFE_Status_t ADCS_GetHealthTlmMMTCmd(void) {
     OS_printf("Primary Temp    : %d || Redundant Temp : %d || Burn Current : %u\n", RetVal.Mag1PrimaryTemperature, RetVal.Mag1RedundantTemperature, RetVal.Mag1BurnCurrent);
     OS_printf("DeployPinState  : %u || BurnPinState   : %u\n", RetVal.Mag1DeployPinState, RetVal.Mag1BurnPinState);
     OS_printf("BurnUnderCurrent: %u || BurnOverCurrent: %u || DeployTimeout: %u\n", RetVal.Mag1BurnUnderCurrent, RetVal.Mag1BurnOverCurrent, RetVal.Mag1DeployTimeout);
-    
     return CFE_SUCCESS;
 }
 
@@ -1729,8 +1711,6 @@ CFE_Status_t ADCS_GetRawCSSSensorCmd(void) {
     OS_printf("CSS 0 : %u, 1 : %u, 2 : %u, 3 : %u, 4 : %u, 5 : %u, 6 : %u, 7 : %u, 8 : %u, 9 : %u",
                 RetVal.CSS0, RetVal.CSS1, RetVal.CSS2, RetVal.CSS3, RetVal.CSS4, RetVal.CSS5, RetVal.CSS6, RetVal.CSS7, RetVal.CSS8, RetVal.CSS9);
     
-    
-    
     return CFE_SUCCESS;
 }
 
@@ -2106,6 +2086,7 @@ CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {	// Sunpointing w/o Commissioni
 	SetVal_56.RWL0 = 1;
 	SetVal_56.RWL1 = 1;
 	SetVal_56.RWL2 = 1;
+	SetVal_56.RWL3 = 1;
 	status = ADCS_SetPowerState(&SetVal_56);
     // ADCS_HandleReport(status, ADCS_SET_POWER_STATE_CC, NULL, 0);
     if (status != CFE_SUCCESS)
@@ -2184,6 +2165,7 @@ CFE_Status_t ADCS_SequenceCmd_Vpointing(void) {	// Velocity vector pointing w/o 
 	SetVal_56.RWL0 = 1;
 	SetVal_56.RWL1 = 1;
 	SetVal_56.RWL2 = 1;
+	SetVal_56.RWL3 = 1;
 	status = ADCS_SetPowerState(&SetVal_56);
     // ADCS_HandleReport(status, ADCS_SET_POWER_STATE_CC, NULL, 0);
     if (status != CFE_SUCCESS)
@@ -2256,6 +2238,7 @@ CFE_Status_t ADCS_SequenceCmd_KSCpointing(void) {	// KissCAM EARTH pointing w/o 
 	SetVal_56.RWL0 = 1;
 	SetVal_56.RWL1 = 1;
 	SetVal_56.RWL2 = 1;
+	SetVal_56.RWL3 = 1;
 	status = ADCS_SetPowerState(&SetVal_56);
     // ADCS_HandleReport(status, ADCS_SET_POWER_STATE_CC, NULL, 0);
     if (status != CFE_SUCCESS)
@@ -2328,6 +2311,7 @@ CFE_Status_t ADCS_SequenceCmd_LGCpointing(void) {	// LG CAM EARTH pointing w/o C
 	SetVal_56.RWL0 = 1;
 	SetVal_56.RWL1 = 1;
 	SetVal_56.RWL2 = 1;
+	SetVal_56.RWL3 = 1;
 	status = ADCS_SetPowerState(&SetVal_56);
     // ADCS_HandleReport(status, ADCS_SET_POWER_STATE_CC, NULL, 0);
     if (status != CFE_SUCCESS)
@@ -2401,6 +2385,7 @@ CFE_Status_t ADCS_SequenceCmd_RPYpointing(const ADCS_SequenceCmdRPYpointingCmd_t
 	SetVal_56.RWL0 = 1;
 	SetVal_56.RWL1 = 1;
 	SetVal_56.RWL2 = 1;
+	SetVal_56.RWL3 = 1;
 	status = ADCS_SetPowerState(&SetVal_56);
     // ADCS_HandleReport(status, ADCS_SET_POWER_STATE_CC, NULL, 0);
     if (status != CFE_SUCCESS)
@@ -2469,7 +2454,6 @@ CFE_Status_t ADCS_Loop(void)
         fscanf(fp,"%d",&contmode_save);
         fclose(fp);
     }
-		
 
 	ADCS_ControlModeTlm_Payload_t RetVal_185 = {0,};
 	ADCS_GetControlMode(&RetVal_185);

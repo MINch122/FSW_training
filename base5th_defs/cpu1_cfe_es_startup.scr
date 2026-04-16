@@ -12,11 +12,11 @@ CFE_APP, adcs,        ADCS_AppMain,       ADCS,         36,   16384, 0x0, 0;
 CFE_APP, hk,          HK_AppMain,         HK,           40,   16384, 0x0, 0;
 CFE_APP, ds,          DS_AppMain,         DS,           44,   16384, 0x0, 0;
 CFE_APP, fm,          FM_AppMain,         FM,           45,   16384, 0x0, 0;
-CFE_APP, utrx,        UTRX_AppMain,       UTRX,         50,   16384, 0x0, 0;
-CFE_APP, stx,         STX_Main,           STX,          55,   16384, 0x0, 0;
-CFE_APP, gps,         GPS_AppMain,        GPS,          60,   16384, 0x0, 0;
-!CFE_APP, sample_app,  SAMPLE_APP_Main,    SAMPLE_APP,   70,   16384, 0x0, 0;
-!
+CFE_APP, ttc,         TTC_Main,           TTC,          50,   16384, 0x0, 0;
+CFE_APP, utrx,        UTRX_AppMain,       UTRX,         55,   16384, 0x0, 0;
+CFE_APP, stx,         STX_Main,           STX,          60,   16384, 0x0, 0;
+CFE_APP, gps,         GPS_AppMain,        GPS,          65,   16384, 0x0, 0;
+!CFE_APP, adcs2,       ADCS2_AppMain,      ADCS2,        38,   16384, 0x0, 0;
 ! CFE_APP, hs,          HS_AppMain,         HS,           42,   16384, 0x0, 0;
 ! CFE_APP, lc,          LC_AppMain,         LC,           43,   16384, 0x0, 0;
 ! CFE_APP, sc,          SC_AppMain,         SC,           41,   16384, 0x0, 0;
