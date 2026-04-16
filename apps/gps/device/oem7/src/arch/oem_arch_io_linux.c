@@ -26,7 +26,7 @@ typedef struct {
 
 static serial_ports_t ports[OEM_PHYSICAL_PORTS] = {
     {
-     .dev = "/dev/ttyS2",
+     .dev = "/dev/ttyS4",
      .baud = B115200,
     }
 };
