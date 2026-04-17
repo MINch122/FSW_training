@@ -65,8 +65,13 @@ struct CFE_SRL_IO_Handle_s {
  * \note Member `Handle` internally point the PSP iodrver
  * GPIO table's particular index
  */
+struct gpiod_chip;
+struct gpiod_line;
+
 typedef struct {
-    int Handle;
+    struct gpiod_chip *Chip;
+    struct gpiod_line *Line;
+    bool IsOut;
 } CFE_SRL_GPIO_Handle_t;
 
 #endif

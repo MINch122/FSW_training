@@ -33,7 +33,7 @@ CFE_SRL_IO_Handle_t *CFE_SRL_ApiGetHandle(CFE_SRL_Handle_Indexer_t Index);
 /// @brief Get GPIO Handle pointer. **Use returned handle pointer to other API function**
 /// @param Index Index of GPIO Handle table (Refer enum `CFE_SRL_GPIO_Indexer_t`)
 /// @return Pointer of `CFE_SRL_GPIO_Handle_t` object
-// CFE_SRL_GPIO_Handle_t *CFE_SRL_ApiGetGpioHandle(CFE_SRL_GPIO_Indexer_t Index);
+CFE_SRL_GPIO_Handle_t *CFE_SRL_ApiGetGpioHandle(CFE_SRL_GPIO_Indexer_t Index);
 
 /// @brief Write data to external device via various serial comm. protocol
 /// @param Handle A Pointer of SRL Handle. Distinguish character device file
@@ -60,14 +60,14 @@ int32 CFE_SRL_ApiClose(CFE_SRL_IO_Handle_t * Handle);
 /// @param Handle [in]`CFE_SRL_GPIO_Handle_t` pointer
 /// @param Value [in]`true` for HIGH, `false` for LOW
 /// @return Only `CFE_SUCCESS`(which is `0`) is success.
-// int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value);
+int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value);
 
 
 /// @brief Get specified GPIO PIN input value
 /// @param Handle [in]`CFE_SRL_GPIO_Handle_t` pointer
 /// @param Value [out] `0` for Low, `1` for High. This value is only valid in success.
 /// @return Only `CFE_SUCCESS`(which is `0`) is success. Anything else is error.
-// int32 CFE_SRL_ApiGpioGet(CFE_SRL_GPIO_Handle_t *Handle, bool *Value);
+int32 CFE_SRL_ApiGpioGet(CFE_SRL_GPIO_Handle_t *Handle, bool *Value);
 
 
 /// @brief CSP Transaction API function via CSP CAN

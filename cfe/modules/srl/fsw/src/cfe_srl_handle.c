@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <fcntl.h>
+#include <gpiod.h>
 
 static CFE_SRL_Global_Handle_t GlobalHandle[CFE_SRL_GLOBAL_HANDLE_NUM] = {0};
 
@@ -18,11 +19,7 @@ int CFE_SRL_PriorInit(void) {
         return CFE_SRL_PRIOR_INIT_ERR;
     }
 
-    /* Temporarily deprecate the gpio module */
-    // if (CFE_PSP_IODriver_FindByName(CFE_SRL_DISCRETE_DRIVER, &CFE_SRL_Global.IOdriverGpioModuleId) != CFE_PSP_SUCCESS) {
-    //     CFE_ES_WriteToSysLog("%s: PSP gpio driver unavailable.\n", __func__);
-    //     return CFE_SRL_PRIOR_INIT_ERR;
-    // }
+
     Status = CFE_SRL_GlobalHandleMutexInit();
     if (Status != CFE_SUCCESS) {
         CFE_ES_WriteToSysLog("%s: Global Handle Mutex create failed.\n", __func__);
@@ -304,41 +301,45 @@ int CFE_SRL_GpioInit(CFE_SRL_GPIO_Handle_t *Handle, const char *Path, unsigned i
     if (Handle == NULL || Path == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     int32_t Status;
-    CFE_PSP_IODriver_Location_t Location = (CFE_PSP_IODriver_Location_t) {.PspModuleId = CFE_SRL_Global.IOdriverGpioModuleId,
-                                                                          .SubsystemId = CFE_PSP_IODriver_OPEN_SUBSYSTEM,
-                                                                          .SubchannelId = 0};
-    CFE_PSP_IODriver_Gpio_init_t Config = (CFE_PSP_IODriver_Gpio_init_t) {.path = Path,
-                                                                          .line = Line,
-                                                                          .name = Name,
-                                                                          .default_val = Default,
-                                                                          .isout = IsOut};
 
-    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Config));
-    if (Status < 0) {
-        CFE_ES_WriteToSysLog("%s: %s Gpio Init failed. PSP RC = %d\n", __func__, Path, Status);
+    memset(Handle, 0, sizeof(*Handle));
+
+    Handle->Chip = gpiod_chip_open(Path);
+    if (Handle->Chip == NULL) {
+        CFE_ES_WriteToSysLog("%s: %s Gpio chip open failed.\n", __func__, Path);
         return CFE_SRL_GPIO_CONFIG_FAIL_ERR;
     }
 
-    /* Allocate Handle. this value is similar to FD */
-    Handle->Handle = Status;
+    Handle->Line = gpiod_chip_get_line(Handle->Chip, Line);
+    if (Handle->Line == NULL) {
+        CFE_ES_WriteToSysLog("%s: %s Gpio get line failed. line=%u\n", __func__, Path, Line);
+        gpiod_chip_close(Handle->Chip);
+        memset(Handle, 0, sizeof(*Handle));
+        return CFE_SRL_GPIO_CONFIG_FAIL_ERR;
+    }
+
+    if (IsOut) Status = gpiod_line_request_output(Handle->Line, Name, Default);
+    else Status = gpiod_line_request_input(Handle->Line, Name);
+
+    if (Status < 0) {
+        CFE_ES_WriteToSysLog("%s: %s Gpio request failed. line=%u isout=%d\n", __func__, Path, Line, IsOut);
+        gpiod_chip_close(Handle->Chip);
+        memset(Handle, 0, sizeof(*Handle));
+        return CFE_SRL_GPIO_CONFIG_FAIL_ERR;
+    }
+
+    Handle->IsOut = IsOut;
 
     return CFE_SUCCESS;
 
 }
 
 int CFE_SRL_GpioClose(CFE_SRL_GPIO_Handle_t *Handle) {
-    if (Handle == NULL || Handle->Handle < 0) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || Handle->Chip == NULL || Handle->Line == NULL) return CFE_SRL_BAD_ARGUMENT;
 
-    int32 Status;
-    CFE_PSP_IODriver_Location_t Location = (CFE_PSP_IODriver_Location_t) {.PspModuleId = CFE_SRL_Global.IOdriverGpioModuleId,
-                                                                          .SubsystemId = CFE_PSP_IODriver_CLOSE_SUBSYSTEM,
-                                                                          .SubchannelId = 0};
-
-    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_U32ARG((uint32_t)Handle->Handle));
-    if(Status < 0) {
-        CFE_ES_WriteToSysLog("%s: Gpio close failed. PSP RC = %d\n", __func__, Status);
-        return CFE_SRL_CLOSE_ERR;
-    }
+    gpiod_line_release(Handle->Line);
+    gpiod_chip_close(Handle->Chip);
+    memset(Handle, 0, sizeof(*Handle));
 
     return CFE_SUCCESS;
 }

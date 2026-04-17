@@ -9,6 +9,7 @@
  * Required header files
 */
 #include "cfe_srl_module_all.h"
+#include <gpiod.h>
 
 /**
  * Private function definition
@@ -25,7 +26,7 @@
 extern CFE_SRL_IO_Handle_t *Handles[CFE_SRL_GNRL_DEVICE_NUM];
 
 /* GPIO Handle for each gpio */
-// extern CFE_SRL_GPIO_Handle_t GPIO[CFE_SRL_TOT_GPIO_NUM];
+extern CFE_SRL_GPIO_Handle_t GPIO[CFE_SRL_TOT_GPIO_NUM];
 
 /**
  * Private Sleep function
@@ -55,9 +56,9 @@ CFE_SRL_IO_Handle_t *CFE_SRL_GetHandle(CFE_SRL_Handle_Indexer_t Index) {
     return Handles[Index];
 }
 
-// CFE_SRL_GPIO_Handle_t *CFE_SRL_GetGpioHandle(CFE_SRL_GPIO_Indexer_t Index) {
-//     return &GPIO[Index];
-// }
+CFE_SRL_GPIO_Handle_t *CFE_SRL_GetGpioHandle(CFE_SRL_GPIO_Indexer_t Index) {
+    return &GPIO[Index];
+}
 
 /** 
  * \brief Private Error Handling function 
@@ -124,45 +125,45 @@ static int32 CFE_SRL_TRxErrHandling(const char *func, int32 PspStatus) {
  * \warning Do not call this function directily.
  *  Use `CFE_SRL_HANDLE_PSP_GPIO_ERR` macro instead.
  */
-static int32 CFE_SRL_GpioErrHandling(const char *func, int32 PspStatus) {
-    int32 Status;
-    switch (PspStatus)
-    {
-    case CFE_PSP_IODriver_DISCRETE_IO_TABLE_FULL_ERROR:
-        Status = CFE_SRL_FULL_ERR;
-        break;
-    case CFE_PSP_IODriver_DISCRETE_IO_CHIP_OPEN_ERROR:
-        Status = CFE_SRL_OPEN_ERR;
-        break;
-    case CFE_PSP_IODriver_DISCRETE_IO_GET_LINE_ERROR:
-    case CFE_PSP_IODriver_DISCRETE_IO_REQUEST_OUTPUT_ERROR:
-    case CFE_PSP_IODriver_DISCRETE_IO_REQUEST_INPUT_ERROR:
-        Status = CFE_SRL_GPIO_CONFIG_FAIL_ERR;
-        break;
-    case CFE_PSP_IODriver_DISCRETE_IO_NOT_OPEN_ERROR:
-        Status = CFE_SRL_NOT_OPEN_ERR;
-        break;
-    case CFE_PSP_IODriver_DISCRETE_IO_INVALID_DIRECTION_ERROR:
-    case CFE_PSP_IODriver_DISCRETE_IO_INVALID_HANDLE:
-        Status = CFE_SRL_BAD_ARGUMENT;
-        break;
-    case CFE_PSP_IODriver_DISCRETE_IO_SET_ERROR:
-        Status = CFE_SRL_GPIO_SET_VALUE_ERR;
-        break;
-    case CFE_PSP_IODriver_DISCRETE_IO_GET_ERROR:
-        Status = CFE_SRL_GPIO_GET_VALUE_ERR;
-        break;
+// static int32 CFE_SRL_GpioErrHandling(const char *func, int32 PspStatus) {
+//     int32 Status;
+//     switch (PspStatus)
+//     {
+//     case CFE_PSP_IODriver_DISCRETE_IO_TABLE_FULL_ERROR:
+//         Status = CFE_SRL_FULL_ERR;
+//         break;
+//     case CFE_PSP_IODriver_DISCRETE_IO_CHIP_OPEN_ERROR:
+//         Status = CFE_SRL_OPEN_ERR;
+//         break;
+//     case CFE_PSP_IODriver_DISCRETE_IO_GET_LINE_ERROR:
+//     case CFE_PSP_IODriver_DISCRETE_IO_REQUEST_OUTPUT_ERROR:
+//     case CFE_PSP_IODriver_DISCRETE_IO_REQUEST_INPUT_ERROR:
+//         Status = CFE_SRL_GPIO_CONFIG_FAIL_ERR;
+//         break;
+//     case CFE_PSP_IODriver_DISCRETE_IO_NOT_OPEN_ERROR:
+//         Status = CFE_SRL_NOT_OPEN_ERR;
+//         break;
+//     case CFE_PSP_IODriver_DISCRETE_IO_INVALID_DIRECTION_ERROR:
+//     case CFE_PSP_IODriver_DISCRETE_IO_INVALID_HANDLE:
+//         Status = CFE_SRL_BAD_ARGUMENT;
+//         break;
+//     case CFE_PSP_IODriver_DISCRETE_IO_SET_ERROR:
+//         Status = CFE_SRL_GPIO_SET_VALUE_ERR;
+//         break;
+//     case CFE_PSP_IODriver_DISCRETE_IO_GET_ERROR:
+//         Status = CFE_SRL_GPIO_GET_VALUE_ERR;
+//         break;
     
-    default:
-        Status = CFE_SRL_ERR;
-        break;
-    }
+//     default:
+//         Status = CFE_SRL_ERR;
+//         break;
+//     }
 
-    if (Status != CFE_SUCCESS)
-        CFE_ES_WriteToSysLog("%s: Operation not succeed. PSP RC = %d\n", func, PspStatus);
+//     if (Status != CFE_SUCCESS)
+//         CFE_ES_WriteToSysLog("%s: Operation not succeed. PSP RC = %d\n", func, PspStatus);
     
-    return Status;
-}
+//     return Status;
+// }
 /**
  * Private Write function
  */
@@ -572,22 +573,12 @@ int32 CFE_SRL_ReadGenericSPI(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Pa
  *-----------------------------------------------------------------*/
 int32 CFE_SRL_GpioSetValue(CFE_SRL_GPIO_Handle_t *Handle, bool Value) {
     int32 Status;
-    CFE_PSP_IODriver_Location_t Location;
-    CFE_PSP_IODriver_GpioVal_t Val = {0,};
 
     if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle->Line == NULL || !Handle->IsOut) return CFE_SRL_BAD_ARGUMENT;
 
-    Location.PspModuleId = CFE_SRL_Global.IOdriverGpioModuleId;
-    Location.SubsystemId = CFE_PSP_IODriver_WRITE_SUBSYSTEM;
-    
-    Val.handle = Handle->Handle;
-    Val.level = Value ? 1 : 0;
-
-    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Val));
-    if (Status < 0) {
-        Status = CFE_SRL_HANDLE_PSP_GPIO_ERR(Status);
-        return Status;
-    }
+    Status = gpiod_line_set_value(Handle->Line, Value ? 1 : 0);
+    if (Status < 0) return CFE_SRL_GPIO_SET_VALUE_ERR;
 
     return CFE_SUCCESS;
     
@@ -600,23 +591,14 @@ int32 CFE_SRL_GpioSetValue(CFE_SRL_GPIO_Handle_t *Handle, bool Value) {
  *-----------------------------------------------------------------*/
 int32 CFE_SRL_GpioGetValue(CFE_SRL_GPIO_Handle_t *Handle, bool *Value) {
     int32 Status;
-    CFE_PSP_IODriver_Location_t Location;
-    CFE_PSP_IODriver_GpioVal_t Val = {0};
 
-    if (Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || Value == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle->Line == NULL || Handle->IsOut) return CFE_SRL_BAD_ARGUMENT;
 
-    Location.PspModuleId = CFE_SRL_Global.IOdriverGpioModuleId;
-    Location.SubsystemId = CFE_PSP_IODriver_READ_SUBSYSTEM;
+    Status = gpiod_line_get_value(Handle->Line);
+    if (Status < 0) return CFE_SRL_GPIO_GET_VALUE_ERR;
 
-    Val.handle = Handle->Handle;
-
-    Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Val));
-    if (Status < 0) {
-        Status = CFE_SRL_HANDLE_PSP_GPIO_ERR(Status);
-        return Status;
-    }
-
-    *Value = Val.level ? true : false;
+    *Value = Status ? true : false;
 
     return CFE_SUCCESS;
 }
