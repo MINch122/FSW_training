@@ -1,0 +1,225 @@
+
+
+#include "lgbat_task.h"
+#include "lgbat_dispatch.h"
+#include "lgbat_cmds.h"
+#include "lgbat_eventids.h"
+#include "lgbat_msgids.h"
+
+
+// Command length verification
+bool LGBAT_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
+{
+    bool   result = true;
+    size_t ActualLength = 0;
+    CFE_SB_MsgId_t    MsgId   = CFE_SB_INVALID_MSG_ID;
+    CFE_MSG_FcnCode_t FcnCode = 0;
+
+    CFE_MSG_GetSize(MsgPtr, &ActualLength);
+
+    if (ExpectedLength != ActualLength)
+    {
+        CFE_MSG_GetMsgId(MsgPtr, &MsgId);
+        CFE_MSG_GetFcnCode(MsgPtr, &FcnCode);
+
+        CFE_EVS_SendEvent(LGBAT_CMD_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "LGBAT: Invalid Msg len: ID=0x%X CC=%u Len=%u Exp=%u",
+                          (unsigned int)CFE_SB_MsgIdToValue(MsgId),
+                          (unsigned int)FcnCode,
+                          (unsigned int)ActualLength,
+                          (unsigned int)ExpectedLength);
+
+        result = false;
+        LGBAT_Data.ErrCounter++;
+
+        // Send RPT for length error
+        LGBAT_ReportTlm_t *BufPtr =
+            (LGBAT_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(LGBAT_ReportTlm_t));
+        if (BufPtr == NULL) goto cleanup;
+
+        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
+                         CFE_SB_ValueToMsgId(LGBAT_REPORT_TLM_MID),
+                         sizeof(LGBAT_ReportTlm_t)) != CFE_SUCCESS)
+        {
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+            goto cleanup;
+        }
+
+        BufPtr->Payload.MsgID          = (uint16_t)CFE_SB_MsgIdToValue(MsgId);
+        BufPtr->Payload.CommandCode    = (uint8_t)FcnCode;
+        BufPtr->Payload.ReturnType     = RPT_RETTYPE_APP;
+        BufPtr->Payload.ReturnCode     = CFE_STATUS_WRONG_MSG_LENGTH;
+        BufPtr->Payload.ReturnDataSize = 2 * sizeof(uint32_t);
+
+        uint32_t tmp = (uint32_t)ActualLength;
+        memcpy(BufPtr->Payload.ReturnValue, &tmp, sizeof(uint32_t));
+        tmp = (uint32_t)ExpectedLength;
+        memcpy(BufPtr->Payload.ReturnValue + sizeof(uint32_t), &tmp, sizeof(uint32_t));
+
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+        if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS)
+            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+    }
+cleanup:
+    return result;
+}
+
+
+// Ground command dispatcher by function code (CC)
+void LGBAT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
+{
+    CFE_MSG_FcnCode_t CC = 0xFF;
+    CFE_MSG_GetFcnCode(&SBBufPtr->Msg, &CC);
+
+    switch (CC)
+    {
+        case LGBAT_NOOP_CC:
+            if (LGBAT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(LGBAT_NoopCmd_t)))
+                LGBAT_NoopCmd((const LGBAT_NoopCmd_t *)SBBufPtr);
+            break;
+
+        case LGBAT_RESET_COUNTER_CC:
+            if (LGBAT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(LGBAT_ResetCounterCmd_t)))
+                LGBAT_ResetCounterCmd((const LGBAT_ResetCounterCmd_t *)SBBufPtr);
+            break;
+
+        case LGBAT_SEND_BCN_CC:
+            if (LGBAT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(LGBAT_SendBcnCmd_t)))
+                LGBAT_SendBeaconCmd();   
+            break;
+
+        case LGBAT_REQUEST_DATA_CC:
+            if (LGBAT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(LGBAT_RequestDataCmd_t)))
+                LGBAT_RequestDataCmd((const LGBAT_RequestDataCmd_t *)SBBufPtr);
+            break;
+
+        case LGBAT_REQUEST_ALL_DATA_CC:
+            if (LGBAT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(LGBAT_RequestAllDataCmd_t)))
+                LGBAT_RequestAllDataCmd((const LGBAT_RequestAllDataCmd_t *)SBBufPtr);
+            break;
+
+        case LGBAT_SET_POWER_CC:
+            if (LGBAT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(LGBAT_SetPowerCmd_t)))
+                LGBAT_SetPowerCmd((const LGBAT_SetPowerCmd_t *)SBBufPtr);
+            break;
+
+        case LGBAT_RESET_BMS_CC:
+            if (LGBAT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(LGBAT_ResetBmsCmd_t)))
+                LGBAT_ResetBmsCmd((const LGBAT_ResetBmsCmd_t *)SBBufPtr);
+            break;
+
+        default:
+            LGBAT_Data.ErrCounter++;
+            CFE_EVS_SendEvent(LGBAT_CC_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "LGBAT: Invalid CC=%d", (int)CC);
+            // Send RPT for invalid CC 
+            {
+                CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
+                CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
+                LGBAT_ReportTlm_t *BufPtr =
+                    (LGBAT_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(LGBAT_ReportTlm_t));
+                if (BufPtr != NULL)
+                {
+                    if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
+                                     CFE_SB_ValueToMsgId(LGBAT_REPORT_TLM_MID),
+                                     sizeof(LGBAT_ReportTlm_t)) == CFE_SUCCESS)
+                    {
+                        BufPtr->Payload.MsgID          = (uint16_t)CFE_SB_MsgIdToValue(MsgId);
+                        BufPtr->Payload.CommandCode    = (uint8_t)CC;
+                        BufPtr->Payload.ReturnType     = RPT_RETTYPE_APP;
+                        BufPtr->Payload.ReturnCode     = CFE_STATUS_BAD_COMMAND_CODE;
+                        BufPtr->Payload.ReturnDataSize = 0;
+                        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+                        if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS)
+                            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+                    }
+                    else
+                        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+                }
+            }
+            break;
+    }
+}
+
+
+// Wakeup handler
+static void LGBAT_WakeupHandler(void)
+{
+    /* Check 2-week mission timeout */
+    CFE_TIME_SysTime_t Now     = CFE_TIME_GetTime();
+    CFE_TIME_SysTime_t Elapsed = CFE_TIME_Subtract(Now, LGBAT_Data.MissionStartTime);
+
+    if (Elapsed.Seconds > LGBAT_MAX_MISSION_DURATION_SEC)
+    {
+        if (LGBAT_Data.MissionActive)
+        {
+            CFE_EVS_SendEvent(LGBAT_MISSION_END_INF_EID, CFE_EVS_EventType_INFORMATION,
+                              "LGBAT: Mission duration exceeded (%u sec). Shutting down.",
+                              LGBAT_MAX_MISSION_DURATION_SEC);
+            LGBAT_Data.MissionActive = false;
+        }
+        LGBAT_Data.RunStatus = CFE_ES_RunStatus_APP_EXIT;
+        return;
+    }
+
+    // Skip if 3.3V not applied 
+    if (!LGBAT_Data.PowerApplied) return;
+
+    // Read all 12 Data IDs: 0x01 ~ 0x0C 
+    bool CycleOk = true;
+    for (uint8_t id = LGBAT_BMS_DATA_ID_MIN; id <= LGBAT_BMS_DATA_ID_MAX; id++)
+    {
+        CFE_Status_t Status = LGBAT_I2C_ReadBmsData(id);
+        if (Status != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(LGBAT_I2C_READ_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "LGBAT: Wakeup I2C fail. DataID=0x%02X", id);
+            LGBAT_Data.ErrCounter++;
+            CycleOk = false;
+           
+        }
+    }
+
+    
+    LGBAT_CheckBmsHealth();
+
+    
+    if (CycleOk && !LGBAT_Data.FirstCommSuccess)
+    {
+        LGBAT_Data.FirstCommSuccess = true;
+        CFE_EVS_SendEvent(LGBAT_MISSION_START_INF_EID, CFE_EVS_EventType_INFORMATION,
+                          "LGBAT: First BMS comm cycle SUCCESS. Mission Criteria #2 met.");
+    }
+}
+
+
+// MID dispatcher
+void LGBAT_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
+{
+    CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
+    CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
+
+    switch (CFE_SB_MsgIdToValue(MsgId))
+    {
+        case LGBAT_CMD_MID:
+            // Ground command — process by CC, each sends RPT 
+            LGBAT_ProcessGroundCommand(SBBufPtr);
+            break;
+
+        case LGBAT_SEND_BCN_MID:
+            
+            LGBAT_SendBeaconCmd();
+            break;
+
+        case LGBAT_WAKEUP_MID:
+            // Scheduler periodic I2C poll trigger 
+            LGBAT_WakeupHandler();
+            break;
+
+        default:
+            CFE_EVS_SendEvent(LGBAT_MID_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "LGBAT: Invalid MID=0x%X",
+                              (unsigned int)CFE_SB_MsgIdToValue(MsgId));
+            break;
+    }
+}

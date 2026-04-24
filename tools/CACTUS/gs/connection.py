@@ -12,6 +12,8 @@ import socket
 import threading
 from typing import Callable, Optional
 
+from .ccsds import split_ccsds_packets
+
 
 class UdpConnection:
     def __init__(self) -> None:
@@ -93,7 +95,9 @@ class UdpConnection:
             try:
                 data, _ = self._recv_sock.recvfrom(65535)
                 if data and self.on_packet_received:
-                    self.on_packet_received(data)
+                    for packet in split_ccsds_packets(data):
+                        if packet:
+                            self.on_packet_received(packet)
             except socket.timeout:
                 continue
             except OSError:

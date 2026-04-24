@@ -15,5 +15,10 @@ foreach(EXT_APP ci_lab to_lab sample_app sc hs lc ds fm)
 endforeach()
 
 # Create the app module
-add_cfe_app(sch_lab fsw/src/sch_lab_app.c)
+add_cfe_app(sch_lab
+  fsw/src/sch_lab_app.c
+  fsw/src/sch_lab_cmds.c
+  fsw/src/sch_lab_dispatch.c
+)
+target_include_directories(sch_lab PUBLIC fsw/inc)
 add_cfe_tables(sch_lab fsw/tables/sch_lab_table.c)

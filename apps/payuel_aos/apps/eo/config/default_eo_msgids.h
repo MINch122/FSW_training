@@ -1,0 +1,27 @@
+#ifndef EO_MSGIDS_H
+#define EO_MSGIDS_H
+
+#include "cfe_core_api_base_msgids.h"
+#include "eo_topicids.h"
+
+/**
+ * For Telecommand handling
+ */
+#define EO_CMD_MID             CFE_PLATFORM_CMD_TOPICID_TO_MIDV(CFE_MISSION_EO_CMD_TOPICID)
+#define EO_SEND_BCN_MID        CFE_PLATFORM_CMD_TOPICID_TO_MIDV(CFE_MISSION_EO_SEND_BCN_TOPICID)
+
+#define EO_WAKEUP_MID           CFE_PLATFORM_CMD_TOPICID_TO_MIDV(CFE_MISSION_EO_WAKEUP_TOPICID)
+
+/**
+ * For Telemetry publishing
+ */
+#define EO_BCN_TLM_MID         CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_EO_BCN_TLM_TOPICID)
+
+
+/**
+ * For Report Msg publishing
+ */
+#define EO_REPORT_TLM_MID      CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_EO_REPORT_TOPICID)
+#define EO_CRITICAL_TLM_MID    CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_EO_CRITICAL_TOPICID)
+
+#endif

@@ -1,0 +1,86 @@
+# combined-cosmic-bcn-tlm (aligned)
+CCSDS Message ID                , 0  , 2, H, Hex, NULL, NULL, NULL, NULL
+CCSDS Sequence                  , 2  , 2, H, Hex, NULL, NULL, NULL, NULL
+CCSDS Length                    , 4  , 2, H, Dec, NULL, NULL, NULL, NULL
+CCSDS Time code MSW             , 6  , 2, H, Dec, NULL, NULL, NULL, NULL
+CCSDS Time code LSW             , 8  , 4, I, Dec, NULL, NULL, NULL, NULL
+SRL CommandCounter              , 12 , 1, B, Dec, NULL, NULL, NULL, NULL
+SRL CommandErrorCounter         , 13 , 1, B, Dec, NULL, NULL, NULL, NULL
+SRL I2C0 Status                 , 14 , 1, B, Dec, NULL, NULL, NULL, NULL
+SRL I2C0 TxCount                , 15 , 2, H, Dec, NULL, NULL, NULL, NULL
+SRL I2C1 Status                 , 17 , 1, B, Dec, NULL, NULL, NULL, NULL
+SRL I2C1 TxCount                , 18 , 2, H, Dec, NULL, NULL, NULL, NULL
+SRL I2C2 Status                 , 20 , 1, B, Dec, NULL, NULL, NULL, NULL
+SRL I2C2 TxCount                , 21 , 2, H, Dec, NULL, NULL, NULL, NULL
+SRL UART Status                 , 23 , 1, B, Dec, NULL, NULL, NULL, NULL
+SRL UART TxCount                , 24 , 2, H, Dec, NULL, NULL, NULL, NULL
+SRL RS422 Status                , 26 , 1, B, Dec, NULL, NULL, NULL, NULL
+SRL RS422 TxCount               , 27 , 2, H, Dec, NULL, NULL, NULL, NULL
+RPT Report Queue Count          , 29 , 1, B, Dec, NULL, NULL, NULL, NULL
+RPT Critical Queue Count        , 30 , 1, B, Dec, NULL, NULL, NULL, NULL
+RPT Boot Count                  , 31 , 2, H, Dec, NULL, NULL, NULL, NULL
+RPT Spacecraft Time (seconds)   , 33 , 4, I, Dec, NULL, NULL, NULL, NULL
+RPT Spacecraft Time (subseconds), 37 , 4, I, Dec, NULL, NULL, NULL, NULL
+RPT Sequence                    , 41 , 4, I, Dec, NULL, NULL, NULL, NULL
+RPT Reset Cause                 , 45 , 1, B, Dec, NULL, NULL, NULL, NULL
+RPT Current Mode                , 46 , 2, H, Dec, NULL, NULL, NULL, NULL
+RPT Previous Mode               , 48 , 2, H, Dec, NULL, NULL, NULL, NULL
+RPT Previous Submode            , 50 , 1, B, Dec, NULL, NULL, NULL, NULL
+RPT Reboot Cause                , 51 , 1, B, Dec, NULL, NULL, NULL, NULL
+RPT Deployment Phase            , 52 , 1, B, Dec, NULL, NULL, NULL, NULL
+SANT Status                     , 53 , 1, B, Dec, NULL, NULL, NULL, NULL
+STRX Last RSSI                  , 54 , 2, H, Dec, NULL, NULL, NULL, NULL
+STRX Bootcount                  , 56 , 2, H, Dec, NULL, NULL, NULL, NULL
+STRX Bootcause                  , 58 , 4, I, Dec, NULL, NULL, NULL, NULL
+STRX RX Mode                    , 62 , 1, B, Dec, NULL, NULL, NULL, NULL
+STRX GND WDT Cnt                , 63 , 2, H, Dec, NULL, NULL, NULL, NULL
+STRX GND WDT Left               , 65 , 4, I, Dec, NULL, NULL, NULL, NULL
+UANT Report deployment status   , 69 , 2, H, Dec, NULL, NULL, NULL, NULL
+UTX Active Conf                 , 71 , 1, B, Dec, NULL, NULL, NULL, NULL
+UTX Boot Count                  , 72 , 2, H, Dec, NULL, NULL, NULL, NULL
+UTX Boot Cause                  , 74 , 4, I, Hex, NULL, NULL, NULL, NULL
+PCDU Vbatt                      , 78 , 2, H, Dec, NULL, NULL, NULL, NULL
+PCDU Output[0]                  , 80 , 1, B, Dec, NULL, NULL, NULL, NULL
+PCDU Output[1]                  , 81 , 1, B, Dec, NULL, NULL, NULL, NULL
+PCDU Output[2]                  , 82 , 1, B, Dec, NULL, NULL, NULL, NULL
+PCDU Output[3]                  , 83 , 1, B, Dec, NULL, NULL, NULL, NULL
+PCDU Output[4]                  , 84 , 1, B, Dec, NULL, NULL, NULL, NULL
+PCDU Output[5]                  , 85 , 1, B, Dec, NULL, NULL, NULL, NULL
+PCDU Output[6]                  , 86 , 1, B, Dec, NULL, NULL, NULL, NULL
+PCDU Output[7]                  , 87 , 1, B, Dec, NULL, NULL, NULL, NULL
+PCDU CurOut[0]                  , 88 , 2, H, Dec, NULL, NULL, NULL, NULL
+PCDU CurOut[1]                  , 90 , 2, H, Dec, NULL, NULL, NULL, NULL
+PCDU CurOut[2]                  , 92 , 2, H, Dec, NULL, NULL, NULL, NULL
+PCDU CurOut[3]                  , 94 , 2, H, Dec, NULL, NULL, NULL, NULL
+PCDU CurOut[4]                  , 96 , 2, H, Dec, NULL, NULL, NULL, NULL
+PCDU CurOut[5]                  , 98 , 2, H, Dec, NULL, NULL, NULL, NULL
+PCDU CurIn[0]                   , 100, 2, H, Dec, NULL, NULL, NULL, NULL
+PCDU CurIn[1]                   , 102, 2, H, Dec, NULL, NULL, NULL, NULL
+PCDU CurIn[2]                   , 104, 2, H, Dec, NULL, NULL, NULL, NULL
+PCDU CurSys                     , 106, 2, H, Dec, NULL, NULL, NULL, NULL
+PCDU Counter Boot               , 108, 2, H, Dec, NULL, NULL, NULL, NULL
+PCDU WDT GND Time Left          , 110, 4, I, Dec, NULL, NULL, NULL, NULL
+PCDU Bootcause                  , 114, 1, B, Dec, NULL, NULL, NULL, NULL
+PCDU Battmode                   , 115, 1, B, Dec, NULL, NULL, NULL, NULL
+Solar Panel Deploy Status       , 116, 1, B, Dec, NULL, NULL, NULL, NULL
+ADCS PowerState                 , 117, 1, B, Dec, NULL, NULL, NULL, NULL
+ADCS Control Mode               , 118, 1, B, Dec, NULL, NULL, NULL, NULL
+ADCS Gyro0 Rate X               , 119, 4, I, Dec, NULL, NULL, NULL, NULL
+ADCS Gyro0 Rate Y               , 123, 4, I, Dec, NULL, NULL, NULL, NULL
+ADCS Gyro0 Rate Z               , 127, 4, I, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Mode                  , 131, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Memory Status[0]      , 132, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Memory Status[1]      , 133, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Memory Status[2]      , 134, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Memory Status[3]      , 135, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Memory Status[4]      , 136, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Memory Status[5]      , 137, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Image Number[0]       , 138, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Image Number[1]       , 139, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Image Number[2]       , 140, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Image Number[3]       , 141, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Image Number[4]       , 142, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_CAM Image Number[5]       , 143, 1, B, Dec, NULL, NULL, NULL, NULL
+UZURO_DEORBIT ADC Value[0]      , 144, 2, H, Dec, NULL, NULL, NULL, NULL
+UZURO_DEORBIT ADC Value[1]      , 146, 2, H, Dec, NULL, NULL, NULL, NULL
+# Total size = 148 bytes

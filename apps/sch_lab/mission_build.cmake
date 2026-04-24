@@ -10,12 +10,15 @@
 
 # The list of header files that control the SCH_LAB configuration
 set(SCH_LAB_MISSION_CONFIG_FILE_LIST
+  sch_lab_fcncodes.h
   sch_lab_interface_cfg.h
   sch_lab_mission_cfg.h
+  sch_lab_msgstruct.h
   sch_lab_perfids.h
   sch_lab_tbldefs.h
   sch_lab_tbl.h
   sch_lab_tblstruct.h
+  sch_lab_topicids.h
 )
 
 if (CFE_EDS_ENABLED_BUILD)

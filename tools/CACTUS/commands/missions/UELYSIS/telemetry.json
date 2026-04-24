@@ -1,0 +1,183 @@
+{
+  "_comment": [
+    "UELYSIS telemetry packets decoded by CACTUS.",
+    "Packet payloads start after the 16-byte cFS telemetry header on this target."
+  ],
+  "packets": [
+    {
+      "app": "PAYUEL_CAM",
+      "name": "Beacon",
+      "mid": "0x089C",
+      "description": "CAM payload beacon telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "PI_Boot_State", "type": "uint8" },
+        { "name": "_pad0", "type": "bytes", "length": 1, "hidden": true },
+        { "name": "PI_Boot_Count", "type": "uint16" },
+        { "name": "CAM_Detect_State", "type": "uint8" },
+        { "name": "_pad1", "type": "bytes", "length": 1, "hidden": true },
+        { "name": "CAM_Shutter_Count", "type": "uint16" },
+        { "name": "CPU_Temp", "type": "int16", "scale": 0.01, "units": "C" },
+        { "name": "_pad2", "type": "bytes", "length": 2, "hidden": true },
+        { "name": "Free_Disk", "type": "uint32", "units": "MB" }
+      ]
+    },
+    {
+      "app": "PAYUEL_OBC",
+      "name": "OBC Beacon",
+      "mid": "0x08A0",
+      "description": "UEL OBC beacon telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "InitError", "type": "uint8", "format": "hex", "hex_digits": 2 },
+        { "name": "_pad0", "type": "bytes", "length": 1, "hidden": true },
+        { "name": "BootCount", "type": "uint16" },
+        { "name": "BootTime", "type": "uint32", "units": "s" },
+        { "name": "ShutterCount", "type": "uint16" },
+        { "name": "AlphaTemp", "type": "int8", "units": "C" },
+        { "name": "BetaTemp", "type": "int8", "units": "C" },
+        { "name": "ImuTemp", "type": "int8", "units": "C" },
+        { "name": "TC1", "type": "int8", "units": "C" },
+        {
+          "name": "SdMountState",
+          "type": "enum",
+          "storage": "uint8",
+          "values": {
+            "UNMOUNTED": 0,
+            "MOUNTED": 1
+          }
+        }
+      ]
+    },
+    {
+      "app": "PAYUEL_CAM",
+      "name": "Report",
+      "mid": "0x089B",
+      "description": "PAYUEL_CAM command report telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "MsgID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "CommandCode", "type": "uint8", "format": "hex", "hex_digits": 2 },
+        {
+          "name": "ReturnType",
+          "type": "enum",
+          "storage": "uint8",
+          "values": {
+            "SUCCESS": 0,
+            "OSAL": 1,
+            "CFE": 2,
+            "LIB": 3,
+            "APP": 4,
+            "HW": 5
+          }
+        },
+        { "name": "ReturnCode", "type": "int32" },
+        { "name": "ReturnDataSize", "type": "uint16" },
+        {
+          "name": "ReturnValue",
+          "type": "bytes",
+          "length": "RPT_RET_VALUE_BUF_SIZE",
+          "display_length_from": "ReturnDataSize"
+        }
+      ]
+    },
+    {
+      "app": "PAYUEL_OBC",
+      "name": "Report",
+      "mid": "0x089F",
+      "description": "PAYUEL_OBC command report telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "MsgID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "CommandCode", "type": "uint8", "format": "hex", "hex_digits": 2 },
+        {
+          "name": "ReturnType",
+          "type": "enum",
+          "storage": "uint8",
+          "values": {
+            "SUCCESS": 0,
+            "OSAL": 1,
+            "CFE": 2,
+            "LIB": 3,
+            "APP": 4,
+            "HW": 5
+          }
+        },
+        { "name": "ReturnCode", "type": "int32" },
+        { "name": "ReturnDataSize", "type": "uint16" },
+        {
+          "name": "ReturnValue",
+          "type": "bytes",
+          "length": "RPT_RET_VALUE_BUF_SIZE",
+          "display_length_from": "ReturnDataSize"
+        }
+      ]
+    },
+    {
+      "app": "RPT",
+      "name": "Report Queue Packet",
+      "mid": "0x0825",
+      "description": "RPT general report telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "MsgID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "CommandCode", "type": "uint8", "format": "hex", "hex_digits": 2 },
+        {
+          "name": "ReturnType",
+          "type": "enum",
+          "storage": "uint8",
+          "values": {
+            "SUCCESS": 0,
+            "OSAL": 1,
+            "CFE": 2,
+            "LIB": 3,
+            "APP": 4,
+            "HW": 5
+          }
+        },
+        { "name": "ReturnCode", "type": "int32" },
+        { "name": "ReturnDataSize", "type": "uint16" },
+        {
+          "name": "ReturnValue",
+          "type": "bytes",
+          "length": "RPT_RET_VALUE_BUF_SIZE",
+          "display_length_from": "ReturnDataSize"
+        }
+      ]
+    },
+    {
+      "app": "RPT",
+      "name": "Critical Packet",
+      "mid": "0x0826",
+      "description": "RPT critical telemetry with timestamp",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "MsgID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "CommandCode", "type": "uint8", "format": "hex", "hex_digits": 2 },
+        {
+          "name": "ReturnType",
+          "type": "enum",
+          "storage": "uint8",
+          "values": {
+            "SUCCESS": 0,
+            "OSAL": 1,
+            "CFE": 2,
+            "LIB": 3,
+            "APP": 4,
+            "HW": 5
+          }
+        },
+        { "name": "ReturnCode", "type": "int32" },
+        { "name": "ReturnDataSize", "type": "uint16" },
+        {
+          "name": "ReturnValue",
+          "type": "bytes",
+          "length": "RPT_RET_VALUE_BUF_SIZE",
+          "display_length_from": "ReturnDataSize"
+        },
+        { "name": "TimeSeconds", "type": "uint32", "units": "s" },
+        { "name": "TimeSubseconds", "type": "uint32", "format": "hex", "hex_digits": 8 }
+      ]
+    }
+  ]
+}

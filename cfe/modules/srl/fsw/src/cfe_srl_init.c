@@ -19,7 +19,8 @@ CFE_SRL_IO_Handle_t *Handles[CFE_SRL_GNRL_DEVICE_NUM];
  * 1 : RS485 Handle
  * 2 : SPIO Handle
  * 3 : CAN0 Handle
- * 4 : RS422 Handle
+ * 4 : I2C2 Handle
+ * 5 : RS422 Handle
  **************************************************/
 
 CFE_SRL_GPIO_Handle_t GPIO[CFE_SRL_TOT_GPIO_NUM];
@@ -87,6 +88,16 @@ int32 CFE_SRL_EarlyInit(void) {
 		CFE_ES_WriteToSysLog("%s: CAN0 Initialization failed! RC=%d\n", __func__, Status);
 	}
 	else CFE_ES_WriteToSysLog("%s: CAN0 Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_CAN0_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_CAN0_HANDLE_INDEXER])->DevName);
+
+	/* I2C2 Init */
+	Config.cfg.i2c = (CFE_PSP_I2C_cfg_t) {.tenbit = false,
+            							  .pec_en = false,
+            							  .retries = 3};
+	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_I2C2_HANDLE_INDEXER], "I2C2", "/dev/i2c-2", SRL_DEVTYPE_I2C, CFE_SRL_I2C2_HANDLE_INDEXER, &Config);
+	if (Status != CFE_SUCCESS) {
+		CFE_ES_WriteToSysLog("%s: I2C2 Initialization failed! RC=%d\n", __func__, Status);
+	}
+	else CFE_ES_WriteToSysLog("%s: I2C2 Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_I2C2_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_I2C2_HANDLE_INDEXER])->DevName);
 
 	/* RS422 Init */
 	Config.cfg.uart = (CFE_PSP_UART_cfg_t) {.baud = 115200,

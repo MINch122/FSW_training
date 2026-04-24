@@ -80,6 +80,10 @@
 
 #include "uant_app_msgids.h"
 #include "uant_app_msg.h"
+
+#include "lgbat_msgids.h"
+#include "payuel_cam_msgids.h"
+#include "payuel_obc_msgids.h"
 /* End of COMS Header */
 
 /*********************
@@ -103,6 +107,8 @@
 #include "adcs_msg.h"
 /* End of ADCS Header */
 
+#include "ttc_msgids.h"
+
 #include "hk_msgids.h"
 #include "hk_msg.h"
 
@@ -120,16 +126,24 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
     .TickRate = SCH_LAB_TICK_RATE, // This TickRate value is equivalent to 1 sec. If `TickRate` is `10`, `10` tick is `1` sec 
     .Config   = {
 
-        // Beacon packets
-        // {CFE_SB_MSGID_WRAP_VALUE(RPT_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(EO_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(STX_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(UANT_APP_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(UTRX_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), SCH_LAB_TICK_RATE*30, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), SCH_LAB_TICK_RATE*10000, 0, sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},
+        /* Beacon requests for apps copied into HK_COMBINED_PKT1 */
+        {CFE_SB_MSGID_WRAP_VALUE(RPT_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(EO_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(STX_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(UANT_APP_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(UTRX_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(PAYUEL_CAM_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(LGBAT_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(PAYUEL_OBC_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), SCH_LAB_TICK_RATE * 30, 0,
+        //  sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},
+
+        // /* Periodic wakeups for apps with internal timed work */
+        // {CFE_SB_MSGID_WRAP_VALUE(ADCS_LOOP_MID), SCH_LAB_TICK_RATE, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(LGBAT_WAKEUP_MID), SCH_LAB_TICK_RATE * 5, 0},
 
         /* Example of including additional open source apps */
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_ES_SEND_HK_MID), 100, 0}, /* Example of a 1hz packet */
@@ -152,11 +166,11 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
         // {CFE_SB_MSGID_WRAP_VALUE(SAMPLE_APP_SEND_HK_MID), 93, 0},
 #endif
 #ifdef HAVE_SC
-        // {CFE_SB_MSGID_WRAP_VALUE(SC_SEND_HK_MID), 92, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(SC_ONEHZ_WAKEUP_MID), 91, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(SC_ONEHZ_WAKEUP_MID), SCH_LAB_TICK_RATE, 0},
 #endif
 #ifdef HAVE_HS
-        {CFE_SB_MSGID_WRAP_VALUE(HS_SEND_HK_MID), 90, 0}, /* Example of a message that wouldn't be sent */
+        {CFE_SB_MSGID_WRAP_VALUE(HS_SEND_HK_MID), SCH_LAB_TICK_RATE * 10, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(HS_WAKEUP_MID), SCH_LAB_TICK_RATE, 0},
 #endif
 #ifdef HAVE_FM
         // {CFE_SB_MSGID_WRAP_VALUE(FM_SEND_HK_MID), 101, 0},
@@ -165,8 +179,10 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
         // {CFE_SB_MSGID_WRAP_VALUE(DS_SEND_HK_MID), 102, 0},
 #endif
 #ifdef HAVE_LC
-        // {CFE_SB_MSGID_WRAP_VALUE(LC_SEND_HK_MID), 103, 0},
         {CFE_SB_MSGID_WRAP_VALUE(LC_SAMPLE_AP_MID), SCH_LAB_TICK_RATE * 5, 0, 8, {0, 175, 1}},
+#endif
+#ifdef HAVE_TTC
+        {CFE_SB_MSGID_WRAP_VALUE(TTC_ONEHZ_WAKEUP_MID), SCH_LAB_TICK_RATE, 0},
 #endif
 
     }};

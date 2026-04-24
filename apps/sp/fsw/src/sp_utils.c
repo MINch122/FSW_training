@@ -16,9 +16,9 @@ void SP_HandleReport(int32 Status, uint8 CC, const void *ReadData, uint16 ReadSi
 	Report->Report.CommandCode = CC;
 	Report->Report.ReturnType = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
 	Report->Report.ReturnCode = Status; // `cfe_error.h`
-	Report->Report.ReturnDataSize = ReadSize;
+	Report->Report.ReturnDataSize = (ReadSize > RPT_RET_VALUE_BUF_SIZE) ? RPT_RET_VALUE_BUF_SIZE : ReadSize;
 	if (ReadSize && ReadData) {
-		memcpy(Report->Report.ReturnValue, ReadData, ReadSize);
+		memcpy(Report->Report.ReturnValue, ReadData, Report->Report.ReturnDataSize);
 	}
 
 	CFE_SB_TimeStampMsg((CFE_MSG_PTR(Report->TelemetryHeader)));

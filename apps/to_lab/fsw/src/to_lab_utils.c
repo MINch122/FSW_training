@@ -163,13 +163,17 @@ void TO_LAB_ForwardTelemetryUDP(void)
 }
 
 void TO_HandleReport(int32 Status, uint8 CC, const void *Data, size_t DataSize) {
+    size_t CopySize = (DataSize > RPT_RET_VALUE_BUF_SIZE) ? RPT_RET_VALUE_BUF_SIZE : DataSize;
+
     TO_LAB_Global.ReportTlm.Payload.MsgID = TO_LAB_CMD_MID;
     TO_LAB_Global.ReportTlm.Payload.CommandCode = CC;
     TO_LAB_Global.ReportTlm.Payload.ReturnType = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_APP;
     TO_LAB_Global.ReportTlm.Payload.ReturnCode = Status;
-    TO_LAB_Global.ReportTlm.Payload.ReturnDataSize = (uint16)DataSize;
-    memcpy(TO_LAB_Global.ReportTlm.Payload.ReturnValue, Data,
-            (DataSize > RPT_RET_VALUE_BUF_SIZE) ? RPT_RET_VALUE_BUF_SIZE : DataSize);
+    TO_LAB_Global.ReportTlm.Payload.ReturnDataSize = (uint16)CopySize;
+    if (Data != NULL && CopySize > 0)
+    {
+        memcpy(TO_LAB_Global.ReportTlm.Payload.ReturnValue, Data, CopySize);
+    }
 
     /* Transmit to SB */
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(TO_LAB_Global.ReportTlm.TelemetryHeader));

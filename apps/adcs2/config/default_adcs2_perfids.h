@@ -23,6 +23,6 @@
 #ifndef ADCS2_PERFIDS_H
 #define ADCS2_PERFIDS_H
 
-#define ADCS2_PERF_ID 24
+#define ADCS2_PERF_ID 47
 
 #endif

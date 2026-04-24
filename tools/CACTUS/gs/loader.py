@@ -49,6 +49,7 @@ from typing import Dict, List, Optional
 
 # Reserved filename — not treated as an app definition.
 MISSION_DEFS_FILENAME = 'mission_defs.json'
+TELEMETRY_DEFS_FILENAME = 'telemetry.json'
 
 
 # ---------------------------------------------------------------------------
@@ -191,8 +192,8 @@ def load_commands_dir(directory: str) -> List[AppDef]:
 
     apps: Dict[str, AppDef] = {}
     for json_file in sorted(path.glob('*.json')):
-        # Skip the reserved mission-defs file — it is not an app definition.
-        if json_file.name == MISSION_DEFS_FILENAME:
+        # Skip reserved support files — these are not command definitions.
+        if json_file.name in (MISSION_DEFS_FILENAME, TELEMETRY_DEFS_FILENAME):
             continue
         try:
             _load_file(json_file, apps, defs)

@@ -103,8 +103,10 @@ CFE_Status_t SP_ReportBcnCmd(const SP_ReportBcnCmd_t *Msg)
 CFE_Status_t SP_NoopCmd(const SP_NoopCmd_t *Msg)
 {
     SP_AppData.CmdCounter++;
+    uint16_t counters[2] = {SP_AppData.CmdCounter, SP_AppData.ErrCounter};
 
     CFE_EVS_SendEvent(SP_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "SP: NOOP command received.");
+    SP_HandleReport(CFE_SUCCESS, SP_NOOP_CC, counters, sizeof(counters));
 
     return CFE_SUCCESS;
 }
@@ -114,8 +116,10 @@ CFE_Status_t SP_ResetCounterCmd(const SP_ResetCountersCmd_t *Msg)
 {
     SP_AppData.CmdCounter = 0;
     SP_AppData.ErrCounter = 0;
+    uint16_t counters[2] = {SP_AppData.CmdCounter, SP_AppData.ErrCounter};
 
     CFE_EVS_SendEvent(SP_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "SP: RESET command");
+    SP_HandleReport(CFE_SUCCESS, SP_RESET_COUNTERS_CC, counters, sizeof(counters));
 
     return CFE_SUCCESS;
 }
@@ -304,6 +308,12 @@ CFE_Status_t SP_StopBurnCmd(const SP_StopBurnCmd_t *Msg)
     if (errA == GS_OK && errB == GS_OK)
         SP_AppData.BcnTlm.IsRunning = false;
 
+    {
+        int32 status = (errA == GS_OK && errB == GS_OK) ? CFE_SUCCESS : CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+        int32 details[2] = {errA, errB};
+        SP_HandleReport(status, SP_STOP_BURN_CC, details, sizeof(details));
+    }
+
     OS_printf("[SP] StopBurn DSP%d addrA=0x%02X addrB=0x%02X errA=%d errB=%d\n",
               dspNum + 1, addrA, addrB, errA, errB);
 
@@ -448,6 +458,12 @@ CFE_Status_t SP_ScanAr6Cmd(const SP_ScanAr6Cmd_t *Msg)
                           "SP: Bus scan complete - %d device(s) found", found);
     }
 
+    {
+        uint16_t found_count = (uint16_t)found;
+        SP_HandleReport((found > 0) ? CFE_SUCCESS : CFE_STATUS_EXTERNAL_RESOURCE_FAIL,
+                        SP_SCAN_AR6_CC, &found_count, sizeof(found_count));
+    }
+
     return CFE_SUCCESS;
 }
 
@@ -474,6 +490,11 @@ CFE_Status_t SP_SetAr6AddrCmd(const SP_SetAr6AddrCmd_t *Msg)
                           curAddr, newAddr, err);
         OS_printf("[SP] SetAr6Addr FAILED set cur=0x%02X new=0x%02X err=%d\n",
                   curAddr, newAddr, err);
+        {
+            uint8_t addr_pair[2] = {curAddr, newAddr};
+            SP_HandleReport(CFE_STATUS_EXTERNAL_RESOURCE_FAIL, SP_SET_AR6_ADDR_CC,
+                            addr_pair, sizeof(addr_pair));
+        }
         return CFE_SUCCESS;
     }
 
@@ -484,6 +505,11 @@ CFE_Status_t SP_SetAr6AddrCmd(const SP_SetAr6AddrCmd_t *Msg)
         CFE_EVS_SendEvent(SP_SET_ADDR_ERR_EID, CFE_EVS_EventType_ERROR,
                           "SP: Commit I2C addr failed (new=0x%02X err=%d)", newAddr, err);
         OS_printf("[SP] SetAr6Addr FAILED commit new=0x%02X err=%d\n", newAddr, err);
+        {
+            uint8_t addr_pair[2] = {curAddr, newAddr};
+            SP_HandleReport(CFE_STATUS_EXTERNAL_RESOURCE_FAIL, SP_SET_AR6_ADDR_CC,
+                            addr_pair, sizeof(addr_pair));
+        }
         return CFE_SUCCESS;
     }
 
@@ -492,6 +518,11 @@ CFE_Status_t SP_SetAr6AddrCmd(const SP_SetAr6AddrCmd_t *Msg)
     CFE_EVS_SendEvent(SP_SET_ADDR_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "SP: AR6 addr programmed 0x%02X -> 0x%02X (committed to NVM)",
                       curAddr, newAddr);
+
+    {
+        uint8_t addr_pair[2] = {curAddr, newAddr};
+        SP_HandleReport(CFE_SUCCESS, SP_SET_AR6_ADDR_CC, addr_pair, sizeof(addr_pair));
+    }
 
     return CFE_SUCCESS;
 }

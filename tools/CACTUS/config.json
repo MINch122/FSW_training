@@ -3,5 +3,5 @@
   "cmd_port": 1234,
   "tlm_port": 2234,
   "endian": "little",
-  "commands_dir": "commands/missions/sample_mission"
+  "commands_dir": "commands/missions/UELYSIS"
 }

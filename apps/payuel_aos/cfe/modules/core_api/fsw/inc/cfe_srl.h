@@ -1,0 +1,144 @@
+/***********************************************************************
+ *  Copyright (c) 2025, Yonsei University as represented by the
+ *  Department of Satellite Systems (DSS) & Astrodynamics & Control Lab (ACL)
+ *  All rights reserved. This software was created at DSS
+ *************************************************************************/
+
+/** 
+ * @file: cfe_srl.h
+ *
+ * Purpose:
+ *      This file contains the definitions of cFE Serial communication
+ *      Application Programmer's Interface
+ *
+ *
+ * Author:   HyeokJin Kweon
+ *
+ * P.S.: Source code of functions is located at
+ *       `cfe/modules/srl/fsw/src/cfe_srl_api.c`
+ */
+
+#ifndef CFE_SRL_H
+#define CFE_SRL_H
+
+#include "common_types.h"
+#include "cfe_srl_api_typedefs.h"
+
+/// @brief Get IO Handle pointer. **Use returned handle pointer to other API function**
+/// @param Index Index of Handle table (Refer enum `CFE_SRL_Handle_Indexer_t`)
+/// @return Pointer of `CFE_SRL_IO_Handle_t` object
+CFE_SRL_IO_Handle_t *CFE_SRL_ApiGetHandle(CFE_SRL_Handle_Indexer_t Index);
+
+
+/// @brief Get GPIO Handle pointer. **Use returned handle pointer to other API function**
+/// @param Index Index of GPIO Handle table (Refer enum `CFE_SRL_GPIO_Indexer_t`)
+/// @return Pointer of `CFE_SRL_GPIO_Handle_t` object
+// CFE_SRL_GPIO_Handle_t *CFE_SRL_ApiGetGpioHandle(CFE_SRL_GPIO_Indexer_t Index);
+
+/// @brief Write data to external device via various serial comm. protocol
+/// @param Handle A Pointer of SRL Handle. Distinguish character device file
+/// @param Params A Pointer of SRL Paramter. Correctly set the members `.TxData`, `.TxSize`. And `.Addr` if needed
+/// @return Only `CFE_SUCCESS`(which is `0`) is success.
+int32 CFE_SRL_ApiWrite(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params);
+
+
+/// @brief Read data from external device via various serial comm. protocol
+/// @details This function doesn't check the whether `.TxData` is `NULL` or not
+/// @param Handle A Pointer of SRL Handle. Distinguish character device file
+/// @param Params A Pointer of SRL Paramter. Correctly set the members `.TxData`, `.TxSize`, `.RxData`, `RxSize`. And `.Timeout`, `.Addr` if needed
+/// @return Only `CFE_SUCCESS`(which is `0`) is success.
+int32 CFE_SRL_ApiRead(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params);
+
+
+/// @brief Close Serial Interface
+/// @param Handle A Pointer of SRL Handle. Distinguish character device file
+/// @return Only `CFE_SUCCESS`(which is `0`) is success.
+int32 CFE_SRL_ApiClose(CFE_SRL_IO_Handle_t * Handle);
+
+
+/// @brief Set specified GPIO PIN to HIGH or LOW
+/// @param Handle [in]`CFE_SRL_GPIO_Handle_t` pointer
+/// @param Value [in]`true` for HIGH, `false` for LOW
+/// @return Only `CFE_SUCCESS`(which is `0`) is success.
+// int32 CFE_SRL_ApiGpioSet(CFE_SRL_GPIO_Handle_t *Handle, bool Value);
+
+
+/// @brief Get specified GPIO PIN input value
+/// @param Handle [in]`CFE_SRL_GPIO_Handle_t` pointer
+/// @param Value [out] `0` for Low, `1` for High. This value is only valid in success.
+/// @return Only `CFE_SUCCESS`(which is `0`) is success. Anything else is error.
+// int32 CFE_SRL_ApiGpioGet(CFE_SRL_GPIO_Handle_t *Handle, bool *Value);
+
+
+/// @brief CSP Transaction API function via CSP CAN
+/// @param Node Destination Node addr
+/// @param Port Corresponed port number to specific request
+/// @param TxData Request
+/// @param TxSize Request size
+/// @param RxData Reply
+/// @param RxSize Reply size (`0` for no reply. `-1` for unknown size)
+/// @return `1` or `reply size` on success, `0` on failure. (error, unmatched length, timeout)
+int32 CFE_SRL_ApiTransactionCSP(uint8_t Node, uint8_t Port, void *TxData, int TxSize, void *RxData, int RxSize);
+
+
+/// @brief Get particular type of parameter of CSP device.
+/// Example: **UTRX baud rate get**
+/// @code
+/// CFE_SRL_ApiGetRparamCSP(GS_PARAM_UINT32, CSP_NODE_UTRX, 1, 0x0004, Value);
+/// @endcode
+/// @param Type Parameter type. Look up header `gs/param/rparam.h`
+/// @param Node CSP device node
+/// @param TableId CSP device table ID
+/// @param Addr Parameter address in table
+/// @param Param Pointer of buffer
+/// @return Only `CFE_SUCCESS`(which is `0`) is success
+int32 CFE_SRL_ApiGetRparamCSP(uint8_t Type, uint8_t Node, uint8_t TableId, uint16_t Addr, void *Param);
+
+
+/// @brief Set particluar type of parameter of CSP device
+/// @param Type Parameter type. Look up header `gs/param/rparam.h`
+/// @param Node CSP device node
+/// @param TableId CSP device table ID
+/// @param Addr Parameter address in table
+/// @param Param Pointer of buffer
+/// @return Only `CFE_SUCCESS`(which is `0`) is success
+int32 CFE_SRL_ApiSetRparamCSP(uint8_t Type, uint8_t Node, uint8_t TableId, uint16_t Addr, void *Param);
+
+/// @brief Send a single ping/echo packet.
+/// @param Node address of subsystem.
+/// @param Timeout timeout in ms to wait for reply.
+/// @param Size payload size in bytes.
+/// @param Options connection options, see @ref CSP_CONNECTION_OPTIONS.
+/// @return >0 = echo time in mS on success, otherwise -1 for error.
+int32 CFE_SRL_ApiPingCSP(uint8 Node, uint32 Timeout, unsigned int Size, uint8 Options);
+
+/// @brief Changes the via address of packet whose destination is GS
+/// @param Via Via address. Should be `CSP_NODE_UTRX` or `CSP_NODE_STRX`
+/// @return `CSP_ERR_NONE` for success.
+int32 CFE_SRL_ApiChangeVia(uint8_t Via);
+
+
+/// @brief Print-out the routing table of Host (OBC) 
+void CFE_SRL_ApiPrintRtable(void);
+
+/// @brief Save Rparam command to CSP device
+/// @param Node CSP device node
+/// @param Timeout Timeout of transaction
+/// @param TableId Table ID want to save
+/// @param To Table ID want to save
+/// @return `0` for success. Anything else is error. Refer enum `gs_error_t`
+int32 CFE_SRL_ApiRparamSaveCSP(uint8 Node, uint32 Timeout, uint8 TableId, uint8 To);
+
+
+/**
+ * CSP Listen Task function
+ */
+// csp_socket_t *CFE_SRL_ApiSocketCSP(uint32_t Option);
+// int CFE_SRL_ApiBindCSP(csp_socket_t *Socket, uint8_t Port);
+// int CFE_SRL_ApiListenCSP(csp_socket_t *Socket, size_t BackLog);
+// csp_conn_t *CFE_SRL_ApiAcceptCSP(csp_socket_t *Socket, uint32_t Timeout);
+// csp_packet_t *CFE_SRL_ApiReadCSP(csp_conn_t *Connection, uint32_t Timeout);
+// int CFE_SRL_ApiConndPort(csp_conn_t *Connection);
+// void CFE_SRL_ApiBufferFreeCSP(csp_packet_t *Packet);
+
+#endif /* CFE_SRL_H */

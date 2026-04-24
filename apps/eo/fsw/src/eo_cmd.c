@@ -9,6 +9,35 @@
 #include "fm_msg.h"
 #include "fm_msgdefs.h"
 
+static void EO_SendCmdReport(uint8_t CommandCode, int32 Status, const void *Data, size_t DataSize)
+{
+    EO_ReportTlm_t Report;
+    size_t         CopySize = DataSize;
+
+    memset(&Report, 0, sizeof(Report));
+
+    if (CopySize > sizeof(Report.Payload.ReturnValue))
+    {
+        CopySize = sizeof(Report.Payload.ReturnValue);
+    }
+
+    CFE_MSG_Init(CFE_MSG_PTR(Report.TelemetryHeader), CFE_SB_ValueToMsgId(EO_REPORT_TLM_MID), sizeof(Report));
+
+    Report.Payload.MsgID          = EO_CMD_MID;
+    Report.Payload.CommandCode    = CommandCode;
+    Report.Payload.ReturnType     = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_APP;
+    Report.Payload.ReturnCode     = Status;
+    Report.Payload.ReturnDataSize = (uint16_t)CopySize;
+
+    if (Data != NULL && CopySize > 0)
+    {
+        memcpy(Report.Payload.ReturnValue, Data, CopySize);
+    }
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
+}
+
 /**
  * @deprecated Not used. EO only occupy Beacon
  */
@@ -32,30 +61,20 @@ CFE_Status_t EO_NoopCmd(const EO_NoopCmd_t *Msg) {
 
     EO_Data.CmdCounter ++;
     uint8_t CurrentPhase;
+    const char WAM[] = "I LOVE MOZART";
 
     OS_MutSemTake(EO_Data.EOMutex);
     CurrentPhase = EO_Data.CurrentStep.CurrentPhase;
     OS_MutSemGive(EO_Data.EOMutex);
     
     if (CurrentPhase == EO_TC_WAIT_PHASE) {
-        /* Report the message */
-        char WAM[] = "I LOVE MOZART";
-        EO_ReportTlm_t Report;
-        CFE_MSG_Init(CFE_MSG_PTR(Report.TelemetryHeader), CFE_SB_ValueToMsgId(EO_REPORT_TLM_MID), sizeof(Report));
-
-        Report.Payload.MsgID = EO_CMD_MID;
-        Report.Payload.CommandCode = 0;
-        Report.Payload.ReturnType = RPT_RETTYPE_SUCCESS;
-        Report.Payload.ReturnCode = CFE_SUCCESS;
-        Report.Payload.ReturnDataSize = sizeof(WAM);
-        memcpy(Report.Payload.ReturnValue, WAM, sizeof(WAM));
-
-        CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
-        CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
-
         EO_Data.CurrentStep.IsTC = true;
-        
         EO_PRINTF("%s: I LOVE MOZART\n", __func__);
+        EO_SendCmdReport(EO_NOOP_CC, CFE_SUCCESS, WAM, sizeof(WAM));
+    }
+    else
+    {
+        EO_SendCmdReport(EO_NOOP_CC, CFE_SUCCESS, &CurrentPhase, sizeof(CurrentPhase));
     }
     
     return CFE_SUCCESS;
@@ -64,48 +83,69 @@ CFE_Status_t EO_NoopCmd(const EO_NoopCmd_t *Msg) {
 CFE_Status_t EO_ResetCounterCmd(const EO_ResetCounterCmd_t *Msg) {
     EO_Data.CmdCounter = 0;
     EO_Data.ErrCounter = 0;
+    {
+        uint16_t counters[2] = {EO_Data.CmdCounter, EO_Data.ErrCounter};
+        EO_SendCmdReport(EO_RESET_COUNTER_CC, CFE_SUCCESS, counters, sizeof(counters));
+    }
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t EO_ResetPhaseCmd(const EO_ResetPhaseCmd_t *Msg) {
+    uint8_t CurrentPhase;
+
     OS_MutSemTake(EO_Data.EOMutex);
     EO_Data.CurrentStep.CurrentPhase = EO_SANT_DEPLOY_PHASE;
+    CurrentPhase = EO_Data.CurrentStep.CurrentPhase;
     OS_MutSemGive(EO_Data.EOMutex);
+
+    EO_SendCmdReport(EO_RESET_PHASE_CC, CFE_SUCCESS, &CurrentPhase, sizeof(CurrentPhase));
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t EO_NextPhaseCmd(const EO_NextPhaseCmd_t *Msg) {
+    uint8_t CurrentPhase;
     
     OS_MutSemTake(EO_Data.EOMutex);
     if (EO_Data.CurrentStep.CurrentPhase < EO_DETUMBLE_PHASE)
         EO_Data.CurrentStep.CurrentPhase ++;
+    CurrentPhase = EO_Data.CurrentStep.CurrentPhase;
     OS_MutSemGive(EO_Data.EOMutex);
+
+    EO_SendCmdReport(EO_NEXT_PHASE_CC, CFE_SUCCESS, &CurrentPhase, sizeof(CurrentPhase));
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t EO_FinishPhaseCmd(const EO_FinishPhaseCmd_t *Msg) {
+    uint8_t CurrentPhase;
     
     OS_MutSemTake(EO_Data.EOMutex);
     EO_Data.CurrentStep.CurrentPhase = EO_DONE;
-    OS_MutSemTake(EO_Data.EOMutex);
+    CurrentPhase = EO_Data.CurrentStep.CurrentPhase;
+    OS_MutSemGive(EO_Data.EOMutex);
+
+    EO_SendCmdReport(EO_FINISH_PHASE_CC, CFE_SUCCESS, &CurrentPhase, sizeof(CurrentPhase));
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t EO_ExitChildTaskCmd(const EO_ExitChildTaskCmd_t *Msg) {
+    CFE_Status_t Status;
 
-    CFE_ES_DeleteChildTask(EO_Data.ChildTaskId);
+    Status = CFE_ES_DeleteChildTask(EO_Data.ChildTaskId);
+    EO_SendCmdReport(EO_EXIT_CHILD_TASK_CC, Status, NULL, 0);
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t EO_StartChildTaskCmd(const EO_StartChildTaskCmd_t *Msg) {
+    CFE_Status_t Status;
 
-    CFE_ES_CreateChildTask(&EO_Data.ChildTaskId, EO_CHILD_TASK_NAME, EO_ChildTask, 0, EO_CHILD_TASK_STACK_SIZE,
-                                   EO_CHILD_TASK_PRIORITY, 0);
+    Status = CFE_ES_CreateChildTask(&EO_Data.ChildTaskId, EO_CHILD_TASK_NAME, EO_ChildTask, 0, EO_CHILD_TASK_STACK_SIZE,
+                                    EO_CHILD_TASK_PRIORITY, 0);
+    EO_SendCmdReport(EO_START_CHILD_TASK_CC, Status, NULL, 0);
 
     return CFE_SUCCESS;
 }
@@ -121,6 +161,11 @@ CFE_Status_t EO_AppsPermOffCmd(const EO_AppsPermOffCmd_t *Msg) {
         memcpy(Cmd.Payload.Filename, AppName[i], strlen(AppName[i]) + 1);
         CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
         OS_TaskDelay(500);
+    }
+
+    {
+        uint8_t deleted = 3;
+        EO_SendCmdReport(EO_APPS_PERM_OFF_CC, CFE_SUCCESS, &deleted, sizeof(deleted));
     }
     
     return CFE_SUCCESS;

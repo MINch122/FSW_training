@@ -26,45 +26,14 @@
 */
 #include <string.h>
 
-#include "cfe.h"
-#include "cfe_msgids.h"
 #include "cfe_config.h"
+#include "cfe_msgids.h"
 
-#include "sch_lab_perfids.h"
+#include "sch_lab_app.h"
+#include "sch_lab_dispatch.h"
 #include "sch_lab_version.h"
-#include "sch_lab_mission_cfg.h"
-#include "sch_lab_tbl.h"
 
-/*
-** Global Structure
-*/
-typedef struct
-{
-    CFE_MSG_CommandHeader_t CommandHeader;
-    uint16                  MessageBuffer[SCH_LAB_MAX_ARGS_PER_ENTRY];
-    uint16                  PayloadLength;
-    uint32                  PacketRate;
-    uint32                  Counter;
-} SCH_LAB_StateEntry_t;
-
-typedef struct
-{
-    SCH_LAB_StateEntry_t State[SCH_LAB_MAX_SCHEDULE_ENTRIES];
-    osal_id_t            TimerId;
-    osal_id_t            TimingSem;
-    CFE_TBL_Handle_t     TblHandle;
-    CFE_SB_PipeId_t      CmdPipe;
-} SCH_LAB_GlobalData_t;
-
-/*
-** Global Variables
-*/
 SCH_LAB_GlobalData_t SCH_LAB_Global;
-
-/*
-** Local Function Prototypes
-*/
-CFE_Status_t SCH_LAB_AppInit(void);
 
 /*
 ** AppMain
@@ -74,7 +43,7 @@ void SCH_LAB_AppMain(void)
     int                   i;
     uint32                SCH_OneHzPktsRcvd = 0;
     int32                 OsStatus;
-    CFE_Status_t          Status;
+    CFE_Status_t          Status = CFE_SUCCESS;
     uint32                RunStatus = CFE_ES_RunStatus_APP_RUN;
     SCH_LAB_StateEntry_t *LocalStateEntry;
     CFE_SB_Buffer_t *     SBBufPtr;
@@ -97,8 +66,16 @@ void SCH_LAB_AppMain(void)
         OsStatus = OS_CountSemTake(SCH_LAB_Global.TimingSem);
         if (OsStatus == OS_SUCCESS)
         {
-            /* check for arrival of the 1Hz - this should sync counts (TBD) */
             Status = CFE_SB_ReceiveBuffer(&SBBufPtr, SCH_LAB_Global.CmdPipe, CFE_SB_POLL);
+            while (Status == CFE_SUCCESS)
+            {
+                if (SCH_LAB_TaskPipe(SBBufPtr))
+                {
+                    SCH_OneHzPktsRcvd++;
+                }
+
+                Status = CFE_SB_ReceiveBuffer(&SBBufPtr, SCH_LAB_Global.CmdPipe, CFE_SB_POLL);
+            }
         }
         else
         {
@@ -106,12 +83,6 @@ void SCH_LAB_AppMain(void)
         }
 
         CFE_ES_PerfLogEntry(SCH_LAB_MAIN_TASK_PERF_ID);
-
-        if (Status == CFE_SUCCESS)
-        {
-            SCH_OneHzPktsRcvd++;
-        }
-
         if (OsStatus == OS_SUCCESS && SCH_OneHzPktsRcvd > 0)
         {
             /*
@@ -121,7 +92,7 @@ void SCH_LAB_AppMain(void)
 
             for (i = 0; i < SCH_LAB_MAX_SCHEDULE_ENTRIES; i++)
             {
-                if (LocalStateEntry->PacketRate != 0)
+                if (LocalStateEntry->Enabled && LocalStateEntry->PacketRate != 0)
                 {
                     ++LocalStateEntry->Counter;
                     if (LocalStateEntry->Counter >= LocalStateEntry->PacketRate)
@@ -245,6 +216,7 @@ CFE_Status_t SCH_LAB_AppInit(void)
 
             LocalStateEntry->PacketRate    = ConfigEntry->PacketRate;
             LocalStateEntry->PayloadLength = ConfigEntry->PayloadLength;
+            LocalStateEntry->Enabled       = true;
 
             for (x = 0; x < SCH_LAB_MAX_ARGS_PER_ENTRY; x++)
             {
@@ -291,6 +263,12 @@ CFE_Status_t SCH_LAB_AppInit(void)
     if (Status != CFE_SUCCESS)
     {
         OS_printf("SCH Error subscribing to 1hz!\n");
+    }
+
+    Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(SCH_LAB_CMD_MID), SCH_LAB_Global.CmdPipe);
+    if (Status != CFE_SUCCESS)
+    {
+        OS_printf("SCH Error subscribing to ground command!\n");
     }
 
     /* Set timer period */

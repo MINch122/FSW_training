@@ -1,20 +1,37 @@
 import sys
 import json
+from pathlib import Path
 from genfunction import *
 
+
+def get_defs_dir():
+    repo_root = Path(__file__).resolve().parents[2]
+    defs_dirs = sorted(repo_root.glob("*_defs"))
+    if len(defs_dirs) == 1:
+        return defs_dirs[0]
+
+    for name in ("uelysis_defs", "base5th_defs"):
+        candidate = repo_root / name
+        if candidate.exists():
+            return candidate
+
+    raise FileNotFoundError("Unable to locate mission defs directory")
+
+
+defs_dir = get_defs_dir()
 
 cfg = Get_Serial_module_cfg("../../cfe/modules/srl/config/default_cfe_srl_interface_cfg.h")
 max_handle = int(cfg["CFE_SRL_GLOBAL_HANDLE_NUM"])
 max_csp = int(cfg["CFE_SRL_CSP_MAX_DEVICE_NUM"])
 
-with open('../../base5th_defs/Interface_config.json') as fp:
+with open(defs_dir / 'Interface_config.json') as fp:
     config = json.load(fp)
 interfaces = config['interfaces']    
 namearr = Get_general_srl_namearr(interfaces)
 if (len(namearr) > max_handle):
     raise Exception(f"General Device is too many. Max: {max_handle} || Input: {len(namearr)}.\nEnlarge the Maximum number in the srl interface config header.")
 
-with open("../../base5th_defs/csp_config.json") as fp:
+with open(defs_dir / "csp_config.json") as fp:
     cspcfg = json.load(fp)
 csp_host = cspcfg['host'] # host config -> dict
 csp_node = cspcfg['external'] # extgernal gomspace config -> 'list' of dict
@@ -205,4 +222,3 @@ with open('../../cfe/modules/srl/fsw/src/cfe_srl_init.c', 'w') as f:
     f.write("}\n")
 
 print("Code generation Successfully done.")
-

@@ -62,9 +62,17 @@
 #include "utrx_msgids.h"
 #include "utrx_msg.h"
 
-
 #include "uant_app_msgids.h"
 #include "uant_app_msg.h"
+
+#include "payuel_cam_msgids.h"
+#include "payuel_cam_msg.h"
+
+#include "lgbat_msgids.h"
+#include "lgbat_msg.h"
+
+#include "payuel_obc_msgids.h"
+#include "payuel_obc_msg.h"
 /* End of COMS Header */
 
 /*********************
@@ -103,9 +111,9 @@
 #define BCN_OFFSET_6            BCN_OFFSET_5 + sizeof(EPS_BcnTlm_Full_Payload_t) 
 #define BCN_OFFSET_7            BCN_OFFSET_6 + sizeof(SP_BcnTlm_Payload_t)     // not
 #define BCN_OFFSET_8            BCN_OFFSET_7 + sizeof(ADCS_BcnTlm_Payload_t)   
-#define BCN_OFFSET_9            BCN_OFFSET_8
-#define BCN_OFFSET_10           BCN_OFFSET_9
-#define BCN_OFFSET_11           BCN_OFFSET_10
+#define BCN_OFFSET_9            BCN_OFFSET_8 + sizeof(PAYUEL_CAM_Bcn_Payload_t)
+#define BCN_OFFSET_10           BCN_OFFSET_9 + sizeof(LGBAT_BcnTlm_Payload_t)
+#define BCN_OFFSET_11           BCN_OFFSET_10 + sizeof(PAYUEL_OBC_ObcBcn_Payload_t)
 #define BCN_OFFSET_12           BCN_OFFSET_11
 #define BCN_OFFSET_13           BCN_OFFSET_12
 
@@ -183,25 +191,25 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
     },
 
     {
-        CFE_SB_MSGID_RESERVED,
+        CFE_SB_MSGID_WRAP_VALUE(PAYUEL_CAM_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        0,
-        0,
+        BCN_OFFSET_8,
+        sizeof(PAYUEL_CAM_Bcn_Payload_t),
     },
     {
-        CFE_SB_MSGID_RESERVED,
+        CFE_SB_MSGID_WRAP_VALUE(LGBAT_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        0,
-        0,
+        BCN_OFFSET_9,
+        sizeof(LGBAT_BcnTlm_Payload_t),
     },
     {
-        CFE_SB_MSGID_RESERVED,
+        CFE_SB_MSGID_WRAP_VALUE(PAYUEL_OBC_OBC_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        0, // Revise to BCN_OFFSET_11
-        0,
+        BCN_OFFSET_10,
+        sizeof(PAYUEL_OBC_ObcBcn_Payload_t),
     },
     /*  15 : PAYUELC  - @deprecated  */
     {

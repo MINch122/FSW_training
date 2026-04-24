@@ -1,0 +1,120 @@
+{
+    "host" :
+    {
+        "ready": true,
+        "address": 3,
+        "hostname": "OBC",
+        "model": "COSMIC",
+        "revision": "mozart",
+        "conn_max": 10,
+        "conn_queue_length": 10,
+        "fifo_length": 25,
+        "port_max_bind": 58,
+        "rdp_max_window": 20,
+        "buffers": 10,
+        "buffer_data_size": 512,
+        "conn_dfl_so": "CSP_O_NONE"
+    },
+    "external" : [
+        {
+            "name": "EPS_PMU",
+            "node": 1,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_NONE"
+        },
+        {
+            "name": "EPS_ACU1",
+            "node": 2,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_NONE"
+        },
+        {
+            "name": "ADCS",
+            "node": 4,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_NONE"
+        },
+        {
+            "name": "EPS_ACU2",
+            "node": 6,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_NONE"
+        },
+        {
+            "name": "EPS_PDU",
+            "node": 10,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_NONE"
+        },
+        {
+            "name": "UTRX",
+            "node": 5,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_CRC32"
+        },
+        {
+            "name": "BATT",
+            "node": 7,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_NONE"
+        },
+        {
+            "name": "GSTRX",
+            "node": 20,
+            "interface": "CAN",
+            "via": "UTRX",
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_CRC32"
+        },
+        {
+            "name": "GS_KISS",
+            "node": 8,
+            "interface": "CAN",
+            "via": "UTRX",
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_CRC32"
+        },
+        {
+            "name": "TEST",
+            "node": 9,
+            "interface": "CAN",
+            "via": null,
+
+            "priority": 2,
+            "timeout": 1,
+            "option": "CSP_O_CRC32"
+        }
+    ]
+}

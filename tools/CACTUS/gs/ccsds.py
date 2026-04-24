@@ -16,7 +16,7 @@ Command secondary header (2 bytes):
 
 import struct
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 
 @dataclass
@@ -43,6 +43,41 @@ def parse_primary_header(data: bytes) -> Optional[PrimaryHeader]:
         seq_count=seq_word & 0x3FFF,
         data_length=data_len,
     )
+
+
+def get_packet_total_size(data: bytes) -> Optional[int]:
+    """Return total CCSDS packet size in bytes, or None if header is unavailable."""
+    hdr = parse_primary_header(data)
+    if hdr is None:
+        return None
+    return int(hdr.data_length) + 7
+
+
+def split_ccsds_packets(data: bytes) -> List[bytes]:
+    """Split a UDP payload into one or more CCSDS packets when possible.
+
+    TO_LAB usually emits one CCSDS packet per datagram, but this parser also
+    handles concatenated packets and preserves any malformed/truncated tail as a
+    final raw chunk so the GUI can still display it.
+    """
+    packets: List[bytes] = []
+    offset = 0
+
+    while offset < len(data):
+        total_size = get_packet_total_size(data[offset:])
+        if total_size is None or total_size < 7:
+            packets.append(data[offset:])
+            break
+
+        end = offset + total_size
+        if end > len(data):
+            packets.append(data[offset:])
+            break
+
+        packets.append(data[offset:end])
+        offset = end
+
+    return packets
 
 
 def _compute_checksum(fc: int, payload: bytes) -> int:

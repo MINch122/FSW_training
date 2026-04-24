@@ -1,0 +1,6 @@
+#ifndef SCH_LAB_TOPICIDS_H
+#define SCH_LAB_TOPICIDS_H
+
+#define CFE_MISSION_SCH_LAB_CMD_TOPICID 0xA3
+
+#endif

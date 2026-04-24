@@ -1,0 +1,22 @@
+[submodule "apps/sample_lib"]
+	path = libs/sample_lib
+	url = https://github.com/nasa/sample_lib.git
+  branch = main
+[submodule "tools/elf2cfetbl"]
+	path = tools/elf2cfetbl
+	url = https://github.com/nasa/elf2cfetbl.git
+  branch = main
+[submodule "tools/tblCRCTool"]
+	path = tools/tblCRCTool
+	url = https://github.com/nasa/tblCRCTool.git
+  branch = main
+[submodule "submodules/libgscsp"]
+	path = submodules/libgscsp
+	url = https://dssacl.yonsei.ac.kr/git/DSS/libgs
+	branch = V2.0
+[submodule "submodules/toolchain"]
+	path = submodules/toolchain
+	url = https://dssacl.yonsei.ac.kr/git/DSS/OBC_Toolchain
+[submodule "submodules/libgpiod"]
+	path = submodules/libgpiod
+	url = https://dssacl.yonsei.ac.kr/git/DSS/libgpiod_1.6.x

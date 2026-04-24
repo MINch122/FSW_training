@@ -1,0 +1,180 @@
+{
+  "app": "PAYUEL_LGPM",
+  "description": "",
+  "commands": [
+    {
+      "name": "PAYUEL_LGPM_NOOP_CC",
+      "mid": "0x1896",
+      "fc": 0,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_RESET_COUNTERS_CC",
+      "mid": "0x1896",
+      "fc": 1,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_MCU_ALIVE_CHECK_CC",
+      "mid": "0x1896",
+      "fc": 2,
+      "description": "",
+      "params": [
+        {
+          "name": "UTC_TIME",
+          "type": "uint32",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "name": "PAYUEL_LGPM_3V3_PWR_ON_CC",
+      "mid": "0x1896",
+      "fc": 3,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_3V3_PWR_OFF_CC",
+      "mid": "0x1896",
+      "fc": 4,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_MAIN_BOOST_SW_ON_CC",
+      "mid": "0x1896",
+      "fc": 5,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_MAIN_BOOST_SW_OFF_CC",
+      "mid": "0x1896",
+      "fc": 6,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_SUB_BOOST_SW_ON_CC",
+      "mid": "0x1896",
+      "fc": 7,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_SUB_BOOST_SW_OFF_CC",
+      "mid": "0x1896",
+      "fc": 8,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_V28_MAIN_ON_CC",
+      "mid": "0x1896",
+      "fc": 9,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_V28_MAIN_OFF_CC",
+      "mid": "0x1896",
+      "fc": 10,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_V28_SUB_OFF_CC",
+      "mid": "0x1896",
+      "fc": 12,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_V12_MAIN_ON_CC",
+      "mid": "0x1896",
+      "fc": 13,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_V12_MAIN_OFF_CC",
+      "mid": "0x1896",
+      "fc": 14,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_PWR_SENSE_INFO_CC",
+      "mid": "0x1896",
+      "fc": 15,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_PWR_SEQ_ON_CC",
+      "mid": "0x1896",
+      "fc": 16,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_PWR_SEQ_OFF_CC",
+      "mid": "0x1896",
+      "fc": 17,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_RWA_CONTROL_CC",
+      "mid": "0x1896",
+      "fc": 18,
+      "description": "",
+      "params": [
+        {
+          "name": "TargetSpeed_RPM",
+          "type": "int16",
+          "description": ""
+        },
+        {
+          "name": "TargetAcc_RPM",
+          "type": "int16",
+          "description": ""
+        },
+        {
+          "name": "Operating_Time",
+          "type": "int16",
+          "description": ""
+        },
+        {
+          "name": "sub_index",
+          "type": "uint8",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "name": "PAYUEL_LGPM_RWA_PWR_ON_CC",
+      "mid": "0x1896",
+      "fc": 19,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_RWA_PWR_OFF_CC",
+      "mid": "0x1896",
+      "fc": 20,
+      "description": "",
+      "params": []
+    },
+    {
+      "name": "PAYUEL_LGPM_RWA_SENSE_INFO_CC",
+      "mid": "0x1896",
+      "fc": 21,
+      "description": "",
+      "params": []
+    }
+  ]
+}

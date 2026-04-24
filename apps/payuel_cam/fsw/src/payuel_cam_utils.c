@@ -1,0 +1,717 @@
+#include "osapi.h"
+#include "payuel_cam.h"
+#include "payuel_cam_eventids.h"
+#include "payuel_cam_tbl.h"
+#include "payuel_cam_utils.h"
+#include "payuel_cam_mission_cfg.h"
+
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
+
+/*
+ * Checksum helpers used by the camera payload protocol.
+ * CRC16 protects short command/response frames, and CRC32 protects
+ * larger image chunk payloads and downloaded files.
+ */
+static uint16_t PAYUEL_CAM_Crc16(const uint8_t *Data, size_t Length)
+{
+    uint16_t Crc = 0xFFFF;
+    size_t   Index;
+    int      Bit;
+
+    for (Index = 0; Index < Length; ++Index)
+    {
+        /* Mix the next byte into the upper half of the register first. */
+        Crc ^= (uint16_t)Data[Index] << 8;
+        for (Bit = 0; Bit < 8; ++Bit)
+        {
+            /* Apply the CCITT polynomial one bit at a time. */
+            if ((Crc & 0x8000U) != 0U)
+            {
+                Crc = (uint16_t)((Crc << 1) ^ 0x1021U);
+            }
+            else
+            {
+                Crc <<= 1;
+            }
+        }
+    }
+
+    return Crc;
+}
+
+static uint32_t PAYUEL_CAM_Crc32Update(uint32_t Crc, const uint8_t *Data, size_t Length)
+{
+    size_t   Index;
+    int      Bit;
+
+    for (Index = 0; Index < Length; ++Index)
+    {
+        /* CRC32 is updated incrementally so callers can feed one buffer at a time. */
+        Crc ^= Data[Index];
+        for (Bit = 0; Bit < 8; ++Bit)
+        {
+            /* Use the reflected CRC32 polynomial expected by the payload/file format. */
+            if ((Crc & 1U) != 0U)
+            {
+                Crc = (Crc >> 1) ^ 0xEDB88320u;
+            }
+            else
+            {
+                Crc >>= 1;
+            }
+        }
+    }
+
+    return Crc;
+}
+
+static uint32_t PAYUEL_CAM_Crc32(const uint8_t *Data, size_t Length)
+{
+    /* Convenience wrapper for one-shot CRC32 calculations. */
+    return PAYUEL_CAM_Crc32Update(0xFFFFFFFFu, Data, Length) ^ 0xFFFFFFFFu;
+}
+
+/* These helpers translate between raw wire bytes and host integer types. */
+uint16_t PAYUEL_CAM_ReadU16BE(const uint8_t *Data)
+{
+    return (uint16_t)(((uint16_t)Data[0] << 8) | (uint16_t)Data[1]);
+}
+
+int16_t PAYUEL_CAM_ReadI16BE(const uint8_t *Data)
+{
+    return (int16_t)PAYUEL_CAM_ReadU16BE(Data);
+}
+
+uint32_t PAYUEL_CAM_ReadU32BE(const uint8_t *Data)
+{
+    return ((uint32_t)Data[0] << 24) | ((uint32_t)Data[1] << 16) |
+           ((uint32_t)Data[2] << 8)  |  (uint32_t)Data[3];
+}
+
+void PAYUEL_CAM_WriteU16BE(uint8_t *Data, uint16_t Value)
+{
+    Data[0] = (uint8_t)(Value >> 8);
+    Data[1] = (uint8_t)(Value & 0xFFU);
+}
+
+void PAYUEL_CAM_WriteU32BE(uint8_t *Data, uint32_t Value)
+{
+    Data[0] = (uint8_t)(Value >> 24);
+    Data[1] = (uint8_t)(Value >> 16);
+    Data[2] = (uint8_t)(Value >> 8);
+    Data[3] = (uint8_t)(Value & 0xFFU);
+}
+
+static bool PAYUEL_CAM_VerifyChunkPadding(const uint8_t *Data, size_t ValidDataLength)
+{
+    size_t Index;
+
+    /* A full chunk has no unused bytes, so there is no padding area to inspect. */
+    if (ValidDataLength >= PAYUEL_CAM_CHUNK_DATA_SIZE)
+    {
+        return true;
+    }
+
+    /*
+     * Chunk responses are fixed-size frames.
+     * Bytes after the valid payload region should stay zeroed so stale data
+     * does not masquerade as real image contents.
+     */
+    for (Index = 5U + ValidDataLength; Index < 5U + PAYUEL_CAM_CHUNK_DATA_SIZE; ++Index)
+    {
+        if (Data[Index] != 0U)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool PAYUEL_CAM_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
+{
+    bool              Result       = true;
+    size_t            ActualLength = 0;
+    CFE_SB_MsgId_t    MsgId        = CFE_SB_INVALID_MSG_ID;
+    CFE_MSG_FcnCode_t FcnCode      = 0;
+
+    /* cFS command handlers validate the incoming packet size before parsing fields. */
+    CFE_MSG_GetSize(MsgPtr, &ActualLength);
+
+    if (ExpectedLength != ActualLength)
+    {
+        /* Include ID and function code so the bad sender can be identified quickly. */
+        CFE_MSG_GetMsgId(MsgPtr, &MsgId);
+        CFE_MSG_GetFcnCode(MsgPtr, &FcnCode);
+
+        CFE_EVS_SendEvent(PAYUEL_CAM_CMD_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "Invalid Msg length: ID=0x%X CC=%u Len=%u Expected=%u",
+                          (unsigned int)CFE_SB_MsgIdToValue(MsgId),
+                          (unsigned int)FcnCode,
+                          (unsigned int)ActualLength,
+                          (unsigned int)ExpectedLength);
+
+        Result = false;
+        PAYUEL_CAM_Data.ErrCounter++;
+    }
+
+    return Result;
+}
+
+void PAYUEL_CAM_AppendCrc16(uint8_t *Buf, size_t PayloadLength)
+{
+    uint16_t Crc = PAYUEL_CAM_Crc16(Buf, PayloadLength);
+
+    /* The CRC is appended immediately after the payload bytes. */
+    PAYUEL_CAM_WriteU16BE(&Buf[PayloadLength], Crc);
+}
+
+bool PAYUEL_CAM_VerifyCrc16(const uint8_t *Data, size_t TotalLength)
+{
+    size_t   PayloadLength;
+    uint16_t Computed;
+    uint16_t Received;
+
+    if (TotalLength < 3U)
+    {
+        /* Need at least 1 byte of payload and 2 bytes of CRC. */
+        return false;
+    }
+
+    /* Split the buffer into [payload][crc16] and compare both values. */
+    PayloadLength = TotalLength - 2U;
+    Computed      = PAYUEL_CAM_Crc16(Data, PayloadLength);
+    Received      = PAYUEL_CAM_ReadU16BE(&Data[PayloadLength]);
+
+    return (Computed == Received);
+}
+
+bool PAYUEL_CAM_VerifyChunkCrc32(const uint8_t *Data, size_t ValidDataLength)
+{
+    uint32_t Computed;
+    uint32_t Received = PAYUEL_CAM_ReadU32BE(&Data[252]);
+
+    /*
+     * The interface note for 0x45 defines the CRC32 range as:
+     *   cmd + slot + img_no + chunk_no(2B BE) + valid data
+     * Padding bytes in the fixed 256-byte response are excluded.
+     */
+    Computed = PAYUEL_CAM_Crc32(Data, 5U + ValidDataLength);
+
+    return (Computed == Received);
+}
+
+static bool PAYUEL_CAM_IsPayloadErrorPacket(uint8_t ExpectedCmd, const uint8_t *Data, int32 Length)
+{
+    return (Data != NULL &&
+            Length == 4 &&
+            Data[0] == ExpectedCmd &&
+            PAYUEL_CAM_VerifyCrc16(Data, 4U));
+}
+
+void PAYUEL_CAM_ClearImageMetaCache(void)
+{
+    /* Reset all cached metadata so the next download starts from known state. */
+    PAYUEL_CAM_Data.ImageMetaSlot      = 0U;
+    PAYUEL_CAM_Data.ImageMetaNumber    = 0U;
+    PAYUEL_CAM_Data.ImageTotalChunks   = 0U;
+    PAYUEL_CAM_Data.ImageLastChunkSize = 0U;
+    PAYUEL_CAM_Data.ImageFileCrc32     = 0U;
+}
+
+void PAYUEL_CAM_ReportCmdStatus(CFE_SB_MsgId_t MsgId, uint16 CommandCode, int32 Status,
+                                const uint8_t *Data, uint16 DataLength, uint8 ReturnType)
+{
+    RPT_Report_t Report = (RPT_Report_t){0};
+    int32        OsStatus;
+    bool         ReportLocked = false;
+
+    /* The RPT buffer is stored in app-global state, so concurrent writers must serialize access. */
+    OsStatus = OS_MutSemTake(PAYUEL_CAM_Data.ReportMutex);
+    if (OsStatus != OS_SUCCESS)
+    {
+        CFE_EVS_SendEvent(PAYUEL_CAM_MUTEX_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_CAM: Report mutex take failed, RC=%ld", (long)OsStatus);
+        PAYUEL_CAM_Data.ErrCounter++;
+    }
+    else
+    {
+        ReportLocked = true;
+    }
+
+    /* Copy the command context into the report packet seen by the rest of the system. */
+    Report.MsgID       = CFE_SB_MsgIdToValue(MsgId);
+    Report.CommandCode = CommandCode;
+    Report.ReturnType  = ReturnType;
+    Report.ReturnCode  = Status;
+
+    if (Data != NULL && DataLength > 0U)
+    {
+        /* Clamp the returned payload so we never overrun the fixed telemetry field. */
+        uint16 CopySize = (DataLength <= sizeof(Report.ReturnValue))
+                              ? DataLength
+                              : (uint16)sizeof(Report.ReturnValue);
+
+        Report.ReturnDataSize = CopySize;
+        memcpy(Report.ReturnValue, Data, CopySize);
+    }
+
+    /* Timestamp and publish once the report body is fully populated. */
+    PAYUEL_CAM_Data.rpt.Payload = Report;
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(PAYUEL_CAM_Data.rpt.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(PAYUEL_CAM_Data.rpt.TelemetryHeader), true);
+
+    if (ReportLocked)
+    {
+        OsStatus = OS_MutSemGive(PAYUEL_CAM_Data.ReportMutex);
+        if (OsStatus != OS_SUCCESS)
+        {
+            CFE_EVS_SendEvent(PAYUEL_CAM_MUTEX_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "PAYUEL_CAM: Report mutex give failed, RC=%ld", (long)OsStatus);
+            PAYUEL_CAM_Data.ErrCounter++;
+        }
+    }
+}
+
+int32 PAYUEL_CAM_DownloadBusyError(const char *CmdName)
+{
+    /* Download commands share one background worker, so reject overlapping requests. */
+    CFE_EVS_SendEvent(PAYUEL_CAM_CHILD_BUSY_ERR_EID, CFE_EVS_EventType_ERROR,
+                      "PAYUEL_CAM: %s rejected while download task is busy", CmdName);
+    PAYUEL_CAM_Data.ErrCounter++;
+    return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+}
+
+int32 PAYUEL_CAM_LockHardware(const char *Context)
+{
+    int32 OsStatus;
+
+    /* One hardware lock keeps normal commands and the child download worker from interleaving CSP/CAN transfers. */
+    OsStatus = OS_MutSemTake(PAYUEL_CAM_Data.HardwareMutex);
+    if (OsStatus != OS_SUCCESS)
+    {
+        CFE_EVS_SendEvent(PAYUEL_CAM_MUTEX_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_CAM: %s hardware mutex take failed, RC=%ld",
+                          Context, (long)OsStatus);
+        PAYUEL_CAM_Data.ErrCounter++;
+    }
+
+    return OsStatus;
+}
+
+void PAYUEL_CAM_UnlockHardware(const char *Context)
+{
+    int32 OsStatus;
+
+    /* Release the shared payload bus after the current request/response sequence fully finishes. */
+    OsStatus = OS_MutSemGive(PAYUEL_CAM_Data.HardwareMutex);
+    if (OsStatus != OS_SUCCESS)
+    {
+        CFE_EVS_SendEvent(PAYUEL_CAM_MUTEX_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_CAM: %s hardware mutex give failed, RC=%ld",
+                          Context, (long)OsStatus);
+        PAYUEL_CAM_Data.ErrCounter++;
+    }
+}
+
+int32 PAYUEL_CAM_RspLenError(const char *CmdName, int32 ActualLength, size_t ExpectedLength)
+{
+    CFE_EVS_SendEvent(PAYUEL_CAM_RX_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
+                      "PAYUEL_CAM: %s RX length mismatch (actual=%ld expected=%u)",
+                      CmdName, (long)ActualLength, (unsigned int)ExpectedLength);
+    PAYUEL_CAM_Data.ErrCounter++;
+    return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+}
+
+int32 PAYUEL_CAM_HwStatusError(const char *CmdName, uint8_t HwStatus)
+{
+    CFE_EVS_SendEvent(PAYUEL_CAM_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
+                      "PAYUEL_CAM: %s payload/HW status error 0x%02X", CmdName, HwStatus);
+    PAYUEL_CAM_Data.ErrCounter++;
+    return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+}
+
+CFE_Status_t PAYUEL_CAM_ValidateResponse(const char *CmdName, uint8_t ExpectedCmd, const uint8_t *RxData,
+                                         int32 RspLen, size_t ExpectedLength, uint8_t *ReturnTypeOut,
+                                         uint8_t *PayloadErrorPacketOut)
+{
+    CFE_Status_t Status = CFE_SUCCESS;
+
+    if (PayloadErrorPacketOut != NULL)
+    {
+        memset(PayloadErrorPacketOut, 0, 4U);
+    }
+
+    if (RspLen <= 0)
+    {
+        Status = (RspLen == 0) ? CFE_STATUS_EXTERNAL_RESOURCE_FAIL : RspLen;
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_CFE;
+        }
+        CFE_EVS_SendEvent(PAYUEL_CAM_TX_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_CAM: %s CSP error, status=0x%08X", CmdName, Status);
+        PAYUEL_CAM_Data.ErrCounter++;
+        return Status;
+    }
+
+    if (ExpectedLength > 4U && PAYUEL_CAM_IsPayloadErrorPacket(ExpectedCmd, RxData, RspLen))
+    {
+        if (PayloadErrorPacketOut != NULL)
+        {
+            memcpy(PayloadErrorPacketOut, RxData, 4U);
+        }
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        return PAYUEL_CAM_HwStatusError(CmdName, RxData[1]);
+    }
+
+    if ((size_t)RspLen != ExpectedLength)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        return PAYUEL_CAM_RspLenError(CmdName, RspLen, ExpectedLength);
+    }
+
+    if (RxData[0] != ExpectedCmd || !PAYUEL_CAM_VerifyCrc16(RxData, (size_t)RspLen))
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        CFE_EVS_SendEvent(PAYUEL_CAM_CRC_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_CAM: %s RX CRC/CMD mismatch", CmdName);
+        PAYUEL_CAM_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    return CFE_SUCCESS;
+}
+
+size_t PAYUEL_CAM_GetChunkDataLenFromMeta(const PAYUEL_CAM_ImageMetaInfo_t *Meta, uint16_t ChunkNumber)
+{
+    /*
+     * Most chunks are fixed-size.
+     * Only the last chunk may be shorter, and that length comes from metadata.
+     */
+    if (Meta != NULL &&
+        Meta->TotalChunks > 0U &&
+        (uint32_t)ChunkNumber + 1U == Meta->TotalChunks &&
+        Meta->LastChunkSize > 0U &&
+        Meta->LastChunkSize <= PAYUEL_CAM_CHUNK_DATA_SIZE)
+    {
+        return Meta->LastChunkSize;
+    }
+
+    return PAYUEL_CAM_CHUNK_DATA_SIZE;
+}
+
+bool PAYUEL_CAM_GetCachedImageMeta(uint8_t ImageSlot, uint8_t ImageNumber,
+                                   PAYUEL_CAM_ImageMetaInfo_t *MetaOut)
+{
+    /* Reuse metadata from a previous request when it matches the same image selection. */
+    if (PAYUEL_CAM_Data.ImageTotalChunks > 0U &&
+        PAYUEL_CAM_Data.ImageMetaSlot == ImageSlot &&
+        PAYUEL_CAM_Data.ImageMetaNumber == ImageNumber &&
+        PAYUEL_CAM_Data.ImageLastChunkSize > 0U &&
+        PAYUEL_CAM_Data.ImageLastChunkSize <= PAYUEL_CAM_CHUNK_DATA_SIZE)
+    {
+        if (MetaOut != NULL)
+        {
+            MetaOut->ImageSlot     = PAYUEL_CAM_Data.ImageMetaSlot;
+            MetaOut->ImageNumber   = PAYUEL_CAM_Data.ImageMetaNumber;
+            MetaOut->TotalChunks   = PAYUEL_CAM_Data.ImageTotalChunks;
+            MetaOut->LastChunkSize = PAYUEL_CAM_Data.ImageLastChunkSize;
+            MetaOut->FileCrc32     = PAYUEL_CAM_Data.ImageFileCrc32;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+CFE_Status_t PAYUEL_CAM_RequestImageMeta(uint8_t ImageSlot, uint8_t ImageNumber,
+                                         PAYUEL_CAM_ImageMetaInfo_t *MetaOut, uint8_t *ReturnTypeOut,
+                                         uint8_t *PayloadErrorPacketOut)
+{
+    uint8_t                 TxData[5];
+    uint8_t                 RxData[12] = {0};
+    int32                   rsp_len;
+    CFE_Status_t            status = CFE_SUCCESS;
+    PAYUEL_CAM_ImageMetaInfo_t Meta = {0};
+
+    if (ReturnTypeOut != NULL)
+    {
+        /* Assume success first, then downgrade if any stage fails. */
+        *ReturnTypeOut = RPT_RETTYPE_SUCCESS;
+    }
+
+    /* Request format: [cmd][slot][image][crc16]. */
+    TxData[0] = PAYUEL_CAM_ID_DOWNLOAD_META;
+    TxData[1] = ImageSlot;
+    TxData[2] = ImageNumber;
+    PAYUEL_CAM_AppendCrc16(TxData, 3);
+
+    /* Send the request and wait for the fixed-length metadata response frame. */
+    rsp_len = CFE_SRL_ApiTransactionCSP(
+        PAYUEL_CAM_NODE, PAYUEL_CAM_PORT,
+        TxData, sizeof(TxData),
+        RxData, sizeof(RxData));
+
+    status = PAYUEL_CAM_ValidateResponse("DownloadMeta", PAYUEL_CAM_ID_DOWNLOAD_META,
+                                         RxData, rsp_len, sizeof(RxData),
+                                         ReturnTypeOut, PayloadErrorPacketOut);
+    if (status == CFE_SUCCESS)
+    {
+        /* Decode the device response into a typed struct before validating it. */
+        Meta.ImageSlot     = RxData[1];
+        Meta.ImageNumber   = RxData[2];
+        Meta.TotalChunks   = PAYUEL_CAM_ReadU16BE(&RxData[3]);
+        Meta.LastChunkSize = RxData[5];
+        Meta.FileCrc32     = PAYUEL_CAM_ReadU32BE(&RxData[6]);
+
+        if (Meta.ImageSlot != ImageSlot || Meta.ImageNumber != ImageNumber)
+        {
+            /* The returned metadata must describe the same image we asked for. */
+            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+            if (ReturnTypeOut != NULL)
+            {
+                *ReturnTypeOut = RPT_RETTYPE_HW;
+            }
+            CFE_EVS_SendEvent(PAYUEL_CAM_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "PAYUEL_CAM: DownloadMeta response mismatch req=(%u,%u) rsp=(%u,%u)",
+                              ImageSlot, ImageNumber, Meta.ImageSlot, Meta.ImageNumber);
+            PAYUEL_CAM_Data.ErrCounter++;
+        }
+        else if (Meta.TotalChunks == 0U || Meta.LastChunkSize == 0U || Meta.LastChunkSize > PAYUEL_CAM_CHUNK_DATA_SIZE)
+        {
+            /* Reject obviously broken metadata before caching it for later chunk requests. */
+            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+            if (ReturnTypeOut != NULL)
+            {
+                *ReturnTypeOut = RPT_RETTYPE_HW;
+            }
+            CFE_EVS_SendEvent(PAYUEL_CAM_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "PAYUEL_CAM: DownloadMeta invalid chunk info total=%u last=%u",
+                              Meta.TotalChunks, Meta.LastChunkSize);
+            PAYUEL_CAM_Data.ErrCounter++;
+        }
+        else
+        {
+            /* Cache the validated metadata so repeated chunk reads do not re-query the device. */
+            PAYUEL_CAM_Data.ImageMetaSlot      = Meta.ImageSlot;
+            PAYUEL_CAM_Data.ImageMetaNumber    = Meta.ImageNumber;
+            PAYUEL_CAM_Data.ImageTotalChunks   = Meta.TotalChunks;
+            PAYUEL_CAM_Data.ImageLastChunkSize = Meta.LastChunkSize;
+            PAYUEL_CAM_Data.ImageFileCrc32     = Meta.FileCrc32;
+
+            if (MetaOut != NULL)
+            {
+                /* Return the parsed metadata to the caller as well. */
+                *MetaOut = Meta;
+            }
+        }
+    }
+
+    return status;
+}
+
+CFE_Status_t PAYUEL_CAM_RequestImageChunk(uint8_t ImageSlot, uint8_t ImageNumber, uint16_t ChunkNumber,
+                                          size_t ValidDataLength, uint8_t *ChunkDataOut, uint8_t *ReturnTypeOut,
+                                          uint8_t *PayloadErrorPacketOut)
+{
+    uint8_t      TxData[7];
+    uint8_t      RxData[PAYUEL_CAM_CHUNK_RESPONSE_SIZE] = {0};
+    int32        rsp_len;
+    CFE_Status_t status = CFE_SUCCESS;
+    uint16_t     rsp_chunk_num;
+
+    if (ReturnTypeOut != NULL)
+    {
+        /* Default to success and only change this when we know the failure source. */
+        *ReturnTypeOut = RPT_RETTYPE_SUCCESS;
+    }
+
+    if (ValidDataLength == 0U || ValidDataLength > PAYUEL_CAM_CHUNK_DATA_SIZE)
+    {
+        /* Callers must already know the expected valid byte count for this chunk. */
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_APP;
+        }
+        CFE_EVS_SendEvent(PAYUEL_CAM_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_CAM: ChunkDownload invalid data length %u",
+                          (unsigned int)ValidDataLength);
+        PAYUEL_CAM_Data.ErrCounter++;
+        return CFE_SB_BAD_ARGUMENT;
+    }
+
+    /* Request format: [cmd][slot][image][chunk number][crc16]. */
+    TxData[0] = PAYUEL_CAM_ID_CHUNK_DOWNLOAD;
+    TxData[1] = ImageSlot;
+    TxData[2] = ImageNumber;
+    PAYUEL_CAM_WriteU16BE(&TxData[3], ChunkNumber);
+    PAYUEL_CAM_AppendCrc16(TxData, 5);
+
+    /* Legacy SPI receive path kept commented for reference.
+     * CFE_SRL_IO_Param_t spiParam = {0};
+     * int32              spiStatus;
+     *
+     * spiParam.TxData   = TxData;
+     * spiParam.TxSize   = sizeof(TxData);
+     * spiParam.RxData   = RxData;
+     * spiParam.RxSize   = sizeof(RxData);
+     * spiParam.Interval = PAYUEL_CAM_SPI_INTERVAL_US;
+     *
+     * spiStatus = CFE_SRL_ApiRead(PAYUEL_CAM_Data.SpiHandle, &spiParam);
+     */
+    /* Current implementation uses one CSP round-trip for request and response. */
+    rsp_len = CFE_SRL_ApiTransactionCSP(
+        PAYUEL_CAM_NODE, PAYUEL_CAM_PORT,
+        TxData, sizeof(TxData),
+        RxData, sizeof(RxData));
+
+    status = PAYUEL_CAM_ValidateResponse("ChunkDownload", PAYUEL_CAM_ID_CHUNK_DOWNLOAD,
+                                         RxData, rsp_len, sizeof(RxData),
+                                         ReturnTypeOut, PayloadErrorPacketOut);
+    if (status == CFE_SUCCESS)
+    {
+        /* Bytes 3..4 echo the chunk number in big-endian format. */
+        rsp_chunk_num = PAYUEL_CAM_ReadU16BE(&RxData[3]);
+
+        if (RxData[0] != PAYUEL_CAM_ID_CHUNK_DOWNLOAD ||
+            RxData[1] != ImageSlot ||
+            RxData[2] != ImageNumber ||
+            rsp_chunk_num != ChunkNumber)
+        {
+            /* Reject frames that do not belong to the requested image/chunk pair. */
+            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+            if (ReturnTypeOut != NULL)
+            {
+                *ReturnTypeOut = RPT_RETTYPE_HW;
+            }
+            CFE_EVS_SendEvent(PAYUEL_CAM_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "PAYUEL_CAM: ChunkDownload header mismatch req=(%u,%u,%u) rsp=(%u,%u,%u)",
+                              ImageSlot, ImageNumber, ChunkNumber, RxData[1], RxData[2], rsp_chunk_num);
+            PAYUEL_CAM_Data.ErrCounter++;
+        }
+        else if (!PAYUEL_CAM_VerifyChunkCrc32(RxData, ValidDataLength))
+        {
+            /* CRC32 only covers the meaningful bytes, not the padded tail of the frame. */
+            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+            if (ReturnTypeOut != NULL)
+            {
+                *ReturnTypeOut = RPT_RETTYPE_HW;
+            }
+            CFE_EVS_SendEvent(PAYUEL_CAM_CRC_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "PAYUEL_CAM: ChunkDownload CRC32 mismatch");
+            PAYUEL_CAM_Data.ErrCounter++;
+        }
+        else if (!PAYUEL_CAM_VerifyChunkPadding(RxData, ValidDataLength))
+        {
+            /* The unused tail should be zero-filled so old data cannot leak into the file. */
+            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+            if (ReturnTypeOut != NULL)
+            {
+                *ReturnTypeOut = RPT_RETTYPE_HW;
+            }
+            CFE_EVS_SendEvent(PAYUEL_CAM_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "PAYUEL_CAM: ChunkDownload padding mismatch after %u valid bytes",
+                              (unsigned int)ValidDataLength);
+            PAYUEL_CAM_Data.ErrCounter++;
+        }
+        else if (ChunkDataOut != NULL)
+        {
+            /* Only copy the caller-requested valid bytes, not the padded frame tail. */
+            memcpy(ChunkDataOut, &RxData[5], ValidDataLength);
+        }
+    }
+
+    return status;
+}
+
+CFE_Status_t PAYUEL_CAM_ComputeFileCrc32(const char *FileName, uint32_t *FileCrc32Out)
+{
+    uint8_t  Buffer[PAYUEL_CAM_FILE_CRC_BUFFER_SIZE];
+    uint32_t Crc = 0xFFFFFFFFu;
+    ssize_t  ReadSize;
+    int      Fd;
+
+    if (FileName == NULL || FileCrc32Out == NULL)
+    {
+        return CFE_SB_BAD_ARGUMENT;
+    }
+
+    /* Open the completed file and stream it through the incremental CRC32 helper. */
+    Fd = open(FileName, O_RDONLY);
+    if (Fd < 0)
+    {
+        CFE_EVS_SendEvent(PAYUEL_CAM_FILE_OPEN_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_CAM: Failed to open %s for CRC32", FileName);
+        PAYUEL_CAM_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    do
+    {
+        ReadSize = read(Fd, Buffer, sizeof(Buffer));
+        if (ReadSize > 0)
+        {
+            /* Each read extends the running CRC instead of loading the whole file into memory. */
+            Crc = PAYUEL_CAM_Crc32Update(Crc, Buffer, (size_t)ReadSize);
+        }
+    } while (ReadSize > 0);
+
+    close(Fd);
+
+    if (ReadSize < 0)
+    {
+        CFE_EVS_SendEvent(PAYUEL_CAM_FILE_READ_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_CAM: Failed to read %s during CRC32", FileName);
+        PAYUEL_CAM_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    *FileCrc32Out = Crc ^ 0xFFFFFFFFu;
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t PAYUEL_CAM_TblValidationFunc(void *TblData)
+{
+    CFE_Status_t                ReturnCode = CFE_SUCCESS;
+    PAYUEL_CAM_ExampleTable_t  *TblDataPtr = (PAYUEL_CAM_ExampleTable_t *)TblData;
+
+    /* Keep the example table within the mission-configured range. */
+    if (TblDataPtr->Int1 > PAYUEL_CAM_TBL_ELEMENT_1_MAX)
+    {
+        ReturnCode = PAYUEL_CAM_TABLE_OUT_OF_RANGE_ERR_CODE;
+    }
+
+    return ReturnCode;
+}
+
+void PAYUEL_CAM_GetCrc(const char *TableName)
+{
+    CFE_Status_t   status;
+    uint32         Crc;
+    CFE_TBL_Info_t TblInfoPtr;
+
+    /* Helper for debugging table contents from the system log. */
+    status = CFE_TBL_GetInfo(&TblInfoPtr, TableName);
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("PAYUEL_CAM: Error Getting Table Info");
+    }
+    else
+    {
+        Crc = TblInfoPtr.Crc;
+        CFE_ES_WriteToSysLog("PAYUEL_CAM: CRC: 0x%08lX\n", (unsigned long)Crc);
+    }
+}

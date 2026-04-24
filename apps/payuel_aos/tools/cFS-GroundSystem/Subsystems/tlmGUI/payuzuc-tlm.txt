@@ -1,0 +1,31 @@
+# 
+# payuzuc-tlm.txt
+# 
+# This file should have the following comma delimited fields:
+#   1. Data item description
+#   2. Offset of data item in packet
+#   3. Length of data item
+#   4. Python data type of item ( using python struct library )
+#   5. Display type of item ( Currently Dec, Hex, Str, Enm ) 
+#   6. Display string for enumerated value 0 ( or NULL if none ) 
+#   7. Display string for enumerated value 1 ( or NULL if none ) 
+#   8. Display string for enumerated value 2 ( or NULL if none ) 
+#   9. Display string for enumerated value 3 ( or NULL if none ) 
+# 
+#  Note(1): A line that begins with # is a comment
+#  Note(2): Remove any blank lines from the end of the file
+#
+Command Counter,       12,  1,  B, Dec, NULL,        NULL,        NULL,       NULL
+Error Counter,         13,  1,  B, Dec, NULL,        NULL,        NULL,       NULL  
+Memory State 0,        14,  1,  B, Dec, NULL,        NULL,        NULL,       NULL
+Memory State 1,        15,  1,  B, Dec, NULL,        NULL,        NULL,       NULL
+Memory State 2,        16,  1,  B, Dec, NULL,        NULL,        NULL,       NULL
+Memory State 3,        17,  1,  B, Dec, NULL,        NULL,        NULL,       NULL
+Memory State 4,        18,  1,  B, Dec, NULL,        NULL,        NULL,       NULL
+Memory State 5,        19,  1,  B, Dec, NULL,        NULL,        NULL,       NULL  
+Last Image Index 0,    20,  1,  B, Dec, NULL,        NULL,        NULL,       NULL  
+Last Image Index 1,    21,  1,  B, Dec, NULL,        NULL,        NULL,       NULL  
+Last Image Index 2,    22,  1,  B, Dec, NULL,        NULL,        NULL,       NULL  
+Last Image Index 3,    23,  1,  B, Dec, NULL,        NULL,        NULL,       NULL  
+Last Image Index 4,    24,  1,  B, Dec, NULL,        NULL,        NULL,       NULL  
+Last Image Index 5,    25,  1,  B, Dec, NULL,        NULL,        NULL,       NULL  

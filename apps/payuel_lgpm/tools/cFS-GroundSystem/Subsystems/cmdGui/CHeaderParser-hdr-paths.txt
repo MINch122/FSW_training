@@ -1,0 +1,51 @@
+# filename: CHeaderParser-hdr-paths.txt
+# description: 
+#	(For use with CHeaderParser.py)
+# 	This file contains the filepaths to the header files which contain command
+#	code definitions and command structures for your specified cFS application.
+#	For easiest use of this program, it is best to only add header files for 
+#	one application at a time (simply comment the others out with '#').
+#
+#	Important Note:
+#	CHeaderParser.py ignores any lines that start with '#' and reads in every 
+#	other line as a filepath to a header file.
+#
+#   This program does support relative paths but if the program cannot 
+#	find your header files, try using absolute paths.
+#
+#../../../../apps/to_lab/fsw/src/to_lab_msg.h
+#../../../../apps/ci_lab/fsw/src/ci_lab_msg.h
+#../../../../cfe/fsw/cfe-core/src/inc/cfe_es_msg.h
+#../../../../cfe/fsw/cfe-core/src/inc/cfe_time_msg.h
+#../../../../cfe/fsw/cfe-core/src/inc/cfe_evs_msg.h
+#../../../../cfe/fsw/cfe-core/src/inc/cfe_sb_msg.h
+#../../../../cfe/fsw/cfe-core/src/inc/cfe_tbl_msg.h
+#../../../../apps/sample_app/config/default_sample_app_fcncodes.h
+#../../../../apps/sample_app/config/default_sample_app_msgdefs.h
+#../../../../apps/payuzuc/config/default_payuzuc_msg.h
+#../../../../apps/payuzuc/config/default_payuzuc_msgdefs.h
+#../../../../apps/payuzuc/config/default_payuzuc_msgstruct.h
+#../../../../apps/payuzuc/config/default_payuzuc_fcncodes.h
+../../../../apps/sp/config/default_sp_fcncodes.h
+../../../../apps/sp/config/default_sp_msgdefs.h
+../../../../apps/sp/config/default_sp_msgstruct.h
+#../../../../apps/batt/config/default_batt_fcncodes.h
+#../../../../apps/batt/config/default_batt_msgdefs.h
+#../../../../apps/batt/config/default_batt_msgstruct.h
+#../../../../apps/payuzut/config/default_payuzut_fcncodes.h
+#../../../../apps/payuzut/config/default_payuzut_msgdefs.h
+#../../../../apps/utrx/config/default_utrx_fcncodes.h
+#../../../../apps/utrx/config/default_utrx_msgstruct.h
+#../../../../apps/adcs/config/default_adcs_fcncodes.h
+#../../../../apps/adcs/config/default_adcs_msgdefs.h
+#../../../../apps/strx/config/default_strx_fcncodes.h
+#../../../../apps/strx/config/default_strx_msgstruct.h
+#../../../../apps/ftp/config/default_ftp_fcncodes.h
+#../../../../apps/ftp/config/default_ftp_msgdefs.h
+#../../../../apps/fm/fsw/inc/fm_msgdefs.h
+#../../../../apps/fm/fsw/inc/fm_msg.h
+../../../../apps/uel_app/config/default_uel_app_fcncodes.h
+../../../../apps/uel_app/config/default_uel_app_msgstruct.h
+../../../../apps/PAYUEL_LGPM/config/default_PAYUEL_LGPM_fcncodes.h
+../../../../apps/PAYUEL_LGPM/config/default_PAYUEL_LGPM_msgstruct.h
+../../../../apps/PAYUEL_LGPM/fsw/src/PAYUEL_LGPM_msgdefs.h

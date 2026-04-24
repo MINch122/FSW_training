@@ -10,6 +10,7 @@
 
 # The list of header files that control the SCH_LAB configuration
 set(SCH_LAB_PLATFORM_CONFIG_FILE_LIST
+  sch_lab_msgids.h
   sch_lab_perfids.h
 )
 

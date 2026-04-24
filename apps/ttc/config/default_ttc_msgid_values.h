@@ -24,7 +24,8 @@
 #define DEFAULT_TTC_MSGID_VALUES_H
 
 #include "cfe_core_api_base_msgids.h"
-#include "ttc_topicids.h"
+/* Use a stable relative include so other apps can include ttc_msgids.h too. */
+#include "../fsw/inc/ttc_topicids.h"
 
 #define TTC_CMD_PLATFORM_MIDVAL(x) CFE_PLATFORM_CMD_TOPICID_TO_MIDV(TTC_MISSION_##x##_TOPICID)
 #define TTC_TLM_PLATFORM_MIDVAL(x) CFE_PLATFORM_TLM_TOPICID_TO_MIDV(TTC_MISSION_##x##_TOPICID)

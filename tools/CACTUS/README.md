@@ -36,7 +36,7 @@ CACTUS is here for you to provide:
 - **Live hex preview** of every packet before you send it
 - **Runtime-editable IP, port, MID and Function Code**
 - **Adding commands during runtime** and saving back to the JSON
-- **Real-time telemetry display** with MID, sequence count, and hex preview
+- **Real-time telemetry display** with MID, sequence count, hex preview, and mission-defined field decoding
 - And a nice cat sitting next to the cactus
 
 ---
@@ -210,6 +210,48 @@ tree is reloaded automatically.
 The saved JSON uses integer `length`/`count` values, not symbolic names.
 If you want symbolic names, open the file in a text editor afterward and
 replace the numbers manually.
+
+---
+
+## Configuring Telemetry
+
+Place a `telemetry.json` file next to the mission command JSON files:
+
+```json
+{
+  "packets": [
+    {
+      "app": "MY_APP",
+      "name": "Beacon",
+      "mid": "0x0880",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "State", "type": "uint8" },
+        { "name": "Counter", "type": "uint16" }
+      ]
+    }
+  ]
+}
+```
+
+CACTUS splits incoming TO_LAB UDP datagrams using the CCSDS packet length, then
+matches each packet by `MID`.  When a definition is found, decoded field values
+are shown in the telemetry tab.  Field types match the command parameter types,
+with a few telemetry-specific display helpers:
+
+- `format: "hex"` renders scalar values in hexadecimal
+- `units: "C"` appends display units
+- `scale: 0.01` applies a display-only multiplier
+- `display_length_from: "ReturnDataSize"` trims the shown portion of a fixed-size `bytes` field
+
+If no matching definition exists, CACTUS falls back to the raw hex preview.
+
+You can manage `telemetry.json` from the GUI as well:
+
+- Open the **Telemetry** tab
+- Use **`+`** to add a packet definition
+- Use **Edit** / **Delete** on the selected packet definition
+- Changes are written back to the current mission's `telemetry.json`
 
 ---
 

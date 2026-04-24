@@ -14,7 +14,7 @@ import json
 import shutil
 import threading
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from PyQt5.QtCore import QEvent, QObject, QPropertyAnimation, Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QColor, QDoubleValidator, QFont, QKeySequence, QPixmap
@@ -199,6 +199,13 @@ from .connection import UdpConnection
 from .loader import AppDef, CommandDef, load_commands_dir, save_command
 from .payload import ALL_TYPES, SCALAR_TYPES, encode_param_array, param_byte_size
 from .scene import SceneWidget
+from .telemetry import (
+    TelemetryDef,
+    decode_telemetry_packet,
+    load_telemetry_defs,
+    load_telemetry_file,
+    save_telemetry_file,
+)
 
 # ---------------------------------------------------------------------------
 # Paths & defaults
@@ -860,6 +867,133 @@ class AddCommandDialog(QDialog):
         }
 
 
+class TelemetryDialog(QDialog):
+    def __init__(self, existing_apps: List[str], packet: dict = None, parent: QWidget = None):
+        super().__init__(parent)
+        self._packet = packet or {}
+        self.setWindowTitle('Edit Telemetry Definition' if packet else 'Add Telemetry Definition')
+        self.setMinimumWidth(760)
+        self.setMinimumHeight(620)
+        self._build(existing_apps)
+
+    def _build(self, existing_apps: List[str]) -> None:
+        root = QVBoxLayout(self)
+
+        form = QFormLayout()
+        form.setSpacing(8)
+
+        self.app_combo = QComboBox()
+        self.app_combo.setEditable(True)
+        self.app_combo.addItems(sorted(set(existing_apps)))
+        self.app_combo.setCurrentText(str(self._packet.get('app', '')))
+        self.app_combo.setPlaceholderText('App name (e.g. PAYUEL_CAM)')
+        form.addRow('App:', self.app_combo)
+
+        self.name_edit = QLineEdit(str(self._packet.get('name', '')))
+        self.name_edit.setPlaceholderText('e.g. Beacon')
+        form.addRow('Packet Name:', self.name_edit)
+
+        mid_value = self._packet.get('mid', '0x0800')
+        self.mid_edit = QLineEdit(str(mid_value))
+        self.mid_edit.setPlaceholderText('0x089C')
+        form.addRow('MID (hex):', self.mid_edit)
+
+        self.offset_edit = QLineEdit(str(self._packet.get('payload_offset', 'CFE_MSG_TLM_HDR_SIZE')))
+        self.offset_edit.setPlaceholderText('CFE_MSG_TLM_HDR_SIZE or 16')
+        form.addRow('Payload Offset:', self.offset_edit)
+
+        self.desc_edit = QLineEdit(str(self._packet.get('description', '')))
+        self.desc_edit.setPlaceholderText('Optional human-readable description')
+        form.addRow('Description:', self.desc_edit)
+
+        root.addLayout(form)
+
+        help_lbl = QLabel(
+            'Fields JSON must be an array. Each item supports keys like '
+            '`name`, `type`, `length`, `count`, `storage`, `values`, `format`, '
+            '`units`, `scale`, `display_length_from`, `hidden`.'
+        )
+        help_lbl.setWordWrap(True)
+        help_lbl.setStyleSheet('color:#777;')
+        root.addWidget(help_lbl)
+
+        self.fields_edit = QTextEdit()
+        self.fields_edit.setFont(QFont('Courier', 9))
+        self.fields_edit.setPlaceholderText(
+            '[\n'
+            '  { "name": "State", "type": "uint8" },\n'
+            '  { "name": "Counter", "type": "uint16" }\n'
+            ']'
+        )
+        fields_text = json.dumps(self._packet.get('fields', [
+            {'name': 'State', 'type': 'uint8'},
+            {'name': 'Counter', 'type': 'uint16'},
+        ]), indent=2)
+        self.fields_edit.setPlainText(fields_text)
+        root.addWidget(self.fields_edit, 1)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self._validate_and_accept)
+        buttons.rejected.connect(self.reject)
+        root.addWidget(buttons)
+
+    def _validate_and_accept(self) -> None:
+        if not self.app_combo.currentText().strip():
+            QMessageBox.warning(self, 'Missing field', 'App name is required.')
+            return
+        if not self.name_edit.text().strip():
+            QMessageBox.warning(self, 'Missing field', 'Packet name is required.')
+            return
+
+        mid_text = self.mid_edit.text().strip()
+        if not mid_text:
+            QMessageBox.warning(self, 'Missing field', 'MID is required.')
+            return
+        try:
+            int(mid_text, 16) if mid_text.startswith(('0x', '0X')) else int(mid_text)
+        except ValueError:
+            QMessageBox.warning(self, 'Invalid MID', f'Cannot parse MID: {mid_text!r}')
+            return
+
+        if not self.offset_edit.text().strip():
+            QMessageBox.warning(self, 'Missing field', 'Payload offset is required.')
+            return
+
+        try:
+            fields = json.loads(self.fields_edit.toPlainText() or '[]')
+        except Exception as exc:
+            QMessageBox.warning(self, 'Invalid Fields JSON', str(exc))
+            return
+
+        if not isinstance(fields, list):
+            QMessageBox.warning(self, 'Invalid Fields JSON', 'Fields must be a JSON array.')
+            return
+
+        for idx, field_def in enumerate(fields):
+            if not isinstance(field_def, dict):
+                QMessageBox.warning(self, 'Invalid Field', f'Field #{idx + 1} must be a JSON object.')
+                return
+            if 'type' not in field_def:
+                QMessageBox.warning(self, 'Invalid Field', f'Field #{idx + 1} is missing `type`.')
+                return
+            if 'name' not in field_def and not field_def.get('hidden', False):
+                QMessageBox.warning(self, 'Invalid Field', f'Field #{idx + 1} is missing `name`.')
+                return
+
+        self.accept()
+
+    def get_packet_dict(self) -> dict:
+        fields = json.loads(self.fields_edit.toPlainText() or '[]')
+        return {
+            'app': self.app_combo.currentText().strip(),
+            'name': self.name_edit.text().strip(),
+            'mid': self.mid_edit.text().strip(),
+            'payload_offset': self.offset_edit.text().strip(),
+            'description': self.desc_edit.text().strip(),
+            'fields': fields,
+        }
+
+
 # ---------------------------------------------------------------------------
 # MainWindow
 # ---------------------------------------------------------------------------
@@ -873,6 +1007,7 @@ class MainWindow(QMainWindow):
         self.conn.on_packet_received = lambda d: self._tlm.packet.emit(d)
 
         self.apps: List[AppDef] = []
+        self.telemetry_defs: Dict[int, TelemetryDef] = {}
         self.config = self._load_config()
 
         self._ping_pending: bool = False
@@ -886,6 +1021,7 @@ class MainWindow(QMainWindow):
 
         self._build_toolbar()
         self._build_central()
+        self._select_configured_mission()
         self._load_commands()
 
     # ------------------------------------------------------------------
@@ -901,6 +1037,12 @@ class MainWindow(QMainWindow):
 
     def _save_config(self) -> None:
         pass  # intentionally no-op — runtime changes are never written back to disk
+
+    def _resolve_commands_dir(self, directory: str) -> str:
+        path = Path(directory)
+        if not path.is_absolute():
+            path = _HERE / path
+        return str(path.resolve())
 
     # ------------------------------------------------------------------
     # Toolbar
@@ -1198,22 +1340,83 @@ class MainWindow(QMainWindow):
 
     def _build_tlm_tab(self) -> QWidget:
         w = QWidget()
-        l = QVBoxLayout(w)
-        l.setContentsMargins(4, 4, 4, 4)
+        root = QVBoxLayout(w)
+        root.setContentsMargins(4, 4, 4, 4)
 
-        hdr = QHBoxLayout()
-        hdr.addWidget(QLabel('Received telemetry packets'))
+        split = QSplitter(Qt.Vertical)
+
+        defs_widget = QWidget()
+        defs_layout = QVBoxLayout(defs_widget)
+        defs_layout.setContentsMargins(0, 0, 0, 0)
+        defs_layout.setSpacing(4)
+
+        defs_hdr = QHBoxLayout()
+        defs_hdr.addWidget(QLabel('Telemetry Definitions For Incoming UDP'))
+        defs_hdr.addStretch()
+
+        add_btn = QPushButton('+')
+        add_btn.setFixedWidth(28)
+        add_btn.setToolTip('Add a telemetry definition to telemetry.json')
+        add_btn.clicked.connect(self._add_telemetry_def)
+        defs_hdr.addWidget(add_btn)
+
+        edit_btn = QPushButton('Edit')
+        edit_btn.setFixedWidth(50)
+        edit_btn.setToolTip('Edit the selected telemetry definition')
+        edit_btn.clicked.connect(self._edit_telemetry_def)
+        defs_hdr.addWidget(edit_btn)
+
+        del_btn = QPushButton('Delete')
+        del_btn.setFixedWidth(55)
+        del_btn.setToolTip('Delete the selected telemetry definition')
+        del_btn.clicked.connect(self._delete_telemetry_def)
+        defs_hdr.addWidget(del_btn)
+
+        reload_btn = QPushButton('Reload')
+        reload_btn.setFixedWidth(55)
+        reload_btn.setToolTip('Reload telemetry definitions from the current mission')
+        reload_btn.clicked.connect(self._load_commands)
+        defs_hdr.addWidget(reload_btn)
+
+        defs_layout.addLayout(defs_hdr)
+
+        self.tlm_tree = QTreeWidget()
+        self.tlm_tree.setHeaderHidden(True)
+        self.tlm_tree.setIndentation(14)
+        self.tlm_tree.currentItemChanged.connect(self._tlm_tree_current_changed)
+        defs_layout.addWidget(self.tlm_tree, 1)
+
+        self.tlm_schema = QTextEdit()
+        self.tlm_schema.setReadOnly(True)
+        self.tlm_schema.setFont(QFont('Courier', 9))
+        self.tlm_schema.setMaximumHeight(160)
+        defs_layout.addWidget(self.tlm_schema)
+
+        live_widget = QWidget()
+        live_layout = QVBoxLayout(live_widget)
+        live_layout.setContentsMargins(0, 0, 0, 0)
+
+        live_hdr = QHBoxLayout()
+        live_hdr.addWidget(QLabel('Received telemetry packets (decoded when known)'))
         clr = QPushButton('Clear')
         clr.setFixedWidth(55)
         clr.clicked.connect(lambda: self.tlm_edit.clear())
-        hdr.addWidget(clr)
-        hdr.addStretch()
-        l.addLayout(hdr)
+        live_hdr.addWidget(clr)
+        live_hdr.addStretch()
+        live_layout.addLayout(live_hdr)
 
         self.tlm_edit = QTextEdit()
         self.tlm_edit.setReadOnly(True)
         self.tlm_edit.setFont(QFont('Courier', 9))
-        l.addWidget(self.tlm_edit)
+        live_layout.addWidget(self.tlm_edit)
+
+        split.addWidget(defs_widget)
+        split.addWidget(live_widget)
+        split.setStretchFactor(0, 1)
+        split.setStretchFactor(1, 2)
+        split.setSizes([240, 420])
+
+        root.addWidget(split)
         return w
 
     # ------------------------------------------------------------------
@@ -1226,14 +1429,238 @@ class MainWindow(QMainWindow):
             self._load_commands_from(path)
         else:
             self.apps = []
+            self.telemetry_defs = {}
             self._populate_tree()
+            self._populate_tlm_tree()
             self._log('[INFO] No mission selected — choose a mission or add new commands')
 
     def _load_commands_from(self, directory: str) -> None:
         self.apps = load_commands_dir(directory)
+        self.telemetry_defs = load_telemetry_defs(directory)
         self._populate_tree()
+        self._populate_tlm_tree()
         total = sum(len(a.commands) for a in self.apps)
-        self._log(f'[INFO] Loaded {total} commands across {len(self.apps)} apps from {directory}')
+        self._log(
+            f'[INFO] Loaded {total} commands across {len(self.apps)} apps and '
+            f'{len(self.telemetry_defs)} telemetry packets from {directory}'
+        )
+
+    def _populate_tlm_tree(self) -> None:
+        if not hasattr(self, 'tlm_tree'):
+            return
+
+        self.tlm_tree.clear()
+        self.tlm_schema.clear()
+
+        dark = self._dark_mode
+        if not self.telemetry_defs:
+            placeholder = QTreeWidgetItem(['No telemetry definitions loaded'])
+            placeholder.setForeground(0, QColor('#555' if dark else '#999'))
+            placeholder.setFlags(Qt.NoItemFlags)
+            self.tlm_tree.addTopLevelItem(placeholder)
+            return
+
+        apps: Dict[str, QTreeWidgetItem] = {}
+        for tlm in sorted(self.telemetry_defs.values(), key=lambda item: (item.app.lower(), item.name.lower(), item.mid)):
+            if tlm.app not in apps:
+                app_item = QTreeWidgetItem([f'  {tlm.app}'])
+                app_item.setData(0, Qt.UserRole, None)
+                font = app_item.font(0)
+                font.setBold(True)
+                app_item.setFont(0, font)
+                app_item.setForeground(0, QColor('#7ec8e3' if dark else '#1a6e8a'))
+                self.tlm_tree.addTopLevelItem(app_item)
+                apps[tlm.app] = app_item
+
+            child = QTreeWidgetItem([f'    {tlm.name}  [0x{tlm.mid:04X}]'])
+            child.setData(0, Qt.UserRole, tlm)
+            child.setToolTip(0, tlm.description or '')
+            apps[tlm.app].addChild(child)
+
+        for item in apps.values():
+            item.setExpanded(True)
+
+    def _tlm_tree_current_changed(self, current: QTreeWidgetItem, _prev: QTreeWidgetItem) -> None:
+        tlm_def = current.data(0, Qt.UserRole) if current is not None else None
+        if isinstance(tlm_def, TelemetryDef):
+            self.tlm_schema.setPlainText(self._render_tlm_definition(tlm_def))
+        else:
+            self.tlm_schema.clear()
+
+    @staticmethod
+    def _render_tlm_definition(tlm_def: TelemetryDef) -> str:
+        lines = [
+            f'App:           {tlm_def.app}',
+            f'Name:          {tlm_def.name}',
+            f'MID:           0x{tlm_def.mid:04X}',
+            f'Payload offset:{tlm_def.payload_offset}',
+        ]
+        if tlm_def.description:
+            lines.append(f'Description:   {tlm_def.description}')
+        lines.append('')
+        lines.append('Fields:')
+
+        for field_def in tlm_def.fields:
+            name = field_def.get('name', '<unnamed>')
+            ptype = field_def.get('type', '?')
+            extra = []
+            for key in ('length', 'count', 'storage', 'format', 'units',
+                        'scale', 'display_length_from', 'hidden'):
+                if key in field_def:
+                    extra.append(f'{key}={field_def[key]}')
+            if 'values' in field_def:
+                extra.append(f'values={field_def["values"]}')
+            suffix = f' ({", ".join(str(x) for x in extra)})' if extra else ''
+            lines.append(f'- {name}: {ptype}{suffix}')
+
+        return '\n'.join(lines)
+
+    def _get_selected_tlm_def(self) -> Optional[TelemetryDef]:
+        item = self.tlm_tree.currentItem() if hasattr(self, 'tlm_tree') else None
+        if item is None:
+            return None
+        tlm_def = item.data(0, Qt.UserRole)
+        return tlm_def if isinstance(tlm_def, TelemetryDef) else None
+
+    def _save_telemetry_definition(self, packet_dict: dict, original_mid: Optional[int] = None) -> None:
+        mission_dir = self.mission_cb.currentData() if self.mission_cb.currentIndex() > 0 else None
+        if not mission_dir:
+            box = QMessageBox(QMessageBox.Warning, 'No Mission Selected',
+                              'Please select or create a mission before editing telemetry definitions.',
+                              QMessageBox.Ok, self)
+            self._center_dialog(box)
+            box.exec_()
+            return
+
+        try:
+            packets = load_telemetry_file(mission_dir)
+        except Exception as exc:
+            box = QMessageBox(QMessageBox.Critical, 'Telemetry Load Error', str(exc), QMessageBox.Ok, self)
+            self._center_dialog(box)
+            box.exec_()
+            return
+
+        new_mid = packet_dict.get('mid')
+        try:
+            new_mid = int(new_mid, 16) if isinstance(new_mid, str) and new_mid.startswith(('0x', '0X')) else int(new_mid)
+        except (TypeError, ValueError):
+            new_mid = None
+
+        updated = False
+        for idx, existing in enumerate(packets):
+            existing_mid = existing.get('mid')
+            try:
+                existing_mid = int(existing_mid, 16) if isinstance(existing_mid, str) and existing_mid.startswith(('0x', '0X')) else int(existing_mid)
+            except (TypeError, ValueError):
+                existing_mid = None
+
+            if new_mid is not None and existing_mid == new_mid and original_mid != existing_mid:
+                box = QMessageBox(QMessageBox.Warning, 'Duplicate MID',
+                                  f'MID 0x{new_mid:04X} is already used by '
+                                  f'"{existing.get("app", "Unknown")}/{existing.get("name", "Unknown")}".',
+                                  QMessageBox.Ok, self)
+                self._center_dialog(box)
+                box.exec_()
+                return
+
+            if original_mid is not None and existing_mid == original_mid:
+                packets[idx] = packet_dict
+                updated = True
+                break
+
+        if not updated:
+            packets.append(packet_dict)
+
+        try:
+            save_path = save_telemetry_file(mission_dir, packets)
+        except Exception as exc:
+            box = QMessageBox(QMessageBox.Critical, 'Telemetry Save Error', str(exc), QMessageBox.Ok, self)
+            self._center_dialog(box)
+            box.exec_()
+            return
+        self._log(f'[INFO] Saved telemetry definition "{packet_dict["app"]}/{packet_dict["name"]}" → {save_path}')
+        self._load_commands()
+
+    def _add_telemetry_def(self) -> None:
+        existing_apps = sorted({*(a.name for a in self.apps), *(t.app for t in self.telemetry_defs.values())})
+        dlg = TelemetryDialog(existing_apps, parent=self)
+        self._center_dialog(dlg)
+        if dlg.exec_() != QDialog.Accepted:
+            return
+        self._save_telemetry_definition(dlg.get_packet_dict())
+
+    def _edit_telemetry_def(self) -> None:
+        tlm_def = self._get_selected_tlm_def()
+        if tlm_def is None:
+            return
+
+        packet_dict = {
+            'app': tlm_def.app,
+            'name': tlm_def.name,
+            'mid': f'0x{tlm_def.mid:04X}',
+            'payload_offset': tlm_def.payload_offset,
+            'description': tlm_def.description,
+            'fields': tlm_def.fields,
+        }
+        existing_apps = sorted({*(a.name for a in self.apps), *(t.app for t in self.telemetry_defs.values())})
+        dlg = TelemetryDialog(existing_apps, packet=packet_dict, parent=self)
+        self._center_dialog(dlg)
+        if dlg.exec_() != QDialog.Accepted:
+            return
+        self._save_telemetry_definition(dlg.get_packet_dict(), original_mid=tlm_def.mid)
+
+    def _delete_telemetry_def(self) -> None:
+        tlm_def = self._get_selected_tlm_def()
+        if tlm_def is None:
+            return
+
+        mission_dir = self.mission_cb.currentData() if self.mission_cb.currentIndex() > 0 else None
+        if not mission_dir:
+            self._log('[ERROR] No mission loaded — cannot delete telemetry definition')
+            return
+
+        box = QMessageBox(QMessageBox.Question, 'Confirm Delete',
+                          f'Delete telemetry definition "{tlm_def.app}/{tlm_def.name}"?\n\n'
+                          f'This removes the packet from telemetry.json and cannot be undone.',
+                          QMessageBox.Yes | QMessageBox.No, self)
+        box.setDefaultButton(QMessageBox.No)
+        self._center_dialog(box)
+        if box.exec_() != QMessageBox.Yes:
+            return
+
+        try:
+            packets = load_telemetry_file(mission_dir)
+        except Exception as exc:
+            box = QMessageBox(QMessageBox.Critical, 'Telemetry Load Error', str(exc), QMessageBox.Ok, self)
+            self._center_dialog(box)
+            box.exec_()
+            return
+        kept = []
+        removed = False
+        for packet in packets:
+            mid_value = packet.get('mid')
+            try:
+                mid_value = int(mid_value, 16) if isinstance(mid_value, str) and mid_value.startswith(('0x', '0X')) else int(mid_value)
+            except (TypeError, ValueError):
+                mid_value = None
+
+            if mid_value == tlm_def.mid and packet.get('name') == tlm_def.name and packet.get('app') == tlm_def.app:
+                removed = True
+                continue
+            kept.append(packet)
+
+        if removed:
+            try:
+                save_path = save_telemetry_file(mission_dir, kept)
+            except Exception as exc:
+                box = QMessageBox(QMessageBox.Critical, 'Telemetry Save Error', str(exc), QMessageBox.Ok, self)
+                self._center_dialog(box)
+                box.exec_()
+                return
+            self._log(f'[INFO] Deleted telemetry definition "{tlm_def.app}/{tlm_def.name}" from {save_path}')
+            self._load_commands()
+        else:
+            self._log(f'[WARN] Telemetry definition "{tlm_def.app}/{tlm_def.name}" not found in telemetry.json')
 
     def _populate_tree(self, filter_text: str = '') -> None:
         self.tree.clear()
@@ -1388,10 +1815,20 @@ class MainWindow(QMainWindow):
     def _populate_mission_cb(self) -> None:
         self.mission_cb.blockSignals(True)
         self.mission_cb.clear()
-        self.mission_cb.addItem('— default —', userData=COMMANDS_DIR)
+        self.mission_cb.addItem('— default —', userData=self._resolve_commands_dir(COMMANDS_DIR))
         for name in self._scan_missions():
-            path = str(Path(COMMANDS_DIR) / 'missions' / name)
+            path = self._resolve_commands_dir(str(Path(COMMANDS_DIR) / 'missions' / name))
             self.mission_cb.addItem(name, userData=path)
+        self.mission_cb.blockSignals(False)
+
+    def _select_configured_mission(self) -> None:
+        configured = self._resolve_commands_dir(self.config.get('commands_dir', COMMANDS_DIR))
+        self.mission_cb.blockSignals(True)
+        for idx in range(self.mission_cb.count()):
+            current = self.mission_cb.itemData(idx)
+            if current and self._resolve_commands_dir(current) == configured:
+                self.mission_cb.setCurrentIndex(idx)
+                break
         self.mission_cb.blockSignals(False)
 
     def _mission_changed(self, _index: int) -> None:
@@ -1439,6 +1876,10 @@ class MainWindow(QMainWindow):
             src = preset_dir / src_name
             if src.exists():
                 shutil.copy2(str(src), str(mission_dir / dst_name))
+
+        telemetry_path = mission_dir / 'telemetry.json'
+        if not telemetry_path.exists():
+            telemetry_path.write_text('{\n  "packets": []\n}\n', encoding='utf-8')
 
         self._populate_mission_cb()
         for i in range(self.mission_cb.count()):
@@ -1493,7 +1934,7 @@ class MainWindow(QMainWindow):
 
     def _remove_command_from_json(self, app_name: str, cmd_name: str, directory: str) -> None:
         for json_file in sorted(Path(directory).glob('*.json')):
-            if json_file.name == 'mission_defs.json':
+            if json_file.name in ('mission_defs.json', 'telemetry.json'):
                 continue
             try:
                 with json_file.open(encoding='utf-8') as fh:
@@ -1521,7 +1962,7 @@ class MainWindow(QMainWindow):
 
     def _remove_app_from_json(self, app_name: str, directory: str) -> None:
         for json_file in sorted(Path(directory).glob('*.json')):
-            if json_file.name == 'mission_defs.json':
+            if json_file.name in ('mission_defs.json', 'telemetry.json'):
                 continue
             try:
                 with json_file.open(encoding='utf-8') as fh:
@@ -1592,7 +2033,10 @@ class MainWindow(QMainWindow):
                 'info':    '#90caf9',
                 'tlm_ts':  '#888',
                 'tlm_mid': '#7ec8e3',
+                'tlm_name':'#a5d6a7',
                 'tlm_meta':'#aaa',
+                'tlm_fields':'#ddd',
+                'tlm_error':'#ef9a9a',
                 'tlm_hex': '#666',
                 'tlm_raw': '#aaa',
             }
@@ -1603,7 +2047,10 @@ class MainWindow(QMainWindow):
             'info':    '#1565c0',
             'tlm_ts':  '#888',
             'tlm_mid': '#1a6e8a',
+            'tlm_name':'#2e7d32',
             'tlm_meta':'#555',
+            'tlm_fields':'#333',
+            'tlm_error':'#c62828',
             'tlm_hex': '#777',
             'tlm_raw': '#555',
         }
@@ -1631,16 +2078,38 @@ class MainWindow(QMainWindow):
         c = self._tc()
 
         if hdr:
+            tlm_def = self.telemetry_defs.get(hdr.mid)
             preview = ' '.join(f'{b:02X}' for b in data[:24])
             if len(data) > 24:
                 preview += ' …'
-            line = (
+            header = (
                 f'<span style="color:{c["tlm_ts"]}">[{ts}]</span> '
                 f'<span style="color:{c["tlm_mid"]}">MID=0x{hdr.mid:04X}</span> '
                 f'<span style="color:{c["tlm_meta"]}"> seq={hdr.seq_count}'
                 f' len={hdr.data_length + 7}B</span> '
-                f'<span style="color:{c["tlm_hex"]}">{preview}</span>'
             )
+
+            if tlm_def:
+                endian = '<' if self.endian_cb.currentIndex() == 0 else '>'
+                decoded_fields, decode_error = decode_telemetry_packet(data, tlm_def, endian)
+                detail = (
+                    f'<span style="color:{c["tlm_name"]}">{tlm_def.app}/{tlm_def.name}</span>'
+                )
+                if decoded_fields:
+                    detail += ' <span style="color:{0}">'.format(c["tlm_fields"])
+                    detail += ' | '.join(f'{name}={value}' for name, value in decoded_fields)
+                    detail += '</span>'
+                if decode_error:
+                    detail += (
+                        f' <span style="color:{c["tlm_error"]}">decode error: {decode_error}</span>'
+                    )
+                line = (
+                    f'{header}<br>'
+                    f'&nbsp;&nbsp;{detail}<br>'
+                    f'&nbsp;&nbsp;<span style="color:{c["tlm_hex"]}">{preview}</span>'
+                )
+            else:
+                line = f'{header}<span style="color:{c["tlm_hex"]}">{preview}</span>'
         else:
             line = (
                 f'<span style="color:{c["tlm_ts"]}">[{ts}]</span> '

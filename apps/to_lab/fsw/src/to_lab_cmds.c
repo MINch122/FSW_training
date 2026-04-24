@@ -54,6 +54,8 @@ CFE_Status_t TO_LAB_EnableOutputCmd(const TO_LAB_EnableOutputCmd_t *data)
     }
 
     ++TO_LAB_Global.HkTlm.Payload.CommandCounter;
+    TO_HandleReport(CFE_SUCCESS, TO_LAB_OUTPUT_ENABLE_CC, &TO_LAB_Global.downlink_on,
+                    sizeof(TO_LAB_Global.downlink_on));
     return CFE_SUCCESS;
 }
 
@@ -62,6 +64,8 @@ CFE_Status_t TO_LAB_DisableOutputCmd(const TO_LAB_DisableOutputCmd_t *Msg) {
     TO_LAB_Global.downlink_on = false;
 
     CFE_EVS_SendEvent(TO_LAB_TLMOUTENA_INF_EID, CFE_EVS_EventType_INFORMATION, "TO telemetry output Disabled.");
+    TO_HandleReport(CFE_SUCCESS, TO_LAB_OUTPUT_DISABLE_CC, &TO_LAB_Global.downlink_on,
+                    sizeof(TO_LAB_Global.downlink_on));
 
     return CFE_SUCCESS;
 }
@@ -149,6 +153,7 @@ CFE_Status_t TO_LAB_SendDataTypesCmd(const TO_LAB_SendDataTypesCmd_t *data)
 //     CFE_SB_TransmitMsg(CFE_MSG_PTR(TO_LAB_Global.DataTypesTlm.TelemetryHeader), true);
 
 //     ++TO_LAB_Global.HkTlm.Payload.CommandCounter;
+    TO_HandleReport(CFE_SUCCESS, TO_LAB_SEND_DATA_TYPES_CC, NULL, 0);
     return CFE_SUCCESS;
 }
 
@@ -188,6 +193,7 @@ CFE_Status_t TO_LAB_AddPacketCmd(const TO_LAB_AddPacketCmd_t *data)
                           pCmd->Flags.Reliability, pCmd->BufLimit);
 
     ++TO_LAB_Global.HkTlm.Payload.CommandCounter;
+    TO_HandleReport(status, TO_LAB_ADD_PKT_CC, &pCmd->Stream, sizeof(pCmd->Stream));
     return CFE_SUCCESS;
 }
 
@@ -210,6 +216,7 @@ CFE_Status_t TO_LAB_RemovePacketCmd(const TO_LAB_RemovePacketCmd_t *data)
         CFE_EVS_SendEvent(TO_LAB_REMOVEPKT_INF_EID, CFE_EVS_EventType_INFORMATION, "L%d TO RemovePkt 0x%x", __LINE__,
                           (unsigned int)CFE_SB_MsgIdToValue(pCmd->Stream));
     ++TO_LAB_Global.HkTlm.Payload.CommandCounter;
+    TO_HandleReport(status, TO_LAB_REMOVE_PKT_CC, &pCmd->Stream, sizeof(pCmd->Stream));
     return CFE_SUCCESS;
 }
 
@@ -242,13 +249,18 @@ CFE_Status_t TO_LAB_RemoveAllCmd(const TO_LAB_RemoveAllCmd_t *data)
                       "L%d TO Unsubscribed to all Commands and Telemetry", __LINE__);
 
     ++TO_LAB_Global.HkTlm.Payload.CommandCounter;
+    TO_HandleReport(CFE_SUCCESS, TO_LAB_REMOVE_ALL_PKT_CC, NULL, 0);
     return CFE_SUCCESS;
 }
 
 CFE_Status_t TO_CreateChildCmd(const TO_CreateChildCmd_t *Msg) {
+    CFE_Status_t Status;
 
-    return CFE_ES_CreateChildTask(&TO_LAB_Global.ChildId, TO_CHILD_NAME, TO_LAB_ForwardTelemetryRF,
-                                CFE_ES_TASK_STACK_ALLOCATE, TO_CHILD_STACK_SIZE(3),
-                                TO_CHILD_PRIORITY, 0);
+    Status = CFE_ES_CreateChildTask(&TO_LAB_Global.ChildId, TO_CHILD_NAME, TO_LAB_ForwardTelemetryRF,
+                                    CFE_ES_TASK_STACK_ALLOCATE, TO_CHILD_STACK_SIZE(3),
+                                    TO_CHILD_PRIORITY, 0);
+    TO_HandleReport(Status, TO_CREATE_CHILD_CC, NULL, 0);
+
+    return Status;
 
 }
