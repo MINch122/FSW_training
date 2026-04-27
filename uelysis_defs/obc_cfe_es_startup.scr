@@ -24,6 +24,8 @@ CFE_APP, payuel_cam,  PAYUEL_CAM_Main,    PAYUEL_CAM,   75,   16384, 0x0, 0;
 CFE_APP, lgbat,       LGBAT_Main,         LGBAT,        80,   16384, 0x0, 0;
 CFE_APP, payuel_obc,  PAYUEL_OBC_Main,    PAYUEL_OBC,   85,   16384, 0x0, 0;
 CFE_APP, payuel_roma, PAYUEL_ROMA_Main,   PAYUEL_ROMA,  90,   16384, 0x0, 0;
+CFE_APP, payuel_aos,  PAYUEL_AOS_Main,    PAYUEL_AOS,   95,   16384, 0x0, 0;
+CFE_APP, PAYUEL_LGPM, PAYUEL_LGPM_AppMain, PAYUEL_LGPM, 100,  16384, 0x0, 0;
 !CFE_APP, sample_app,  SAMPLE_APP_Main,    SAMPLE_APP,   70,   16384, 0x0, 0;
 !
 ! Startup script fields:

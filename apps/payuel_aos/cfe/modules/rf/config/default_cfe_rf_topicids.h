@@ -1,6 +1,0 @@
-#ifndef CFE_RF_TOPICIDS_H
-#define CFE_RF_TOPICIDS_H
-
-#define CFE_MISSION_RF_TLM_TOPICID  0x0F
-
-#endif

@@ -2,56 +2,40 @@
 
 ## Reporting a Vulnerability
 
-For general cFS vulnerabilities, please [open a cFS framework issue](https://github.com/nasa/cfs/issues/new/choose). Please use the "Bug Report" template and provide as much information as possible. Apply appropriate labels for each report.  
+To report a vulnerability for the sample_app subsystem please [submit an issue](https://github.com/nasa/sample_app/issues/new/choose).
 
-For security related vulnerabilities, follow the general cFS vulnerabilities instructions and tag the issue with the "security" label.
+For general cFS vulnerabilities please [open a cFS framework issue](https://github.com/nasa/cfs/issues/new/choose) and see our [top-level security policy](https://github.com/nasa/cFS/security/policy) for additional information.
 
-## Security Reports
-
-To submit sensitive security reports or findings, [contact the cFS Product Team](README.md#contact-the-cfs-product-team).
+In either case please use the "Bug Report" template and provide as much information as possible. Apply appropriate labels for each report. For security related reports, tag the issue with the "security" label.
 
 ## Testing
 
-**Disclaimer: nasa/cFS is not responsible for any liability incurred as stated under the [Apache License 2.0](https://github.com/nasa/cFS/blob/main/LICENSE).**
+**Disclaimer: nasa/sample_app is not responsible for any liability incurred under the [Apache License 2.0](https://github.com/nasa/sample_app/blob/main/LICENSE).**
 
-Testing is an important aspect our team values to improve the cFS bundle. Several tools are used for testing:
+Testing is an important aspect our team values to improve sample_app. 
+
+To view tools used for the cFS bundle, see our [top-level security policy](https://github.com/nasa/cFS/security/policy). 
 
 ### CodeQL
 
-The [cFS CodeQL GitHub Actions workflow](https://github.com/nasa/cFS/actions/workflows/codeql-analysis.yml) is available to the public. To review the results, fork the cFS repository and run the CodeQL workflow.
+The [sample_app CodeQL GitHub Actions workflow](https://github.com/nasa/sample_app/actions/workflows/codeql-build.yml) is available to the public. To review the results, fork the sample_app repository and run the CodeQL workflow. 
 
-CodeQL is ran for every push and pull-request on all branches of cFS in GitHub Actions.
+CodeQL is ran for every push and pull-request on all branches of sample_app in GitHub Actions. 
 
-For the CodeQL GitHub Actions setup, visit https://github.com/github/codeql-action.
+For the CodeQL GitHub Actions setup, visit https://github.com/github/codeql-action. 
 
 ### Cppcheck
 
-The [cFS Cppcheck GitHub Actions workflow and results](https://github.com/nasa/cFS/actions/workflows/static-analysis.yml) are available to the public. To view the results, select a workflow and download the artifacts.
+The [sample_app Cppcheck GitHub Actions workflow and results](https://github.com/nasa/sample_app/actions/workflows/static-analysis.yml) are available to the public. To view the results, select a workflow and download the artifacts. 
 
-Cppcheck is ran for every push on the main branch and every pull request on all branches of cFS in Github Actions.
+Cppcheck is ran for every push on the main branch and every pull request on all branches of sample_app in Github Actions. 
 
 For more information about Cppcheck, visit http://cppcheck.sourceforge.net/.
 
-### CodeSonar
-
-CodeSonar results are not available to the public.
-
-CodeSonar is typically ran on a “once per release” sort of schedule.  
-
-For more information about CodeSonar, visit https://codesecure.com/our-products/codesonar.
-
-### Fuzz Testing
-
-The application used to fuzz test cFS and its results are not available to the public.
-
-The latest version of cFS is fuzzed nightly using a continuous integration pipeline.
-
-For more information about AFL used by the Fuzzing cFS application, visit https://github.com/google/AFL.
-
 ## Additional Support
 
-For additional support, submit a GitHub issue.
+For additional support, submit a GitHub issue. You can also email the cfs community at cfs-community@lists.nasa.gov. 
 
-You can also [join the cfs community mailing list](README.md#join-the-mailing-list) for technical discussions with cFS developers and users.
+You can subscribe to the mailing list [here](https://lists.nasa.gov/mailman/listinfo/cfs-community) that includes all the community members/users of the NASA core Flight Software (cFS) product line. The mailing list is used to communicate any information related to the cFS product such as current releases, bug findings and fixes, enhancement requests, community meeting notifications, sending out meeting minutes, etc.
 
 If you wish to report a cybersecurity incident or concern, please contact the NASA Security Operations Center either by phone at 1-877-627-2732 or via email address soc@nasa.gov.
