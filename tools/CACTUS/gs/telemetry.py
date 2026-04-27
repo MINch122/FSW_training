@@ -314,10 +314,7 @@ def _format_bytes(raw_bytes: bytes, shown_len: int) -> str:
         return "(empty)"
 
     preview = raw_bytes[:shown_len]
-    max_preview = 24
-    text = ' '.join(f'{b:02X}' for b in preview[:max_preview])
-    if shown_len > max_preview:
-        text += ' ...'
+    text = ' '.join(f'{b:02X}' for b in preview)
 
     if shown_len != len(raw_bytes):
         return f"{text} ({shown_len}/{len(raw_bytes)}B shown)"

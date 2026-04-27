@@ -20,6 +20,10 @@ CFE_Status_t PAYUEL_CAM_NoopCmd(const PAYUEL_CAM_NoopCmd_t *Msg)
     PAYUEL_CAM_Data.CmdCounter++;
     CFE_EVS_SendEvent(PAYUEL_CAM_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "PAYUEL_CAM: NOOP command %s", PAYUEL_CAM_VERSION);
+
+    PAYUEL_CAM_ReportCmdStatus(CFE_SB_ValueToMsgId(PAYUEL_CAM_CMD_MID), PAYUEL_CAM_NOOP_CC,
+                               CFE_SUCCESS, NULL, 0, RPT_RETTYPE_SUCCESS);
+
     return CFE_SUCCESS;
 }
 
@@ -34,6 +38,9 @@ CFE_Status_t PAYUEL_CAM_ResetCountersCmd(const PAYUEL_CAM_ResetCountersCmd_t *Ms
     PAYUEL_CAM_Data.ErrCounter = 0;
     CFE_EVS_SendEvent(PAYUEL_CAM_RESET_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "PAYUEL_CAM: RESET command");
+
+    PAYUEL_CAM_ReportCmdStatus(CFE_SB_ValueToMsgId(PAYUEL_CAM_CMD_MID), PAYUEL_CAM_RESET_COUNTERS_CC,
+                               CFE_SUCCESS, NULL, 0, RPT_RETTYPE_SUCCESS);
     return CFE_SUCCESS;
 }
 

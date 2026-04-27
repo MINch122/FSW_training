@@ -95,8 +95,8 @@ void TO_LAB_ForwardTelemetryUDP(void)
     CFE_SB_MsgId_t   MsgId = CFE_SB_INVALID_MSG_ID;
 
     uint32_t         BCN_PktCount = 0;
-    uint8_t         beacon_delay_pattern[] = {2,5,10,20};   // BEE  
-    // uint8_t        beacon_delay_patter[] = (10, 15, 18, 20); // UYS
+    //uint8_t         beacon_delay_pattern[] = {2,5,10,20};   // BEE  
+    uint8_t        beacon_delay_pattern[] = {10, 15, 18, 20}; // UYS
 
     OS_printf("%s: TO child start.\n", __func__);
 

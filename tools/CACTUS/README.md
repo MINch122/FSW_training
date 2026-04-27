@@ -235,23 +235,26 @@ Place a `telemetry.json` file next to the mission command JSON files:
 ```
 
 CACTUS splits incoming TO_LAB UDP datagrams using the CCSDS packet length, then
-matches each packet by `MID`.  When a definition is found, decoded field values
-are shown in the telemetry tab.  Field types match the command parameter types,
-with a few telemetry-specific display helpers:
+matches each packet by `MID`.  Every received packet is shown in the telemetry
+tab with its full payload bytes and full packet bytes.  When a definition is
+found, decoded field values are shown above the raw hex.  Field types match the
+command parameter types, with a few telemetry-specific display helpers:
 
 - `format: "hex"` renders scalar values in hexadecimal
 - `units: "C"` appends display units
 - `scale: 0.01` applies a display-only multiplier
 - `display_length_from: "ReturnDataSize"` trims the shown portion of a fixed-size `bytes` field
 
-If no matching definition exists, CACTUS falls back to the raw hex preview.
+If no matching definition exists, CACTUS still shows the packet as unregistered
+telemetry with the full payload hex, so new MIDs are visible before they are
+added to `telemetry.json`.
 
-You can manage `telemetry.json` from the GUI as well:
+Use **Subscribe All** in the telemetry tab to send TO_LAB `Add Packet` for every
+telemetry MID currently loaded from `telemetry.json`.  This avoids subscribing
+the listed telemetry streams one by one from the command tree.
 
-- Open the **Telemetry** tab
-- Use **`+`** to add a packet definition
-- Use **Edit** / **Delete** on the selected packet definition
-- Changes are written back to the current mission's `telemetry.json`
+CACTUS loads `telemetry.json` in the background for names, offsets, and field
+decoding.  The telemetry tab itself stays focused on the live packet stream.
 
 ---
 
