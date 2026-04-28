@@ -145,6 +145,12 @@ CFE_Status_t PAYUEL_ROMA_Init(void)
         CFE_MSG_Init(CFE_MSG_PTR(PAYUEL_ROMA_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUEL_ROMA_HK_TLM_MID),
                      sizeof(PAYUEL_ROMA_Data.HkTlm));
 
+        CFE_MSG_Init(CFE_MSG_PTR(PAYUEL_ROMA_Data.bcn.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUEL_ROMA_BCN_TLM_MID),
+                     sizeof(PAYUEL_ROMA_Data.bcn));
+
+        CFE_MSG_Init(CFE_MSG_PTR(PAYUEL_ROMA_Data.rpt.TelemetryHeader), CFE_SB_ValueToMsgId(PAYUEL_ROMA_REPORT_TLM_MID),
+                     sizeof(PAYUEL_ROMA_Data.rpt));
+
         /*
          ** Create Software Bus message pipe.
          */
@@ -181,6 +187,20 @@ CFE_Status_t PAYUEL_ROMA_Init(void)
                               "Roma-SP: Error Subscribing to Commands, RC = 0x%08lX", (unsigned long)status);
         }
     }
+
+    if (status == CFE_SUCCESS)
+    {
+        /*
+        ** Subscribe to ground command packets
+        */
+        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(PAYUEL_ROMA_SEND_BCN_MID), PAYUEL_ROMA_Data.CommandPipe);
+        if (status != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(PAYUEL_ROMA_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "Roma-SP: Error Subscribing to Commands, RC = 0x%08lX", (unsigned long)status);
+        }
+    }
+
 
     if (status == CFE_SUCCESS)
     {

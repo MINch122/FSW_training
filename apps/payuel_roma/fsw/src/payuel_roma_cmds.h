@@ -31,28 +31,34 @@
 #include "payuel_roma_msg.h"
 
 CFE_Status_t PAYUEL_ROMA_SendHkCmd(const PAYUEL_ROMA_SendHkCmd_t *Msg);
+CFE_Status_t PAYUEL_ROMA_SendBcnCmd(const PAYUEL_ROMA_SendBcnCmd_t *Msg);
+
 CFE_Status_t PAYUEL_ROMA_ResetCountersCmd(const PAYUEL_ROMA_ResetCountersCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_NoopCmd(const PAYUEL_ROMA_NoopCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_CommTestCmd(const PAYUEL_ROMA_CommTestCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_ClockSyncCmd(const PAYUEL_ROMA_ClockSyncCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_LogTestCmd(const PAYUEL_ROMA_LogTestCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_TransTestCmd(const PAYUEL_ROMA_TransTestCmd_t *Msg);
+
 CFE_Status_t PAYUEL_ROMA_GetSpecificLineCmd(const PAYUEL_ROMA_GetSpecificLineCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_GetMultipleLinesCmd(const PAYUEL_ROMA_GetMultipleLinesCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_GetLatestLineCmd(const PAYUEL_ROMA_GetLatestLineCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_GetLatestNLinesCmd(const PAYUEL_ROMA_GetLatestNLinesCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_ClearAllLinesCmd(const PAYUEL_ROMA_ClearAllLinesCmd_t *Msg);
+
 CFE_Status_t PAYUEL_ROMA_GetSingleEntryCmd(const PAYUEL_ROMA_GetSingleEntryCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_GetMultipleEntriesCmd(const PAYUEL_ROMA_GetMultipleEntriesCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_AddEntryCmd(const PAYUEL_ROMA_AddEntryCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_RemoveEntryCmd(const PAYUEL_ROMA_RemoveEntryCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_GetUsedSlotsCmd(const PAYUEL_ROMA_GetUsedSlotsCmd_t *Msg);
+
 CFE_Status_t PAYUEL_ROMA_SetRouteDefaultCmd(const PAYUEL_ROMA_SetRouteDefaultCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_ResetRouteCmd(const PAYUEL_ROMA_ResetRouteCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_LoadRouteCmd(const PAYUEL_ROMA_LoadRouteCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_SaveRouteCmd(const PAYUEL_ROMA_SaveRouteCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_SendRouteCmd(const PAYUEL_ROMA_SendRouteCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_SetRouteCmd(const PAYUEL_ROMA_SetRouteCmd_t *Msg);
+
 CFE_Status_t PAYUEL_ROMA_ParGetCmd(const PAYUEL_ROMA_ParGetCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_ParSetCmd(const PAYUEL_ROMA_ParSetCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_ParDefaultsCmd(const PAYUEL_ROMA_ParDefaultsCmd_t *Msg);
@@ -60,7 +66,9 @@ CFE_Status_t PAYUEL_ROMA_ParSaveCmd(const PAYUEL_ROMA_ParSaveCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_ParRestoreCmd(const PAYUEL_ROMA_ParRestoreCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_ParLoadCmd(const PAYUEL_ROMA_ParLoadCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_ParSetOobCmd(const PAYUEL_ROMA_ParSetOobCmd_t *Msg);
+
 CFE_Status_t PAYUEL_ROMA_SendCommandCmd(const PAYUEL_ROMA_SendCommandCmd_t *Msg);
+
 CFE_Status_t PAYUEL_ROMA_SendMsgCmd(const PAYUEL_ROMA_SendMsgCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_SyncRxCmd(const PAYUEL_ROMA_SyncRxCmd_t *Msg);
 CFE_Status_t PAYUEL_ROMA_SyncTxCmd(const PAYUEL_ROMA_SyncTxCmd_t *Msg);

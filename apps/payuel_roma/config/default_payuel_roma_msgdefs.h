@@ -219,4 +219,9 @@ typedef struct PAYUEL_ROMA_HkTlm_Payload
     uint8 spare[2];
 } PAYUEL_ROMA_HkTlm_Payload_t;
 
+typedef struct PAYUEL_ROMA_BcnTlm_Payload
+{
+    uint8 random; // 추후 정할 예정
+} PAYUEL_ROMA_BcnTlm_Payload_t;
+
 #endif

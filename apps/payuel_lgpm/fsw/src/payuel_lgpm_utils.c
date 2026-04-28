@@ -24,10 +24,10 @@
 /*
 ** Include Files:
 */
-#include "PAYUEL_LGPM_app.h"
-#include "PAYUEL_LGPM_eventids.h"
-#include "PAYUEL_LGPM_tbl.h"
-#include "PAYUEL_LGPM_utils.h"
+#include "payuel_lgpm_app.h"
+#include "payuel_lgpm_eventids.h"
+#include "payuel_lgpm_tbl.h"
+#include "payuel_lgpm_utils.h"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                 */

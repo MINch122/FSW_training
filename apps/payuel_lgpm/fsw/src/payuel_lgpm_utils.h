@@ -18,24 +18,26 @@
 
 /**
  * @file
- *
- * PAYUEL_LGPM Application Platform Configuration Header File
- *
- * This is a compatibility header for the "platform_cfg.h" file that has
- * traditionally provided both public and private config definitions
- * for each CFS app.
- *
- * These definitions are now provided in two separate files, one for
- * the public/mission scope and one for internal scope.
- *
- * @note This file may be overridden/superceded by mission-provided defintions
- * either by overriding this header or by generating definitions from a command/data
- * dictionary tool.
+ *   This file contains the prototypes for the PAYUEL_LGPM utility functions
  */
-#ifndef PAYUEL_LGPM_PLATFORM_CFG_H
-#define PAYUEL_LGPM_PLATFORM_CFG_H
 
-#include "PAYUEL_LGPM_mission_cfg.h"
-#include "PAYUEL_LGPM_internal_cfg.h"
+#ifndef PAYUEL_LGPM_UTILS_H
+#define PAYUEL_LGPM_UTILS_H
 
-#endif
+/*
+** Required header files.
+*/
+#include "payuel_lgpm_app.h"
+
+CFE_Status_t PAYUEL_LGPM_TblValidationFunc(void *TblData);
+void         PAYUEL_LGPM_GetCrc(const char *TableName);
+
+
+
+/* CRC16 (XModem) calculation function */ 
+
+uint16_t Usart6_CalculateCRC16(uint8_t *data, uint16_t length);
+
+
+#endif /* PAYUEL_LGPM_UTILS_H */
+

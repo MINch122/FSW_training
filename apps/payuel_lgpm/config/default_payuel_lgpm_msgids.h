@@ -18,19 +18,16 @@
 
 /**
  * @file
- *   Specification for the PAYUEL_LGPM table structures
- *
- * @note
- *   Constants and enumerated types related to these table structures
- *   are defined in PAYUEL_LGPM_tbldefs.h.
+ *   PAYUEL_LGPM Application Message IDs
  */
-#ifndef PAYUEL_LGPM_TBL_H
-#define PAYUEL_LGPM_TBL_H
+#ifndef PAYUEL_LGPM_MSGIDS_H
+#define PAYUEL_LGPM_MSGIDS_H
 
-#include "PAYUEL_LGPM_tbldefs.h"
-#include "PAYUEL_LGPM_tblstruct.h"
+#include "cfe_core_api_base_msgids.h"
+#include "payuel_lgpm_topicids.h"
 
-/* Define filenames of default data images for tables */
-#define PAYUEL_LGPM_TABLE_FILE "/cf/PAYUEL_LGPM_tbl.tbl"
+#define PAYUEL_LGPM_CMD_MID     CFE_PLATFORM_CMD_TOPICID_TO_MIDV(CFE_MISSION_PAYUEL_LGPM_CMD_TOPICID)
+#define PAYUEL_LGPM_SEND_HK_MID CFE_PLATFORM_CMD_TOPICID_TO_MIDV(CFE_MISSION_PAYUEL_LGPM_SEND_HK_TOPICID)
+#define PAYUEL_LGPM_HK_TLM_MID  CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_PAYUEL_LGPM_HK_TLM_TOPICID)
 
 #endif

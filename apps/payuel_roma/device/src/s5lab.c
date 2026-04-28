@@ -458,7 +458,7 @@ int s5lab_send_command(const char* cmd_str, uint8_t* result)
 
     int ret = s5lab_transaction(S5LAB_PORT_SHELL,
                                 cmd_str, cmd_len + 1,
-                                &rep, sizeof(rep), s5lab_csp_get_timeout());
+                                &rep, sizeof(rep), 20000); // send command timeout 늘려놓기: 20 초
 
     if (ret == S5LAB_OK && result) {
         *result = rep.result;

@@ -18,19 +18,19 @@
 
 /**
  * @file
- *   PAYUEL_LGPM Application Message IDs
+ *
+ * PAYUEL_LGPM Application Mission Configuration Header File
+ *
+ * This is a compatibility header for the "mission_cfg.h" file that has
+ * traditionally provided public config definitions for each CFS app.
+ *
+ * @note This file may be overridden/superceded by mission-provided defintions
+ * either by overriding this header or by generating definitions from a command/data
+ * dictionary tool.
  */
-#ifndef PAYUEL_LGPM_MSGIDS_H
-#define PAYUEL_LGPM_MSGIDS_H
+#ifndef PAYUEL_LGPM_MISSION_CFG_H
+#define PAYUEL_LGPM_MISSION_CFG_H
 
-#include "cfe_core_api_base_msgids.h"
-#include "PAYUEL_LGPM_topicids.h"
-
-// Commands
-#define PAYUEL_LGPM_CMD_MID     CFE_PLATFORM_CMD_TOPICID_TO_MIDV(CFE_MISSION_PAYUEL_LGPM_CMD_TOPICID)
-#define PAYUEL_LGPM_SEND_HK_MID CFE_PLATFORM_CMD_TOPICID_TO_MIDV(CFE_MISSION_PAYUEL_LGPM_SEND_HK_TOPICID)
-#define PAYUEL_LGPM_HK_TLM_MID  CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_PAYUEL_LGPM_HK_TLM_TOPICID)
-
-// Telemtry
+#include "payuel_lgpm_interface_cfg.h"
 
 #endif

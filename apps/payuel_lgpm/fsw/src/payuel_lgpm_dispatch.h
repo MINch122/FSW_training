@@ -19,18 +19,20 @@
 /**
  * @file
  *
- * PAYUEL_LGPM Application Mission Configuration Header File
- *
- * This is a compatibility header for the "mission_cfg.h" file that has
- * traditionally provided public config definitions for each CFS app.
- *
- * @note This file may be overridden/superceded by mission-provided defintions
- * either by overriding this header or by generating definitions from a command/data
- * dictionary tool.
+ * Main header file for the PAYUEL_LGPM application
  */
-#ifndef PAYUEL_LGPM_MISSION_CFG_H
-#define PAYUEL_LGPM_MISSION_CFG_H
 
-#include "PAYUEL_LGPM_interface_cfg.h"
+#ifndef PAYUEL_LGPM_DISPATCH_H
+#define PAYUEL_LGPM_DISPATCH_H
 
-#endif
+/*
+** Required header files.
+*/
+#include "cfe.h"
+#include "payuel_lgpm_msg.h"
+
+void PAYUEL_LGPM_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr);
+void PAYUEL_LGPM_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr);
+bool PAYUEL_LGPM_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength);
+
+#endif /* PAYUEL_LGPM_DISPATCH_H */

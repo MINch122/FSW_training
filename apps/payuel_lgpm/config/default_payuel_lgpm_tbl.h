@@ -18,21 +18,19 @@
 
 /**
  * @file
+ *   Specification for the PAYUEL_LGPM table structures
  *
- * Main header file for the PAYUEL_LGPM application
+ * @note
+ *   Constants and enumerated types related to these table structures
+ *   are defined in PAYUEL_LGPM_tbldefs.h.
  */
+#ifndef PAYUEL_LGPM_TBL_H
+#define PAYUEL_LGPM_TBL_H
 
-#ifndef PAYUEL_LGPM_DISPATCH_H
-#define PAYUEL_LGPM_DISPATCH_H
+#include "payuel_lgpm_tbldefs.h"
+#include "payuel_lgpm_tblstruct.h"
 
-/*
-** Required header files.
-*/
-#include "cfe.h"
-#include "PAYUEL_LGPM_msg.h"
+/* Define filenames of default data images for tables */
+#define PAYUEL_LGPM_TABLE_FILE "/cf/PAYUEL_LGPM_tbl.tbl"
 
-void PAYUEL_LGPM_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr);
-void PAYUEL_LGPM_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr);
-bool PAYUEL_LGPM_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength);
-
-#endif /* PAYUEL_LGPM_DISPATCH_H */
+#endif

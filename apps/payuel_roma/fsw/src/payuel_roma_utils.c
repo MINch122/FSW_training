@@ -96,10 +96,10 @@ void PAYUEL_ROMA_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t
 	Report->Report.CommandCode = CC;
 	Report->Report.ReturnType = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_HW;
 	Report->Report.ReturnCode = Status; // `device/s5lab.h`
-	Report->Report.ReturnDataSize = (ReadSize > RPT_RET_VALUE_BUF_SIZE) ? RPT_RET_VALUE_BUF_SIZE : ReadSize;
+	Report->Report.ReturnDataSize = ReadSize;
 	if (ReadSize && ReadData)
     {
-		memcpy(Report->Report.ReturnValue, ReadData, Report->Report.ReturnDataSize);
+		memcpy(Report->Report.ReturnValue, ReadData, ReadSize);
 	}
 
 	CFE_SB_TimeStampMsg((CFE_MSG_PTR(Report->TelemetryHeader)));

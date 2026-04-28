@@ -31,10 +31,9 @@
 /************************************************************************
  * Includes
  ************************************************************************/
-#include "PAYUEL_LGPM_mission_cfg.h"
-#include "PAYUEL_LGPM_msgdefs.h"
+#include "payuel_lgpm_mission_cfg.h"
+#include "payuel_lgpm_msgdefs.h"
 #include "cfe_msg_hdr.h"
-#include "rpt_interface_cfg.h"
 
 /*************************************************************************/
 
@@ -188,40 +187,40 @@ typedef struct
 
 /*************************************************************************/
 /*
-** OBC to Payload (CMD code : 0x20) : RWA
+** OBC to Payload (CMD code : 0x20)
 */
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-    PAYUEL_LGPM_GCS2OBC_RWA_CONTROL_TLM_Payload_t  payload;
+    PAYUEL_LGPM_OBC2Payload_RWA_CONTROL_Payload_t  payload;
 
-} __attribute__((packed))PAYUEL_LGPM_RWA_CONTROL_Cmd_t;
-
+} PAYUEL_LGPM_RWA_CONTROL_Cmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+    PAYUEL_LGPM_OBC2Payload_RWA_PWR_ON_Payload_t  payload;
 
 } PAYUEL_LGPM_RWA_PWR_ON_Cmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-
+    PAYUEL_LGPM_OBC2Payload_RWA_PWR_OFF_Payload_t  payload;
 
 } PAYUEL_LGPM_RWA_PWR_OFF_Cmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-
+    PAYUEL_LGPM_OBC2Payload_RWA_SENSE_INFO_Payload_t  payload;
 
 } PAYUEL_LGPM_RWA_SENSE_INFO_Cmd_t;
 
 /*************************************************************************/
 /*
-** Payload to OBC(CMD code : 0x23) : PWR
+** Payload to OBC(CMD code : 0x23)
 */
 
 typedef struct
@@ -341,7 +340,7 @@ typedef struct
 
 /*************************************************************************/
 /*
-** Payload to OBC (CMD code : 0x20) : RWA
+** Payload to OBC (CMD code : 0x20)
 */
 
 typedef struct
@@ -373,11 +372,6 @@ typedef struct
 } PAYUEL_LGPM_RWA_SENSE_INFO_Reply_Cmd_t;
 
 
-/* Report SB MSG */
-typedef struct {
-    CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    RPT_Report_t Report;
-} ADCS_ReportTlm_t;
 
 /*************************************************************************/
 /*

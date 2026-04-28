@@ -399,6 +399,10 @@ void PAYUEL_ROMA_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
             PAYUEL_ROMA_SendHkCmd((const PAYUEL_ROMA_SendHkCmd_t *)SBBufPtr);
             break;
 
+        case PAYUEL_ROMA_SEND_BCN_MID:
+            PAYUEL_ROMA_SendBcnCmd((const PAYUEL_ROMA_SendBcnCmd_t *)SBBufPtr);
+            break;
+
         default:
             CFE_EVS_SendEvent(PAYUEL_ROMA_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                               "Roma-SP: invalid command packet,MID = 0x%x", (unsigned int)CFE_SB_MsgIdToValue(MsgId));

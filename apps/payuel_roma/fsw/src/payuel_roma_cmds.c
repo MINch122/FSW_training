@@ -1,4 +1,4 @@
-/************************************************************************
+ /************************************************************************
  * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
  * Copyright (c) 2020 United States Government as represented by the
@@ -72,6 +72,32 @@ CFE_Status_t PAYUEL_ROMA_SendHkCmd(const PAYUEL_ROMA_SendHkCmd_t *Msg)
     return CFE_SUCCESS;
 }
 
+CFE_Status_t PAYUEL_ROMA_SendBcnCmd(const PAYUEL_ROMA_SendBcnCmd_t *Msg) 
+{
+    CFE_Status_t Status;
+    uint8 RxBuf[128] = {0};
+
+    Status = CFE_SRL_ApiTransactionCSP(19, 8, &PAYUEL_ROMA_Data.bcn.Payload.random, sizeof(PAYUEL_ROMA_Data.bcn.Payload.random), RxBuf, -1); 
+
+    
+    if (Status != CFE_SUCCESS)
+    {
+        CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                        "[ROMA-SP] Failed to get beacon data, status = 0x%08X", Status);
+        PAYUEL_ROMA_Data.ErrCounter++;
+    }
+    else
+    {
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(PAYUEL_ROMA_Data.bcn.TelemetryHeader));
+        CFE_SB_TransmitMsg(CFE_MSG_PTR(PAYUEL_ROMA_Data.bcn.TelemetryHeader), true);
+        PAYUEL_ROMA_Data.CmdCounter++;
+        OS_printf("[ROMA-SP] random Staus: 0x%04X\n", PAYUEL_ROMA_Data.bcn.Payload.random);  // beacon 항목 정해지면 수정해야함 함수 전체
+    }
+    
+    return CFE_SUCCESS;
+}
+
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
 /* NOOP commands                                                              */
@@ -102,10 +128,6 @@ CFE_Status_t PAYUEL_ROMA_NoopCmd(const PAYUEL_ROMA_NoopCmd_t *Msg)
     if (Status == CFE_SUCCESS) {
         OS_printf("Rx Data: %s\n", RxBuf);
     }
-
-    PAYUEL_ROMA_HandleReport(Status, PAYUEL_ROMA_NOOP_CC,
-                             (Status == CFE_SUCCESS) ? RxBuf : NULL,
-                             (Status == CFE_SUCCESS) ? sizeof(RxBuf) : 0);
 
     return CFE_SUCCESS;
 }
@@ -141,10 +163,6 @@ CFE_Status_t PAYUEL_ROMA_ResetCountersCmd(const PAYUEL_ROMA_ResetCountersCmd_t *
     }
 
     CFE_EVS_SendEvent(PAYUEL_ROMA_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "RESET command");
-
-    PAYUEL_ROMA_HandleReport(Status, PAYUEL_ROMA_RESET_COUNTERS_CC,
-                             (Status == CFE_SUCCESS) ? RxBuf : NULL,
-                             (Status == CFE_SUCCESS) ? sizeof(RxBuf) : 0);
 
     return CFE_SUCCESS;
 }
@@ -189,11 +207,6 @@ CFE_Status_t PAYUEL_ROMA_CommTestCmd(const PAYUEL_ROMA_CommTestCmd_t *Msg)
     {
         OS_printf("[ROMA-SP] Comm. Test Failed. Status: 0x%08X\n", (unsigned int)Status);
     }
-
-    PAYUEL_ROMA_HandleReport((Status >= 0) ? CFE_SUCCESS : CFE_STATUS_EXTERNAL_RESOURCE_FAIL,
-                             PAYUEL_ROMA_COMM_TEST_CC,
-                             (Status > 0) ? RxBuf : NULL,
-                             (Status > 0) ? (uint16)Status : 0);
 
     return CFE_SUCCESS;
 }
@@ -258,11 +271,6 @@ CFE_Status_t PAYUEL_ROMA_ClockSyncCmd(const PAYUEL_ROMA_ClockSyncCmd_t *Msg)
         OS_printf("[ROMA-SP] Clock Synchronization Test Failed. Status: 0x%08X\n", (unsigned int)Status);
     }
 
-    PAYUEL_ROMA_HandleReport((Status >= 0) ? CFE_SUCCESS : CFE_STATUS_EXTERNAL_RESOURCE_FAIL,
-                             PAYUEL_ROMA_CLOCK_SYNC_CC,
-                             (Status > 0) ? RxBuf : NULL,
-                             (Status > 0) ? (uint16)Status : 0);
-
     return CFE_SUCCESS;
 }
 
@@ -302,14 +310,8 @@ CFE_Status_t PAYUEL_ROMA_LogTestCmd(const PAYUEL_ROMA_LogTestCmd_t *Msg)
         OS_printf("[ROMA-SP] Log Retrieval Failed. Error: 0x%08X\n", (unsigned int)Status);
     }
 
-    PAYUEL_ROMA_HandleReport((Status > 0) ? CFE_SUCCESS : CFE_STATUS_EXTERNAL_RESOURCE_FAIL,
-                             PAYUEL_ROMA_LOG_TEST_CC,
-                             (Status > 0) ? RxBuf : NULL,
-                             (Status > 0) ? (uint16)Status : 0);
-
     return CFE_SUCCESS;
 }
-
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
@@ -353,11 +355,6 @@ CFE_Status_t PAYUEL_ROMA_TransTestCmd(const PAYUEL_ROMA_TransTestCmd_t *Msg)
     {
         OS_printf("[ROMA-SP] Trans Test Failed. Error: 0x%08X\n", (unsigned int)Status);
     }
-
-    PAYUEL_ROMA_HandleReport((Status >= 1) ? CFE_SUCCESS : CFE_STATUS_EXTERNAL_RESOURCE_FAIL,
-                             PAYUEL_ROMA_TRANS_TEST_CC,
-                             (Status > 0) ? RxBuf : NULL,
-                             (Status > 0) ? (uint16)Status : 0);
 
     return CFE_SUCCESS;
 }
@@ -739,16 +736,12 @@ CFE_Status_t PAYUEL_ROMA_GetMultipleEntriesCmd(const PAYUEL_ROMA_GetMultipleEntr
 
     if (Status == S5LAB_OK)
     {
-        CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
-                         "GET_MULTILE_ENTRIES totally succeeded.");
+        CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,"GET_MULTILE_ENTRIES totally succeeded.");
     }
     else
     {
-        CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                         "GET_MULTIPLE_ENTRIES err: %d", Status);
+        CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"GET_MULTIPLE_ENTRIES err: %d", Status);
     }
-
-    PAYUEL_ROMA_HandleReport(Status, PAYUEL_ROMA_GET_MULTIPLE_ENTRIES_CC, NULL, 0);
 
     return CFE_SUCCESS;
 }
@@ -807,7 +800,6 @@ CFE_Status_t PAYUEL_ROMA_AddEntryCmd(const PAYUEL_ROMA_AddEntryCmd_t *Msg)
             CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                             "ADD_ENTRY: Failed (Rx error code = 0x%02X)", (unsigned int)error_code);
         }
-
         // debug print
         OS_printf("[ROMA-SP] ADD_ENTRY:\nRx error code=0x%02X\n", (unsigned int)error_code);
     }
@@ -852,24 +844,17 @@ CFE_Status_t PAYUEL_ROMA_RemoveEntryCmd(const PAYUEL_ROMA_RemoveEntryCmd_t *Msg)
             // debug print
             OS_printf("[ROMA-SP] REMOVE_ENTRY (idx: %u): Success\n", (unsigned int)Msg->Payload.entry_index);
         }
-        else if (result == 0) // 0 = failed
+        else // 0 or else = failed
         {
             CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "REMOVE_ENTRY (idx: %u): Failed", (unsigned int)Msg->Payload.entry_index);
+                              "REMOVE_ENTRY (idx: %u): Failed. result = %d", (unsigned int)Msg->Payload.entry_index, (int8)result);
             // debug print
-            OS_printf("[ROMA-SP] REMOVE_ENTRY (idx: %u): Failed\n", (unsigned int)Msg->Payload.entry_index);
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "REMOVE_ENTRY: Failed command itself (result: %u)", (unsigned int)result);
-            // debug print
-            OS_printf("[ROMA-SP] REMOVE_ENTRY (idx: %u): Failed command itself. result = %u\n", (unsigned int)Msg->Payload.entry_index, (unsigned int)result);
+            OS_printf("[ROMA-SP] REMOVE_ENTRY (idx: %u): Failed. result = %d\n", (unsigned int)Msg->Payload.entry_index, (int8)result);
         }
     }
     else
     {
-        CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "REMOVE_ENTRY: CSP transaction failed: %d", Status);
+        CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"REMOVE_ENTRY: CSP transaction failed: %d", Status);
     }
 
     PAYUEL_ROMA_HandleReport(Status, PAYUEL_ROMA_REMOVE_ENTRY_CC, &result, sizeof(result));
@@ -902,14 +887,12 @@ CFE_Status_t PAYUEL_ROMA_GetUsedSlotsCmd(const PAYUEL_ROMA_GetUsedSlotsCmd_t *Ms
 
         CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
                           "GET_USED_SLOTS success: %u slots in use", (unsigned int)slots);
-        
         // debug print
         OS_printf("[ROMA-SP] GET_USED_SLOTS: %u\n", (unsigned int)slots);
     }
     else
     {
-        CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "GET_USED_SLOTS: CSP transaction failed: %d", Status);
+        CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"GET_USED_SLOTS: CSP transaction failed: %d", Status);
     }
 
     PAYUEL_ROMA_HandleReport(Status, PAYUEL_ROMA_GET_USED_SLOTS_CC, &slots, sizeof(slots));
@@ -951,18 +934,11 @@ CFE_Status_t PAYUEL_ROMA_SetRouteDefaultCmd(const PAYUEL_ROMA_SetRouteDefaultCmd
             // debug print
             OS_printf("[ROMA-SP] SET_ROUTE_DEFAULT: Success\n");
         }
-        else if (result == 0) // 0 = failed
+        else// 0 or something = failed
         {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"SET_ROUTE_DEFAULT: Failed");
+            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"SET_ROUTE_DEFAULT: Failed. result = %d", (int8)result);
             // debug print
-            OS_printf("[ROMA-SP] SET_ROUTE_DEFAULT: Failed\n");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                            "SET_ROUTE_DEFAULT: Failed command itself. result: %u", (unsigned int)result);
-            // debug print
-            OS_printf("[ROMA-SP] SET_ROUTE_DEFAULT: Failed command itself. result: %u\n", (unsigned int)result);
+            OS_printf("[ROMA-SP] SET_ROUTE_DEFAULT: Failed. result = %d\n", (int8)result);
         }
     }
     else
@@ -1004,18 +980,11 @@ CFE_Status_t PAYUEL_ROMA_ResetRouteCmd(const PAYUEL_ROMA_ResetRouteCmd_t *Msg)
             // debug print
             OS_printf("[ROMA-SP] RESET_ROUTE: Success\n");
         }
-        else if (result == 0) // 0 = failed
+        else // 0 or something = failed
         {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"RESET_ROUTE: Failed");
+            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"RESET_ROUTE: Failed. result = %d", (int8)result);
             // debug print
-            OS_printf("[ROMA-SP] RESET_ROUTE: Failed\n");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                                "RESET_ROUTE: Failed command itself. result: %u", (unsigned int)result);
-            // debug print
-            OS_printf("[ROMA-SP] RESET_ROUTE: Failed command itself. result: %u\n", (unsigned int)result);
+            OS_printf("[ROMA-SP] RESET_ROUTE: Failed. result = %d\n", (int8)result);
         }
     }
     else
@@ -1057,19 +1026,11 @@ CFE_Status_t PAYUEL_ROMA_LoadRouteCmd(const PAYUEL_ROMA_LoadRouteCmd_t *Msg)
             // debug print
             OS_printf("[ROMA-SP] LOAD_ROUTE: Success\n");
         }
-        else if (result == 0) // 0 = failed
+        else // 0 or something = failed
         {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"LOAD_ROUTE: Failed");
+            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"LOAD_ROUTE: Failed. result = %d", (int8)result);
             // debug print
-            OS_printf("[ROMA-SP] LOAD_ROUTE: Failed\n");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                            "LOAD_ROUTE: Failed command itself. result: %u", (unsigned int)result);
-
-            // debug print
-            OS_printf("[ROMA-SP] LOAD_ROUTE: Failed command itself. result: %u\n", (unsigned int)result);
+            OS_printf("[ROMA-SP] LOAD_ROUTE: Failed. result = %d\n", (int8)result);
         }
     }
     else
@@ -1152,18 +1113,11 @@ CFE_Status_t PAYUEL_ROMA_SendRouteCmd(const PAYUEL_ROMA_SendRouteCmd_t *Msg)
             // debug print
             OS_printf("[ROMA-SP] SEND_ROUTE: Success\n");
         }
-        else if (result == 0) // 0 = failed
+        else // 0 or something = failed
         {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"SEND_ROUTE: Failed");
+            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"SEND_ROUTE: Failed. result = %d", (int8)result);
             // debug print
-            OS_printf("[ROMA-SP] SEND_ROUTE: Failed\n");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                            "SEND_ROUTE: Failed command itself. result: %u", (unsigned int)result);
-            // debug print
-            OS_printf("[ROMA-SP] SEND_ROUTE: Failed command itself. result: %u\n", (unsigned int)result);
+            OS_printf("[ROMA-SP] SEND_ROUTE: Failed. result = %d\n", (int8)result);
         }
     }
     else
@@ -1205,17 +1159,11 @@ CFE_Status_t PAYUEL_ROMA_SetRouteCmd(const PAYUEL_ROMA_SetRouteCmd_t *Msg)
             // debug print
             OS_printf("[ROMA-SP] SET_ROUTE: Success\n");
         }
-        else if (result == 0) // 0 = failed
+        else // 0 or something = failed
         {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"SET_ROUTE: Failed");
+            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"SET_ROUTE: Failed. result = %d", (int8)result);
             // debug print
-            OS_printf("[ROMA-SP] SET_ROUTE: Failed\n");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "SET_ROUTE: Failed command itself. result: %u", (unsigned int)result);
-            // debug print
-            OS_printf("[ROMA-SP] SET_ROUTE: Failed command itself. result: %u\n", (unsigned int)result);
+            OS_printf("[ROMA-SP] SET_ROUTE: Failed. result = %d\n", (int8)result);
         }
     }
     else
@@ -1300,17 +1248,11 @@ CFE_Status_t PAYUEL_ROMA_ParSetCmd(const PAYUEL_ROMA_ParSetCmd_t *Msg)
             // debug print
             OS_printf("[ROMA-SP] PAR_SET: Success\n");
         }
-        else if (result == 0) // 0 = failed
+        else // 0 or something = failed
         {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"PAR_SET: Failed");
+            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"PAR_SET: Failed. result = %d", (int8)result);
             // debug print
-            OS_printf("[ROMA-SP] PAR_SET: Failed\n");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "PAR_SET: Failed command itself. result: %u", (unsigned int)result);
-            // debug print
-            OS_printf("[ROMA-SP] PAR_SET: Failed command itself. result: %u\n", (unsigned int)result);
+            OS_printf("[ROMA-SP] PAR_SET: Failed. result = %d\n", (int8)result);
         }
     }
     else
@@ -1352,17 +1294,11 @@ CFE_Status_t PAYUEL_ROMA_ParDefaultsCmd(const PAYUEL_ROMA_ParDefaultsCmd_t *Msg)
             // debug print
             OS_printf("[ROMA-SP] PAR_DEFAULTS: Success\n");
         }
-        else if (result == 0) // 0 = failed
+        else // 0 or something = failed
         {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"PAR_DEFAULTS: Failed");
+            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"PAR_DEFAULTS: Failed. result = %d", (int8)result);
             // debug print
-            OS_printf("[ROMA-SP] PAR_DEFAULTS: Failed\n");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "PAR_DEFAULTS: Failed command itself. result: %u", (unsigned int)result);
-            // debug print
-            OS_printf("[ROMA-SP] PAR_DEFAULTS: Failed command itself. result: %u\n", (unsigned int)result);
+            OS_printf("[ROMA-SP] PAR_DEFAULTS: Failed. result = %d\n", (int8)result);
         }
     }
     else
@@ -1404,17 +1340,10 @@ CFE_Status_t PAYUEL_ROMA_ParSaveCmd(const PAYUEL_ROMA_ParSaveCmd_t *Msg)
             // debug print
             OS_printf("[ROMA-SP] PAR_SAVE: Success\n");
         }
-        else if (result == 0) // 0 = failed
+        else // 0 or something = failed
         {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"PAR_SAVE: Failed");
-            // debug print
-            OS_printf("[ROMA-SP] PAR_SAVE: Failed\n");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "PAR_SAVE: Failed command itself. result: %u", (unsigned int)result);
-            // debug print
-            OS_printf("[ROMA-SP] PAR_SAVE: Failed command itself. result: %u\n", (unsigned int)result);
+            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"PAR_SAVE: Failed. result = %d", (int8)result);
+            OS_printf("[ROMA-SP] PAR_SAVE: Failed. result = %d\n", (int8)result);
         }
     }
     else
@@ -1456,17 +1385,10 @@ CFE_Status_t PAYUEL_ROMA_ParRestoreCmd(const PAYUEL_ROMA_ParRestoreCmd_t *Msg)
             // debug print
             OS_printf("[ROMA-SP] PAR_RESTORE: Success\n");
         }
-        else if (result == 0) // 0 = failed
+        else // 0 or something = failed
         {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"PAR_RESTORE: Failed");
-            // debug print
-            OS_printf("[ROMA-SP] PAR_RESTORE: Failed\n");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "PAR_RESTORE: Failed command itself. result: %u", (unsigned int)result);
-            // debug print
-            OS_printf("[ROMA-SP] PAR_RESTORE: Failed command itself. result: %u\n", (unsigned int)result);
+            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"PAR_RESTORE: Failed. result = %d", (int8)result);
+            OS_printf("[ROMA-SP] PAR_RESTORE: Failed. result = %d\n", (int8)result);
         }
     }
     else
@@ -1508,17 +1430,10 @@ CFE_Status_t PAYUEL_ROMA_ParLoadCmd(const PAYUEL_ROMA_ParLoadCmd_t *Msg)
             // debug print
             OS_printf("[ROMA-SP] PAR_LOAD: Success\n");
         }
-        else if (result == 0) // 0 = failed
+        else // 0 or something = failed
         {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"PAR_LOAD: Failed");
-            // debug print
-            OS_printf("[ROMA-SP] PAR_LOAD: Failed\n");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "PAR_LOAD: Failed command itself. result: %u", (unsigned int)result);
-            // debug print
-            OS_printf("[ROMA-SP] PAR_LOAD: Failed command itself. result: %u\n", (unsigned int)result);
+            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"PAR_LOAD: Failed. result = %d", (int8)result);
+            OS_printf("[ROMA-SP] PAR_LOAD: Failed. result = %d\n", (int8)result);
         }
     }
     else
@@ -1557,20 +1472,12 @@ CFE_Status_t PAYUEL_ROMA_ParSetOobCmd(const PAYUEL_ROMA_ParSetOobCmd_t *Msg)
         if (result == 1) // 1 = success
         {
             CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,"PAR_SET_OOB: Success");
-            // debug print
             OS_printf("[ROMA-SP] PAR_SET_OOB: Success\n");
         }
-        else if (result == 0) // 0 = failed
+        else // 0 or something = failed
         {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"PAR_SET_OOB: Failed");
-            // debug print
-            OS_printf("[ROMA-SP] PAR_SET_OOB: Failed\n");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "PAR_SET_OOB: Failed command itself. result: %u", (unsigned int)result);
-            // debug print
-            OS_printf("[ROMA-SP] PAR_SET_OOB: Failed command itself. result: %u\n", (unsigned int)result);
+            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"PAR_SET_OOB: Failed. result = %d", (int8)result);
+            OS_printf("[ROMA-SP] PAR_SET_OOB: Failed. result = %d\n", (int8)result);
         }
     }
     else
@@ -1598,7 +1505,7 @@ CFE_Status_t PAYUEL_ROMA_ParSetOobCmd(const PAYUEL_ROMA_ParSetOobCmd_t *Msg)
 
 CFE_Status_t PAYUEL_ROMA_SendCommandCmd(const PAYUEL_ROMA_SendCommandCmd_t *Msg)
 {
-    uint8 result = 0;
+    uint8 result = 7;
 
     // 방어 버퍼
     char safe_cmd[128] = {0};
@@ -1614,25 +1521,19 @@ CFE_Status_t PAYUEL_ROMA_SendCommandCmd(const PAYUEL_ROMA_SendCommandCmd_t *Msg)
         for (int i = 0; i < strlen(safe_cmd) + 1; i++) OS_printf("%02X ", (uint8)safe_cmd[i]);
     OS_printf("\n");
 
-    if (Status == S5LAB_OK)
+    // if (Status == S5LAB_OK)
+    if (Status >= 0)
     {
-        if (result == 1) // 1 = success
+        if (result == 0)// 0 = success
         {
             CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,"SEND_COMMAND: Success");
             // debug print
-            OS_printf("[ROMA-SP] SEND_COMMAND: Success\n");
+            OS_printf("[ROMA-SP] SEND_COMMAND: Success, result=%d\n", result);
         }
-        else if (result == 0) // 0 = failed
+        else // 0 이외 = failed
         {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"SEND_COMMAND: Failed");
-            // debug print
-            OS_printf("[ROMA-SP] SEND_COMMAND: Failed\n");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "SEND_COMMAND: Failed command itself. result: %u", (unsigned int)result);
-            // debug print
-            OS_printf("[ROMA-SP] SEND_COMMAND: Failed command itself. result: %u\n", (unsigned int)result);
+            CFE_EVS_SendEvent(PAYUEL_ROMA_CMD_ERR_EID, CFE_EVS_EventType_ERROR,"SEND_COMMAND: Failed. results = %d", (int8)result);
+            OS_printf("[ROMA-SP] SEND_COMMAND: Failed. result =%d\n", (int8)result);
         }
     }
     else
@@ -1681,16 +1582,12 @@ CFE_Status_t PAYUEL_ROMA_SendMsgCmd(const PAYUEL_ROMA_SendMsgCmd_t *Msg)
     {
         OS_printf("[ROMA-SP] Send Message Command Success.\n");
         OS_printf("[ROMA-SP] Sended Message: %s", Msg->Payload.msg);
-
     }
     else
     {
         OS_printf("[ROMA-SP] Send Message Command Failed. Status: 0x%08X\n", (unsigned int)Status);
         OS_printf("[ROMA-SP] Sended Message: %s", Msg->Payload.msg);
     }
-
-    PAYUEL_ROMA_HandleReport((Status >= 0) ? CFE_SUCCESS : CFE_STATUS_EXTERNAL_RESOURCE_FAIL,
-                             PAYUEL_ROMA_SEND_MSG_CC, NULL, 0);
 
     return CFE_SUCCESS;
 }
@@ -1720,9 +1617,6 @@ CFE_Status_t PAYUEL_ROMA_SyncRxCmd(const PAYUEL_ROMA_SyncRxCmd_t *Msg)
     {
         OS_printf("[ROMA-SP] Sync RX Command Failed. Status: 0x%08X\n", (unsigned int)Status);
     }
-
-    PAYUEL_ROMA_HandleReport((Status >= 0) ? CFE_SUCCESS : CFE_STATUS_EXTERNAL_RESOURCE_FAIL,
-                             PAYUEL_ROMA_SYNC_RX_CC, NULL, 0);
 
     return CFE_SUCCESS;
 }
@@ -1755,9 +1649,6 @@ CFE_Status_t PAYUEL_ROMA_SyncTxCmd(const PAYUEL_ROMA_SyncTxCmd_t *Msg)
         OS_printf("[ROMA-SP] Sync TX Command Failed. Status: 0x%08X\n", (unsigned int)Status);
     }
 
-    PAYUEL_ROMA_HandleReport((Status >= 0) ? CFE_SUCCESS : CFE_STATUS_EXTERNAL_RESOURCE_FAIL,
-                             PAYUEL_ROMA_SYNC_TX_CC, NULL, 0);
-
     return CFE_SUCCESS;
 }
 
@@ -1776,7 +1667,9 @@ CFE_Status_t PAYUEL_ROMA_PayInitCmd(const PAYUEL_ROMA_PayInitCmd_t *Msg)
     TxBuf[1] = 32; // cmd
     TxBuf[2] = 7;   // sub
 
-    int32 Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_ROMA, 8, TxBuf, sizeof(TxBuf), NULL, 0);
+    uint16 timeout = 30000; //  the pay lora command can take long to execute, from 2 seconds up to 20
+
+    int32 Status = s5lab_csp_send(8, TxBuf, sizeof(TxBuf), timeout, NULL);
 
     if (Status >= 0)
     {
@@ -1786,9 +1679,6 @@ CFE_Status_t PAYUEL_ROMA_PayInitCmd(const PAYUEL_ROMA_PayInitCmd_t *Msg)
     {
         OS_printf("[ROMA-SP] Payload Initialization Command Failed. Status: 0x%08X\n", (unsigned int)Status);
     }
-
-    PAYUEL_ROMA_HandleReport((Status >= 0) ? CFE_SUCCESS : CFE_STATUS_EXTERNAL_RESOURCE_FAIL,
-                             PAYUEL_ROMA_PAY_INIT_CC, NULL, 0);
 
     return CFE_SUCCESS;
 }

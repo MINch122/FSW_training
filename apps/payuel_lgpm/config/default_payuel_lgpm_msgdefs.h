@@ -27,7 +27,7 @@
 #define PAYUEL_LGPM_MSGDEFS_H
 
 #include "common_types.h"
-#include "PAYUEL_LGPM_fcncodes.h"
+#include "payuel_lgpm_fcncodes.h"
 
 
 
@@ -37,7 +37,7 @@
 */
 
 # define PWR_cmd_code 0x23
-# define RWA_cmd_code 0x23
+# define RWA_cmd_code 0x20
 
 
 #pragma pack(push, 1) 
@@ -170,19 +170,7 @@ typedef struct PAYUEL_LGPM_OBC2Payload_PWR_SEQ_OFF_Payload
 } PAYUEL_LGPM_OBC2Payload_PWR_SEQ_OFF_Payload_t;
 
 
-/*************************************************************************/
-/*
-** GCS to OBC (CMD code : 0x20)
-*/
 
-typedef struct PAYUEL_LGPM_GCS2OBC_RWA_CONTROL_TLM_Payload
-{     
-    int16 TargetSpeed_RPM;    
-    int16 TargetAcc_RPM;
-    int16 Operating_Time;
-    uint8 sub_index;
-          
-} __attribute__((packed))PAYUEL_LGPM_GCS2OBC_RWA_CONTROL_TLM_Payload_t;
 
 /*************************************************************************/
 /*
@@ -197,9 +185,9 @@ typedef struct PAYUEL_LGPM_OBC2Payload_RWA_CONTROL_Payload
     int16 TargetAcc_RPM;
     int16 Operating_Time;
     uint8 sub_index;
-    uint8 Checksum;  
-    uint16 CRC16;              
-} __attribute__((packed))PAYUEL_LGPM_OBC2Payload_RWA_CONTROL_Payload_t;
+    uint8 Checksum;                
+    uint16 CRC16; 
+} PAYUEL_LGPM_OBC2Payload_RWA_CONTROL_Payload_t;
 
 typedef struct PAYUEL_LGPM_OBC2Payload_RWA_PWR_ON_Payload
 {
@@ -392,7 +380,7 @@ typedef struct PAYUEL_LGPM_Payload2OBC_RWA_CONTROL_Payload
 typedef struct PAYUEL_LGPM_Payload2OBC_RWA_PWR_ON_Payload
 {
     RWA_CommonHeader_cmd_t header;
-    uint8 RWA_PWR_ON;
+    uint8 RWA_PWR_ON_val;
     uint32 Execution_Timestamp;    
     char Reply_Message[42]; 
     uint16 CRC16;                           
@@ -401,7 +389,7 @@ typedef struct PAYUEL_LGPM_Payload2OBC_RWA_PWR_ON_Payload
 typedef struct PAYUEL_LGPM_Payload2OBC_RWA_PWR_OFF_Payload
 {
     RWA_CommonHeader_cmd_t header;
-    uint8 RWA_PWR_OFF;
+    uint8 RWA_PWR_OFF_val;
     uint32 Execution_Timestamp;    
     char Reply_Message[46]; 
     uint16 CRC16;                           

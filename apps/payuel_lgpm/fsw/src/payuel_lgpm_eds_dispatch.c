@@ -24,15 +24,15 @@
 /*
 ** Include Files:
 */
-#include "PAYUEL_LGPM_app.h"
-#include "PAYUEL_LGPM_dispatch.h"
-#include "PAYUEL_LGPM_cmds.h"
-#include "PAYUEL_LGPM_eventids.h"
-#include "PAYUEL_LGPM_msgids.h"
-#include "PAYUEL_LGPM_msg.h"
+#include "payuel_lgpm_app.h"
+#include "payuel_lgpm_dispatch.h"
+#include "payuel_lgpm_cmds.h"
+#include "payuel_lgpm_eventids.h"
+#include "payuel_lgpm_msgids.h"
+#include "payuel_lgpm_msg.h"
 
-#include "PAYUEL_LGPM_eds_dispatcher.h"
-#include "PAYUEL_LGPM_eds_dictionary.h"
+#include "payuel_lgpm_eds_dispatcher.h"
+#include "payuel_lgpm_eds_dictionary.h"
 
 /*
  * Define a lookup table for PAYUEL_LGPM app command codes

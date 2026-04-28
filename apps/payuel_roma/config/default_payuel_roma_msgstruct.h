@@ -36,7 +36,6 @@
 #include "payuel_roma_msgdefs.h"
 #include "cfe_msg_hdr.h"
 
-#include "rpt_interface_cfg.h"
 
 /*************************************************************************/
 
@@ -81,6 +80,11 @@ typedef struct
 {
     CFE_MSG_CommandHeader_t            CommandHeader;
 } PAYUEL_ROMA_TransTestCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+} PAYUEL_ROMA_SendBcnCmd_t;
 
 
 /************************************************************************
@@ -291,5 +295,15 @@ typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     RPT_Report_t Report;
 } PAYUEL_ROMA_ReportTlm_t;
+
+/*
+** Beacon Telemetry Packet
+*/
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    PAYUEL_ROMA_BcnTlm_Payload_t Payload;
+} PAYUEL_ROMA_BcnTlm_t;
+
 
 #endif /* PAYUEL_ROMA_MSGSTRUCT_H */

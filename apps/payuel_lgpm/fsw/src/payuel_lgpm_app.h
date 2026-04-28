@@ -32,12 +32,12 @@
 #include "cfe_config.h"
 #include "cfe_msg.h"
 
-#include "PAYUEL_LGPM_mission_cfg.h"
-#include "PAYUEL_LGPM_platform_cfg.h"
+#include "payuel_lgpm_mission_cfg.h"
+#include "payuel_lgpm_platform_cfg.h"
 
-#include "PAYUEL_LGPM_perfids.h"
-#include "PAYUEL_LGPM_msgids.h"
-#include "PAYUEL_LGPM_msg.h"
+#include "payuel_lgpm_perfids.h"
+#include "payuel_lgpm_msgids.h"
+#include "payuel_lgpm_msg.h"
 
 /************************************************************************
 ** Type Definitions

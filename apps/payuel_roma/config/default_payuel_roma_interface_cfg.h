@@ -32,6 +32,10 @@
 #ifndef PAYUEL_ROMA_INTERFACE_CFG_H
 #define PAYUEL_ROMA_INTERFACE_CFG_H
 
+#include "common_types.h"
+#include "cfe.h"
+#include "rpt_interface_cfg.h"
+
 /**
  * \brief Length of string buffer in the Display Value command
  *

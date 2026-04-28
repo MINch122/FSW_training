@@ -28,7 +28,7 @@
 ** Required header files.
 */
 #include "cfe_error.h"
-#include "PAYUEL_LGPM_msg.h"
+#include "payuel_lgpm_msg.h"
 
 CFE_Status_t PAYUEL_LGPM_SendHkCmd(const PAYUEL_LGPM_SendHkCmd_t *Msg);
 CFE_Status_t PAYUEL_LGPM_ResetCountersCmd(const PAYUEL_LGPM_ResetCountersCmd_t *Msg);

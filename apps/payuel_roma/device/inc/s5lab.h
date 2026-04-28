@@ -15,6 +15,7 @@
 #include <stdbool.h>
 
 #include "s5lab_config.h"
+#include <csp/csp.h>
 
 
 /**
@@ -197,6 +198,15 @@ uint16_t s5lab_csp_get_timeout(void);
  * @param payload_len Length of the command in bytes.
  */
 bool s5lab_csp_payload_fits(uint16_t payload_len);
+
+
+
+int s5lab_csp_send(uint8_t port,
+                   const void* tx,
+                   uint16_t tx_len,
+                   uint16_t timeout_ms,
+                   csp_conn_t** conn_out);
+
 
 
 /* ════════════════════════════════════════════════════════════════════════

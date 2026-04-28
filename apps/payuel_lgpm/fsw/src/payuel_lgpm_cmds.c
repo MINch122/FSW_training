@@ -24,17 +24,17 @@
 /*
 ** Include Files:
 */
-#include "PAYUEL_LGPM_app.h"
-#include "PAYUEL_LGPM_cmds.h"
-#include "PAYUEL_LGPM_msgids.h"
-#include "PAYUEL_LGPM_eventids.h"
-#include "PAYUEL_LGPM_version.h"
-#include "PAYUEL_LGPM_tbl.h"
-#include "PAYUEL_LGPM_utils.h"
-#include "PAYUEL_LGPM_msg.h"
+#include "payuel_lgpm_app.h"
+#include "payuel_lgpm_cmds.h"
+#include "payuel_lgpm_msgids.h"
+#include "payuel_lgpm_eventids.h"
+#include "payuel_lgpm_version.h"
+#include "payuel_lgpm_tbl.h"
+#include "payuel_lgpm_utils.h"
+#include "payuel_lgpm_msg.h"
 
 /* The PAYUEL_LGPM_lib module provides the PAYUEL_LGPM_Function() prototype */
-// #include "PAYUEL_LGPM_lib.h"
+// #include "payuel_lgpm_lib.h"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
@@ -195,7 +195,7 @@ CFE_Status_t PAYUEL_LGPM_MCU_ALIVE_CHECK_Cmd(const PAYUEL_LGPM_MCU_ALIVE_CHECK_C
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -214,6 +214,10 @@ CFE_Status_t PAYUEL_LGPM_MCU_ALIVE_CHECK_Cmd(const PAYUEL_LGPM_MCU_ALIVE_CHECK_C
                 OS_printf("  - Timestamp: %u\n", (unsigned int)rxdata.Execution_Timestamp);
                 OS_printf("  - Reply Msg: %.*s\n", (int)msg_len, rxdata.Reply_Message);
                 OS_printf("======================================\n");
+
+                OS_printf("  - fuck       : 0x%02X 0x%02X\n", rxdata.Reply_Message[0], rxdata.Reply_Message[1]);
+                OS_printf("  - [DEBUG] Header Length: %d\n", rxdata.header.length);
+            OS_printf("  - [DEBUG] msg_len (Length - 5): %d\n", msg_len);
                 
                 // Send_To_Report_App(&rxdata);
             }
@@ -287,9 +291,7 @@ CFE_Status_t PAYUEL_LGPM_3V3_PWR_ON_Cmd(const PAYUEL_LGPM_3V3_PWR_ON_Cmd_t *Msg)
         Param.TxData = NULL;
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
-        Param.RxSize = remaining_size;
-        Param.Timeout  = 150;
-        Param.Interval = 100; 
+        Param.RxSize = remaining_size; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -306,7 +308,7 @@ CFE_Status_t PAYUEL_LGPM_3V3_PWR_ON_Cmd(const PAYUEL_LGPM_3V3_PWR_ON_Cmd_t *Msg)
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -385,9 +387,7 @@ CFE_Status_t PAYUEL_LGPM_3V3_PWR_OFF_Cmd(const PAYUEL_LGPM_3V3_PWR_OFF_Cmd_t *Ms
         Param.TxData = NULL;
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
-        Param.RxSize = remaining_size;
-        Param.Timeout  = 150;
-        Param.Interval = 100;  
+        Param.RxSize = remaining_size; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -404,7 +404,7 @@ CFE_Status_t PAYUEL_LGPM_3V3_PWR_OFF_Cmd(const PAYUEL_LGPM_3V3_PWR_OFF_Cmd_t *Ms
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -465,8 +465,8 @@ CFE_Status_t PAYUEL_LGPM_MAIN_BOOST_SW_ON_Cmd(const PAYUEL_LGPM_MAIN_BOOST_SW_ON
     Param.TxSize   = sizeof(txdata); 
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 2500;  
-    Param.Interval = 500;  
+    Param.Timeout  = 2200;  // 기존의 넉넉한 타임아웃 유지
+    Param.Interval = 500;   // 기존 인터벌 유지
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
 
@@ -484,8 +484,6 @@ CFE_Status_t PAYUEL_LGPM_MAIN_BOOST_SW_ON_Cmd(const PAYUEL_LGPM_MAIN_BOOST_SW_ON
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
         Param.RxSize = remaining_size; 
-        Param.Timeout  = 150;
-        Param.Interval = 100; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -502,7 +500,7 @@ CFE_Status_t PAYUEL_LGPM_MAIN_BOOST_SW_ON_Cmd(const PAYUEL_LGPM_MAIN_BOOST_SW_ON
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -563,9 +561,8 @@ CFE_Status_t PAYUEL_LGPM_MAIN_BOOST_SW_OFF_Cmd(const PAYUEL_LGPM_MAIN_BOOST_SW_O
     Param.TxSize   = sizeof(txdata); 
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 280;
+    Param.Timeout  = 250;
     Param.Interval = 100;
-
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
 
@@ -582,11 +579,8 @@ CFE_Status_t PAYUEL_LGPM_MAIN_BOOST_SW_OFF_Cmd(const PAYUEL_LGPM_MAIN_BOOST_SW_O
         Param.TxData = NULL;
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
-        Param.RxSize = remaining_size;
-        Param.Timeout  = 150;
-        Param.Interval = 100;  
+        Param.RxSize = remaining_size; 
         
-
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
         if (status == CFE_SUCCESS) 
@@ -602,7 +596,7 @@ CFE_Status_t PAYUEL_LGPM_MAIN_BOOST_SW_OFF_Cmd(const PAYUEL_LGPM_MAIN_BOOST_SW_O
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -663,7 +657,7 @@ CFE_Status_t PAYUEL_LGPM_SUB_BOOST_SW_ON_Cmd(const PAYUEL_LGPM_SUB_BOOST_SW_ON_C
     Param.TxSize   = sizeof(txdata); 
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 280;
+    Param.Timeout  = 250;
     Param.Interval = 100;
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
@@ -682,9 +676,7 @@ CFE_Status_t PAYUEL_LGPM_SUB_BOOST_SW_ON_Cmd(const PAYUEL_LGPM_SUB_BOOST_SW_ON_C
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
         Param.RxSize = remaining_size; 
-        Param.Timeout  = 150;
-        Param.Interval = 100; 
-
+        
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
         if (status == CFE_SUCCESS) 
@@ -700,7 +692,7 @@ CFE_Status_t PAYUEL_LGPM_SUB_BOOST_SW_ON_Cmd(const PAYUEL_LGPM_SUB_BOOST_SW_ON_C
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -761,7 +753,7 @@ CFE_Status_t PAYUEL_LGPM_SUB_BOOST_SW_OFF_Cmd(const PAYUEL_LGPM_SUB_BOOST_SW_OFF
     Param.TxSize   = sizeof(txdata); 
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 280;
+    Param.Timeout  = 250;
     Param.Interval = 100;
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
@@ -779,9 +771,7 @@ CFE_Status_t PAYUEL_LGPM_SUB_BOOST_SW_OFF_Cmd(const PAYUEL_LGPM_SUB_BOOST_SW_OFF
         Param.TxData = NULL;
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
-        Param.RxSize = remaining_size;
-        Param.Timeout  = 150;
-        Param.Interval = 100;  
+        Param.RxSize = remaining_size; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -798,7 +788,7 @@ CFE_Status_t PAYUEL_LGPM_SUB_BOOST_SW_OFF_Cmd(const PAYUEL_LGPM_SUB_BOOST_SW_OFF
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -860,7 +850,7 @@ CFE_Status_t PAYUEL_LGPM_V28_MAIN_ON_Cmd(const PAYUEL_LGPM_V28_MAIN_ON_Cmd_t *Ms
     Param.TxSize   = sizeof(txdata); 
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 2500; 
+    Param.Timeout  = 2200;  // 기존의 넉넉한 타임아웃 유지
     Param.Interval = 100;
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
@@ -879,8 +869,6 @@ CFE_Status_t PAYUEL_LGPM_V28_MAIN_ON_Cmd(const PAYUEL_LGPM_V28_MAIN_ON_Cmd_t *Ms
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
         Param.RxSize = remaining_size; 
-        Param.Timeout  = 150;
-        Param.Interval = 100; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -897,7 +885,7 @@ CFE_Status_t PAYUEL_LGPM_V28_MAIN_ON_Cmd(const PAYUEL_LGPM_V28_MAIN_ON_Cmd_t *Ms
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -976,9 +964,7 @@ CFE_Status_t PAYUEL_LGPM_V28_MAIN_OFF_Cmd(const PAYUEL_LGPM_V28_MAIN_OFF_Cmd_t *
         Param.TxData = NULL;
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
-        Param.RxSize = remaining_size;
-        Param.Timeout  = 150;
-        Param.Interval = 100;  
+        Param.RxSize = remaining_size; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -995,7 +981,7 @@ CFE_Status_t PAYUEL_LGPM_V28_MAIN_OFF_Cmd(const PAYUEL_LGPM_V28_MAIN_OFF_Cmd_t *
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -1056,7 +1042,7 @@ CFE_Status_t PAYUEL_LGPM_V28_SUB_ON_Cmd(const PAYUEL_LGPM_V28_SUB_ON_Cmd_t *Msg)
     Param.TxSize   = sizeof(txdata); 
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 270;
+    Param.Timeout  = 250;
     Param.Interval = 100;
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
@@ -1075,8 +1061,6 @@ CFE_Status_t PAYUEL_LGPM_V28_SUB_ON_Cmd(const PAYUEL_LGPM_V28_SUB_ON_Cmd_t *Msg)
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
         Param.RxSize = remaining_size; 
-        Param.Timeout  = 150;
-        Param.Interval = 100; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -1093,7 +1077,7 @@ CFE_Status_t PAYUEL_LGPM_V28_SUB_ON_Cmd(const PAYUEL_LGPM_V28_SUB_ON_Cmd_t *Msg)
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -1154,7 +1138,7 @@ CFE_Status_t PAYUEL_LGPM_V28_SUB_OFF_Cmd(const PAYUEL_LGPM_V28_SUB_OFF_Cmd_t *Ms
     Param.TxSize   = sizeof(txdata); 
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 280;
+    Param.Timeout  = 250;
     Param.Interval = 100;
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
@@ -1173,8 +1157,6 @@ CFE_Status_t PAYUEL_LGPM_V28_SUB_OFF_Cmd(const PAYUEL_LGPM_V28_SUB_OFF_Cmd_t *Ms
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
         Param.RxSize = remaining_size; 
-        Param.Timeout  = 150;
-        Param.Interval = 100; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -1191,7 +1173,7 @@ CFE_Status_t PAYUEL_LGPM_V28_SUB_OFF_Cmd(const PAYUEL_LGPM_V28_SUB_OFF_Cmd_t *Ms
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -1252,7 +1234,7 @@ CFE_Status_t PAYUEL_LGPM_V12_MAIN_ON_Cmd(const PAYUEL_LGPM_V12_MAIN_ON_Cmd_t *Ms
     Param.TxSize   = sizeof(txdata); 
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 280;
+    Param.Timeout  = 250;
     Param.Interval = 100;
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
@@ -1271,8 +1253,6 @@ CFE_Status_t PAYUEL_LGPM_V12_MAIN_ON_Cmd(const PAYUEL_LGPM_V12_MAIN_ON_Cmd_t *Ms
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
         Param.RxSize = remaining_size; 
-        Param.Timeout  = 150;
-        Param.Interval = 100; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -1289,7 +1269,7 @@ CFE_Status_t PAYUEL_LGPM_V12_MAIN_ON_Cmd(const PAYUEL_LGPM_V12_MAIN_ON_Cmd_t *Ms
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -1350,7 +1330,7 @@ CFE_Status_t PAYUEL_LGPM_V12_MAIN_OFF_Cmd(const PAYUEL_LGPM_V12_MAIN_OFF_Cmd_t *
     Param.TxSize   = sizeof(txdata); 
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 270;
+    Param.Timeout  = 250;
     Param.Interval = 100;
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
@@ -1368,9 +1348,7 @@ CFE_Status_t PAYUEL_LGPM_V12_MAIN_OFF_Cmd(const PAYUEL_LGPM_V12_MAIN_OFF_Cmd_t *
         Param.TxData = NULL;
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
-        Param.RxSize = remaining_size;
-        Param.Timeout  = 150;
-        Param.Interval = 100;  
+        Param.RxSize = remaining_size; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -1387,7 +1365,7 @@ CFE_Status_t PAYUEL_LGPM_V12_MAIN_OFF_Cmd(const PAYUEL_LGPM_V12_MAIN_OFF_Cmd_t *
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -1448,8 +1426,8 @@ CFE_Status_t PAYUEL_LGPM_PWR_SENSE_INFO_Cmd(const PAYUEL_LGPM_PWR_SENSE_INFO_Cmd
     Param.TxSize   = sizeof(txdata); 
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 1500;
-    Param.Interval = 100;
+    Param.Timeout  = 100;
+    Param.Interval = 10;
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
 
@@ -1466,9 +1444,7 @@ CFE_Status_t PAYUEL_LGPM_PWR_SENSE_INFO_Cmd(const PAYUEL_LGPM_PWR_SENSE_INFO_Cmd
         Param.TxData = NULL;
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
-        Param.RxSize = remaining_size;
-        Param.Timeout  = 500;
-        Param.Interval = 0; 
+        Param.RxSize = remaining_size; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -1485,7 +1461,7 @@ CFE_Status_t PAYUEL_LGPM_PWR_SENSE_INFO_Cmd(const PAYUEL_LGPM_PWR_SENSE_INFO_Cmd
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -1495,18 +1471,8 @@ CFE_Status_t PAYUEL_LGPM_PWR_SENSE_INFO_Cmd(const PAYUEL_LGPM_PWR_SENSE_INFO_Cmd
             OS_printf("  - Sync: 0x%02X\n", rxdata.header.sync);
             OS_printf("  - Status: 0x%02X\n", rxdata.PWR_SENSE_INFO);
             OS_printf("  - Timestamp: %u\n", (unsigned int)rxdata.Execution_Timestamp);
-            OS_printf("  - Reply Msg: \n");
-
-            int chunk_size = 64;
-            for (int i = 0; i < msg_len; i += chunk_size) 
-            {
-                int print_len = (msg_len - i > chunk_size) ? chunk_size : (msg_len - i);
-                OS_printf("    %.*s\n", print_len, &rxdata.Reply_Message[i]);
-            }
-
-            // OS_printf("  - [DEBUG] REPLY_MSG Length: %d\n", (int)sizeof(rxdata.Reply_Message) );
+            OS_printf("  - Reply Msg: %.*s\n", (int)msg_len, rxdata.Reply_Message);
             OS_printf("======================================\n");
-
         }
         else 
         {
@@ -1535,6 +1501,7 @@ CFE_Status_t PAYUEL_LGPM_PWR_SEQ_ON_Cmd(const PAYUEL_LGPM_PWR_SEQ_ON_Cmd_t *Msg)
 {
     PAYUEL_LGPM_Data.CmdCounter++;
 
+    // TX 데이터 준비
     PAYUEL_LGPM_OBC2Payload_PWR_SEQ_ON_Payload_t txdata;
     memset(&txdata, 0, sizeof(txdata));
     
@@ -1546,111 +1513,75 @@ CFE_Status_t PAYUEL_LGPM_PWR_SEQ_ON_Cmd(const PAYUEL_LGPM_PWR_SEQ_ON_Cmd_t *Msg)
     uint16 calc_length = sizeof(txdata) - sizeof(txdata.CRC16) - sizeof(txdata.header);
     txdata.CRC16 = Usart6_CalculateCRC16((uint8_t *)&txdata.PWR_SEQ_ON, calc_length);
 
+    // RX 데이터 및 파라미터 초기화
+    PAYUEL_LGPM_Payload2OBC_PWR_SEQ_ON_Payload_t rxdata;
+    memset(&rxdata, 0, sizeof(rxdata));
+
     CFE_SRL_IO_Param_t Param;
     memset(&Param, 0, sizeof(Param));
 
+    // 명령 송신(TX) + 헤더 수신(RX 3바이트)
     Param.TxData   = (uint8_t *)&txdata;           
     Param.TxSize   = sizeof(txdata); 
-    Param.Timeout  = 5000;  // 첫 응답까지 대기시간
+    Param.RxData   = (uint8_t *)&rxdata.header;
+    Param.RxSize   = sizeof(rxdata.header);
+    Param.Timeout  = 5000;  // 시퀀스 ON 대기시간 (5초)
     Param.Interval = 100;
 
-    int max_responses = 5;
-    int seq_complete = 0;  
+    int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
 
-    // 여러 개의 응답 패킷을 순차적으로 읽기 위한 루프
-    for (int i = 0; i < max_responses; i++)
+    if (status == CFE_SUCCESS) 
     {
-        // 매 루프마다 RX 데이터 버퍼 초기화
-        PAYUEL_LGPM_Payload2OBC_PWR_SEQ_ON_Payload_t rxdata;
-        memset(&rxdata, 0, sizeof(rxdata));
+        uint8_t dynamic_length = rxdata.header.length; 
+        uint16_t remaining_size = dynamic_length + 2;
 
-        // 헤더 수신 (3바이트) 대기
-        Param.RxData   = (uint8_t *)&rxdata.header;
-        Param.RxSize   = sizeof(rxdata.header);
+        uint8_t raw_buffer[300];
+        memset(raw_buffer, 0, sizeof(raw_buffer));
 
-        int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
+        // TX 없이 남은 데이터만 추가 수신
+        Param.TxData = NULL;
+        Param.TxSize = 0;
+        Param.RxData = raw_buffer;
+        Param.RxSize = remaining_size; 
+        
+        status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
         if (status == CFE_SUCCESS) 
         {
-            uint8_t dynamic_length = rxdata.header.length; 
-            uint16_t remaining_size = dynamic_length + 2; // 바디 + CRC
-
-            uint8_t raw_buffer[300];
-            memset(raw_buffer, 0, sizeof(raw_buffer));
-
-            // 바디 수신 (이때는 TX가 나가지 않도록 설정)
-            Param.TxData = NULL;
-            Param.TxSize = 0;
-            Param.RxData = raw_buffer;
-            Param.RxSize = remaining_size;
-            Param.Timeout  = 500;
-            Param.Interval = 0;  
+            // CMD INFO + Timesatamp 메모리 복사 
+            rxdata.PWR_SEQ_ON = raw_buffer[0];
+            memcpy(&rxdata.Execution_Timestamp, &raw_buffer[1], 4);
             
-            status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
+            // dynamic length : CMD INFO(1) + Timesatamp(4) + Reply_Message
+            // msg_len : Reply_Message
+            uint8_t msg_len = dynamic_length - 5;
 
-            if (status == CFE_SUCCESS) 
+            if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
-                // CMD INFO + Timesatamp 메모리 복사 
-                rxdata.PWR_SEQ_ON = raw_buffer[0];
-                memcpy(&rxdata.Execution_Timestamp, &raw_buffer[1], 4);
-                
-                uint8_t msg_len = dynamic_length - 5;
-
-                if (msg_len <= sizeof(rxdata.Reply_Message)) 
-                {
-                    memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                }
-                
-                memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
-                
-                OS_printf("======================================\n");
-                OS_printf(" 응답 패킷 [%d] 수신 성공 (PWR SEQ ON)\n", i + 1);
-                OS_printf("  - Sync: 0x%02X\n", rxdata.header.sync);
-                OS_printf("  - Status: 0x%02X\n", rxdata.PWR_SEQ_ON);
-                OS_printf("  - Timestamp: %u\n", (unsigned int)rxdata.Execution_Timestamp);
-                OS_printf("  - Reply Msg: %.*s\n", (int)msg_len, rxdata.Reply_Message);
-                OS_printf("======================================\n");
-
-                // 종료 조건 검사: 마지막 메시지가 도착했는지 확인
-                // 수신된 데이터에 널 종료(NULL-termination)가 없을 수 있으므로 strncmp 사용 (길이 19)
-                if (strncmp((char*)rxdata.Reply_Message, "PWR_SEQ_ON_COMPLETE", 19) == 0)
-                {
-                    seq_complete = 1;
-                    break; // 모든 시퀀스 응답을 받았으므로 루프를 안전하게 탈출
-                }
+                memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
-            else 
-            {
-                CFE_EVS_SendEvent(PAYUEL_LGPM_CC_ERR_EID, CFE_EVS_EventType_ERROR, 
-                                "UART Body Read Failed! Status: 0x%08X", (unsigned int)status);
-                break; // 바디 읽기 실패 시 루프 탈출
-            }
+            
+            memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
+            
+            OS_printf("======================================\n");
+            OS_printf(" 페이로드 응답 수신 성공 (PWR SEQ ON)\n");
+            OS_printf("  - Sync: 0x%02X\n", rxdata.header.sync);
+            OS_printf("  - Status: 0x%02X\n", rxdata.PWR_SEQ_ON);
+            OS_printf("  - Timestamp: %u\n", (unsigned int)rxdata.Execution_Timestamp);
+            OS_printf("  - Reply Msg: %.*s\n", (int)msg_len, rxdata.Reply_Message);
+            OS_printf("======================================\n");
         }
         else 
         {
-            if (i > 0) {
-                // 이미 첫 번째 패킷을 받았는데 다음 헤더를 못 읽은 경우 (시퀀스 중간 끊김)
-                break; 
-            } else {
-                // 아예 처음부터 응답이 없는 경우
-                CFE_EVS_SendEvent(PAYUEL_LGPM_CC_ERR_EID, CFE_EVS_EventType_ERROR, 
-                                  "UART Header Read Failed or Timeout! Status: 0x%08X", (unsigned int)status);
-                break;
-            }
+            CFE_EVS_SendEvent(PAYUEL_LGPM_CC_ERR_EID, CFE_EVS_EventType_ERROR, 
+                            "UART Body Read Failed! Status: 0x%08X", (unsigned int)status);
         }
-
-      // 두 번째 루프부터는 다음 패킷 헤더 수신을 위해 파라미터 재설정
-        Param.TxData = NULL;
-        Param.TxSize = 0;
-        Param.Timeout = 5000;  
-        Param.Interval = 100;  
     }
-
-    // 최종 상태 확인용 출력
-    if (seq_complete) {
-        OS_printf(" -> PWR SEQ ON 시퀀스 전체 완료 확인!\n");
-    } else {
-        OS_printf(" 시퀀스 COMPLETE 메시지를 받지 못했습니다.\n");
+    else 
+    {
+        CFE_EVS_SendEvent(PAYUEL_LGPM_CC_ERR_EID, CFE_EVS_EventType_ERROR, 
+                          "UART Header(Sync + length) Read Failed or Timeout! Status: 0x%08X", (unsigned int)status);
     }
     
     return CFE_SUCCESS; 
@@ -1665,9 +1596,10 @@ CFE_Status_t PAYUEL_LGPM_PWR_SEQ_OFF_Cmd(const PAYUEL_LGPM_PWR_SEQ_OFF_Cmd_t *Ms
 {
     PAYUEL_LGPM_Data.CmdCounter++;
 
-    // TX 데이터
+    // TX 데이터 준비
     PAYUEL_LGPM_OBC2Payload_PWR_SEQ_OFF_Payload_t txdata;
     memset(&txdata, 0, sizeof(txdata));
+    
     txdata.header.cmd_code = PWR_cmd_code;
     txdata.header.sync = 0x45;
     txdata.header.length = 1; 
@@ -1676,104 +1608,84 @@ CFE_Status_t PAYUEL_LGPM_PWR_SEQ_OFF_Cmd(const PAYUEL_LGPM_PWR_SEQ_OFF_Cmd_t *Ms
     uint16 calc_length = sizeof(txdata) - sizeof(txdata.CRC16) - sizeof(txdata.header);
     txdata.CRC16 = Usart6_CalculateCRC16((uint8_t *)&txdata.PWR_SEQ_OFF, calc_length);
 
-    // 초기화
+    // RX 데이터 및 파라미터 초기화
+    PAYUEL_LGPM_Payload2OBC_PWR_SEQ_OFF_Payload_t rxdata;
+    memset(&rxdata, 0, sizeof(rxdata));
+
     CFE_SRL_IO_Param_t Param;
     memset(&Param, 0, sizeof(Param));
 
+    // 명령 송신(TX) + 헤더 수신(RX 3바이트)
     Param.TxData   = (uint8_t *)&txdata;           
     Param.TxSize   = sizeof(txdata); 
-    Param.Timeout  = 1200; 
+    Param.RxData   = (uint8_t *)&rxdata.header;
+    Param.RxSize   = sizeof(rxdata.header);
+    Param.Timeout  = 1200;  // 시퀀스 OFF 대기시간 (1.2초)
     Param.Interval = 100;
 
-    int max_responses = 5; // 무한 루프 방지용 (최대 5개 패킷 대기)
-    int seq_complete = 0;  // 완료 플래그
+    int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
 
-    for (int i = 0; i < max_responses; i++)
+    if (status == CFE_SUCCESS) 
     {
-        PAYUEL_LGPM_Payload2OBC_PWR_SEQ_OFF_Payload_t rxdata;
-        memset(&rxdata, 0, sizeof(rxdata));
-        
-        Param.RxData = (uint8_t *)&rxdata.header;
-        Param.RxSize = sizeof(rxdata.header);
+        uint8_t dynamic_length = rxdata.header.length; 
+        uint16_t remaining_size = dynamic_length + 2;
 
-        int32 status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
+        uint8_t raw_buffer[300];
+        memset(raw_buffer, 0, sizeof(raw_buffer));
+
+        // TX 없이 남은 데이터만 추가 수신
+        Param.TxData = NULL;
+        Param.TxSize = 0;
+        Param.RxData = raw_buffer;
+        Param.RxSize = remaining_size; 
+        
+        status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
         if (status == CFE_SUCCESS) 
         {
-            uint8_t dynamic_length = rxdata.header.length; 
-            uint16_t remaining_size = dynamic_length + 2; // 바디 + CRC
-
-            uint8_t raw_buffer[300];
-            memset(raw_buffer, 0, sizeof(raw_buffer));
-
-            Param.TxData = NULL;
-            Param.TxSize = 0;
-            Param.RxData = raw_buffer;
-            Param.RxSize = remaining_size;
-            Param.Timeout  = 500;
-            Param.Interval = 0;  
+            // CMD INFO + Timesatamp 메모리 복사 
+            rxdata.PWR_SEQ_OFF = raw_buffer[0];
+            memcpy(&rxdata.Execution_Timestamp, &raw_buffer[1], 4);
             
-            status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
+            // dynamic length : CMD INFO(1) + Timesatamp(4) + Reply_Message
+            // msg_len : Reply_Message
+            uint8_t msg_len = dynamic_length - 5;
 
-            if (status == CFE_SUCCESS) 
+            if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
-                rxdata.PWR_SEQ_OFF = raw_buffer[0];
-                memcpy(&rxdata.Execution_Timestamp, &raw_buffer[1], 4);
-                
-                uint8_t msg_len = dynamic_length - 5;
-                if (msg_len <= sizeof(rxdata.Reply_Message)) 
-                {
-                    memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                }
-                
-                OS_printf("======================================\n");
-                OS_printf(" 응답 패킷 [%d] 수신 성공\n", i+1);
-                OS_printf("  - Reply Msg: %.*s\n", (int)msg_len, rxdata.Reply_Message);
-                OS_printf("======================================\n");
-
-                // 종료 조건 검사: 마지막 메시지가 도착했는지 확인
-                if (strncmp((char*)rxdata.Reply_Message, "PWR_SEQ_OFF_COMPLETE", 20) == 0)
-                {
-                    seq_complete = 1;
-                    break; // 모든 시퀀스 응답을 받았으므로 루프 탈출
-                }
+                memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
-            else 
-            {
-                OS_printf("Body Read Error!\n");
-                break;
-            }
+            
+            memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
+            
+            OS_printf("======================================\n");
+            OS_printf(" 페이로드 응답 수신 성공 (PWR SEQ OFF)\n");
+            OS_printf("  - Sync: 0x%02X\n", rxdata.header.sync);
+            OS_printf("  - Status: 0x%02X\n", rxdata.PWR_SEQ_OFF);
+            OS_printf("  - Timestamp: %u\n", (unsigned int)rxdata.Execution_Timestamp);
+            OS_printf("  - Reply Msg: %.*s\n", (int)msg_len, rxdata.Reply_Message);
+            OS_printf("======================================\n");
         }
         else 
         {
-            // 헤더를 못 읽음 (더 이상 올 패킷이 없거나 타임아웃)
-            if (i > 0) {
-                // 이미 패킷을 하나라도 받았다면 단순히 더 올게 없는 것일 수 있음
-                break; 
-            } else {
-                CFE_EVS_SendEvent(PAYUEL_LGPM_CC_ERR_EID, CFE_EVS_EventType_ERROR, "UART Header Read Failed!");
-                break;
-            }
+            CFE_EVS_SendEvent(PAYUEL_LGPM_CC_ERR_EID, CFE_EVS_EventType_ERROR, 
+                            "UART Body Read Failed! Status: 0x%08X", (unsigned int)status);
         }
-
-        Param.TxData = NULL;
-        Param.TxSize = 0;
-        Param.Timeout = 1500; // 다음 패킷이 올 때까지의 대기 시간 (페이로드 시퀀스 딜레이 고려)
     }
-
-    if (seq_complete) {
-        OS_printf(" -> PWR SEQ OFF 시퀀스 전체 완료 확인!\n");
-    } else {
-        OS_printf(" 시퀀스 COMPLETE 메시지를 받지 못했습니다.\n");
+    else 
+    {
+        CFE_EVS_SendEvent(PAYUEL_LGPM_CC_ERR_EID, CFE_EVS_EventType_ERROR, 
+                          "UART Header(Sync + length) Read Failed or Timeout! Status: 0x%08X", (unsigned int)status);
     }
-
+    
     return CFE_SUCCESS; 
 }
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /* */
-/* PAYUEL_LGPM RWA CONTROL command                                            */
+/* PAYUEL_LGPM RWA CONTROL command (수정필요)                                  */
 /* */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t PAYUEL_LGPM_RWA_CONTROL_Cmd(const PAYUEL_LGPM_RWA_CONTROL_Cmd_t *Msg) 
@@ -1784,31 +1696,12 @@ CFE_Status_t PAYUEL_LGPM_RWA_CONTROL_Cmd(const PAYUEL_LGPM_RWA_CONTROL_Cmd_t *Ms
     memset(&txdata, 0, sizeof(txdata));
     
     txdata.header.cmd_code = RWA_cmd_code; 
-    txdata.header.sync = 0x45;    
-    txdata.header.length = 9;     
+    txdata.header.sync = 0x46;    // RWA Sync Byte
+    txdata.header.length = 9;     // Control 길이 9
     txdata.RWA_CONTROL = 0x20; 
 
-    txdata.TargetSpeed_RPM = Msg->payload.TargetSpeed_RPM;
-    txdata.TargetAcc_RPM   = Msg->payload.TargetAcc_RPM;
-    txdata.Operating_Time  = Msg->payload.Operating_Time;
-    txdata.sub_index       = Msg->payload.sub_index;
-
-    // check sum
-
-    uint8_t checksum_val = 0;
-    // uint8_t *payload_ptr = (uint8_t *)&txdata.RWA_CONTROL;
-    uint8_t *payload_ptr = (uint8_t *)&txdata.TargetSpeed_RPM;
-    for (int i = 0; i < 7; i++) 
-    {
-        checksum_val ^= payload_ptr[i];
-    }
-    txdata.Checksum = checksum_val;
-    
     uint16 calc_length = sizeof(txdata) - sizeof(txdata.CRC16) - sizeof(txdata.header);
     txdata.CRC16 = Usart6_CalculateCRC16((uint8_t *)&txdata.RWA_CONTROL, calc_length);
-
-    OS_printf("\n");
-
 
     PAYUEL_LGPM_Payload2OBC_RWA_CONTROL_Payload_t rxdata;
     memset(&rxdata, 0, sizeof(rxdata)); 
@@ -1820,7 +1713,7 @@ CFE_Status_t PAYUEL_LGPM_RWA_CONTROL_Cmd(const PAYUEL_LGPM_RWA_CONTROL_Cmd_t *Ms
     Param.TxSize   = sizeof(txdata); 
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 1400;  
+    Param.Timeout  = 1200;  
     Param.Interval = 100;
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
@@ -1836,9 +1729,7 @@ CFE_Status_t PAYUEL_LGPM_RWA_CONTROL_Cmd(const PAYUEL_LGPM_RWA_CONTROL_Cmd_t *Ms
         Param.TxData = NULL;
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
-        Param.RxSize = remaining_size;
-        Param.Timeout  = 150;
-        Param.Interval = 100;  
+        Param.RxSize = remaining_size; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -1851,7 +1742,7 @@ CFE_Status_t PAYUEL_LGPM_RWA_CONTROL_Cmd(const PAYUEL_LGPM_RWA_CONTROL_Cmd_t *Ms
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -1891,10 +1782,9 @@ CFE_Status_t PAYUEL_LGPM_RWA_PWR_ON_Cmd(const PAYUEL_LGPM_RWA_PWR_ON_Cmd_t *Msg)
     memset(&txdata, 0, sizeof(txdata));
     
     txdata.header.cmd_code = RWA_cmd_code;
-    txdata.header.sync = 0x45;
+    txdata.header.sync = 0x46;
     txdata.header.length = 1; 
     txdata.RWA_PWR_ON = 0x21; 
-
 
     uint16 calc_length = sizeof(txdata) - sizeof(txdata.CRC16) - sizeof(txdata.header);
     txdata.CRC16 = Usart6_CalculateCRC16((uint8_t *)&txdata.RWA_PWR_ON, calc_length);
@@ -1907,16 +1797,9 @@ CFE_Status_t PAYUEL_LGPM_RWA_PWR_ON_Cmd(const PAYUEL_LGPM_RWA_PWR_ON_Cmd_t *Msg)
 
     Param.TxData   = (uint8_t *)&txdata;           
     Param.TxSize   = sizeof(txdata); 
-
-    //Debug 
-        OS_printf("RWA_PWR_ON TX size=%u\n", (unsigned int)sizeof(txdata));
-    for (int i = 0; i < sizeof(txdata); i++) {
-        OS_printf("tx[%d] = 0x%02X\n", i, ((uint8 *)&txdata)[i]);
-    }
-
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 5000;  
+    Param.Timeout  = 300;  
     Param.Interval = 100;
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
@@ -1932,22 +1815,20 @@ CFE_Status_t PAYUEL_LGPM_RWA_PWR_ON_Cmd(const PAYUEL_LGPM_RWA_PWR_ON_Cmd_t *Msg)
         Param.TxData = NULL;
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
-        Param.RxSize = remaining_size;
-        Param.Timeout  = 150;
-        Param.Interval = 100;  
+        Param.RxSize = remaining_size; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
         if (status == CFE_SUCCESS) 
         {
-            rxdata.RWA_PWR_ON = raw_buffer[0];
+            rxdata.RWA_PWR_ON_val = raw_buffer[0];
             memcpy(&rxdata.Execution_Timestamp, &raw_buffer[1], 4);
             
             uint8_t msg_len = dynamic_length - 5;
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -1955,7 +1836,7 @@ CFE_Status_t PAYUEL_LGPM_RWA_PWR_ON_Cmd(const PAYUEL_LGPM_RWA_PWR_ON_Cmd_t *Msg)
             OS_printf("======================================\n");
             OS_printf(" 페이로드 응답 수신 성공 (RWA PWR ON)\n");
             OS_printf("  - Sync: 0x%02X\n", rxdata.header.sync);
-            OS_printf("  - Status: 0x%02X\n", rxdata.RWA_PWR_ON);
+            OS_printf("  - Status: 0x%02X\n", rxdata.RWA_PWR_ON_val);
             OS_printf("  - Timestamp: %u\n", (unsigned int)rxdata.Execution_Timestamp);
             OS_printf("  - Reply Msg: %.*s\n", (int)msg_len, rxdata.Reply_Message);
             OS_printf("======================================\n");
@@ -1987,7 +1868,7 @@ CFE_Status_t PAYUEL_LGPM_RWA_PWR_OFF_Cmd(const PAYUEL_LGPM_RWA_PWR_OFF_Cmd_t *Ms
     memset(&txdata, 0, sizeof(txdata));
     
     txdata.header.cmd_code = RWA_cmd_code;
-    txdata.header.sync = 0x45;
+    txdata.header.sync = 0x46;
     txdata.header.length = 1; 
     txdata.RWA_PWR_OFF = 0x22; 
 
@@ -2020,22 +1901,20 @@ CFE_Status_t PAYUEL_LGPM_RWA_PWR_OFF_Cmd(const PAYUEL_LGPM_RWA_PWR_OFF_Cmd_t *Ms
         Param.TxData = NULL;
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
-        Param.RxSize = remaining_size;
-        Param.Timeout  = 150;
-        Param.Interval = 100;  
+        Param.RxSize = remaining_size; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
         if (status == CFE_SUCCESS) 
         {
-            rxdata.RWA_PWR_OFF = raw_buffer[0];
+            rxdata.RWA_PWR_OFF_val = raw_buffer[0];
             memcpy(&rxdata.Execution_Timestamp, &raw_buffer[1], 4);
             
             uint8_t msg_len = dynamic_length - 5;
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; 
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -2043,7 +1922,7 @@ CFE_Status_t PAYUEL_LGPM_RWA_PWR_OFF_Cmd(const PAYUEL_LGPM_RWA_PWR_OFF_Cmd_t *Ms
             OS_printf("======================================\n");
             OS_printf(" 페이로드 응답 수신 성공 (RWA PWR OFF)\n");
             OS_printf("  - Sync: 0x%02X\n", rxdata.header.sync);
-            OS_printf("  - Status: 0x%02X\n", rxdata.RWA_PWR_OFF);
+            OS_printf("  - Status: 0x%02X\n", rxdata.RWA_PWR_OFF_val);
             OS_printf("  - Timestamp: %u\n", (unsigned int)rxdata.Execution_Timestamp);
             OS_printf("  - Reply Msg: %.*s\n", (int)msg_len, rxdata.Reply_Message);
             OS_printf("======================================\n");
@@ -2075,7 +1954,7 @@ CFE_Status_t PAYUEL_LGPM_RWA_SENSE_INFO_Cmd(const PAYUEL_LGPM_RWA_SENSE_INFO_Cmd
     memset(&txdata, 0, sizeof(txdata));
     
     txdata.header.cmd_code = RWA_cmd_code;
-    txdata.header.sync = 0x45;
+    txdata.header.sync = 0x46;
     txdata.header.length = 1; 
     txdata.RWA_SENSE_INFO = 0x23; 
 
@@ -2092,7 +1971,7 @@ CFE_Status_t PAYUEL_LGPM_RWA_SENSE_INFO_Cmd(const PAYUEL_LGPM_RWA_SENSE_INFO_Cmd
     Param.TxSize   = sizeof(txdata); 
     Param.RxData   = (uint8_t *)&rxdata.header;
     Param.RxSize   = sizeof(rxdata.header);
-    Param.Timeout  = 1400;  
+    Param.Timeout  = 1200;  
     Param.Interval = 100;
 
     int32 status = CFE_SRL_ApiRead( PAYUEL_LGPM_Data.Handle, &Param );
@@ -2109,8 +1988,6 @@ CFE_Status_t PAYUEL_LGPM_RWA_SENSE_INFO_Cmd(const PAYUEL_LGPM_RWA_SENSE_INFO_Cmd
         Param.TxSize = 0;
         Param.RxData = raw_buffer;
         Param.RxSize = remaining_size; 
-        Param.Timeout  = 150;
-        Param.Interval = 100; 
         
         status = CFE_SRL_ApiRead(PAYUEL_LGPM_Data.Handle, &Param);
 
@@ -2123,7 +2000,7 @@ CFE_Status_t PAYUEL_LGPM_RWA_SENSE_INFO_Cmd(const PAYUEL_LGPM_RWA_SENSE_INFO_Cmd
             if (msg_len <= sizeof(rxdata.Reply_Message)) 
             {
                 memcpy(rxdata.Reply_Message, &raw_buffer[5], msg_len);
-                
+                rxdata.Reply_Message[msg_len] = '\0'; OS_printf("  - Reply Msg: %s\n", rxdata.Reply_Message);
             }
             
             memcpy(&rxdata.CRC16, &raw_buffer[dynamic_length], 2);
@@ -2134,10 +2011,7 @@ CFE_Status_t PAYUEL_LGPM_RWA_SENSE_INFO_Cmd(const PAYUEL_LGPM_RWA_SENSE_INFO_Cmd
             OS_printf("  - Status: 0x%02X\n", rxdata.RWA_SENSE_INFO);
             OS_printf("  - Timestamp: %u\n", (unsigned int)rxdata.Execution_Timestamp);
             OS_printf("  - Reply Msg: %.*s\n", (int)msg_len, rxdata.Reply_Message);
-            OS_printf("================[DeBug Line below]======================\n");
-            OS_printf("  - dynamic length : %u\n", (unsigned int)dynamic_length);
-            OS_printf("  - Size of dynamic length : %u\n", (unsigned int)sizeof(dynamic_length));  
-            OS_printf("======================================\n");     
+            OS_printf("======================================\n");
         }
         else 
         {
@@ -2223,3 +2097,4 @@ CFE_Status_t PAYUEL_LGPM_RWA_SENSE_INFO_Cmd(const PAYUEL_LGPM_RWA_SENSE_INFO_Cmd
 
 //     return CFE_SUCCESS;
 //}
+

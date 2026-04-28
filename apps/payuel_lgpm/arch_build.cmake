@@ -10,10 +10,10 @@
 
 # The list of header files that control the PAYUEL_LGPM configuration
 set(PAYUEL_LGPM_PLATFORM_CONFIG_FILE_LIST
-  PAYUEL_LGPM_internal_cfg.h
-  PAYUEL_LGPM_platform_cfg.h
-  PAYUEL_LGPM_perfids.h
-  PAYUEL_LGPM_msgids.h
+  payuel_lgpm_internal_cfg.h
+  payuel_lgpm_platform_cfg.h
+  payuel_lgpm_perfids.h
+  payuel_lgpm_msgids.h
 )
 
 # Create wrappers around the all the config header files

@@ -18,28 +18,24 @@
 
 /**
  * @file
- *   Specification for the PAYUEL_LGPM table related
- *   constant definitions.
  *
- * @note
- *   These Macro definitions have been put in this file (instead of
- *   PAYUEL_LGPM_tbl.h). DO NOT PUT ANY TYPEDEFS OR
- *   STRUCTURE DEFINITIONS IN THIS FILE!
- *   ADD THEM TO PAYUEL_LGPM_tbl.h IF NEEDED!
+ * PAYUEL_LGPM Application Platform Configuration Header File
+ *
+ * This is a compatibility header for the "platform_cfg.h" file that has
+ * traditionally provided both public and private config definitions
+ * for each CFS app.
+ *
+ * These definitions are now provided in two separate files, one for
+ * the public/mission scope and one for internal scope.
+ *
+ * @note This file may be overridden/superceded by mission-provided defintions
+ * either by overriding this header or by generating definitions from a command/data
+ * dictionary tool.
  */
-#ifndef PAYUEL_LGPM_TBLDEFS_H
-#define PAYUEL_LGPM_TBLDEFS_H
+#ifndef PAYUEL_LGPM_PLATFORM_CFG_H
+#define PAYUEL_LGPM_PLATFORM_CFG_H
 
-#include "common_types.h"
-#include "PAYUEL_LGPM_mission_cfg.h"
-
-/*
-** Example Table structure
-*/
-typedef struct
-{
-    uint16 Int1;
-    uint16 Int2;
-} PAYUEL_LGPM_ExampleTable_t;
+#include "payuel_lgpm_mission_cfg.h"
+#include "payuel_lgpm_internal_cfg.h"
 
 #endif

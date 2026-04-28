@@ -10,28 +10,28 @@
 
 # The list of header files that control the PAYUEL_LGPM configuration
 set(PAYUEL_LGPM_MISSION_CONFIG_FILE_LIST
-  PAYUEL_LGPM_fcncodes.h
-  PAYUEL_LGPM_interface_cfg.h
-  PAYUEL_LGPM_mission_cfg.h
-  PAYUEL_LGPM_perfids.h
-  PAYUEL_LGPM_msg.h
-  PAYUEL_LGPM_msgdefs.h
-  PAYUEL_LGPM_msgstruct.h
-  PAYUEL_LGPM_tbl.h
-  PAYUEL_LGPM_tbldefs.h
-  PAYUEL_LGPM_tblstruct.h
-  PAYUEL_LGPM_topicids.h
+  payuel_lgpm_fcncodes.h
+  payuel_lgpm_interface_cfg.h
+  payuel_lgpm_mission_cfg.h
+  payuel_lgpm_perfids.h
+  payuel_lgpm_msg.h
+  payuel_lgpm_msgdefs.h
+  payuel_lgpm_msgstruct.h
+  payuel_lgpm_tbl.h
+  payuel_lgpm_tbldefs.h
+  payuel_lgpm_tblstruct.h
+  payuel_lgpm_topicids.h
 )
 
 if (CFE_EDS_ENABLED_BUILD)
 
   # In an EDS-based build, these files come generated from the EDS tool
-  set(PAYUEL_LGPM_CFGFILE_SRC_PAYUEL_LGPM_interface_cfg "PAYUEL_LGPM_eds_designparameters.h")
-  set(PAYUEL_LGPM_CFGFILE_SRC_PAYUEL_LGPM_tbldefs       "PAYUEL_LGPM_eds_typedefs.h")
-  set(PAYUEL_LGPM_CFGFILE_SRC_PAYUEL_LGPM_tblstruct     "PAYUEL_LGPM_eds_typedefs.h")
-  set(PAYUEL_LGPM_CFGFILE_SRC_PAYUEL_LGPM_msgdefs       "PAYUEL_LGPM_eds_typedefs.h")
-  set(PAYUEL_LGPM_CFGFILE_SRC_PAYUEL_LGPM_msgstruct     "PAYUEL_LGPM_eds_typedefs.h")
-  set(PAYUEL_LGPM_CFGFILE_SRC_PAYUEL_LGPM_fcncodes      "PAYUEL_LGPM_eds_cc.h")
+  set(PAYUEL_LGPM_CFGFILE_SRC_payuel_lgpm_interface_cfg "payuel_lgpm_eds_designparameters.h")
+  set(PAYUEL_LGPM_CFGFILE_SRC_payuel_lgpm_tbldefs       "payuel_lgpm_eds_typedefs.h")
+  set(PAYUEL_LGPM_CFGFILE_SRC_payuel_lgpm_tblstruct     "payuel_lgpm_eds_typedefs.h")
+  set(PAYUEL_LGPM_CFGFILE_SRC_payuel_lgpm_msgdefs       "payuel_lgpm_eds_typedefs.h")
+  set(PAYUEL_LGPM_CFGFILE_SRC_payuel_lgpm_msgstruct     "payuel_lgpm_eds_typedefs.h")
+  set(PAYUEL_LGPM_CFGFILE_SRC_payuel_lgpm_fcncodes      "payuel_lgpm_eds_cc.h")
 
 endif(CFE_EDS_ENABLED_BUILD)
 

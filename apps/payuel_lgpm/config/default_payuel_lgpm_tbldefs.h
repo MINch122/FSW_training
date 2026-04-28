@@ -18,26 +18,28 @@
 
 /**
  * @file
- *   This file contains the prototypes for the PAYUEL_LGPM utility functions
+ *   Specification for the PAYUEL_LGPM table related
+ *   constant definitions.
+ *
+ * @note
+ *   These Macro definitions have been put in this file (instead of
+ *   PAYUEL_LGPM_tbl.h). DO NOT PUT ANY TYPEDEFS OR
+ *   STRUCTURE DEFINITIONS IN THIS FILE!
+ *   ADD THEM TO PAYUEL_LGPM_tbl.h IF NEEDED!
  */
+#ifndef PAYUEL_LGPM_TBLDEFS_H
+#define PAYUEL_LGPM_TBLDEFS_H
 
-#ifndef PAYUEL_LGPM_UTILS_H
-#define PAYUEL_LGPM_UTILS_H
+#include "common_types.h"
+#include "payuel_lgpm_mission_cfg.h"
 
 /*
-** Required header files.
+** Example Table structure
 */
-#include "PAYUEL_LGPM_app.h"
+typedef struct
+{
+    uint16 Int1;
+    uint16 Int2;
+} PAYUEL_LGPM_ExampleTable_t;
 
-CFE_Status_t PAYUEL_LGPM_TblValidationFunc(void *TblData);
-void         PAYUEL_LGPM_GetCrc(const char *TableName);
-
-
-
-/* CRC16 (XModem) calculation function */ 
-
-uint16_t Usart6_CalculateCRC16(uint8_t *data, uint16_t length);
-
-
-#endif /* PAYUEL_LGPM_UTILS_H */
-
+#endif

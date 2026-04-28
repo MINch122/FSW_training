@@ -52,11 +52,16 @@ typedef struct
     */
     uint8 CmdCounter;
     uint8 ErrCounter;
+    
+    //beacon telemetry packet
+    PAYUEL_ROMA_BcnTlm_t bcn;
 
     /*
     ** Housekeeping telemetry packet...
     */
     PAYUEL_ROMA_HkTlm_t HkTlm;
+
+    PAYUEL_ROMA_ReportTlm_t rpt;
 
     /*
     ** Run Status variable used in the main processing loop

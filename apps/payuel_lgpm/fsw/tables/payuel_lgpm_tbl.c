@@ -16,23 +16,20 @@
  * limitations under the License.
  ************************************************************************/
 
-/**
- * @file
- *   Specification for the PAYUEL_LGPM command and telemetry
- *   message data types.
- *
- * This is a compatibility header for the "PAYUEL_LGPM_msg.h" file that has
- * traditionally provided the message definitions for cFS apps.
- *
- * @note This file may be overridden/superceded by mission-provided defintions
- * either by overriding this header or by generating definitions from a command/data
- * dictionary tool.
- */
-#ifndef PAYUEL_LGPM_MSG_H
-#define PAYUEL_LGPM_MSG_H
+#include "cfe_tbl_filedef.h" /* Required to obtain the CFE_TBL_FILEDEF macro definition */
+#include "payuel_lgpm_tbl.h"
 
-#include "PAYUEL_LGPM_mission_cfg.h"
-#include "PAYUEL_LGPM_msgdefs.h"
-#include "PAYUEL_LGPM_msgstruct.h"
+/*
+** The following is an example of the declaration statement that defines the desired
+** contents of the table image.
+*/
+PAYUEL_LGPM_ExampleTable_t ExampleTable = {1, 2};
 
-#endif
+/*
+** The macro below identifies:
+**    1) the data structure type to use as the table image format
+**    2) the name of the table to be placed into the cFE Example Table File Header
+**    3) a brief description of the contents of the file image
+**    4) the desired name of the table image binary file that is cFE compatible
+*/
+CFE_TBL_FILEDEF(ExampleTable, PAYUEL_LGPM.ExampleTable, Table Utility Test Table, PAYUEL_LGPM_tbl.tbl)
