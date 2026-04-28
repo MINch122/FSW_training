@@ -21,10 +21,6 @@ add_cfe_app(payuel_lgpm ${APP_SRC_FILES})
 
 target_include_directories(payuel_lgpm PUBLIC fsw/inc)
 
-# Include the public API from sample_lib to demonstrate how
-# to call library-provided functions
-add_cfe_app_dependency(payuel_lgpm sample_lib)
-
 # Add table
 add_cfe_tables(payuel_lgpm fsw/tables/payuel_lgpm_tbl.c)
 
