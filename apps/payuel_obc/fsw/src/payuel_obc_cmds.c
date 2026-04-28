@@ -295,9 +295,10 @@ CFE_Status_t PAYUEL_OBC_DownloadMetaCmd(const PAYUEL_OBC_DownloadMetaCmd_t *Msg)
  * 0x45 - 이미지 청크 다운로드 요청 (UEL OBC)
  * TX via CSP CAN (7 B):   [0x45][ImageSlot][ImageNumber][ChunkNum_H][ChunkNum_L]
  *                         [CRC16_H][CRC16_L]
- * RX via CSP CAN (256 B): [0x45][Slot][ImgNum][ChunkNum_H][ChunkNum_L]
- *                         [ImageData/Padding(247B)][CRC32(4B,BE)]
- * CRC32 range:            Cmd..valid data only (padding excluded)
+ * RX via CSP CAN:         [0x45][Slot][ImgNum][ChunkNum_H][ChunkNum_L]
+ *                         [ImageData(valid bytes)][CRC32(4B,BE)]
+ *                         length = 5 + valid data length + 4, max 256 B
+ * CRC32 range:            Cmd..valid data only
  * =================================================================== */
 CFE_Status_t PAYUEL_OBC_ChunkDownloadCmd(const PAYUEL_OBC_ChunkDownloadCmd_t *Msg)
 {
@@ -442,9 +443,10 @@ CFE_Status_t PAYUEL_OBC_SensorMetaCmd(const PAYUEL_OBC_SensorMetaCmd_t *Msg)
  * 0x55 - 센서 데이터 청크 다운로드 요청
  * TX via CSP CAN (7 B):   [0x55][DataSlot][DataNumber][ChunkNum_H][ChunkNum_L]
  *                         [CRC16_H][CRC16_L]
- * RX via CSP CAN (256 B): [0x55][DataSlot][DataNumber][ChunkNum_H][ChunkNum_L]
- *                         [SensorData/Padding(247B)][CRC32(4B,BE)]
- * CRC32 range:            Cmd..valid data only (padding excluded)
+ * RX via CSP CAN:         [0x55][DataSlot][DataNumber][ChunkNum_H][ChunkNum_L]
+ *                         [SensorData(valid bytes)][CRC32(4B,BE)]
+ *                         length = 5 + valid data length + 4, max 256 B
+ * CRC32 range:            Cmd..valid data only
  * =================================================================== */
 CFE_Status_t PAYUEL_OBC_SensorChunkCmd(const PAYUEL_OBC_SensorChunkCmd_t *Msg)
 {

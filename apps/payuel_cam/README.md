@@ -19,7 +19,7 @@ Command map used by this app:
 Notes:
 - The spreadsheet ICD is authoritative when terminology differs from the summary PDF.
 - For `0x43`/`0x44`/`0x45`, this code follows the ICD parameter naming used in the spreadsheet.
-- `0x45` keeps the spreadsheet wire format: request CRC16, fixed 256-byte response, CRC32 over valid data only.
+- `0x45` keeps the spreadsheet wire format: request CRC16, response length is 5 + valid data length + CRC32, and CRC32 covers command through valid data only.
 - Single-chunk `0x45` stays synchronous; only the aggregate full-image download runs in a child task.
 - `PAYUEL_CAM_CMD_MID` carries operator-issued ground commands.
 - `PAYUEL_CAM_SEND_BCN_MID` is a scheduler/internal trigger for the same beacon path.

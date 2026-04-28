@@ -22,7 +22,7 @@
 /* Image chunk data size (excluding header and CRC) */
 #define PAYUEL_CAM_CHUNK_DATA_SIZE   247
 
-/* Fixed response size for 0x45 chunk download over CSP/CAN */
+/* Maximum response size for 0x45 chunk download over CSP/CAN */
 #define PAYUEL_CAM_CHUNK_RESPONSE_SIZE 256
 
 /* Legacy SPI path kept commented for reference.

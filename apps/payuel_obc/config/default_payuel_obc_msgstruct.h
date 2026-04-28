@@ -57,7 +57,8 @@ typedef struct
 /**
  * 0x45 - 이미지 청크 다운로드 요청
  * TX: [0x45][ImageSlot][ImageNumber][ChunkNumber(uint16 BE)][CRC16(BE)] = 7 bytes
- * RX: [0x45][ImageSlot][ImageNumber][ChunkNumber(uint16 BE)][Data/Padding(247)][CRC32(BE)] = 256 bytes
+ * RX: [0x45][ImageSlot][ImageNumber][ChunkNumber(uint16 BE)][Data(valid bytes)][CRC32(BE)]
+ *     = 5 + valid data length + 4 bytes (max 256)
  */
 typedef struct
 {
@@ -81,7 +82,8 @@ typedef struct
 /**
  * 0x55 - 센서 데이터 청크 다운로드 요청
  * TX: [0x55][DataSlot][DataNumber][ChunkNumber(uint16 BE)][CRC16(BE)] = 7 bytes
- * RX: [0x55][DataSlot][DataNumber][ChunkNumber(uint16 BE)][Data/Padding(247)][CRC32(BE)] = 256 bytes
+ * RX: [0x55][DataSlot][DataNumber][ChunkNumber(uint16 BE)][Data(valid bytes)][CRC32(BE)]
+ *     = 5 + valid data length + 4 bytes (max 256)
  */
 typedef struct
 {

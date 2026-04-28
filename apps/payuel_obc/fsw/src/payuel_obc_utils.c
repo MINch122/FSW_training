@@ -12,7 +12,7 @@
 /*
  * Checksum helpers used by the OBC-side payload protocol.
  * CRC16 protects short command/response frames, and CRC32 protects
- * fixed-size chunk downloads and reconstructed files.
+ * chunk downloads and reconstructed files.
  */
 static uint16_t PAYUEL_OBC_Crc16(const uint8_t *Data, size_t Length)
 {
@@ -99,32 +99,6 @@ void PAYUEL_OBC_WriteU32BE(uint8_t *Data, uint32_t Value)
     Data[3] = (uint8_t)(Value & 0xFFU);
 }
 
-static bool PAYUEL_OBC_VerifyChunkPadding(const uint8_t *Data, size_t ValidDataLength)
-{
-    size_t Index;
-
-    /* A full chunk has no unused bytes, so there is no padding area to inspect. */
-    if (ValidDataLength >= PAYUEL_OBC_CHUNK_DATA_SIZE)
-    {
-        return true;
-    }
-
-    /*
-     * Chunk responses are fixed-size frames.
-     * Bytes after the valid payload region should stay zeroed so stale data
-     * does not masquerade as real image or sensor contents.
-     */
-    for (Index = 5U + ValidDataLength; Index < 5U + PAYUEL_OBC_CHUNK_DATA_SIZE; ++Index)
-    {
-        if (Data[Index] != 0U)
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 bool PAYUEL_OBC_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
 {
     bool              Result       = true;
@@ -188,10 +162,11 @@ bool PAYUEL_OBC_VerifyChunkCrc32(const uint8_t *Data, size_t ValidDataLength)
     /*
      * The payload app defines the CRC32 range as:
      *   cmd + slot + number + chunk_no(2B BE) + valid data
-     * Padding bytes in the fixed 256-byte response are excluded.
+     * The CRC32 field follows immediately after the valid data; no padding bytes
+     * are expected between the payload and CRC.
      */
     uint32_t Computed = PAYUEL_OBC_Crc32(Data, 5U + ValidDataLength);
-    uint32_t Received = PAYUEL_OBC_ReadU32BE(&Data[252]);
+    uint32_t Received = PAYUEL_OBC_ReadU32BE(&Data[5U + ValidDataLength]);
 
     return (Computed == Received);
 }
@@ -393,6 +368,70 @@ CFE_Status_t PAYUEL_OBC_ValidateResponse(const char *CmdName, uint8_t ExpectedCm
         }
         CFE_EVS_SendEvent(PAYUEL_OBC_CRC_ERR_EID, CFE_EVS_EventType_ERROR,
                           "PAYUEL_OBC: %s RX CRC/CMD mismatch", CmdName);
+        PAYUEL_OBC_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    return CFE_SUCCESS;
+}
+
+static CFE_Status_t PAYUEL_OBC_ValidateChunkResponse(const char *CmdName, uint8_t ExpectedCmd,
+                                                     const uint8_t *RxData, int32 RspLen,
+                                                     size_t ExpectedLength,
+                                                     uint8_t *ReturnTypeOut,
+                                                     uint8_t *PayloadErrorPacketOut)
+{
+    CFE_Status_t Status = CFE_SUCCESS;
+
+    if (PayloadErrorPacketOut != NULL)
+    {
+        memset(PayloadErrorPacketOut, 0, 4U);
+    }
+
+    if (RspLen <= 0)
+    {
+        Status = (RspLen == 0) ? CFE_STATUS_EXTERNAL_RESOURCE_FAIL : RspLen;
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_CFE;
+        }
+        CFE_EVS_SendEvent(PAYUEL_OBC_TX_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_OBC: %s CSP error, status=0x%08X", CmdName, Status);
+        PAYUEL_OBC_Data.ErrCounter++;
+        return Status;
+    }
+
+    if (PAYUEL_OBC_IsPayloadErrorPacket(ExpectedCmd, RxData, RspLen))
+    {
+        if (PayloadErrorPacketOut != NULL)
+        {
+            memcpy(PayloadErrorPacketOut, RxData, 4U);
+        }
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        return PAYUEL_OBC_HwStatusError(CmdName, RxData[1]);
+    }
+
+    if ((size_t)RspLen != ExpectedLength)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        return PAYUEL_OBC_RspLenError(CmdName, RspLen, ExpectedLength);
+    }
+
+    if (RxData[0] != ExpectedCmd)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_OBC: %s RX command mismatch expected=0x%02X actual=0x%02X",
+                          CmdName, ExpectedCmd, RxData[0]);
         PAYUEL_OBC_Data.ErrCounter++;
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
@@ -664,6 +703,7 @@ CFE_Status_t PAYUEL_OBC_RequestImageChunk(uint8_t ImageSlot, uint8_t ImageNumber
     int32        rsp_len;
     CFE_Status_t status = CFE_SUCCESS;
     uint16_t     rsp_chunk_num;
+    size_t       expected_rsp_len;
 
     if (ReturnTypeOut != NULL)
     {
@@ -685,6 +725,8 @@ CFE_Status_t PAYUEL_OBC_RequestImageChunk(uint8_t ImageSlot, uint8_t ImageNumber
         return CFE_SB_BAD_ARGUMENT;
     }
 
+    expected_rsp_len = 5U + ValidDataLength + 4U;
+
     /* Request format: [cmd][slot][image][chunk number][crc16]. */
     TxData[0] = PAYUEL_OBC_ID_CHUNK_DOWNLOAD;
     TxData[1] = ImageSlot;
@@ -704,15 +746,15 @@ CFE_Status_t PAYUEL_OBC_RequestImageChunk(uint8_t ImageSlot, uint8_t ImageNumber
      *
      * spiStatus = CFE_SRL_ApiRead(PAYUEL_OBC_Data.SpiHandle, &spiParam);
      */
-    /* Current implementation uses one CSP round-trip for request and response. */
+    /* Receive variable-length chunk replies, including 4-byte error packets. */
     rsp_len = CFE_SRL_ApiTransactionCSP(
         PAYUEL_OBC_NODE, PAYUEL_OBC_PORT,
         TxData, sizeof(TxData),
-        RxData, sizeof(RxData));
+        RxData, -1);
 
-    status = PAYUEL_OBC_ValidateResponse("ChunkDownload", PAYUEL_OBC_ID_CHUNK_DOWNLOAD,
-                                         RxData, rsp_len, sizeof(RxData),
-                                         ReturnTypeOut, PayloadErrorPacketOut);
+    status = PAYUEL_OBC_ValidateChunkResponse("ChunkDownload", PAYUEL_OBC_ID_CHUNK_DOWNLOAD,
+                                              RxData, rsp_len, expected_rsp_len,
+                                              ReturnTypeOut, PayloadErrorPacketOut);
     if (status == CFE_SUCCESS)
     {
         /* Bytes 3..4 echo the chunk number in big-endian format. */
@@ -736,7 +778,7 @@ CFE_Status_t PAYUEL_OBC_RequestImageChunk(uint8_t ImageSlot, uint8_t ImageNumber
         }
         else if (!PAYUEL_OBC_VerifyChunkCrc32(RxData, ValidDataLength))
         {
-            /* CRC32 only covers the meaningful bytes, not the padded tail of the frame. */
+            /* CRC32 covers cmd through valid data only; no padding bytes are present. */
             status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             if (ReturnTypeOut != NULL)
             {
@@ -746,22 +788,9 @@ CFE_Status_t PAYUEL_OBC_RequestImageChunk(uint8_t ImageSlot, uint8_t ImageNumber
                               "PAYUEL_OBC: ChunkDownload CRC32 mismatch");
             PAYUEL_OBC_Data.ErrCounter++;
         }
-        else if (!PAYUEL_OBC_VerifyChunkPadding(RxData, ValidDataLength))
-        {
-            /* The unused tail should be zero-filled so old data cannot leak into the file. */
-            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-            if (ReturnTypeOut != NULL)
-            {
-                *ReturnTypeOut = RPT_RETTYPE_HW;
-            }
-            CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "PAYUEL_OBC: ChunkDownload padding mismatch after %u valid bytes",
-                              (unsigned int)ValidDataLength);
-            PAYUEL_OBC_Data.ErrCounter++;
-        }
         else if (ChunkDataOut != NULL)
         {
-            /* Only copy the caller-requested valid bytes, not the padded frame tail. */
+            /* Only copy the caller-requested valid bytes. */
             memcpy(ChunkDataOut, &RxData[5], ValidDataLength);
         }
     }
@@ -778,6 +807,7 @@ CFE_Status_t PAYUEL_OBC_RequestSensorChunk(uint8_t DataSlot, uint8_t DataNumber,
     int32        rsp_len;
     CFE_Status_t status = CFE_SUCCESS;
     uint16_t     rsp_chunk_num;
+    size_t       expected_rsp_len;
 
     if (ReturnTypeOut != NULL)
     {
@@ -799,6 +829,8 @@ CFE_Status_t PAYUEL_OBC_RequestSensorChunk(uint8_t DataSlot, uint8_t DataNumber,
         return CFE_SB_BAD_ARGUMENT;
     }
 
+    expected_rsp_len = 5U + ValidDataLength + 4U;
+
     /* Request format: [cmd][slot][sensor number][chunk number][crc16]. */
     TxData[0] = PAYUEL_OBC_ID_SENSOR_CHUNK;
     TxData[1] = DataSlot;
@@ -818,15 +850,15 @@ CFE_Status_t PAYUEL_OBC_RequestSensorChunk(uint8_t DataSlot, uint8_t DataNumber,
      *
      * spiStatus = CFE_SRL_ApiRead(PAYUEL_OBC_Data.SpiHandle, &spiParam);
      */
-    /* Current implementation uses one CSP round-trip for request and response. */
+    /* Receive variable-length chunk replies, including 4-byte error packets. */
     rsp_len = CFE_SRL_ApiTransactionCSP(
         PAYUEL_OBC_NODE, PAYUEL_OBC_PORT,
         TxData, sizeof(TxData),
-        RxData, sizeof(RxData));
+        RxData, -1);
 
-    status = PAYUEL_OBC_ValidateResponse("SensorChunk", PAYUEL_OBC_ID_SENSOR_CHUNK,
-                                         RxData, rsp_len, sizeof(RxData),
-                                         ReturnTypeOut, PayloadErrorPacketOut);
+    status = PAYUEL_OBC_ValidateChunkResponse("SensorChunk", PAYUEL_OBC_ID_SENSOR_CHUNK,
+                                              RxData, rsp_len, expected_rsp_len,
+                                              ReturnTypeOut, PayloadErrorPacketOut);
     if (status == CFE_SUCCESS)
     {
         /* Bytes 3..4 echo the chunk number in big-endian format. */
@@ -850,7 +882,7 @@ CFE_Status_t PAYUEL_OBC_RequestSensorChunk(uint8_t DataSlot, uint8_t DataNumber,
         }
         else if (!PAYUEL_OBC_VerifyChunkCrc32(RxData, ValidDataLength))
         {
-            /* CRC32 only covers the meaningful bytes, not the padded tail of the frame. */
+            /* CRC32 covers cmd through valid data only; no padding bytes are present. */
             status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
             if (ReturnTypeOut != NULL)
             {
@@ -860,22 +892,9 @@ CFE_Status_t PAYUEL_OBC_RequestSensorChunk(uint8_t DataSlot, uint8_t DataNumber,
                               "PAYUEL_OBC: SensorChunk CRC32 mismatch");
             PAYUEL_OBC_Data.ErrCounter++;
         }
-        else if (!PAYUEL_OBC_VerifyChunkPadding(RxData, ValidDataLength))
-        {
-            /* The unused tail should be zero-filled so old data cannot leak into the file. */
-            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-            if (ReturnTypeOut != NULL)
-            {
-                *ReturnTypeOut = RPT_RETTYPE_HW;
-            }
-            CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "PAYUEL_OBC: SensorChunk padding mismatch after %u valid bytes",
-                              (unsigned int)ValidDataLength);
-            PAYUEL_OBC_Data.ErrCounter++;
-        }
         else if (ChunkDataOut != NULL)
         {
-            /* Only copy the caller-requested valid bytes, not the padded frame tail. */
+            /* Only copy the caller-requested valid bytes. */
             memcpy(ChunkDataOut, &RxData[5], ValidDataLength);
         }
     }

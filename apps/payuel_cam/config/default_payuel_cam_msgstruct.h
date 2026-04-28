@@ -57,7 +57,8 @@ typedef struct
 /**
  * 0x45 - DOWNLOAD CHUNK
  * ICD TX: [0x45][ImageSlot][ImageNumber][ChunkNumber(uint16 BE)][CRC16(BE)] = 7 bytes
- * ICD RX: fixed 256 bytes, CRC32 over Cmd..valid data (padding excluded)
+ * ICD RX: [cmd][slot][image][chunk_no][valid data][CRC32], max 256 bytes.
+ * CRC32 covers cmd through valid data only; no padding bytes are expected.
  */
 typedef struct
 {

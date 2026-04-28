@@ -25,8 +25,8 @@
 /* Image/Sensor chunk data size (excluding header and CRC) */
 #define PAYUEL_OBC_CHUNK_DATA_SIZE     247
 
-/* Fixed-size chunk response (header 5B + data/padding 247B + CRC32 4B) */
-#define PAYUEL_OBC_CHUNK_RESPONSE_SIZE 256   /**< 0x45/0x55 chunk response size via CSP CAN */
+/* Maximum chunk response size (header 5B + valid data up to 247B + CRC32 4B) */
+#define PAYUEL_OBC_CHUNK_RESPONSE_SIZE 256   /**< 0x45/0x55 max chunk response size via CSP CAN */
 
 /* Legacy SPI configuration kept commented for reference.
  * #define PAYUEL_OBC_SPI_CHUNK_SIZE  256

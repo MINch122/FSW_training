@@ -259,9 +259,10 @@ CFE_Status_t PAYUEL_CAM_DownloadMetaCmd(const PAYUEL_CAM_DownloadMetaCmd_t *Msg)
  * 0x45 - Chunk Download
  * TX via CSP CAN (7 B):   [0x45][ImageSlot][ImageNumber][ChunkNum_H][ChunkNum_L]
  *                         [CRC16_H][CRC16_L]
- * RX via CSP CAN (256 B): [0x45][Slot][ImgNum][ChunkNum_H][ChunkNum_L]
- *                         [ImageData/Padding(247B)][CRC32(4B,BE)]
- * CRC32 range:        Cmd..valid data only (padding excluded)
+ * RX via CSP CAN:     [0x45][Slot][ImgNum][ChunkNum_H][ChunkNum_L]
+ *                     [ImageData(valid bytes)][CRC32(4B,BE)]
+ *                     length = 5 + valid data length + 4, max 256 B
+ * CRC32 range:        Cmd..valid data only
  * =================================================================== */
 CFE_Status_t PAYUEL_CAM_ChunkDownloadCmd(const PAYUEL_CAM_ChunkDownloadCmd_t *Msg)
 {
