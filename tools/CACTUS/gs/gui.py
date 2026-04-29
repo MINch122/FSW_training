@@ -1694,8 +1694,6 @@ class MainWindow(QMainWindow):
             try:
                 self.conn.connect(ip, cp, tp)
                 self._set_connected(True)
-                # Auto-ping to verify the uplink/downlink immediately
-                self._ping()
             except Exception as exc:
                 self._log(f'[ERROR] Could not open socket: {exc}')
 
@@ -1703,13 +1701,12 @@ class MainWindow(QMainWindow):
         self._style_connect_btn(connected)
         self.ping_btn.setEnabled(connected)
         if connected:
-            # Yellow while ping is in flight; colour changes after ping result
-            self.status_dot.setStyleSheet('color:#ffc107; font-size:20px;')
+            self.status_dot.setStyleSheet('color:#4caf50; font-size:20px;')
             ip, cp, tp = (self.ip_edit.text(),
                           self.cmd_port_spin.value(),
                           self.tlm_port_spin.value())
             self.status_lbl.setText(f'Socket open {ip}:{cp}')
-            self._log(f'[INFO] Socket open  →  {ip}:{cp}  (tlm :{tp})  — verifying…')
+            self._log(f'[INFO] Socket open  ->  {ip}:{cp}  (tlm :{tp})')
             self.scene.set_state(SceneWidget.TX_ONLY)
         else:
             self.status_dot.setStyleSheet('color:#f44336; font-size:20px;')

@@ -102,7 +102,6 @@ void TO_LAB_ForwardTelemetryUDP(void)
 
     OS_SocketAddrInit(&d_addr, OS_SocketDomain_INET);
     OS_SocketAddrSetPort(&d_addr, TO_LAB_TLM_PORT);
-    OS_SocketAddrFromString(&d_addr, TO_LAB_Global.tlm_dest_IP);
     OsStatus = 0;
 
     for(; ; ){
@@ -143,7 +142,15 @@ void TO_LAB_ForwardTelemetryUDP(void)
                         
                     }
                     
-                    OsStatus = OS_SocketSendTo(TO_LAB_Global.TLMsockid, NetBufPtr, NetBufSize, &d_addr);
+                    OsStatus = OS_SocketAddrFromString(&d_addr, TO_LAB_Global.tlm_dest_IP);
+                    if (OsStatus == OS_SUCCESS)
+                    {
+                        OsStatus = OS_SocketAddrSetPort(&d_addr, TO_LAB_TLM_PORT);
+                    }
+                    if (OsStatus == OS_SUCCESS)
+                    {
+                        OsStatus = OS_SocketSendTo(TO_LAB_Global.TLMsockid, NetBufPtr, NetBufSize, &d_addr);
+                    }
                 }
 
                 CFE_ES_PerfLogExit(TO_LAB_SOCKET_SEND_PERF_ID);
