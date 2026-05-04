@@ -61,6 +61,7 @@ typedef struct
     uint8  SensorMetaNumber;
     uint16 SensorTotalChunks;
     uint8  SensorLastChunkSize;
+    uint32 SensorFileCrc32;
 
     /* CFE_SRL_IO_Handle_t *SpiHandle; */ /**< Legacy SPI handle kept commented for chunk download reference */
 } PAYUEL_OBC_Data_t;

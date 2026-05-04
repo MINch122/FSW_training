@@ -9,7 +9,7 @@
 /* Create the semaphore/mutex/task set used for long full-file downloads. */
 CFE_Status_t PAYUEL_OBC_ChildInit(void);
 /* Queue an image full-download request for the child task and return immediately to the caller. */
-CFE_Status_t PAYUEL_OBC_QueueDownloadImage(uint8_t ImageSlot, uint8_t ImageNumber, uint8_t *ReturnTypeOut);
+CFE_Status_t PAYUEL_OBC_QueueDownloadImage(uint8_t CameraID, uint8_t ImageNumber, uint8_t *ReturnTypeOut);
 /* Queue a sensor-data full-download request for the child task and return immediately to the caller. */
 CFE_Status_t PAYUEL_OBC_QueueDownloadSensor(uint8_t DataSlot, uint8_t DataNumber, uint8_t *ReturnTypeOut);
 /* Report whether the child mailbox is occupied or the child is already processing a request. */

@@ -57,7 +57,7 @@
  *       This parameter shouldn't be larger than the value set for
  *       #CFE_PLATFORM_SB_HIGHEST_VALID_MSGID.
  */
-#define LC_RTS_REQ_MID 0x18A9
+#define LC_RTS_REQ_MID 0x1828
 
 /**
  * \brief RTS Request Command Code

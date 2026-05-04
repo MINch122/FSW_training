@@ -29,11 +29,9 @@ bool         PAYUEL_CAM_VerifyChunkCrc32(const uint8_t *Data, size_t ValidDataLe
 void         PAYUEL_CAM_ClearImageMetaCache(void);
 void         PAYUEL_CAM_ReportCmdStatus(CFE_SB_MsgId_t MsgId, uint16 CommandCode, int32 Status,
                                         const uint8_t *Data, uint16 DataLength, uint8 ReturnType);
-int32        PAYUEL_CAM_DownloadBusyError(const char *CmdName);
 int32        PAYUEL_CAM_LockHardware(const char *Context);
 void         PAYUEL_CAM_UnlockHardware(const char *Context);
-int32        PAYUEL_CAM_RspLenError(const char *CmdName, int32 ActualLength, size_t ExpectedLength);
-int32        PAYUEL_CAM_HwStatusError(const char *CmdName, uint8_t HwStatus);
+CFE_Status_t PAYUEL_CAM_RejectHwStatus(const char *CmdName, uint8_t HwStatus);
 CFE_Status_t PAYUEL_CAM_ValidateResponse(const char *CmdName, uint8_t ExpectedCmd, const uint8_t *RxData,
                                          int32 RspLen, size_t ExpectedLength, uint8_t *ReturnTypeOut,
                                          uint8_t *PayloadErrorPacketOut);

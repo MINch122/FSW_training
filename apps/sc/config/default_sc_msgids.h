@@ -53,6 +53,6 @@
 /**
  * RTS start request Message ID by Limit Checker (LC)
  */
-#define LC_RTS_REQUEST_MID  0x18A9
+#define LC_RTS_REQUEST_MID  0x1828
 
 #endif

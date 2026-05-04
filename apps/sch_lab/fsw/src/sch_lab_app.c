@@ -135,6 +135,13 @@ CFE_Status_t SCH_LAB_AppInit(void)
 
     memset(&SCH_LAB_Global, 0, sizeof(SCH_LAB_Global));
 
+    Status = CFE_EVS_Register(NULL, 0, CFE_EVS_EventFilter_BINARY);
+    if (Status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("SCH_LAB: Error registering for Event Services, RC = 0x%08lX\n",
+                             (unsigned long)Status);
+    }
+
     OsStatus = OS_CountSemCreate(&SCH_LAB_Global.TimingSem, "SCH_LAB", 0, 0);
     if (OsStatus != OS_SUCCESS)
     {

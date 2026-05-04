@@ -16,7 +16,7 @@
  * Command handlers only enqueue work; the child performs the blocking
  * hardware transactions and file I/O in the background.
  */
-static CFE_Status_t PAYUEL_CAM_ChildLockState(void)
+static CFE_Status_t PAYUEL_CAM_TakeChildMutex(void)
 {
     int32 OsStatus;
 
@@ -32,7 +32,7 @@ static CFE_Status_t PAYUEL_CAM_ChildLockState(void)
     return OsStatus;
 }
 
-static void PAYUEL_CAM_ChildUnlockState(void)
+static void PAYUEL_CAM_GiveChildMutex(void)
 {
     int32 OsStatus;
 
@@ -46,25 +46,10 @@ static void PAYUEL_CAM_ChildUnlockState(void)
     }
 }
 
-/* Pack metadata fields into the compact report payload returned to operators. */
-static void PAYUEL_CAM_BuildMetaReportData(const PAYUEL_CAM_ImageMetaInfo_t *Meta, uint8_t *ReportData)
-{
-    if (Meta == NULL || ReportData == NULL)
-    {
-        return;
-    }
-
-    ReportData[0] = Meta->ImageSlot;
-    ReportData[1] = Meta->ImageNumber;
-    PAYUEL_CAM_WriteU16BE(&ReportData[2], Meta->TotalChunks);
-    ReportData[4] = Meta->LastChunkSize;
-    PAYUEL_CAM_WriteU32BE(&ReportData[5], Meta->FileCrc32);
-}
-
 /* Build a deterministic file name so each downloaded image has a stable location on disk. */
-static CFE_Status_t PAYUEL_CAM_BuildDownloadPath(char *Path, size_t PathSize,
-                                                 uint8_t ImageSlot, uint8_t ImageNumber,
-                                                 const char *Suffix)
+static CFE_Status_t PAYUEL_CAM_MakeDownloadPath(char *Path, size_t PathSize,
+                                                uint8_t ImageSlot, uint8_t ImageNumber,
+                                                const char *Suffix)
 {
     int Result;
 
@@ -83,13 +68,13 @@ static CFE_Status_t PAYUEL_CAM_BuildDownloadPath(char *Path, size_t PathSize,
     return CFE_SUCCESS;
 }
 
-static CFE_Status_t PAYUEL_CAM_ExecuteDownload(uint8_t ImageSlot, uint8_t ImageNumber)
+static CFE_Status_t PAYUEL_CAM_DownloadImageInChild(uint8_t ImageSlot, uint8_t ImageNumber)
 {
     PAYUEL_CAM_ImageMetaInfo_t Meta = {0};
     uint8_t                    ChunkData[PAYUEL_CAM_CHUNK_DATA_SIZE];
     uint8_t                    ReportData[9] = {ImageSlot, ImageNumber, 0};
     CFE_Status_t               status = CFE_SUCCESS;
-    uint8_t                    rpt_type = RPT_RETTYPE_SUCCESS;
+    uint8_t                    return_type = RPT_RETTYPE_SUCCESS;
     char                       temp_path[PAYUEL_CAM_DOWNLOAD_PATH_MAX];
     char                       final_path[PAYUEL_CAM_DOWNLOAD_PATH_MAX];
     uint32_t                   expected_size = 0;
@@ -101,18 +86,18 @@ static CFE_Status_t PAYUEL_CAM_ExecuteDownload(uint8_t ImageSlot, uint8_t ImageN
     ssize_t                    written;
 
     /* Download into a temporary file first so incomplete data never looks final. */
-    status = PAYUEL_CAM_BuildDownloadPath(temp_path, sizeof(temp_path), ImageSlot, ImageNumber, ".part");
+    status = PAYUEL_CAM_MakeDownloadPath(temp_path, sizeof(temp_path), ImageSlot, ImageNumber, ".part");
     if (status != CFE_SUCCESS)
     {
-        rpt_type = RPT_RETTYPE_APP;
+        return_type = RPT_RETTYPE_APP;
         goto report_status;
     }
 
     /* The final .bin name is published only after every chunk and verification step succeeds. */
-    status = PAYUEL_CAM_BuildDownloadPath(final_path, sizeof(final_path), ImageSlot, ImageNumber, ".bin");
+    status = PAYUEL_CAM_MakeDownloadPath(final_path, sizeof(final_path), ImageSlot, ImageNumber, ".bin");
     if (status != CFE_SUCCESS)
     {
-        rpt_type = RPT_RETTYPE_APP;
+        return_type = RPT_RETTYPE_APP;
         goto report_status;
     }
 
@@ -120,7 +105,7 @@ static CFE_Status_t PAYUEL_CAM_ExecuteDownload(uint8_t ImageSlot, uint8_t ImageN
     status = PAYUEL_CAM_LockHardware("DownloadImage");
     if (status != CFE_SUCCESS)
     {
-        rpt_type = RPT_RETTYPE_OSAL;
+        return_type = RPT_RETTYPE_OSAL;
         goto report_status;
     }
 
@@ -129,15 +114,18 @@ static CFE_Status_t PAYUEL_CAM_ExecuteDownload(uint8_t ImageSlot, uint8_t ImageN
      * That tells us how many chunks to fetch, how large the last chunk is,
      * and what CRC32 the finished file must match.
      */
-    status = PAYUEL_CAM_RequestImageMeta(ImageSlot, ImageNumber, &Meta, &rpt_type, NULL);
+    status = PAYUEL_CAM_RequestImageMeta(ImageSlot, ImageNumber, &Meta, &return_type, NULL);
     if (status != CFE_SUCCESS)
     {
         PAYUEL_CAM_UnlockHardware("DownloadImage");
         goto report_status;
     }
 
-    /* Keep the metadata in the report even if a later chunk fails. */
-    PAYUEL_CAM_BuildMetaReportData(&Meta, ReportData);
+    ReportData[0] = Meta.ImageSlot;
+    ReportData[1] = Meta.ImageNumber;
+    PAYUEL_CAM_WriteU16BE(&ReportData[2], Meta.TotalChunks);
+    ReportData[4] = Meta.LastChunkSize;
+    PAYUEL_CAM_WriteU32BE(&ReportData[5], Meta.FileCrc32);
 
     /* Start with a clean temporary file so retries do not append to old contents. */
     fd = open(temp_path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
@@ -148,7 +136,7 @@ static CFE_Status_t PAYUEL_CAM_ExecuteDownload(uint8_t ImageSlot, uint8_t ImageN
                           "PAYUEL_CAM: Failed to open %s", temp_path);
         PAYUEL_CAM_Data.ErrCounter++;
         status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-        rpt_type = RPT_RETTYPE_CFE;
+        return_type = RPT_RETTYPE_CFE;
         goto report_status;
     }
 
@@ -156,7 +144,7 @@ static CFE_Status_t PAYUEL_CAM_ExecuteDownload(uint8_t ImageSlot, uint8_t ImageN
     {
         /* Metadata tells us whether this is a full-sized chunk or the shorter last chunk. */
         chunk_size = PAYUEL_CAM_GetChunkDataLenFromMeta(&Meta, chunk);
-        status = PAYUEL_CAM_RequestImageChunk(ImageSlot, ImageNumber, chunk, chunk_size, ChunkData, &rpt_type,
+        status = PAYUEL_CAM_RequestImageChunk(ImageSlot, ImageNumber, chunk, chunk_size, ChunkData, &return_type,
                                               NULL);
         if (status != CFE_SUCCESS)
         {
@@ -172,7 +160,7 @@ static CFE_Status_t PAYUEL_CAM_ExecuteDownload(uint8_t ImageSlot, uint8_t ImageN
                               (long)written, (unsigned int)chunk_size, temp_path);
             PAYUEL_CAM_Data.ErrCounter++;
             status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-            rpt_type = RPT_RETTYPE_CFE;
+            return_type = RPT_RETTYPE_CFE;
             break;
         }
 
@@ -202,7 +190,7 @@ static CFE_Status_t PAYUEL_CAM_ExecuteDownload(uint8_t ImageSlot, uint8_t ImageN
                           (unsigned long)actual_size, (unsigned long)expected_size);
         PAYUEL_CAM_Data.ErrCounter++;
         status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-        rpt_type = RPT_RETTYPE_APP;
+        return_type = RPT_RETTYPE_APP;
         goto cleanup_temp;
     }
 
@@ -210,7 +198,7 @@ static CFE_Status_t PAYUEL_CAM_ExecuteDownload(uint8_t ImageSlot, uint8_t ImageN
     status = PAYUEL_CAM_ComputeFileCrc32(temp_path, &actual_crc32);
     if (status != CFE_SUCCESS)
     {
-        rpt_type = RPT_RETTYPE_CFE;
+        return_type = RPT_RETTYPE_CFE;
         goto cleanup_temp;
     }
 
@@ -221,7 +209,7 @@ static CFE_Status_t PAYUEL_CAM_ExecuteDownload(uint8_t ImageSlot, uint8_t ImageN
                           actual_crc32, Meta.FileCrc32, temp_path);
         PAYUEL_CAM_Data.ErrCounter++;
         status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-        rpt_type = RPT_RETTYPE_HW;
+        return_type = RPT_RETTYPE_HW;
         goto cleanup_temp;
     }
 
@@ -233,7 +221,7 @@ static CFE_Status_t PAYUEL_CAM_ExecuteDownload(uint8_t ImageSlot, uint8_t ImageN
                           temp_path, final_path, errno);
         PAYUEL_CAM_Data.ErrCounter++;
         status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-        rpt_type = RPT_RETTYPE_CFE;
+        return_type = RPT_RETTYPE_CFE;
         goto cleanup_temp;
     }
 
@@ -250,7 +238,7 @@ cleanup_temp:
 report_status:
     /* Always emit one completion report so the command side can observe final status. */
     PAYUEL_CAM_ReportCmdStatus(CFE_SB_ValueToMsgId(PAYUEL_CAM_CMD_MID), PAYUEL_CAM_DOWNLOAD_IMAGE_CC,
-                               status, ReportData, sizeof(ReportData), rpt_type);
+                               status, ReportData, sizeof(ReportData), return_type);
     return status;
 }
 
@@ -273,14 +261,14 @@ void PAYUEL_CAM_ChildTask(void)
             break;
         }
 
-        if (PAYUEL_CAM_ChildLockState() != CFE_SUCCESS)
+        if (PAYUEL_CAM_TakeChildMutex() != CFE_SUCCESS)
         {
             break;
         }
 
         if (!PAYUEL_CAM_Data.DownloadRequestPending)
         {
-            PAYUEL_CAM_ChildUnlockState();
+            PAYUEL_CAM_GiveChildMutex();
             CFE_EVS_SendEvent(PAYUEL_CAM_CHILD_TERM_ERR_EID, CFE_EVS_EventType_ERROR,
                               "PAYUEL_CAM: Child wake-up without pending request");
             PAYUEL_CAM_Data.ErrCounter++;
@@ -292,19 +280,19 @@ void PAYUEL_CAM_ChildTask(void)
         memset(&PAYUEL_CAM_Data.PendingDownload, 0, sizeof(PAYUEL_CAM_Data.PendingDownload));
         PAYUEL_CAM_Data.DownloadRequestPending = false;
         PAYUEL_CAM_Data.DownloadInProgress = true;
-        PAYUEL_CAM_ChildUnlockState();
+        PAYUEL_CAM_GiveChildMutex();
 
         /* Process the queued request outside the state lock because it can take a long time. */
-        (void)PAYUEL_CAM_ExecuteDownload(Request.ImageSlot, Request.ImageNumber);
+        (void)PAYUEL_CAM_DownloadImageInChild(Request.ImageSlot, Request.ImageNumber);
 
-        if (PAYUEL_CAM_ChildLockState() != CFE_SUCCESS)
+        if (PAYUEL_CAM_TakeChildMutex() != CFE_SUCCESS)
         {
             break;
         }
 
         /* Clear the busy flag only after the whole file download path has completely returned. */
         PAYUEL_CAM_Data.DownloadInProgress = false;
-        PAYUEL_CAM_ChildUnlockState();
+        PAYUEL_CAM_GiveChildMutex();
     }
 
     /* Mark the child as unusable before exiting so new queue attempts fail cleanly. */
@@ -371,7 +359,7 @@ CFE_Status_t PAYUEL_CAM_QueueDownloadImage(uint8_t ImageSlot, uint8_t ImageNumbe
     }
 
     /* Parent side locks the mailbox before checking busy flags and posting a new child request. */
-    status = PAYUEL_CAM_ChildLockState();
+    status = PAYUEL_CAM_TakeChildMutex();
     if (status != CFE_SUCCESS)
     {
         if (ReturnTypeOut != NULL)
@@ -383,19 +371,22 @@ CFE_Status_t PAYUEL_CAM_QueueDownloadImage(uint8_t ImageSlot, uint8_t ImageNumbe
 
     if (PAYUEL_CAM_Data.DownloadRequestPending || PAYUEL_CAM_Data.DownloadInProgress)
     {
-        PAYUEL_CAM_ChildUnlockState();
+        PAYUEL_CAM_GiveChildMutex();
         if (ReturnTypeOut != NULL)
         {
             *ReturnTypeOut = RPT_RETTYPE_APP;
         }
-        return PAYUEL_CAM_DownloadBusyError("DownloadImage");
+        CFE_EVS_SendEvent(PAYUEL_CAM_CHILD_BUSY_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_CAM: DownloadImage rejected while download task is busy");
+        PAYUEL_CAM_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
     /* Populate the one-slot mailbox that the child will copy after it wakes up. */
     PAYUEL_CAM_Data.PendingDownload.ImageSlot = ImageSlot;
     PAYUEL_CAM_Data.PendingDownload.ImageNumber = ImageNumber;
     PAYUEL_CAM_Data.DownloadRequestPending = true;
-    PAYUEL_CAM_ChildUnlockState();
+    PAYUEL_CAM_GiveChildMutex();
 
     /* Ring the child's doorbell after the mailbox is fully populated. */
     OsStatus = OS_CountSemGive(PAYUEL_CAM_Data.ChildSemaphore);
@@ -406,12 +397,12 @@ CFE_Status_t PAYUEL_CAM_QueueDownloadImage(uint8_t ImageSlot, uint8_t ImageNumbe
             *ReturnTypeOut = RPT_RETTYPE_OSAL;
         }
 
-        if (PAYUEL_CAM_ChildLockState() == CFE_SUCCESS)
+        if (PAYUEL_CAM_TakeChildMutex() == CFE_SUCCESS)
         {
             /* Roll back the mailbox so the next request starts from a clean state. */
             memset(&PAYUEL_CAM_Data.PendingDownload, 0, sizeof(PAYUEL_CAM_Data.PendingDownload));
             PAYUEL_CAM_Data.DownloadRequestPending = false;
-            PAYUEL_CAM_ChildUnlockState();
+            PAYUEL_CAM_GiveChildMutex();
         }
 
         CFE_EVS_SendEvent(PAYUEL_CAM_CHILD_TERM_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -429,13 +420,13 @@ bool PAYUEL_CAM_ChildIsBusy(void)
 {
     bool Busy = true;
 
-    if (PAYUEL_CAM_ChildLockState() != CFE_SUCCESS)
+    if (PAYUEL_CAM_TakeChildMutex() != CFE_SUCCESS)
     {
         return true;
     }
 
     /* Busy means either a request is queued or the child is actively downloading. */
     Busy = PAYUEL_CAM_Data.DownloadRequestPending || PAYUEL_CAM_Data.DownloadInProgress;
-    PAYUEL_CAM_ChildUnlockState();
+    PAYUEL_CAM_GiveChildMutex();
     return Busy;
 }

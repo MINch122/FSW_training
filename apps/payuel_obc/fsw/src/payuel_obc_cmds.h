@@ -24,29 +24,29 @@ CFE_Status_t PAYUEL_OBC_ResetCountersCmd(const PAYUEL_OBC_ResetCountersCmd_t *Ms
 CFE_Status_t PAYUEL_OBC_SendObcBcnCmd(const PAYUEL_OBC_SendObcBcnCmd_t *Msg);
 /*
  * 0x21 Motor mode command.
- * Fill L_Speed and R_Speed with signed motor speeds, Duration with run time, and Instance with target instance.
+ * Fill L_Speed and R_Speed with signed motor speeds, and Duration with run time.
  * Use negative values for reverse direction if that is defined by the ICD.
- * Example: L_Speed=10, R_Speed=10, Duration=5, Instance=0 drives both motors for 5 units on instance 0.
+ * Example: L_Speed=10, R_Speed=10, Duration=5 drives both motors for 5 units.
  */
 CFE_Status_t PAYUEL_OBC_MotorModeCmd(const PAYUEL_OBC_MotorModeCmd_t *Msg);
 /*
  * 0x41 Camera shot command through the UEL OBC path.
- * Fill ImageSlot with the destination slot and CameraNumber with the camera index.
- * Example: ImageSlot=0, CameraNumber=1 captures a new image from camera 1 into slot 0.
+ * Fill CameraID with the camera index and ImageNumber with the destination image number.
+ * Example: CameraID=0x61, ImageNumber=0 captures a new image from camera 0x61 as image 0.
  */
 CFE_Status_t PAYUEL_OBC_CamShotCmd(const PAYUEL_OBC_CamShotCmd_t *Msg);
 /*
  * 0x44 Image download-meta command.
- * Fill ImageSlot and ImageNumber for the image whose metadata you want to query.
+ * Fill CameraID and ImageNumber for the image whose metadata you want to query.
  * Use this before a manual 0x45 chunk download so total chunks and last-chunk size are known.
- * Example: ImageSlot=0, ImageNumber=2 requests metadata for image 2 in slot 0.
+ * Example: CameraID=0x61, ImageNumber=2 requests metadata for image 2 on camera 0x61.
  */
 CFE_Status_t PAYUEL_OBC_DownloadMetaCmd(const PAYUEL_OBC_DownloadMetaCmd_t *Msg);
 /*
  * 0x45 Single image chunk download command.
- * Fill ImageSlot and ImageNumber to identify the image, then ChunkNumber for the zero-based chunk index.
+ * Fill CameraID and ImageNumber to identify the image, then ChunkNumber for the zero-based chunk index.
  * ChunkNumber should be less than the total chunk count returned by 0x44 metadata.
- * Example: ImageSlot=0, ImageNumber=2, ChunkNumber=0 downloads the first image chunk.
+ * Example: CameraID=0x61, ImageNumber=2, ChunkNumber=0 downloads the first image chunk.
  */
 CFE_Status_t PAYUEL_OBC_ChunkDownloadCmd(const PAYUEL_OBC_ChunkDownloadCmd_t *Msg);
 /*
@@ -65,9 +65,9 @@ CFE_Status_t PAYUEL_OBC_SensorMetaCmd(const PAYUEL_OBC_SensorMetaCmd_t *Msg);
 CFE_Status_t PAYUEL_OBC_SensorChunkCmd(const PAYUEL_OBC_SensorChunkCmd_t *Msg);
 /*
  * cFS aggregate image download command.
- * Fill ImageSlot and ImageNumber for the image to download end-to-end.
+ * Fill CameraID and ImageNumber for the image to download end-to-end.
  * The child task will run 0x44, download all 0x45 chunks, assemble the file, and verify Image File CRC32.
- * Example: ImageSlot=0, ImageNumber=2 downloads the full image 2 from slot 0 in one command.
+ * Example: CameraID=0x61, ImageNumber=2 downloads the full image 2 from camera 0x61 in one command.
  */
 CFE_Status_t PAYUEL_OBC_DownloadImageCmd(const PAYUEL_OBC_DownloadImageCmd_t *Msg);
 /*

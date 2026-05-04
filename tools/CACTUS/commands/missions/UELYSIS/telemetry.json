@@ -7,7 +7,7 @@
     {
       "app": "PAYUEL_CAM",
       "name": "Beacon",
-      "mid": "0x089C",
+      "mid": "0x08C5",
       "description": "CAM payload beacon telemetry",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
       "fields": [
@@ -25,15 +25,19 @@
     {
       "app": "PAYUEL_OBC",
       "name": "OBC Beacon",
-      "mid": "0x08A0",
-      "description": "UEL OBC beacon telemetry",
+      "mid": "0x08C2",
+      "description": "UEL OBC beacon telemetry from ICD 0x20",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
       "fields": [
         { "name": "InitError", "type": "uint8", "format": "hex", "hex_digits": 2 },
         { "name": "_pad0", "type": "bytes", "length": 1, "hidden": true },
-        { "name": "BootCount", "type": "uint16" },
-        { "name": "BootTime", "type": "uint32", "units": "s" },
-        { "name": "ShutterCount", "type": "uint16" },
+        { "name": "BootCount_a", "type": "uint16" },
+        { "name": "BootTime_a", "type": "uint32", "units": "s" },
+        { "name": "BootCount_b", "type": "uint16" },
+        { "name": "_pad1", "type": "bytes", "length": 2, "hidden": true },
+        { "name": "BootTime_b", "type": "uint32", "units": "s" },
+        { "name": "ShutterCount_a", "type": "uint16" },
+        { "name": "ShutterCount_b", "type": "uint16" },
         { "name": "AlphaTemp", "type": "int8", "units": "C" },
         { "name": "BetaTemp", "type": "int8", "units": "C" },
         { "name": "ImuTemp", "type": "int8", "units": "C" },
@@ -46,13 +50,65 @@
             "UNMOUNTED": 0,
             "MOUNTED": 1
           }
-        }
+        },
+        { "name": "_pad2", "type": "bytes", "length": 3, "hidden": true }
+      ]
+    },
+    {
+      "app": "CFE_EVS",
+      "name": "Long Event",
+      "mid": "0x0804",
+      "description": "cFE EVS long-format event telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "AppName", "type": "string", "length": "CFE_MISSION_MAX_API_LEN" },
+        { "name": "EventID", "type": "uint16" },
+        {
+          "name": "EventType",
+          "type": "enum",
+          "storage": "uint16",
+          "values": {
+            "DEBUG": 1,
+            "INFORMATION": 2,
+            "ERROR": 3,
+            "CRITICAL": 4
+          }
+        },
+        { "name": "SpacecraftID", "type": "uint32" },
+        { "name": "ProcessorID", "type": "uint32" },
+        { "name": "Message", "type": "string", "length": "CFE_MISSION_EVS_MAX_MESSAGE_LENGTH" },
+        { "name": "_spare1", "type": "bytes", "length": 1, "hidden": true },
+        { "name": "_spare2", "type": "bytes", "length": 1, "hidden": true }
+      ]
+    },
+    {
+      "app": "CFE_EVS",
+      "name": "Short Event",
+      "mid": "0x0805",
+      "description": "cFE EVS short-format event telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "AppName", "type": "string", "length": "CFE_MISSION_MAX_API_LEN" },
+        { "name": "EventID", "type": "uint16" },
+        {
+          "name": "EventType",
+          "type": "enum",
+          "storage": "uint16",
+          "values": {
+            "DEBUG": 1,
+            "INFORMATION": 2,
+            "ERROR": 3,
+            "CRITICAL": 4
+          }
+        },
+        { "name": "SpacecraftID", "type": "uint32" },
+        { "name": "ProcessorID", "type": "uint32" }
       ]
     },
     {
       "app": "PAYUEL_CAM",
       "name": "Report",
-      "mid": "0x089B",
+      "mid": "0x08C4",
       "description": "PAYUEL_CAM command report telemetry",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
       "fields": [
@@ -84,7 +140,7 @@
     {
       "app": "PAYUEL_OBC",
       "name": "Report",
-      "mid": "0x089F",
+      "mid": "0x08C1",
       "description": "PAYUEL_OBC command report telemetry",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
       "fields": [

@@ -1604,8 +1604,8 @@
             "name": "LogFilename",
             "type": "string",
             "length": "CFE_MISSION_MAX_PATH_LEN",
-            "default": "/cf/evs_log.dat",
-            "description": "Output path"
+            "default": "/ram/cfe_evs.log",
+            "description": "Output path; empty command payload also uses the cFE default /ram/cfe_evs.log"
           }
         ]
       },
@@ -2613,19 +2613,19 @@
     "commands": [
       {
         "name": "Noop",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 0,
         "params": []
       },
       {
         "name": "Reset Counters",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 1,
         "params": []
       },
       {
         "name": "Power Interface Get",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 10,
         "params": [
           {
@@ -2643,7 +2643,7 @@
       },
       {
         "name": "Power Interface Set",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 11,
         "params": [
           {
@@ -2676,7 +2676,7 @@
       },
       {
         "name": "Power Interface List",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 12,
         "params": [
           {
@@ -2688,7 +2688,7 @@
       },
       {
         "name": "Get HK",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 20,
         "params": [
           {
@@ -2701,13 +2701,13 @@
       },
       {
         "name": "Get HK All",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 21,
         "params": []
       },
       {
         "name": "Clear Ground WDT",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 30,
         "params": [
           {
@@ -2719,13 +2719,13 @@
       },
       {
         "name": "Clear Ground WDT All",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 31,
         "params": []
       },
       {
         "name": "RParam Get",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 40,
         "params": [
           {
@@ -2763,7 +2763,7 @@
       },
       {
         "name": "RParam Set",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 41,
         "params": [
           {
@@ -2801,7 +2801,7 @@
       },
       {
         "name": "RParam Get Full Table",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 42,
         "params": [
           {
@@ -2818,7 +2818,7 @@
       },
       {
         "name": "RParam Save All",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 50,
         "params": [
           {
@@ -2830,7 +2830,7 @@
       },
       {
         "name": "RParam Table Save",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 51,
         "params": [
           {
@@ -2847,7 +2847,7 @@
       },
       {
         "name": "RParam Table Load",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 52,
         "params": [
           {
@@ -2864,7 +2864,7 @@
       },
       {
         "name": "RParam Save To Store",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 53,
         "params": [
           {
@@ -2893,7 +2893,7 @@
       },
       {
         "name": "RParam Load From Store",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 54,
         "params": [
           {
@@ -2922,13 +2922,13 @@
       },
       {
         "name": "Report Beacon",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 70,
         "params": []
       },
       {
         "name": "CSP Ping",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 80,
         "params": [
           {
@@ -2950,7 +2950,7 @@
       },
       {
         "name": "CSP Reboot",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 81,
         "params": [
           {
@@ -2962,7 +2962,7 @@
       },
       {
         "name": "CSP PS",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 82,
         "params": [
           {
@@ -2974,7 +2974,7 @@
       },
       {
         "name": "CSP MemFree",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 83,
         "params": [
           {
@@ -2986,7 +2986,7 @@
       },
       {
         "name": "CSP BufFree",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 84,
         "params": [
           {
@@ -2998,7 +2998,7 @@
       },
       {
         "name": "CSP Uptime",
-        "mid": "0x18AB",
+        "mid": "0x1875",
         "fc": 85,
         "params": [
           {
@@ -3010,7 +3010,7 @@
       },
       {
         "name": "Request Beacon",
-        "mid": "0x18AC",
+        "mid": "0x1877",
         "fc": 0,
         "description": "EPS_SEND_BCN_MID",
         "params": []
@@ -3974,25 +3974,25 @@
     "commands": [
       {
         "name": "Noop",
-        "mid": "0x18A0",
+        "mid": "0x18C6",
         "fc": 0,
         "params": []
       },
       {
         "name": "Reset Counters",
-        "mid": "0x18A0",
+        "mid": "0x18C6",
         "fc": 1,
         "params": []
       },
       {
         "name": "Send Beacon",
-        "mid": "0x18A0",
+        "mid": "0x18C6",
         "fc": 2,
         "params": []
       },
       {
         "name": "Request One Data ID",
-        "mid": "0x18A0",
+        "mid": "0x18C6",
         "fc": 3,
         "params": [
           {
@@ -4011,13 +4011,13 @@
       },
       {
         "name": "Request All Data",
-        "mid": "0x18A0",
+        "mid": "0x18C6",
         "fc": 4,
         "params": []
       },
       {
         "name": "Set Power",
-        "mid": "0x18A0",
+        "mid": "0x18C6",
         "fc": 5,
         "params": [
           {
@@ -4036,20 +4036,20 @@
       },
       {
         "name": "Reset BMS Cache",
-        "mid": "0x18A0",
+        "mid": "0x18C6",
         "fc": 6,
         "params": []
       },
       {
         "name": "Request Beacon",
-        "mid": "0x18A1",
+        "mid": "0x18C8",
         "fc": 0,
         "description": "LGBAT_SEND_BCN_MID",
         "params": []
       },
       {
         "name": "Wakeup",
-        "mid": "0x18A2",
+        "mid": "0x18C7",
         "fc": 0,
         "description": "LGBAT_WAKEUP_MID",
         "params": []
@@ -4062,49 +4062,49 @@
     "commands": [
       {
         "name": "Noop",
-        "mid": "0x18AB",
+        "mid": "0x1847",
         "fc": 0,
         "description": "PAYUEL_AOS_NOOP_CC",
         "params": []
       },
       {
         "name": "Reset Counters",
-        "mid": "0x18AB",
+        "mid": "0x1847",
         "fc": 1,
         "description": "PAYUEL_AOS_RESET_COUNTERS_CC",
         "params": []
       },
       {
         "name": "Reset",
-        "mid": "0x18AB",
+        "mid": "0x1847",
         "fc": 2,
         "description": "PAYUEL_AOS_RESET_CC",
         "params": []
       },
       {
         "name": "Write Register",
-        "mid": "0x18AB",
+        "mid": "0x1847",
         "fc": 3,
         "description": "PAYUEL_AOS_WRITE_REGISTER_CC",
         "params": []
       },
       {
         "name": "Read Register",
-        "mid": "0x18AB",
+        "mid": "0x1847",
         "fc": 4,
         "description": "PAYUEL_AOS_READ_REGISTER_CC",
         "params": []
       },
       {
         "name": "Read All Channels",
-        "mid": "0x18AB",
+        "mid": "0x1847",
         "fc": 5,
         "description": "PAYUEL_AOS_READ_ALL_CHANNELS_CC",
         "params": []
       },
       {
         "name": "Request HK",
-        "mid": "0x18AC",
+        "mid": "0x1848",
         "fc": 0,
         "description": "PAYUEL_AOS_SEND_HK_MID",
         "params": []
@@ -4117,19 +4117,19 @@
     "commands": [
       {
         "name": "Noop",
-        "mid": "0x1899",
+        "mid": "0x18C3",
         "fc": 0,
         "params": []
       },
       {
         "name": "Reset Counters",
-        "mid": "0x1899",
+        "mid": "0x18C3",
         "fc": 1,
         "params": []
       },
       {
         "name": "Shot",
-        "mid": "0x1899",
+        "mid": "0x18C3",
         "fc": 2,
         "params": [
           {
@@ -4146,13 +4146,13 @@
       },
       {
         "name": "Health Check",
-        "mid": "0x1899",
+        "mid": "0x18C3",
         "fc": 3,
         "params": []
       },
       {
         "name": "Process Binning",
-        "mid": "0x1899",
+        "mid": "0x18C3",
         "fc": 4,
         "params": [
           {
@@ -4169,7 +4169,7 @@
       },
       {
         "name": "Download Meta",
-        "mid": "0x1899",
+        "mid": "0x18C3",
         "fc": 5,
         "params": [
           {
@@ -4186,7 +4186,7 @@
       },
       {
         "name": "Chunk Download",
-        "mid": "0x1899",
+        "mid": "0x18C3",
         "fc": 6,
         "params": [
           {
@@ -4208,13 +4208,13 @@
       },
       {
         "name": "Send Beacon",
-        "mid": "0x1899",
+        "mid": "0x18C3",
         "fc": 7,
         "params": []
       },
       {
         "name": "Download Image",
-        "mid": "0x1899",
+        "mid": "0x18C3",
         "fc": 8,
         "params": [
           {
@@ -4231,7 +4231,7 @@
       },
       {
         "name": "Request Beacon",
-        "mid": "0x189A",
+        "mid": "0x18C5",
         "fc": 0,
         "description": "PAYUEL_CAM_SEND_BCN_MID",
         "params": []
@@ -4244,161 +4244,161 @@
     "commands": [
       {
         "name": "Noop",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 0,
         "description": "PAYUEL_LGPM_NOOP_CC",
         "params": []
       },
       {
         "name": "Reset Counters",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 1,
         "description": "PAYUEL_LGPM_RESET_COUNTERS_CC",
         "params": []
       },
       {
         "name": "Mcu Alive Check",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 2,
         "description": "PAYUEL_LGPM_MCU_ALIVE_CHECK_CC",
         "params": []
       },
       {
         "name": "3v3 Pwr On",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 3,
         "description": "PAYUEL_LGPM_3V3_PWR_ON_CC",
         "params": []
       },
       {
         "name": "3v3 Pwr Off",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 4,
         "description": "PAYUEL_LGPM_3V3_PWR_OFF_CC",
         "params": []
       },
       {
         "name": "Main Boost Sw On",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 5,
         "description": "PAYUEL_LGPM_MAIN_BOOST_SW_ON_CC",
         "params": []
       },
       {
         "name": "Main Boost Sw Off",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 6,
         "description": "PAYUEL_LGPM_MAIN_BOOST_SW_OFF_CC",
         "params": []
       },
       {
         "name": "Sub Boost Sw On",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 7,
         "description": "PAYUEL_LGPM_SUB_BOOST_SW_ON_CC",
         "params": []
       },
       {
         "name": "Sub Boost Sw Off",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 8,
         "description": "PAYUEL_LGPM_SUB_BOOST_SW_OFF_CC",
         "params": []
       },
       {
         "name": "V28 Main On",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 9,
         "description": "PAYUEL_LGPM_V28_MAIN_ON_CC",
         "params": []
       },
       {
         "name": "V28 Main Off",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 10,
         "description": "PAYUEL_LGPM_V28_MAIN_OFF_CC",
         "params": []
       },
       {
         "name": "V28 Sub On",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 11,
         "description": "PAYUEL_LGPM_V28_SUB_ON_CC",
         "params": []
       },
       {
         "name": "V28 Sub Off",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 12,
         "description": "PAYUEL_LGPM_V28_SUB_OFF_CC",
         "params": []
       },
       {
         "name": "V12 Main On",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 13,
         "description": "PAYUEL_LGPM_V12_MAIN_ON_CC",
         "params": []
       },
       {
         "name": "V12 Main Off",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 14,
         "description": "PAYUEL_LGPM_V12_MAIN_OFF_CC",
         "params": []
       },
       {
         "name": "Pwr Sense Info",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 15,
         "description": "PAYUEL_LGPM_PWR_SENSE_INFO_CC",
         "params": []
       },
       {
         "name": "Pwr Seq On",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 16,
         "description": "PAYUEL_LGPM_PWR_SEQ_ON_CC",
         "params": []
       },
       {
         "name": "Pwr Seq Off",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 17,
         "description": "PAYUEL_LGPM_PWR_SEQ_OFF_CC",
         "params": []
       },
       {
         "name": "Rwa Control",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 18,
         "description": "PAYUEL_LGPM_RWA_CONTROL_CC",
         "params": []
       },
       {
         "name": "Rwa Pwr On",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 19,
         "description": "PAYUEL_LGPM_RWA_PWR_ON_CC",
         "params": []
       },
       {
         "name": "Rwa Pwr Off",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 20,
         "description": "PAYUEL_LGPM_RWA_PWR_OFF_CC",
         "params": []
       },
       {
         "name": "Rwa Sense Info",
-        "mid": "0x1896",
+        "mid": "0x1835",
         "fc": 21,
         "description": "PAYUEL_LGPM_RWA_SENSE_INFO_CC",
         "params": []
       },
       {
         "name": "Request HK",
-        "mid": "0x1897",
+        "mid": "0x1836",
         "fc": 0,
         "description": "PAYUEL_LGPM_SEND_HK_MID",
         "params": []
@@ -4411,181 +4411,224 @@
     "commands": [
       {
         "name": "Noop",
-        "mid": "0x189D",
+        "mid": "0x18C0",
         "fc": 0,
         "params": []
       },
       {
         "name": "Reset Counters",
-        "mid": "0x189D",
+        "mid": "0x18C0",
         "fc": 1,
         "params": []
       },
       {
         "name": "Send OBC Beacon",
-        "mid": "0x189D",
+        "mid": "0x18C0",
         "fc": 2,
+        "description": "PAYUEL_OBC_SEND_OBC_BCN_CC; CSP 0x20, TX 3B, RX 25B",
         "params": []
       },
       {
         "name": "Motor Mode",
-        "mid": "0x189D",
+        "mid": "0x18C0",
         "fc": 3,
+        "description": "PAYUEL_OBC_MOTOR_MODE_CC; CSP 0x21, TX [L_Speed][R_Speed][Duration] + CRC16, RX six motor currents",
         "params": [
           {
             "name": "L_Speed",
             "type": "int8",
-            "default": "0"
+            "default": "0",
+            "description": "Left motor speed, -128..127"
           },
           {
             "name": "R_Speed",
             "type": "int8",
-            "default": "0"
+            "default": "0",
+            "description": "Right motor speed, -128..127"
           },
           {
             "name": "Duration",
             "type": "uint8",
-            "default": "0"
-          },
-          {
-            "name": "Instance",
-            "type": "uint8",
-            "default": "0"
+            "default": "0",
+            "description": "Run duration, 0..255"
           }
         ]
       },
       {
         "name": "Camera Shot",
-        "mid": "0x189D",
+        "mid": "0x18C0",
         "fc": 4,
+        "description": "PAYUEL_OBC_CAM_SHOT_CC; CSP 0x41, TX [CameraID][ImageNumber] + CRC16",
         "params": [
           {
-            "name": "ImageSlot",
-            "type": "uint8",
-            "default": "0"
+            "name": "CameraID",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "CAMERA_0x61": 97,
+              "CAMERA_0x62": 98
+            },
+            "default": "CAMERA_0x61",
+            "description": "Camera ID from ICD, 0x61 or 0x62"
           },
           {
-            "name": "CameraNumber",
+            "name": "ImageNumber",
             "type": "uint8",
-            "default": "0"
+            "default": "0",
+            "description": "Image number/index, 0..255"
           }
         ]
       },
       {
         "name": "Download Meta",
-        "mid": "0x189D",
+        "mid": "0x18C0",
         "fc": 5,
+        "description": "PAYUEL_OBC_DOWNLOAD_META_CC; CSP 0x44 image metadata. Report ReturnValue: CameraID, ImageIndex, ChunkCount(BE), LastChunkSize, ImageFileCRC32(BE)",
         "params": [
           {
-            "name": "ImageSlot",
-            "type": "uint8",
-            "default": "0"
+            "name": "CameraID",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "CAMERA_0x61": 97,
+              "CAMERA_0x62": 98
+            },
+            "default": "CAMERA_0x61",
+            "description": "Camera ID from ICD, 0x61 or 0x62"
           },
           {
             "name": "ImageNumber",
             "type": "uint8",
-            "default": "0"
+            "default": "0",
+            "description": "Image number/index, 0..255"
           }
         ]
       },
       {
         "name": "Chunk Download",
-        "mid": "0x189D",
+        "mid": "0x18C0",
         "fc": 6,
+        "description": "PAYUEL_OBC_CHUNK_DOWNLOAD_CC; CSP 0x45 image chunk. Response uses Status, CameraID, uint16 ImageNumber, uint16 ChunkNumber, up to 247B data, CRC16",
         "params": [
           {
-            "name": "ImageSlot",
-            "type": "uint8",
-            "default": "0"
+            "name": "CameraID",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "CAMERA_0x61": 97,
+              "CAMERA_0x62": 98
+            },
+            "default": "CAMERA_0x61",
+            "description": "Camera ID from ICD, 0x61 or 0x62"
           },
           {
             "name": "ImageNumber",
             "type": "uint8",
-            "default": "0"
+            "default": "0",
+            "description": "Image number/index, 0..255"
           },
           {
             "name": "ChunkNumber",
             "type": "uint16",
-            "default": "0"
+            "default": "0",
+            "description": "Chunk index, 0..ChunkCount-1"
           }
         ]
       },
       {
         "name": "Sensor Meta",
-        "mid": "0x189D",
+        "mid": "0x18C0",
         "fc": 7,
+        "description": "PAYUEL_OBC_SENSOR_META_CC; CSP 0x54 sensor metadata. Report ReturnValue: DataSlot, DataIndex, ChunkCount(BE), LastChunkSize, BinFileCRC32(BE)",
         "params": [
           {
             "name": "DataSlot",
             "type": "uint8",
-            "default": "0"
+            "default": "0",
+            "description": "Sensor data slot, 0..255"
           },
           {
             "name": "DataNumber",
             "type": "uint8",
-            "default": "0"
+            "default": "0",
+            "description": "Sensor data number/index, 0..255"
           }
         ]
       },
       {
         "name": "Sensor Chunk",
-        "mid": "0x189D",
+        "mid": "0x18C0",
         "fc": 8,
+        "description": "PAYUEL_OBC_SENSOR_CHUNK_CC; CSP 0x55 sensor chunk. Response uses Status, DataSlot, DataNumber, uint16 ChunkNumber, up to 247B data, CRC16",
         "params": [
           {
             "name": "DataSlot",
             "type": "uint8",
-            "default": "0"
+            "default": "0",
+            "description": "Sensor data slot, 0..255"
           },
           {
             "name": "DataNumber",
             "type": "uint8",
-            "default": "0"
+            "default": "0",
+            "description": "Sensor data number/index, 0..255"
           },
           {
             "name": "ChunkNumber",
             "type": "uint16",
-            "default": "0"
+            "default": "0",
+            "description": "Chunk index, 0..ChunkCount-1"
           }
         ]
       },
       {
         "name": "Download Image",
-        "mid": "0x189D",
+        "mid": "0x18C0",
         "fc": 9,
+        "description": "PAYUEL_OBC_DOWNLOAD_IMAGE_CC; aggregate 0x44 + all 0x45 chunks, verifies ImageFileCRC32",
         "params": [
           {
-            "name": "ImageSlot",
-            "type": "uint8",
-            "default": "0"
+            "name": "CameraID",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "CAMERA_0x61": 97,
+              "CAMERA_0x62": 98
+            },
+            "default": "CAMERA_0x61",
+            "description": "Camera ID from ICD, 0x61 or 0x62"
           },
           {
             "name": "ImageNumber",
             "type": "uint8",
-            "default": "0"
+            "default": "0",
+            "description": "Image number/index, 0..255"
           }
         ]
       },
       {
         "name": "Download Sensor",
-        "mid": "0x189D",
+        "mid": "0x18C0",
         "fc": 10,
+        "description": "PAYUEL_OBC_DOWNLOAD_SENSOR_CC; aggregate 0x54 + all 0x55 chunks, verifies BinFileCRC32",
         "params": [
           {
             "name": "DataSlot",
             "type": "uint8",
-            "default": "0"
+            "default": "0",
+            "description": "Sensor data slot, 0..255"
           },
           {
             "name": "DataNumber",
             "type": "uint8",
-            "default": "0"
+            "default": "0",
+            "description": "Sensor data number/index, 0..255"
           }
         ]
       },
       {
         "name": "Request Beacon",
-        "mid": "0x189E",
+        "mid": "0x18C2",
         "fc": 0,
         "description": "PAYUEL_OBC_SEND_BCN_MID",
         "params": []
@@ -5553,6 +5596,72 @@
             "default": "ENABLED"
           }
         ]
+      },
+      {
+        "name": "Add Entry",
+        "mid": "0x18A3",
+        "fc": 3,
+        "description": "Add or replace one SCH_LAB runtime schedule entry",
+        "params": [
+          {
+            "name": "EntryIndex",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "FcnCode",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "MessageID",
+            "type": "uint32",
+            "default": "0x1826",
+            "description": "Command MID to transmit on schedule"
+          },
+          {
+            "name": "PacketRate",
+            "type": "uint32",
+            "default": "300",
+            "description": "Send every N SCH_LAB ticks"
+          },
+          {
+            "name": "PayloadLength",
+            "type": "uint16",
+            "default": "0",
+            "description": "Number of bytes to use from MessageBuffer"
+          },
+          {
+            "name": "Enabled",
+            "type": "enum",
+            "storage": "uint16",
+            "values": {
+              "DISABLED": 0,
+              "ENABLED": 1
+            },
+            "default": "ENABLED"
+          },
+          {
+            "name": "MessageBuffer",
+            "type": "bytes",
+            "length": 64,
+            "default": "",
+            "description": "Optional command payload bytes; first PayloadLength bytes are used"
+          }
+        ]
+      },
+      {
+        "name": "Delete Entry",
+        "mid": "0x18A3",
+        "fc": 4,
+        "description": "Clear one SCH_LAB runtime schedule entry",
+        "params": [
+          {
+            "name": "EntryIndex",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
       }
     ]
   },
@@ -5562,25 +5671,25 @@
     "commands": [
       {
         "name": "Noop",
-        "mid": "0x185B",
+        "mid": "0x1858",
         "fc": 0,
         "params": []
       },
       {
         "name": "Reset Counters",
-        "mid": "0x185B",
+        "mid": "0x1858",
         "fc": 1,
         "params": []
       },
       {
         "name": "Get HK",
-        "mid": "0x185B",
+        "mid": "0x1858",
         "fc": 2,
         "params": []
       },
       {
         "name": "Deploy",
-        "mid": "0x185B",
+        "mid": "0x1858",
         "fc": 3,
         "params": [
           {
@@ -5604,7 +5713,7 @@
       },
       {
         "name": "Stop Burn",
-        "mid": "0x185B",
+        "mid": "0x1858",
         "fc": 4,
         "params": [
           {
@@ -5623,7 +5732,7 @@
       },
       {
         "name": "Auto Deploy",
-        "mid": "0x185B",
+        "mid": "0x1858",
         "fc": 5,
         "params": [
           {
@@ -5651,13 +5760,13 @@
       },
       {
         "name": "Scan AR6",
-        "mid": "0x185B",
+        "mid": "0x1858",
         "fc": 6,
         "params": []
       },
       {
         "name": "Set AR6 Address",
-        "mid": "0x185B",
+        "mid": "0x1858",
         "fc": 7,
         "params": [
           {
@@ -5681,20 +5790,20 @@
       },
       {
         "name": "Report Beacon",
-        "mid": "0x185B",
+        "mid": "0x1858",
         "fc": 8,
         "params": []
       },
       {
         "name": "Request HK",
-        "mid": "0x185D",
+        "mid": "0x185A",
         "fc": 0,
         "description": "SP_SEND_HK_MID",
         "params": []
       },
       {
         "name": "Request Beacon",
-        "mid": "0x185C",
+        "mid": "0x1859",
         "fc": 0,
         "description": "SP_SEND_BCN_MID",
         "params": []
@@ -5739,7 +5848,7 @@
       },
       {
         "name": "Request Beacon",
-        "mid": "0x1858",
+        "mid": "0x1856",
         "fc": 0,
         "description": "STX_SEND_BCN_MID",
         "params": []
@@ -5884,55 +5993,55 @@
     "commands": [
       {
         "name": "Noop",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 0,
         "params": []
       },
       {
         "name": "Reset Counters",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 1,
         "params": []
       },
       {
         "name": "Report",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 2,
         "params": []
       },
       {
         "name": "Get Timeline HK",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 10,
         "params": []
       },
       {
         "name": "Reset Timeline HK",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 11,
         "params": []
       },
       {
         "name": "Get Pending Entry Count",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 12,
         "params": []
       },
       {
         "name": "Get Next Entry ID",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 13,
         "params": []
       },
       {
         "name": "Get Next Execution Time",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 14,
         "params": []
       },
       {
         "name": "Insert Absolute Entry",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 15,
         "params": [
           {
@@ -5981,7 +6090,7 @@
       },
       {
         "name": "Insert Relative Entry",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 16,
         "params": [
           {
@@ -6030,7 +6139,7 @@
       },
       {
         "name": "Delete Entry",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 17,
         "params": [
           {
@@ -6047,7 +6156,7 @@
       },
       {
         "name": "Delete Group",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 18,
         "params": [
           {
@@ -6059,13 +6168,13 @@
       },
       {
         "name": "Delete All Entries",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 19,
         "params": []
       },
       {
         "name": "Execute Entry",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 20,
         "params": [
           {
@@ -6092,7 +6201,7 @@
       },
       {
         "name": "Execute Group",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 21,
         "params": [
           {
@@ -6114,19 +6223,19 @@
       },
       {
         "name": "Pause Timeline",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 22,
         "params": []
       },
       {
         "name": "Resume Timeline",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 23,
         "params": []
       },
       {
         "name": "Plumb Init Entry",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 24,
         "params": [
           {
@@ -6143,7 +6252,7 @@
       },
       {
         "name": "Plumb Write Entry",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 25,
         "params": [
           {
@@ -6176,7 +6285,7 @@
       },
       {
         "name": "Plumb Finalize Entry",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 26,
         "params": [
           {
@@ -6229,13 +6338,13 @@
       },
       {
         "name": "Plumb Purge Timeline",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 27,
         "params": []
       },
       {
         "name": "Delete Reserved Entry",
-        "mid": "0x1886",
+        "mid": "0x1880",
         "fc": 28,
         "params": [
           {
@@ -6252,13 +6361,13 @@
       },
       {
         "name": "Request HK",
-        "mid": "0x1887",
+        "mid": "0x1881",
         "fc": 0,
         "params": []
       },
       {
         "name": "Wakeup",
-        "mid": "0x1889",
+        "mid": "0x1882",
         "fc": 0,
         "description": "TTC_ONEHZ_WAKEUP_MID",
         "params": []

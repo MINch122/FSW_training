@@ -61,6 +61,20 @@ void SCH_LAB_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case SCH_LAB_ADD_ENTRY_CC:
+            if (SCH_LAB_VerifyCmdLength(&SBBufPtr->Msg, sizeof(SCH_LAB_AddEntryCmd_t)))
+            {
+                SCH_LAB_AddEntryCmd((const SCH_LAB_AddEntryCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case SCH_LAB_DELETE_ENTRY_CC:
+            if (SCH_LAB_VerifyCmdLength(&SBBufPtr->Msg, sizeof(SCH_LAB_DeleteEntryCmd_t)))
+            {
+                SCH_LAB_DeleteEntryCmd((const SCH_LAB_DeleteEntryCmd_t *)SBBufPtr);
+            }
+            break;
+
         default:
             SCH_LAB_Global.ErrCounter++;
             CFE_EVS_SendEvent(SCH_LAB_CC_ERR_EID, CFE_EVS_EventType_ERROR,

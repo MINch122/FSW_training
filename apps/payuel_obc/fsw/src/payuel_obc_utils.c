@@ -11,8 +11,8 @@
 
 /*
  * Checksum helpers used by the OBC-side payload protocol.
- * CRC16 protects short command/response frames, and CRC32 protects
- * chunk downloads and reconstructed files.
+ * CRC16 protects command/response frames. CRC32 is used for reconstructed
+ * image and BIN files whose expected CRC is reported by metadata.
  */
 static uint16_t PAYUEL_OBC_Crc16(const uint8_t *Data, size_t Length)
 {
@@ -65,12 +65,6 @@ static uint32_t PAYUEL_OBC_Crc32Update(uint32_t Crc, const uint8_t *Data, size_t
     }
 
     return Crc;
-}
-
-static uint32_t PAYUEL_OBC_Crc32(const uint8_t *Data, size_t Length)
-{
-    /* Convenience wrapper for one-shot CRC32 calculations. */
-    return PAYUEL_OBC_Crc32Update(0xFFFFFFFFu, Data, Length) ^ 0xFFFFFFFFu;
 }
 
 /* These helpers translate between raw wire bytes and host integer types. */
@@ -157,20 +151,6 @@ bool PAYUEL_OBC_VerifyCrc16(const uint8_t *Data, size_t TotalLength)
     return (Computed == Received);
 }
 
-bool PAYUEL_OBC_VerifyChunkCrc32(const uint8_t *Data, size_t ValidDataLength)
-{
-    /*
-     * The payload app defines the CRC32 range as:
-     *   cmd + slot + number + chunk_no(2B BE) + valid data
-     * The CRC32 field follows immediately after the valid data; no padding bytes
-     * are expected between the payload and CRC.
-     */
-    uint32_t Computed = PAYUEL_OBC_Crc32(Data, 5U + ValidDataLength);
-    uint32_t Received = PAYUEL_OBC_ReadU32BE(&Data[5U + ValidDataLength]);
-
-    return (Computed == Received);
-}
-
 static bool PAYUEL_OBC_IsPayloadErrorPacket(uint8_t ExpectedCmd, const uint8_t *Data, int32 Length)
 {
     return (Data != NULL &&
@@ -196,6 +176,7 @@ void PAYUEL_OBC_ClearSensorMetaCache(void)
     PAYUEL_OBC_Data.SensorMetaNumber    = 0U;
     PAYUEL_OBC_Data.SensorTotalChunks   = 0U;
     PAYUEL_OBC_Data.SensorLastChunkSize = 0U;
+    PAYUEL_OBC_Data.SensorFileCrc32     = 0U;
 }
 
 void PAYUEL_OBC_ReportCmdStatus(CFE_SB_MsgId_t MsgId, uint16 CommandCode, int32 Status,
@@ -256,15 +237,6 @@ void PAYUEL_OBC_ReportCmdStatus(CFE_SB_MsgId_t MsgId, uint16 CommandCode, int32 
     }
 }
 
-int32 PAYUEL_OBC_DownloadBusyError(const char *CmdName)
-{
-    /* Download commands share one background worker, so reject overlapping requests. */
-    CFE_EVS_SendEvent(PAYUEL_OBC_CHILD_BUSY_ERR_EID, CFE_EVS_EventType_ERROR,
-                      "PAYUEL_OBC: %s rejected while download task is busy", CmdName);
-    PAYUEL_OBC_Data.ErrCounter++;
-    return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-}
-
 int32 PAYUEL_OBC_LockHardware(const char *Context)
 {
     int32 OsStatus;
@@ -297,7 +269,7 @@ void PAYUEL_OBC_UnlockHardware(const char *Context)
     }
 }
 
-int32 PAYUEL_OBC_RspLenError(const char *CmdName, int32 ActualLength, size_t ExpectedLength)
+static CFE_Status_t PAYUEL_OBC_RejectRxLength(const char *CmdName, int32 ActualLength, size_t ExpectedLength)
 {
     CFE_EVS_SendEvent(PAYUEL_OBC_RX_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
                       "PAYUEL_OBC: %s RX length mismatch (actual=%ld expected=%u)",
@@ -306,7 +278,7 @@ int32 PAYUEL_OBC_RspLenError(const char *CmdName, int32 ActualLength, size_t Exp
     return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
 }
 
-int32 PAYUEL_OBC_HwStatusError(const char *CmdName, uint8_t HwStatus)
+CFE_Status_t PAYUEL_OBC_RejectHwStatus(const char *CmdName, uint8_t HwStatus)
 {
     CFE_EVS_SendEvent(PAYUEL_OBC_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
                       "PAYUEL_OBC: %s payload/HW status error 0x%02X", CmdName, HwStatus);
@@ -348,7 +320,7 @@ CFE_Status_t PAYUEL_OBC_ValidateResponse(const char *CmdName, uint8_t ExpectedCm
         {
             *ReturnTypeOut = RPT_RETTYPE_HW;
         }
-        return PAYUEL_OBC_HwStatusError(CmdName, RxData[1]);
+        return PAYUEL_OBC_RejectHwStatus(CmdName, RxData[1]);
     }
 
     if ((size_t)RspLen != ExpectedLength)
@@ -357,7 +329,7 @@ CFE_Status_t PAYUEL_OBC_ValidateResponse(const char *CmdName, uint8_t ExpectedCm
         {
             *ReturnTypeOut = RPT_RETTYPE_HW;
         }
-        return PAYUEL_OBC_RspLenError(CmdName, RspLen, ExpectedLength);
+        return PAYUEL_OBC_RejectRxLength(CmdName, RspLen, ExpectedLength);
     }
 
     if (RxData[0] != ExpectedCmd || !PAYUEL_OBC_VerifyCrc16(RxData, (size_t)RspLen))
@@ -411,7 +383,7 @@ static CFE_Status_t PAYUEL_OBC_ValidateChunkResponse(const char *CmdName, uint8_
         {
             *ReturnTypeOut = RPT_RETTYPE_HW;
         }
-        return PAYUEL_OBC_HwStatusError(CmdName, RxData[1]);
+        return PAYUEL_OBC_RejectHwStatus(CmdName, RxData[1]);
     }
 
     if ((size_t)RspLen != ExpectedLength)
@@ -420,18 +392,17 @@ static CFE_Status_t PAYUEL_OBC_ValidateChunkResponse(const char *CmdName, uint8_
         {
             *ReturnTypeOut = RPT_RETTYPE_HW;
         }
-        return PAYUEL_OBC_RspLenError(CmdName, RspLen, ExpectedLength);
+        return PAYUEL_OBC_RejectRxLength(CmdName, RspLen, ExpectedLength);
     }
 
-    if (RxData[0] != ExpectedCmd)
+    if (RxData[0] != ExpectedCmd || !PAYUEL_OBC_VerifyCrc16(RxData, (size_t)RspLen))
     {
         if (ReturnTypeOut != NULL)
         {
             *ReturnTypeOut = RPT_RETTYPE_HW;
         }
-        CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "PAYUEL_OBC: %s RX command mismatch expected=0x%02X actual=0x%02X",
-                          CmdName, ExpectedCmd, RxData[0]);
+        CFE_EVS_SendEvent(PAYUEL_OBC_CRC_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_OBC: %s RX CRC/CMD mismatch", CmdName);
         PAYUEL_OBC_Data.ErrCounter++;
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
@@ -446,8 +417,8 @@ size_t PAYUEL_OBC_GetChunkDataLenFromImageMeta(const PAYUEL_OBC_ImageMetaInfo_t 
      * Only the last chunk may be shorter, and that length comes from metadata.
      */
     if (Meta != NULL &&
-        Meta->TotalChunks > 0U &&
-        (uint32_t)ChunkNumber + 1U == Meta->TotalChunks &&
+        Meta->ChunkCount > 0U &&
+        (uint32_t)ChunkNumber + 1U == Meta->ChunkCount &&
         Meta->LastChunkSize > 0U &&
         Meta->LastChunkSize <= PAYUEL_OBC_CHUNK_DATA_SIZE)
     {
@@ -464,8 +435,8 @@ size_t PAYUEL_OBC_GetChunkDataLenFromSensorMeta(const PAYUEL_OBC_SensorMetaInfo_
      * only the last chunk may be shorter than the nominal chunk size.
      */
     if (Meta != NULL &&
-        Meta->TotalChunks > 0U &&
-        (uint32_t)ChunkNumber + 1U == Meta->TotalChunks &&
+        Meta->ChunkCount > 0U &&
+        (uint32_t)ChunkNumber + 1U == Meta->ChunkCount &&
         Meta->LastChunkSize > 0U &&
         Meta->LastChunkSize <= PAYUEL_OBC_CHUNK_DATA_SIZE)
     {
@@ -475,23 +446,25 @@ size_t PAYUEL_OBC_GetChunkDataLenFromSensorMeta(const PAYUEL_OBC_SensorMetaInfo_
     return PAYUEL_OBC_CHUNK_DATA_SIZE;
 }
 
-bool PAYUEL_OBC_GetCachedImageMeta(uint8_t ImageSlot, uint8_t ImageNumber,
+bool PAYUEL_OBC_GetCachedImageMeta(uint8_t CameraID, uint8_t ImageNumber,
                                    PAYUEL_OBC_ImageMetaInfo_t *MetaOut)
 {
     /* Reuse metadata from a previous request when it matches the same image selection. */
     if (PAYUEL_OBC_Data.ImageTotalChunks > 0U &&
-        PAYUEL_OBC_Data.ImageMetaSlot == ImageSlot &&
+        PAYUEL_OBC_Data.ImageMetaSlot == CameraID &&
         PAYUEL_OBC_Data.ImageMetaNumber == ImageNumber &&
         PAYUEL_OBC_Data.ImageLastChunkSize > 0U &&
         PAYUEL_OBC_Data.ImageLastChunkSize <= PAYUEL_OBC_CHUNK_DATA_SIZE)
     {
         if (MetaOut != NULL)
         {
-            MetaOut->ImageSlot     = PAYUEL_OBC_Data.ImageMetaSlot;
-            MetaOut->ImageNumber   = PAYUEL_OBC_Data.ImageMetaNumber;
-            MetaOut->TotalChunks   = PAYUEL_OBC_Data.ImageTotalChunks;
-            MetaOut->LastChunkSize = PAYUEL_OBC_Data.ImageLastChunkSize;
-            MetaOut->FileCrc32     = PAYUEL_OBC_Data.ImageFileCrc32;
+            MetaOut->Status         = 0U;
+            MetaOut->CameraID       = PAYUEL_OBC_Data.ImageMetaSlot;
+            MetaOut->ImageValid     = 1U;
+            MetaOut->ImageIndex     = PAYUEL_OBC_Data.ImageMetaNumber;
+            MetaOut->ImageFileCRC32 = PAYUEL_OBC_Data.ImageFileCrc32;
+            MetaOut->LastChunkSize  = PAYUEL_OBC_Data.ImageLastChunkSize;
+            MetaOut->ChunkCount     = PAYUEL_OBC_Data.ImageTotalChunks;
         }
 
         return true;
@@ -512,9 +485,13 @@ bool PAYUEL_OBC_GetCachedSensorMeta(uint8_t DataSlot, uint8_t DataNumber,
     {
         if (MetaOut != NULL)
         {
+            MetaOut->Status        = 0U;
             MetaOut->DataSlot      = PAYUEL_OBC_Data.SensorMetaSlot;
-            MetaOut->DataNumber    = PAYUEL_OBC_Data.SensorMetaNumber;
-            MetaOut->TotalChunks   = PAYUEL_OBC_Data.SensorTotalChunks;
+            MetaOut->DataIndex     = PAYUEL_OBC_Data.SensorMetaNumber;
+            MetaOut->BinValid      = 1U;
+            MetaOut->BinSize       = 0U;
+            MetaOut->BinFileCRC32  = PAYUEL_OBC_Data.SensorFileCrc32;
+            MetaOut->ChunkCount    = PAYUEL_OBC_Data.SensorTotalChunks;
             MetaOut->LastChunkSize = PAYUEL_OBC_Data.SensorLastChunkSize;
         }
 
@@ -524,13 +501,13 @@ bool PAYUEL_OBC_GetCachedSensorMeta(uint8_t DataSlot, uint8_t DataNumber,
     return false;
 }
 
-CFE_Status_t PAYUEL_OBC_RequestImageMeta(uint8_t ImageSlot, uint8_t ImageNumber,
+CFE_Status_t PAYUEL_OBC_RequestImageMeta(uint8_t CameraID, uint8_t ImageNumber,
                                          PAYUEL_OBC_ImageMetaInfo_t *MetaOut, uint8_t *ReturnTypeOut,
                                          uint8_t *PayloadErrorPacketOut)
 {
     uint8_t                 TxData[5];
-    uint8_t                 RxData[12] = {0};
-    int32                   rsp_len;
+    uint8_t                 RxData[18] = {0};
+    int32                   rx_len;
     CFE_Status_t            status = CFE_SUCCESS;
     PAYUEL_OBC_ImageMetaInfo_t Meta = {0};
 
@@ -540,74 +517,95 @@ CFE_Status_t PAYUEL_OBC_RequestImageMeta(uint8_t ImageSlot, uint8_t ImageNumber,
         *ReturnTypeOut = RPT_RETTYPE_SUCCESS;
     }
 
-    /* Request format: [cmd][slot][image][crc16]. */
+    /* Request format: [cmd][camera][image][crc16]. */
     TxData[0] = PAYUEL_OBC_ID_DOWNLOAD_META;
-    TxData[1] = ImageSlot;
+    TxData[1] = CameraID;
     TxData[2] = ImageNumber;
     PAYUEL_OBC_AppendCrc16(TxData, 3);
 
     /* Send the request and wait for the fixed-length metadata response frame. */
-    rsp_len = CFE_SRL_ApiTransactionCSP(
+    rx_len = CFE_SRL_ApiTransactionCSP(
         PAYUEL_OBC_NODE, PAYUEL_OBC_PORT,
         TxData, sizeof(TxData),
         RxData, sizeof(RxData));
 
     status = PAYUEL_OBC_ValidateResponse("DownloadMeta", PAYUEL_OBC_ID_DOWNLOAD_META,
-                                         RxData, rsp_len, sizeof(RxData),
+                                         RxData, rx_len, sizeof(RxData),
                                          ReturnTypeOut, PayloadErrorPacketOut);
-    if (status == CFE_SUCCESS)
+    if (status != CFE_SUCCESS)
     {
-        /* Decode the device response into a typed struct before validating it. */
-        Meta.ImageSlot     = RxData[1];
-        Meta.ImageNumber   = RxData[2];
-        Meta.TotalChunks   = PAYUEL_OBC_ReadU16BE(&RxData[3]);
-        Meta.LastChunkSize = RxData[5];
-        Meta.FileCrc32     = PAYUEL_OBC_ReadU32BE(&RxData[6]);
-
-        if (Meta.ImageSlot != ImageSlot || Meta.ImageNumber != ImageNumber)
-        {
-            /* The returned metadata must describe the same image we asked for. */
-            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-            if (ReturnTypeOut != NULL)
-            {
-                *ReturnTypeOut = RPT_RETTYPE_HW;
-            }
-            CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "PAYUEL_OBC: DownloadMeta response mismatch req=(%u,%u) rsp=(%u,%u)",
-                              ImageSlot, ImageNumber, Meta.ImageSlot, Meta.ImageNumber);
-            PAYUEL_OBC_Data.ErrCounter++;
-        }
-        else if (Meta.TotalChunks == 0U || Meta.LastChunkSize == 0U || Meta.LastChunkSize > PAYUEL_OBC_CHUNK_DATA_SIZE)
-        {
-            /* Reject obviously broken metadata before caching it for later chunk requests. */
-            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-            if (ReturnTypeOut != NULL)
-            {
-                *ReturnTypeOut = RPT_RETTYPE_HW;
-            }
-            CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "PAYUEL_OBC: DownloadMeta invalid chunk info total=%u last=%u",
-                              Meta.TotalChunks, Meta.LastChunkSize);
-            PAYUEL_OBC_Data.ErrCounter++;
-        }
-        else
-        {
-            /* Cache the validated metadata so repeated chunk reads do not re-query the device. */
-            PAYUEL_OBC_Data.ImageMetaSlot      = Meta.ImageSlot;
-            PAYUEL_OBC_Data.ImageMetaNumber    = Meta.ImageNumber;
-            PAYUEL_OBC_Data.ImageTotalChunks   = Meta.TotalChunks;
-            PAYUEL_OBC_Data.ImageLastChunkSize = Meta.LastChunkSize;
-            PAYUEL_OBC_Data.ImageFileCrc32     = Meta.FileCrc32;
-
-            if (MetaOut != NULL)
-            {
-                /* Return the parsed metadata to the caller as well. */
-                *MetaOut = Meta;
-            }
-        }
+        return status;
     }
 
-    return status;
+    Meta.Status         = RxData[1];
+    Meta.CameraID       = RxData[2];
+    Meta.ImageValid     = RxData[3];
+    Meta.ImageIndex     = RxData[4];
+    Meta.ImageSize      = PAYUEL_OBC_ReadU32BE(&RxData[5]);
+    Meta.ImageFileCRC32 = PAYUEL_OBC_ReadU32BE(&RxData[9]);
+    Meta.LastChunkSize  = RxData[13];
+    Meta.ChunkCount     = PAYUEL_OBC_ReadU16BE(&RxData[14]);
+
+    if (Meta.Status != 0U)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        return PAYUEL_OBC_RejectHwStatus("DownloadMeta", Meta.Status);
+    }
+
+    if (Meta.CameraID != CameraID || Meta.ImageIndex != ImageNumber)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_OBC: DownloadMeta response mismatch req=(%u,%u) rsp=(%u,%u)",
+                          CameraID, ImageNumber, Meta.CameraID, Meta.ImageIndex);
+        PAYUEL_OBC_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    if (Meta.ImageValid != 1U)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_OBC: DownloadMeta image invalid camera=%u image=%u valid=%u",
+                          Meta.CameraID, Meta.ImageIndex, Meta.ImageValid);
+        PAYUEL_OBC_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    if (Meta.ChunkCount == 0U || Meta.LastChunkSize == 0U || Meta.LastChunkSize > PAYUEL_OBC_CHUNK_DATA_SIZE)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_OBC: DownloadMeta invalid chunk info total=%u last=%u",
+                          Meta.ChunkCount, Meta.LastChunkSize);
+        PAYUEL_OBC_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    PAYUEL_OBC_Data.ImageMetaSlot      = Meta.CameraID;
+    PAYUEL_OBC_Data.ImageMetaNumber    = Meta.ImageIndex;
+    PAYUEL_OBC_Data.ImageTotalChunks   = Meta.ChunkCount;
+    PAYUEL_OBC_Data.ImageLastChunkSize = Meta.LastChunkSize;
+    PAYUEL_OBC_Data.ImageFileCrc32     = Meta.ImageFileCRC32;
+
+    if (MetaOut != NULL)
+    {
+        *MetaOut = Meta;
+    }
+
+    return CFE_SUCCESS;
 }
 
 CFE_Status_t PAYUEL_OBC_RequestSensorMeta(uint8_t DataSlot, uint8_t DataNumber,
@@ -615,8 +613,8 @@ CFE_Status_t PAYUEL_OBC_RequestSensorMeta(uint8_t DataSlot, uint8_t DataNumber,
                                           uint8_t *PayloadErrorPacketOut)
 {
     uint8_t                  TxData[5];
-    uint8_t                  RxData[8] = {0};
-    int32                    rsp_len;
+    uint8_t                  RxData[18] = {0};
+    int32                    rx_len;
     CFE_Status_t             status = CFE_SUCCESS;
     PAYUEL_OBC_SensorMetaInfo_t Meta = {0};
 
@@ -626,84 +624,109 @@ CFE_Status_t PAYUEL_OBC_RequestSensorMeta(uint8_t DataSlot, uint8_t DataNumber,
         *ReturnTypeOut = RPT_RETTYPE_SUCCESS;
     }
 
-    /* Request format: [cmd][slot][sensor number][crc16]. */
+    /* Request format: [cmd][data slot][data number][crc16]. */
     TxData[0] = PAYUEL_OBC_ID_SENSOR_META;
     TxData[1] = DataSlot;
     TxData[2] = DataNumber;
     PAYUEL_OBC_AppendCrc16(TxData, 3);
 
     /* Send the request and wait for the fixed-length sensor metadata response frame. */
-    rsp_len = CFE_SRL_ApiTransactionCSP(
+    rx_len = CFE_SRL_ApiTransactionCSP(
         PAYUEL_OBC_NODE, PAYUEL_OBC_PORT,
         TxData, sizeof(TxData),
         RxData, sizeof(RxData));
 
     status = PAYUEL_OBC_ValidateResponse("SensorMeta", PAYUEL_OBC_ID_SENSOR_META,
-                                         RxData, rsp_len, sizeof(RxData),
+                                         RxData, rx_len, sizeof(RxData),
                                          ReturnTypeOut, PayloadErrorPacketOut);
-    if (status == CFE_SUCCESS)
+    if (status != CFE_SUCCESS)
     {
-        /* Decode the device response into a typed struct before validating it. */
-        Meta.DataSlot      = RxData[1];
-        Meta.DataNumber    = RxData[2];
-        Meta.TotalChunks   = PAYUEL_OBC_ReadU16BE(&RxData[3]);
-        Meta.LastChunkSize = RxData[5];
-
-        if (Meta.DataSlot != DataSlot || Meta.DataNumber != DataNumber)
-        {
-            /* The returned metadata must describe the same sensor dataset we asked for. */
-            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-            if (ReturnTypeOut != NULL)
-            {
-                *ReturnTypeOut = RPT_RETTYPE_HW;
-            }
-            CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "PAYUEL_OBC: SensorMeta response mismatch req=(%u,%u) rsp=(%u,%u)",
-                              DataSlot, DataNumber, Meta.DataSlot, Meta.DataNumber);
-            PAYUEL_OBC_Data.ErrCounter++;
-        }
-        else if (Meta.TotalChunks == 0U || Meta.LastChunkSize == 0U || Meta.LastChunkSize > PAYUEL_OBC_CHUNK_DATA_SIZE)
-        {
-            /* Reject obviously broken metadata before caching it for later chunk requests. */
-            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-            if (ReturnTypeOut != NULL)
-            {
-                *ReturnTypeOut = RPT_RETTYPE_HW;
-            }
-            CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "PAYUEL_OBC: SensorMeta invalid chunk info total=%u last=%u",
-                              Meta.TotalChunks, Meta.LastChunkSize);
-            PAYUEL_OBC_Data.ErrCounter++;
-        }
-        else
-        {
-            /* Cache the validated metadata so repeated chunk reads do not re-query the device. */
-            PAYUEL_OBC_Data.SensorMetaSlot      = Meta.DataSlot;
-            PAYUEL_OBC_Data.SensorMetaNumber    = Meta.DataNumber;
-            PAYUEL_OBC_Data.SensorTotalChunks   = Meta.TotalChunks;
-            PAYUEL_OBC_Data.SensorLastChunkSize = Meta.LastChunkSize;
-
-            if (MetaOut != NULL)
-            {
-                /* Return the parsed metadata to the caller as well. */
-                *MetaOut = Meta;
-            }
-        }
+        return status;
     }
 
-    return status;
+    Meta.Status        = RxData[1];
+    Meta.DataSlot      = RxData[2];
+    Meta.BinValid      = RxData[3];
+    Meta.DataIndex     = RxData[4];
+    Meta.BinSize       = PAYUEL_OBC_ReadU32BE(&RxData[5]);
+    Meta.BinFileCRC32  = PAYUEL_OBC_ReadU32BE(&RxData[9]);
+    Meta.LastChunkSize = RxData[13];
+    Meta.ChunkCount    = PAYUEL_OBC_ReadU16BE(&RxData[14]);
+
+    if (Meta.Status != 0U)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        return PAYUEL_OBC_RejectHwStatus("SensorMeta", Meta.Status);
+    }
+
+    if (Meta.DataSlot != DataSlot || Meta.DataIndex != DataNumber)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_OBC: SensorMeta response mismatch req=(%u,%u) rsp=(%u,%u)",
+                          DataSlot, DataNumber, Meta.DataSlot, Meta.DataIndex);
+        PAYUEL_OBC_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    if (Meta.BinValid != 1U)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_OBC: SensorMeta bin invalid slot=%u data=%u valid=%u",
+                          Meta.DataSlot, Meta.DataIndex, Meta.BinValid);
+        PAYUEL_OBC_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    if (Meta.ChunkCount == 0U || Meta.LastChunkSize == 0U || Meta.LastChunkSize > PAYUEL_OBC_CHUNK_DATA_SIZE)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_OBC: SensorMeta invalid chunk info total=%u last=%u",
+                          Meta.ChunkCount, Meta.LastChunkSize);
+        PAYUEL_OBC_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    PAYUEL_OBC_Data.SensorMetaSlot      = Meta.DataSlot;
+    PAYUEL_OBC_Data.SensorMetaNumber    = Meta.DataIndex;
+    PAYUEL_OBC_Data.SensorTotalChunks   = Meta.ChunkCount;
+    PAYUEL_OBC_Data.SensorLastChunkSize = Meta.LastChunkSize;
+    PAYUEL_OBC_Data.SensorFileCrc32     = Meta.BinFileCRC32;
+
+    if (MetaOut != NULL)
+    {
+        *MetaOut = Meta;
+    }
+
+    return CFE_SUCCESS;
 }
 
-CFE_Status_t PAYUEL_OBC_RequestImageChunk(uint8_t ImageSlot, uint8_t ImageNumber, uint16_t ChunkNumber,
+CFE_Status_t PAYUEL_OBC_RequestImageChunk(uint8_t CameraID, uint8_t ImageNumber, uint16_t ChunkNumber,
                                           size_t ValidDataLength, uint8_t *ChunkDataOut, uint8_t *ReturnTypeOut,
                                           uint8_t *PayloadErrorPacketOut)
 {
     uint8_t      TxData[7];
     uint8_t      RxData[PAYUEL_OBC_CHUNK_RESPONSE_SIZE] = {0};
-    int32        rsp_len;
+    int32        rx_len;
     CFE_Status_t status = CFE_SUCCESS;
+    uint8_t      rsp_status;
+    uint16_t     rsp_image_num;
     uint16_t     rsp_chunk_num;
-    size_t       expected_rsp_len;
+    size_t       expected_rx_len;
 
     if (ReturnTypeOut != NULL)
     {
@@ -725,11 +748,11 @@ CFE_Status_t PAYUEL_OBC_RequestImageChunk(uint8_t ImageSlot, uint8_t ImageNumber
         return CFE_SB_BAD_ARGUMENT;
     }
 
-    expected_rsp_len = 5U + ValidDataLength + 4U;
+    expected_rx_len = 7U + ValidDataLength + 2U;
 
-    /* Request format: [cmd][slot][image][chunk number][crc16]. */
+    /* Request format: [cmd][camera][image][chunk number][crc16]. */
     TxData[0] = PAYUEL_OBC_ID_CHUNK_DOWNLOAD;
-    TxData[1] = ImageSlot;
+    TxData[1] = CameraID;
     TxData[2] = ImageNumber;
     PAYUEL_OBC_WriteU16BE(&TxData[3], ChunkNumber);
     PAYUEL_OBC_AppendCrc16(TxData, 5);
@@ -747,55 +770,53 @@ CFE_Status_t PAYUEL_OBC_RequestImageChunk(uint8_t ImageSlot, uint8_t ImageNumber
      * spiStatus = CFE_SRL_ApiRead(PAYUEL_OBC_Data.SpiHandle, &spiParam);
      */
     /* Receive variable-length chunk replies, including 4-byte error packets. */
-    rsp_len = CFE_SRL_ApiTransactionCSP(
+    rx_len = CFE_SRL_ApiTransactionCSP(
         PAYUEL_OBC_NODE, PAYUEL_OBC_PORT,
         TxData, sizeof(TxData),
         RxData, -1);
 
     status = PAYUEL_OBC_ValidateChunkResponse("ChunkDownload", PAYUEL_OBC_ID_CHUNK_DOWNLOAD,
-                                              RxData, rsp_len, expected_rsp_len,
+                                              RxData, rx_len, expected_rx_len,
                                               ReturnTypeOut, PayloadErrorPacketOut);
-    if (status == CFE_SUCCESS)
+    if (status != CFE_SUCCESS)
     {
-        /* Bytes 3..4 echo the chunk number in big-endian format. */
-        rsp_chunk_num = PAYUEL_OBC_ReadU16BE(&RxData[3]);
-
-        if (RxData[0] != PAYUEL_OBC_ID_CHUNK_DOWNLOAD ||
-            RxData[1] != ImageSlot ||
-            RxData[2] != ImageNumber ||
-            rsp_chunk_num != ChunkNumber)
-        {
-            /* Reject frames that do not belong to the requested image/chunk pair. */
-            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-            if (ReturnTypeOut != NULL)
-            {
-                *ReturnTypeOut = RPT_RETTYPE_HW;
-            }
-            CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "PAYUEL_OBC: ChunkDownload header mismatch req=(%u,%u,%u) rsp=(%u,%u,%u)",
-                              ImageSlot, ImageNumber, ChunkNumber, RxData[1], RxData[2], rsp_chunk_num);
-            PAYUEL_OBC_Data.ErrCounter++;
-        }
-        else if (!PAYUEL_OBC_VerifyChunkCrc32(RxData, ValidDataLength))
-        {
-            /* CRC32 covers cmd through valid data only; no padding bytes are present. */
-            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-            if (ReturnTypeOut != NULL)
-            {
-                *ReturnTypeOut = RPT_RETTYPE_HW;
-            }
-            CFE_EVS_SendEvent(PAYUEL_OBC_CRC_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "PAYUEL_OBC: ChunkDownload CRC32 mismatch");
-            PAYUEL_OBC_Data.ErrCounter++;
-        }
-        else if (ChunkDataOut != NULL)
-        {
-            /* Only copy the caller-requested valid bytes. */
-            memcpy(ChunkDataOut, &RxData[5], ValidDataLength);
-        }
+        return status;
     }
 
-    return status;
+    rsp_status    = RxData[1];
+    rsp_image_num = PAYUEL_OBC_ReadU16BE(&RxData[3]);
+    rsp_chunk_num = PAYUEL_OBC_ReadU16BE(&RxData[5]);
+
+    if (rsp_status != 0U)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        return PAYUEL_OBC_RejectHwStatus("ChunkDownload", rsp_status);
+    }
+
+    if (RxData[2] != CameraID ||
+        rsp_image_num != ImageNumber ||
+        rsp_chunk_num != ChunkNumber)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_OBC: ChunkDownload header mismatch req=(%u,%u,%u) rsp=(%u,%u,%u)",
+                          CameraID, ImageNumber, ChunkNumber, RxData[2], rsp_image_num, rsp_chunk_num);
+        PAYUEL_OBC_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    if (ChunkDataOut != NULL)
+    {
+        memcpy(ChunkDataOut, &RxData[7], ValidDataLength);
+    }
+
+    return CFE_SUCCESS;
 }
 
 CFE_Status_t PAYUEL_OBC_RequestSensorChunk(uint8_t DataSlot, uint8_t DataNumber, uint16_t ChunkNumber,
@@ -804,10 +825,11 @@ CFE_Status_t PAYUEL_OBC_RequestSensorChunk(uint8_t DataSlot, uint8_t DataNumber,
 {
     uint8_t      TxData[7];
     uint8_t      RxData[PAYUEL_OBC_CHUNK_RESPONSE_SIZE] = {0};
-    int32        rsp_len;
+    int32        rx_len;
     CFE_Status_t status = CFE_SUCCESS;
+    uint8_t      rsp_status;
     uint16_t     rsp_chunk_num;
-    size_t       expected_rsp_len;
+    size_t       expected_rx_len;
 
     if (ReturnTypeOut != NULL)
     {
@@ -829,7 +851,7 @@ CFE_Status_t PAYUEL_OBC_RequestSensorChunk(uint8_t DataSlot, uint8_t DataNumber,
         return CFE_SB_BAD_ARGUMENT;
     }
 
-    expected_rsp_len = 5U + ValidDataLength + 4U;
+    expected_rx_len = 6U + ValidDataLength + 2U;
 
     /* Request format: [cmd][slot][sensor number][chunk number][crc16]. */
     TxData[0] = PAYUEL_OBC_ID_SENSOR_CHUNK;
@@ -851,55 +873,52 @@ CFE_Status_t PAYUEL_OBC_RequestSensorChunk(uint8_t DataSlot, uint8_t DataNumber,
      * spiStatus = CFE_SRL_ApiRead(PAYUEL_OBC_Data.SpiHandle, &spiParam);
      */
     /* Receive variable-length chunk replies, including 4-byte error packets. */
-    rsp_len = CFE_SRL_ApiTransactionCSP(
+    rx_len = CFE_SRL_ApiTransactionCSP(
         PAYUEL_OBC_NODE, PAYUEL_OBC_PORT,
         TxData, sizeof(TxData),
         RxData, -1);
 
     status = PAYUEL_OBC_ValidateChunkResponse("SensorChunk", PAYUEL_OBC_ID_SENSOR_CHUNK,
-                                              RxData, rsp_len, expected_rsp_len,
+                                              RxData, rx_len, expected_rx_len,
                                               ReturnTypeOut, PayloadErrorPacketOut);
-    if (status == CFE_SUCCESS)
+    if (status != CFE_SUCCESS)
     {
-        /* Bytes 3..4 echo the chunk number in big-endian format. */
-        rsp_chunk_num = PAYUEL_OBC_ReadU16BE(&RxData[3]);
-
-        if (RxData[0] != PAYUEL_OBC_ID_SENSOR_CHUNK ||
-            RxData[1] != DataSlot ||
-            RxData[2] != DataNumber ||
-            rsp_chunk_num != ChunkNumber)
-        {
-            /* Reject frames that do not belong to the requested sensor/chunk pair. */
-            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-            if (ReturnTypeOut != NULL)
-            {
-                *ReturnTypeOut = RPT_RETTYPE_HW;
-            }
-            CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "PAYUEL_OBC: SensorChunk header mismatch req=(%u,%u,%u) rsp=(%u,%u,%u)",
-                              DataSlot, DataNumber, ChunkNumber, RxData[1], RxData[2], rsp_chunk_num);
-            PAYUEL_OBC_Data.ErrCounter++;
-        }
-        else if (!PAYUEL_OBC_VerifyChunkCrc32(RxData, ValidDataLength))
-        {
-            /* CRC32 covers cmd through valid data only; no padding bytes are present. */
-            status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-            if (ReturnTypeOut != NULL)
-            {
-                *ReturnTypeOut = RPT_RETTYPE_HW;
-            }
-            CFE_EVS_SendEvent(PAYUEL_OBC_CRC_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "PAYUEL_OBC: SensorChunk CRC32 mismatch");
-            PAYUEL_OBC_Data.ErrCounter++;
-        }
-        else if (ChunkDataOut != NULL)
-        {
-            /* Only copy the caller-requested valid bytes. */
-            memcpy(ChunkDataOut, &RxData[5], ValidDataLength);
-        }
+        return status;
     }
 
-    return status;
+    rsp_status    = RxData[1];
+    rsp_chunk_num = PAYUEL_OBC_ReadU16BE(&RxData[4]);
+
+    if (rsp_status != 0U)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        return PAYUEL_OBC_RejectHwStatus("SensorChunk", rsp_status);
+    }
+
+    if (RxData[2] != DataSlot ||
+        RxData[3] != DataNumber ||
+        rsp_chunk_num != ChunkNumber)
+    {
+        if (ReturnTypeOut != NULL)
+        {
+            *ReturnTypeOut = RPT_RETTYPE_HW;
+        }
+        CFE_EVS_SendEvent(PAYUEL_OBC_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAYUEL_OBC: SensorChunk header mismatch req=(%u,%u,%u) rsp=(%u,%u,%u)",
+                          DataSlot, DataNumber, ChunkNumber, RxData[2], RxData[3], rsp_chunk_num);
+        PAYUEL_OBC_Data.ErrCounter++;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    if (ChunkDataOut != NULL)
+    {
+        memcpy(ChunkDataOut, &RxData[6], ValidDataLength);
+    }
+
+    return CFE_SUCCESS;
 }
 
 CFE_Status_t PAYUEL_OBC_ComputeFileCrc32(const char *FileName, uint32_t *FileCrc32Out)
