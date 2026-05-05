@@ -144,9 +144,9 @@ void LGBAT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 }
 
 
-// LGBAT_WakeupHandler
+// LGBAT_SendHkHandler
 
-static void LGBAT_WakeupHandler(void)
+static void LGBAT_SendHkHandler(void)
 {
     // Check whether the 2-week mission window has expired
     CFE_TIME_SysTime_t Now     = CFE_TIME_GetTime();
@@ -167,7 +167,10 @@ static void LGBAT_WakeupHandler(void)
 
     // Skip I2C reads if 3.3V is not applied
     if (!LGBAT_Data.PowerApplied)
+    {
+        OS_printf("LGBAT HK: skipped I2C poll. PowerApplied=0\n");
         return;
+    }
 
     // Read all 12 Data IDs: 0x01 through 0x0C
     bool CycleOk = true;
@@ -177,11 +180,33 @@ static void LGBAT_WakeupHandler(void)
         if (Status != CFE_SUCCESS)
         {
             CFE_EVS_SendEvent(LGBAT_I2C_READ_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "LGBAT: Wakeup I2C fail. DataID=0x%02X", id);
+                              "LGBAT: HK I2C fail. DataID=0x%02X", id);
             LGBAT_Data.ErrCounter++;
             CycleOk = false;
         }
     }
+
+    // Build and transmit HK TLM (0x08C6) with summary fields
+    LGBAT_HkTlm_Payload_t *HK = &LGBAT_Data.HkTlm.Payload;
+    memset(HK, 0, sizeof(*HK));
+    HK->CmdCounter          = LGBAT_Data.CmdCounter;
+    HK->CmdErrCounter       = LGBAT_Data.ErrCounter;
+    HK->PowerApplied        = 1u;
+    HK->MissionActive       = LGBAT_Data.MissionActive ? 1u : 0u;
+    HK->FirstCommDone       = LGBAT_Data.FirstCommSuccess ? 1u : 0u;
+    HK->Pack_Voltage_mV     = LGBAT_Data.BmsData.Data01.Pack_Voltage;
+    HK->Pack_Current_mA     = LGBAT_Data.BmsData.Data01.Pack_Current;
+    HK->SOC_x100            = LGBAT_Data.BmsData.Data02.SOC;
+    HK->SOH_pct             = LGBAT_Data.BmsData.Data02.SOH;
+    HK->Power_Supply_Status = LGBAT_Data.BmsData.Data02.Power_Supply_Status;
+    HK->Failure_Level       = LGBAT_0x09_GET_FAILURE_LEVEL(
+                                  LGBAT_Data.BmsData.Data09.TempFailLevel);
+    HK->BMS_Wakeup          = LGBAT_Data.BmsData.Data09.BMS_Wakeup;
+    HK->FailStatus2_Raw     = LGBAT_Data.BmsData.Data0A.FailStatus2;
+    HK->FailStatus3_Raw     = LGBAT_Data.BmsData.Data0A.FailStatus3;
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(LGBAT_Data.HkTlm.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(LGBAT_Data.HkTlm.TelemetryHeader), true);
 
     // Run health check after every full poll cycle
     LGBAT_CheckBmsHealth();
@@ -209,8 +234,8 @@ void LGBAT_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
             LGBAT_ProcessGroundCommand(SBBufPtr);
             break;
 
-        case LGBAT_WAKEUP_MID:  // 0x18C7 SCH periodic I2C poll trigger
-            LGBAT_WakeupHandler();
+        case LGBAT_SEND_HK_MID: // 0x18C7 SCH periodic HK/I2C poll trigger
+            LGBAT_SendHkHandler();
             break;
 
         case LGBAT_SEND_BCN_MID: // 0x18C8 SCH beacon send request

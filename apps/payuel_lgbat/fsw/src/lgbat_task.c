@@ -5,6 +5,7 @@
 LGBAT_Data_t LGBAT_Data;
 
 // LGBAT_Main: cFS application entry point.
+// Initializes the app, then blocks on the SB pipe waiting for messages.
 void LGBAT_Main(void)
 {
     CFE_Status_t    Status;
@@ -42,6 +43,7 @@ void LGBAT_Main(void)
 }
 
 // LGBAT_Init: Initialize all app data, register EVS, init telemetry headers,
+// create the SB pipe, and subscribe to all required MIDs.
 CFE_Status_t LGBAT_Init(void)
 {
     CFE_Status_t Status;
@@ -63,21 +65,19 @@ CFE_Status_t LGBAT_Init(void)
     }
 
     // Initialize telemetry message headers with the correct MIDs
-    CFE_MSG_Init(CFE_MSG_PTR(LGBAT_Data.BcnTlm.TelemetryHeader),
-                 CFE_SB_ValueToMsgId(LGBAT_BCN_TLM_MID),
-                 sizeof(LGBAT_Data.BcnTlm));
-
-    CFE_MSG_Init(CFE_MSG_PTR(LGBAT_Data.FullDataTlm.TelemetryHeader),
-                 CFE_SB_ValueToMsgId(LGBAT_FULLDATA_TLM_MID),
-                 sizeof(LGBAT_Data.FullDataTlm));
+    CFE_MSG_Init(CFE_MSG_PTR(LGBAT_Data.HkTlm.TelemetryHeader),
+                 CFE_SB_ValueToMsgId(LGBAT_HK_TLM_MID),
+                 sizeof(LGBAT_Data.HkTlm));
 
     CFE_MSG_Init(CFE_MSG_PTR(LGBAT_Data.ReportTlm.TelemetryHeader),
                  CFE_SB_ValueToMsgId(LGBAT_REPORT_TLM_MID),
                  sizeof(LGBAT_Data.ReportTlm));
 
-    CFE_MSG_Init(CFE_MSG_PTR(LGBAT_Data.CriticalTlm.TelemetryHeader),
-                 CFE_SB_ValueToMsgId(LGBAT_CRITICAL_TLM_MID),
-                 sizeof(LGBAT_Data.CriticalTlm));
+    CFE_MSG_Init(CFE_MSG_PTR(LGBAT_Data.BcnTlm.TelemetryHeader),
+                 CFE_SB_ValueToMsgId(LGBAT_BCN_TLM_MID),
+                 sizeof(LGBAT_Data.BcnTlm));
+
+    // CriticalTlm uses the REPORT channel (same MID) so no separate init needed
 
     // Create the software bus pipe
     Status = CFE_SB_CreatePipe(&LGBAT_Data.CmdPipe, LGBAT_Data.PipeDepth,
@@ -99,12 +99,12 @@ CFE_Status_t LGBAT_Init(void)
         return Status;
     }
 
-    // Subscribe: 0x18C7 SCH periodic I2C poll trigger
-    Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(LGBAT_WAKEUP_MID), LGBAT_Data.CmdPipe);
+    // Subscribe: 0x18C7 SCH periodic HK and I2C poll trigger
+    Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(LGBAT_SEND_HK_MID), LGBAT_Data.CmdPipe);
     if (Status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(LGBAT_SUB_WAKEUP_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "LGBAT: Subscribe WAKEUP (0x18C7) failed. RC=0x%08lX",
+                          "LGBAT: Subscribe SEND_HK (0x18C7) failed. RC=0x%08lX",
                           (unsigned long)Status);
         return Status;
     }

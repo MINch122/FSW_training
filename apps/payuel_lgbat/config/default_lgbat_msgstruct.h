@@ -11,11 +11,11 @@
 // Telemetry messages (CCSDS TelemetryHeader + payload)
 
 
-// Full BMS Data Telemetry (0x08C6): sent on every WAKEUP_MID trigger and REQUEST_ALL_DATA_CC
+// HK Telemetry (0x08C6): sent on every SEND_HK_MID trigger
 typedef struct {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader;
-    LGBAT_BmsAllData_t          Payload;
-} LGBAT_FullDataTlm_t;
+    LGBAT_HkTlm_Payload_t      Payload;
+} LGBAT_HkTlm_t;
 
 // Report Telemetry (0x08C7): sent after every ground command
 typedef struct {

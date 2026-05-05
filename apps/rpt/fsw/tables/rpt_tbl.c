@@ -83,7 +83,7 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
     
     /* Entry 11 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(LGBAT_CRITICAL_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(LGBAT_HK_TLM_MID),
         .Entry.IsCritical = RPT_CRITICAL},
 
     /* Entry 12 */

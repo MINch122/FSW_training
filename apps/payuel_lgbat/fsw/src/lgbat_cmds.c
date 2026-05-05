@@ -538,7 +538,7 @@ void LGBAT_CheckBmsHealth(void)
         sendCritical = true;
     }
 
-    // Send a critical alert TLM when any fault or warning is detected
+    // Send a critical alert report when any fault or warning is detected
     if (sendCritical)
     {
         LGBAT_CriticalTlm_Payload_t *CP = &LGBAT_Data.CriticalTlm.Payload;
@@ -548,8 +548,10 @@ void LGBAT_CheckBmsHealth(void)
         CP->TempDiag        = TempDiag;
         CP->FailStatus2_Raw = FS2;
         CP->FailStatus3_Raw = FS3;
-        CFE_SB_TimeStampMsg(CFE_MSG_PTR(LGBAT_Data.CriticalTlm.TelemetryHeader));
-        CFE_SB_TransmitMsg(CFE_MSG_PTR(LGBAT_Data.CriticalTlm.TelemetryHeader), true);
+
+        // Send via ReportTlm channel (RPT pattern)
+        LGBAT_SendReport(LGBAT_CMD_MID, 0xFF, CFE_STATUS_EXTERNAL_RESOURCE_FAIL,
+                         CP, sizeof(*CP));
         OS_printf("LGBAT: CriticalAlert sent. FailLvl=%u FS2=0x%02X FS3=0x%02X\n",
                   FailLvl, FS2, FS3);
     }
@@ -722,6 +724,7 @@ CFE_Status_t LGBAT_RequestDataCmd(const LGBAT_RequestDataCmd_t *Msg)
 }
 
 // CC 4: Read all 12 Data IDs (0x01-0x0C) sequentially, then send HK telemetry.
+// Skips I2C reads if 3.3V power is not applied.
 CFE_Status_t LGBAT_RequestAllDataCmd(const LGBAT_RequestAllDataCmd_t *Msg)
 {
     (void)Msg;
@@ -752,11 +755,28 @@ CFE_Status_t LGBAT_RequestAllDataCmd(const LGBAT_RequestAllDataCmd_t *Msg)
         }
     }
 
-    // Transmit full BMS data telemetry packet
-    memcpy(&LGBAT_Data.FullDataTlm.Payload, &LGBAT_Data.BmsData, sizeof(LGBAT_BmsAllData_t));
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(LGBAT_Data.FullDataTlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(LGBAT_Data.FullDataTlm.TelemetryHeader), true);
-    OS_printf("LGBAT CMD [REQUEST_ALL_DATA_CC]: FullData TLM transmitted.\n");
+    // Build and send HK telemetry with a summary of the BMS state
+    LGBAT_HkTlm_Payload_t *HK = &LGBAT_Data.HkTlm.Payload;
+    memset(HK, 0, sizeof(*HK));
+    HK->CmdCounter         = LGBAT_Data.CmdCounter;
+    HK->CmdErrCounter      = LGBAT_Data.ErrCounter;
+    HK->PowerApplied       = LGBAT_Data.PowerApplied ? 1u : 0u;
+    HK->MissionActive      = LGBAT_Data.MissionActive ? 1u : 0u;
+    HK->FirstCommDone      = LGBAT_Data.FirstCommSuccess ? 1u : 0u;
+    HK->Pack_Voltage_mV    = LGBAT_Data.BmsData.Data01.Pack_Voltage;
+    HK->Pack_Current_mA    = LGBAT_Data.BmsData.Data01.Pack_Current;
+    HK->SOC_x100           = LGBAT_Data.BmsData.Data02.SOC;
+    HK->SOH_pct            = LGBAT_Data.BmsData.Data02.SOH;
+    HK->Power_Supply_Status = LGBAT_Data.BmsData.Data02.Power_Supply_Status;
+    HK->Failure_Level      = LGBAT_0x09_GET_FAILURE_LEVEL(
+                                 LGBAT_Data.BmsData.Data09.TempFailLevel);
+    HK->BMS_Wakeup         = LGBAT_Data.BmsData.Data09.BMS_Wakeup;
+    HK->FailStatus2_Raw    = LGBAT_Data.BmsData.Data0A.FailStatus2;
+    HK->FailStatus3_Raw    = LGBAT_Data.BmsData.Data0A.FailStatus3;
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(LGBAT_Data.HkTlm.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(LGBAT_Data.HkTlm.TelemetryHeader), true);
+    OS_printf("LGBAT CMD [REQUEST_ALL_DATA_CC]: HK TLM transmitted.\n");
 
     // Run health check after every full poll cycle
     LGBAT_CheckBmsHealth();
@@ -777,6 +797,7 @@ CFE_Status_t LGBAT_RequestAllDataCmd(const LGBAT_RequestAllDataCmd_t *Msg)
 }
 
 // CC 5: Turn 3.3V power on or off.
+// The BMS wakes up automatically when 3.3V is applied (no extra wakeup command needed).
 CFE_Status_t LGBAT_SetPowerCmd(const LGBAT_SetPowerCmd_t *Msg)
 {
     LGBAT_Data.CmdCounter++;
@@ -785,14 +806,14 @@ CFE_Status_t LGBAT_SetPowerCmd(const LGBAT_SetPowerCmd_t *Msg)
     if (Msg->PowerOn)
     {
         LGBAT_Data.PowerApplied = true;
-        CFE_EVS_SendEvent(LGBAT_BMS_WAKEUP_INF_EID, CFE_EVS_EventType_INFORMATION,
+        CFE_EVS_SendEvent(LGBAT_BMS_POWER_ON_INF_EID, CFE_EVS_EventType_INFORMATION,
                           "LGBAT: 3.3V ON. BMS will wake up automatically.");
         OS_printf("LGBAT: 3.3V ON. BMS wakeup is automatic.\n");
     }
     else
     {
         LGBAT_Data.PowerApplied = false;
-        CFE_EVS_SendEvent(LGBAT_BMS_SLEEP_INF_EID, CFE_EVS_EventType_INFORMATION,
+        CFE_EVS_SendEvent(LGBAT_BMS_POWER_OFF_INF_EID, CFE_EVS_EventType_INFORMATION,
                           "LGBAT: 3.3V OFF. BMS entering sleep.");
         OS_printf("LGBAT: 3.3V OFF. BMS entering sleep.\n");
     }

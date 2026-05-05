@@ -21,18 +21,18 @@ typedef struct
     uint16          PipeDepth;
 
     // Telemetry messages
-    LGBAT_BcnTlm_t       BcnTlm;
-    LGBAT_FullDataTlm_t  FullDataTlm;
-    LGBAT_ReportTlm_t    ReportTlm;
-    LGBAT_CriticalTlm_t  CriticalTlm;
+    LGBAT_HkTlm_t      HkTlm;
+    LGBAT_ReportTlm_t  ReportTlm;
+    LGBAT_BcnTlm_t     BcnTlm;
+    LGBAT_CriticalTlm_t CriticalTlm;
 
     // BMS data cache filled by I2C reads
     LGBAT_BmsAllData_t BmsData;
 
     // Application state flags
-    bool PowerApplied;     
-    bool MissionActive;     
-    bool FirstCommSuccess;  
+    bool PowerApplied;      // True when 3.3V has been turned on by SET_POWER_CC
+    bool MissionActive;     // True while within the 2-week mission window
+    bool FirstCommSuccess;  // True after the first full I2C cycle succeeds
 
     // Mission timer start point
     CFE_TIME_SysTime_t MissionStartTime;
