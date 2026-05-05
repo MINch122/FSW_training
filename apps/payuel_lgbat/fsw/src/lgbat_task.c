@@ -1,12 +1,10 @@
-
 #include "lgbat_task.h"
 #include "lgbat_dispatch.h"
 #include "lgbat_eventids.h"
 
 LGBAT_Data_t LGBAT_Data;
 
-
-// LGBAT_Main — cFS app entry point
+// LGBAT_Main: cFS application entry point.
 void LGBAT_Main(void)
 {
     CFE_Status_t    Status;
@@ -43,8 +41,7 @@ void LGBAT_Main(void)
     CFE_ES_ExitApp(LGBAT_Data.RunStatus);
 }
 
-
-// LGBAT_Init — app initialization
+// LGBAT_Init: Initialize all app data, register EVS, init telemetry headers,
 CFE_Status_t LGBAT_Init(void)
 {
     CFE_Status_t Status;
@@ -56,7 +53,7 @@ CFE_Status_t LGBAT_Init(void)
     strncpy(LGBAT_Data.CmdPipeName, "LGBAT_CMD_PIPE", sizeof(LGBAT_Data.CmdPipeName));
     LGBAT_Data.CmdPipeName[sizeof(LGBAT_Data.CmdPipeName) - 1] = '\0';
 
-    // Register with EVS 
+    // Register with Event Services
     Status = CFE_EVS_Register(NULL, 0, CFE_EVS_EventFilter_BINARY);
     if (Status != CFE_SUCCESS)
     {
@@ -65,7 +62,7 @@ CFE_Status_t LGBAT_Init(void)
         return Status;
     }
 
-    // Initialize telemetry message headers 
+    // Initialize telemetry message headers with the correct MIDs
     CFE_MSG_Init(CFE_MSG_PTR(LGBAT_Data.BcnTlm.TelemetryHeader),
                  CFE_SB_ValueToMsgId(LGBAT_BCN_TLM_MID),
                  sizeof(LGBAT_Data.BcnTlm));
@@ -78,12 +75,11 @@ CFE_Status_t LGBAT_Init(void)
                  CFE_SB_ValueToMsgId(LGBAT_REPORT_TLM_MID),
                  sizeof(LGBAT_Data.ReportTlm));
 
-    // Critical TLM — initialized here so it is ready when health check fires 
     CFE_MSG_Init(CFE_MSG_PTR(LGBAT_Data.CriticalTlm.TelemetryHeader),
                  CFE_SB_ValueToMsgId(LGBAT_CRITICAL_TLM_MID),
                  sizeof(LGBAT_Data.CriticalTlm));
 
-    // Create SB pipe 
+    // Create the software bus pipe
     Status = CFE_SB_CreatePipe(&LGBAT_Data.CmdPipe, LGBAT_Data.PipeDepth,
                                 LGBAT_Data.CmdPipeName);
     if (Status != CFE_SUCCESS)
@@ -93,42 +89,45 @@ CFE_Status_t LGBAT_Init(void)
         return Status;
     }
 
-    // Subscribe to ground commands 
+    // Subscribe: 0x18C6 ground commands
     Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(LGBAT_CMD_MID), LGBAT_Data.CmdPipe);
     if (Status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(LGBAT_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "LGBAT: Subscribe CMD failed. RC=0x%08lX", (unsigned long)Status);
+                          "LGBAT: Subscribe CMD (0x18C6) failed. RC=0x%08lX",
+                          (unsigned long)Status);
         return Status;
     }
 
-    // Subscribe to beacon request from SCH 
-    Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(LGBAT_SEND_BCN_MID), LGBAT_Data.CmdPipe);
-    if (Status != CFE_SUCCESS)
-    {
-        CFE_EVS_SendEvent(LGBAT_SUB_BCN_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "LGBAT: Subscribe BCN MID failed. RC=0x%08lX", (unsigned long)Status);
-        return Status;
-    }
-
-    // Subscribe to periodic wakeup from SCH (I2C polling trigger) 
+    // Subscribe: 0x18C7 SCH periodic I2C poll trigger
     Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(LGBAT_WAKEUP_MID), LGBAT_Data.CmdPipe);
     if (Status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(LGBAT_SUB_WAKEUP_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "LGBAT: Subscribe WAKEUP failed. RC=0x%08lX", (unsigned long)Status);
+                          "LGBAT: Subscribe WAKEUP (0x18C7) failed. RC=0x%08lX",
+                          (unsigned long)Status);
         return Status;
     }
 
-    // Mission timer 
+    // Subscribe: 0x18C8 SCH beacon send request
+    Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(LGBAT_SEND_BCN_MID), LGBAT_Data.CmdPipe);
+    if (Status != CFE_SUCCESS)
+    {
+        CFE_EVS_SendEvent(LGBAT_SUB_BCN_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "LGBAT: Subscribe SEND_BCN (0x18C8) failed. RC=0x%08lX",
+                          (unsigned long)Status);
+        return Status;
+    }
+
+    // Start mission timer
     LGBAT_Data.MissionStartTime = CFE_TIME_GetTime();
     LGBAT_Data.MissionActive    = true;
 
-    OS_printf("LGBAT: App initialized. I2C2 Slave=0x%02X, MaxMission=%u sec.\n",
+    OS_printf("LGBAT: App initialized. I2C2 Slave=0x%02X MaxMission=%u sec.\n",
               LGBAT_BMS_I2C_SLAVE_ADDR, LGBAT_MAX_MISSION_DURATION_SEC);
 
     CFE_EVS_SendEvent(LGBAT_INIT_INF_EID, CFE_EVS_EventType_INFORMATION,
-                      "LGBAT App Initialized. I2C2 Addr=0x%02X, MaxMission=%u sec.",
+                      "LGBAT App Initialized. I2C2 Addr=0x%02X MaxMission=%u sec.",
                       LGBAT_BMS_I2C_SLAVE_ADDR, LGBAT_MAX_MISSION_DURATION_SEC);
 
     return CFE_SUCCESS;

@@ -3970,42 +3970,62 @@
   },
   {
     "app": "LGBAT",
-    "description": "LG battery monitor",
+    "description": "LG Energy Solution BMS Battery Pack App — I2C communication with BMS (INR21700M52V, 2S1P)",
     "commands": [
       {
         "name": "Noop",
         "mid": "0x18C6",
         "fc": 0,
+        "description": "No-op command. Increments command counter.",
         "params": []
       },
       {
         "name": "Reset Counters",
         "mid": "0x18C6",
         "fc": 1,
+        "description": "Reset CmdCounter and ErrCounter to zero.",
         "params": []
       },
       {
         "name": "Send Beacon",
         "mid": "0x18C6",
         "fc": 2,
+        "description": "Immediately transmit beacon telemetry.",
         "params": []
       },
       {
-        "name": "Request One Data ID",
+        "name": "Request Data",
         "mid": "0x18C6",
         "fc": 3,
+        "description": "Read a single BMS Data ID via I2C.",
         "params": [
           {
             "name": "DataID",
-            "type": "uint8",
-            "default": "1"
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "0x01_Pack_Power_Time": 1,
+              "0x02_Capacity_Status": 2,
+              "0x03_Battery_Info": 3,
+              "0x04_Charge_State": 4,
+              "0x05_Cell_Extremes": 5,
+              "0x06_Cell_Voltages": 6,
+              "0x07_Cell_Temperatures": 7,
+              "0x08_FET_Status": 8,
+              "0x09_BMS_Status": 9,
+              "0x0A_Fail_Status": 10,
+              "0x0B_MCU_Voltages": 11,
+              "0x0C_PCB_Boost_Status": 12
+            },
+            "default": "0x01_Pack_Power_Time",
+            "description": "BMS Data ID to read (0x01~0x0C)"
           },
           {
             "name": "Spare",
-            "type": "bytes",
-            "length": 3,
-            "default": "",
-            "hidden": true
+            "type": "uint8",
+            "count": 3,
+            "default": "0, 0, 0",
+            "description": "Padding"
           }
         ]
       },
@@ -4013,45 +4033,80 @@
         "name": "Request All Data",
         "mid": "0x18C6",
         "fc": 4,
+        "description": "Read all 12 BMS Data IDs.",
         "params": []
       },
       {
-        "name": "Set Power",
+        "name": "Set Power ON",
         "mid": "0x18C6",
         "fc": 5,
+        "description": "Apply 3.3V power to BMS (PowerOn=1).",
         "params": [
           {
             "name": "PowerOn",
-            "type": "uint8",
-            "default": "1"
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "OFF": 0,
+              "ON": 1
+            },
+            "default": "ON",
+            "description": "1=ON, 0=OFF"
           },
           {
             "name": "Spare",
-            "type": "bytes",
-            "length": 3,
-            "default": "",
-            "hidden": true
+            "type": "uint8",
+            "count": 3,
+            "default": "0, 0, 0",
+            "description": "Padding"
           }
         ]
       },
       {
-        "name": "Reset BMS Cache",
+        "name": "Set Power OFF",
+        "mid": "0x18C6",
+        "fc": 5,
+        "description": "Remove 3.3V power from BMS (PowerOn=0).",
+        "params": [
+          {
+            "name": "PowerOn",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "OFF": 0,
+              "ON": 1
+            },
+            "default": "OFF",
+            "description": "1=ON, 0=OFF"
+          },
+          {
+            "name": "Spare",
+            "type": "uint8",
+            "count": 3,
+            "default": "0, 0, 0",
+            "description": "Padding"
+          }
+        ]
+      },
+      {
+        "name": "Reset BMS",
         "mid": "0x18C6",
         "fc": 6,
+        "description": "Software reset. Clears flags and BmsData cache.",
         "params": []
       },
       {
-        "name": "Request Beacon",
+        "name": "Request Beacon (SCH)",
         "mid": "0x18C8",
         "fc": 0,
-        "description": "LGBAT_SEND_BCN_MID",
+        "description": "LGBAT_SEND_BCN_MID — SCH beacon trigger",
         "params": []
       },
       {
-        "name": "Wakeup",
+        "name": "Wakeup (SCH)",
         "mid": "0x18C7",
         "fc": 0,
-        "description": "LGBAT_WAKEUP_MID",
+        "description": "LGBAT_WAKEUP_MID — SCH I2C poll trigger",
         "params": []
       }
     ]

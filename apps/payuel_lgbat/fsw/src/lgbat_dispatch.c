@@ -1,5 +1,3 @@
-
-
 #include "lgbat_task.h"
 #include "lgbat_dispatch.h"
 #include "lgbat_cmds.h"
@@ -7,7 +5,8 @@
 #include "lgbat_msgids.h"
 
 
-// Command length verification
+// LGBAT_VerifyCmdLength
+
 bool LGBAT_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
 {
     bool   result = true;
@@ -32,7 +31,7 @@ bool LGBAT_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLengt
         result = false;
         LGBAT_Data.ErrCounter++;
 
-        // Send RPT for length error
+        // Send RPT with actual and expected lengths in the return value buffer
         LGBAT_ReportTlm_t *BufPtr =
             (LGBAT_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(LGBAT_ReportTlm_t));
         if (BufPtr == NULL) goto cleanup;
@@ -65,7 +64,8 @@ cleanup:
 }
 
 
-// Ground command dispatcher by function code (CC)
+// LGBAT_ProcessGroundCommand
+
 void LGBAT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 {
     CFE_MSG_FcnCode_t CC = 0xFF;
@@ -85,7 +85,7 @@ void LGBAT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 
         case LGBAT_SEND_BCN_CC:
             if (LGBAT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(LGBAT_SendBcnCmd_t)))
-                LGBAT_SendBeaconCmd();   
+                LGBAT_SendBeaconCmd();
             break;
 
         case LGBAT_REQUEST_DATA_CC:
@@ -109,15 +109,16 @@ void LGBAT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             break;
 
         default:
+            // Unknown CC: count the error and send RPT
             LGBAT_Data.ErrCounter++;
             CFE_EVS_SendEvent(LGBAT_CC_ERR_EID, CFE_EVS_EventType_ERROR,
                               "LGBAT: Invalid CC=%d", (int)CC);
-            // Send RPT for invalid CC 
             {
                 CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
                 CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
                 LGBAT_ReportTlm_t *BufPtr =
-                    (LGBAT_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(LGBAT_ReportTlm_t));
+                    (LGBAT_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(
+                        sizeof(LGBAT_ReportTlm_t));
                 if (BufPtr != NULL)
                 {
                     if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
@@ -130,7 +131,8 @@ void LGBAT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
                         BufPtr->Payload.ReturnCode     = CFE_STATUS_BAD_COMMAND_CODE;
                         BufPtr->Payload.ReturnDataSize = 0;
                         CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
-                        if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS)
+                        if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true)
+                                != CFE_SUCCESS)
                             CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
                     }
                     else
@@ -142,10 +144,11 @@ void LGBAT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 }
 
 
-// Wakeup handler
+// LGBAT_WakeupHandler
+
 static void LGBAT_WakeupHandler(void)
 {
-    /* Check 2-week mission timeout */
+    // Check whether the 2-week mission window has expired
     CFE_TIME_SysTime_t Now     = CFE_TIME_GetTime();
     CFE_TIME_SysTime_t Elapsed = CFE_TIME_Subtract(Now, LGBAT_Data.MissionStartTime);
 
@@ -162,10 +165,11 @@ static void LGBAT_WakeupHandler(void)
         return;
     }
 
-    // Skip if 3.3V not applied 
-    if (!LGBAT_Data.PowerApplied) return;
+    // Skip I2C reads if 3.3V is not applied
+    if (!LGBAT_Data.PowerApplied)
+        return;
 
-    // Read all 12 Data IDs: 0x01 ~ 0x0C 
+    // Read all 12 Data IDs: 0x01 through 0x0C
     bool CycleOk = true;
     for (uint8_t id = LGBAT_BMS_DATA_ID_MIN; id <= LGBAT_BMS_DATA_ID_MAX; id++)
     {
@@ -176,24 +180,24 @@ static void LGBAT_WakeupHandler(void)
                               "LGBAT: Wakeup I2C fail. DataID=0x%02X", id);
             LGBAT_Data.ErrCounter++;
             CycleOk = false;
-           
         }
     }
 
-    
+    // Run health check after every full poll cycle
     LGBAT_CheckBmsHealth();
 
-    
+    // Record first successful full cycle
     if (CycleOk && !LGBAT_Data.FirstCommSuccess)
     {
         LGBAT_Data.FirstCommSuccess = true;
         CFE_EVS_SendEvent(LGBAT_MISSION_START_INF_EID, CFE_EVS_EventType_INFORMATION,
-                          "LGBAT: First BMS comm cycle SUCCESS. Mission Criteria #2 met.");
+                          "LGBAT: First BMS comm cycle SUCCESS. Mission Criteria met.");
     }
 }
 
 
-// MID dispatcher
+// LGBAT_TaskPipe
+
 void LGBAT_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 {
     CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
@@ -201,19 +205,16 @@ void LGBAT_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 
     switch (CFE_SB_MsgIdToValue(MsgId))
     {
-        case LGBAT_CMD_MID:
-            // Ground command — process by CC, each sends RPT 
+        case LGBAT_CMD_MID:      // 0x18C6 Ground command
             LGBAT_ProcessGroundCommand(SBBufPtr);
             break;
 
-        case LGBAT_SEND_BCN_MID:
-            
-            LGBAT_SendBeaconCmd();
+        case LGBAT_WAKEUP_MID:  // 0x18C7 SCH periodic I2C poll trigger
+            LGBAT_WakeupHandler();
             break;
 
-        case LGBAT_WAKEUP_MID:
-            // Scheduler periodic I2C poll trigger 
-            LGBAT_WakeupHandler();
+        case LGBAT_SEND_BCN_MID: // 0x18C8 SCH beacon send request
+            LGBAT_SendBeaconCmd();
             break;
 
         default:
