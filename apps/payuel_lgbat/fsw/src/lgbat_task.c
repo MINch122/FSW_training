@@ -4,8 +4,6 @@
 
 LGBAT_Data_t LGBAT_Data;
 
-// LGBAT_Main: cFS application entry point.
-// Initializes the app, then blocks on the SB pipe waiting for messages.
 void LGBAT_Main(void)
 {
     CFE_Status_t    Status;
@@ -42,8 +40,6 @@ void LGBAT_Main(void)
     CFE_ES_ExitApp(LGBAT_Data.RunStatus);
 }
 
-// LGBAT_Init: Initialize all app data, register EVS, init telemetry headers,
-// create the SB pipe, and subscribe to all required MIDs.
 CFE_Status_t LGBAT_Init(void)
 {
     CFE_Status_t Status;
@@ -55,7 +51,6 @@ CFE_Status_t LGBAT_Init(void)
     strncpy(LGBAT_Data.CmdPipeName, "LGBAT_CMD_PIPE", sizeof(LGBAT_Data.CmdPipeName));
     LGBAT_Data.CmdPipeName[sizeof(LGBAT_Data.CmdPipeName) - 1] = '\0';
 
-    // Register with Event Services
     Status = CFE_EVS_Register(NULL, 0, CFE_EVS_EventFilter_BINARY);
     if (Status != CFE_SUCCESS)
     {
@@ -64,7 +59,6 @@ CFE_Status_t LGBAT_Init(void)
         return Status;
     }
 
-    // Initialize telemetry message headers with the correct MIDs
     CFE_MSG_Init(CFE_MSG_PTR(LGBAT_Data.HkTlm.TelemetryHeader),
                  CFE_SB_ValueToMsgId(LGBAT_HK_TLM_MID),
                  sizeof(LGBAT_Data.HkTlm));
@@ -77,9 +71,6 @@ CFE_Status_t LGBAT_Init(void)
                  CFE_SB_ValueToMsgId(LGBAT_BCN_TLM_MID),
                  sizeof(LGBAT_Data.BcnTlm));
 
-    // CriticalTlm uses the REPORT channel (same MID) so no separate init needed
-
-    // Create the software bus pipe
     Status = CFE_SB_CreatePipe(&LGBAT_Data.CmdPipe, LGBAT_Data.PipeDepth,
                                 LGBAT_Data.CmdPipeName);
     if (Status != CFE_SUCCESS)
@@ -89,7 +80,6 @@ CFE_Status_t LGBAT_Init(void)
         return Status;
     }
 
-    // Subscribe: 0x18C6 ground commands
     Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(LGBAT_CMD_MID), LGBAT_Data.CmdPipe);
     if (Status != CFE_SUCCESS)
     {
@@ -99,7 +89,6 @@ CFE_Status_t LGBAT_Init(void)
         return Status;
     }
 
-    // Subscribe: 0x18C7 SCH periodic HK and I2C poll trigger
     Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(LGBAT_SEND_HK_MID), LGBAT_Data.CmdPipe);
     if (Status != CFE_SUCCESS)
     {
@@ -109,7 +98,6 @@ CFE_Status_t LGBAT_Init(void)
         return Status;
     }
 
-    // Subscribe: 0x18C8 SCH beacon send request
     Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(LGBAT_SEND_BCN_MID), LGBAT_Data.CmdPipe);
     if (Status != CFE_SUCCESS)
     {
@@ -119,7 +107,6 @@ CFE_Status_t LGBAT_Init(void)
         return Status;
     }
 
-    // Start mission timer
     LGBAT_Data.MissionStartTime = CFE_TIME_GetTime();
     LGBAT_Data.MissionActive    = true;
 

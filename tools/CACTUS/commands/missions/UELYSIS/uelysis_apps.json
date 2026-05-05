@@ -3971,6 +3971,40 @@
   {
     "app": "LGBAT",
     "description": "LG Energy Solution BMS Battery Pack App — I2C communication with BMS (INR21700M52V, 2S1P)",
+    "mids": {
+      "cmd": {
+        "mid": "0x18C6",
+        "name": "LGBAT_CMD_MID",
+        "direction": "ground->OBC"
+      },
+      "send_hk": {
+        "mid": "0x18C7",
+        "name": "LGBAT_SEND_HK_MID",
+        "direction": "SCH->OBC",
+        "description": "SCH wakeup — triggers I2C poll and HK publish"
+      },
+      "send_bcn": {
+        "mid": "0x18C8",
+        "name": "LGBAT_SEND_BCN_MID",
+        "direction": "SCH->OBC",
+        "description": "SCH beacon trigger — causes OBC to emit BCN_TLM"
+      },
+      "hk_tlm": {
+        "mid": "0x08C6",
+        "name": "LGBAT_HK_TLM_MID",
+        "direction": "OBC->ground"
+      },
+      "rpt_tlm": {
+        "mid": "0x08C7",
+        "name": "LGBAT_REPORT_TLM_MID",
+        "direction": "OBC->ground"
+      },
+      "bcn_tlm": {
+        "mid": "0x08C8",
+        "name": "LGBAT_BCN_TLM_MID",
+        "direction": "OBC->ground"
+      }
+    },
     "commands": [
       {
         "name": "Noop",
@@ -3990,14 +4024,14 @@
         "name": "Send Beacon",
         "mid": "0x18C6",
         "fc": 2,
-        "description": "Immediately transmit beacon telemetry.",
+        "description": "Immediately transmit beacon telemetry (BCN_TLM, MID 0x08C8).",
         "params": []
       },
       {
         "name": "Request Data",
         "mid": "0x18C6",
         "fc": 3,
-        "description": "Read a single BMS Data ID via I2C.",
+        "description": "Read a single BMS Data ID via I2C. Reply arrives as REPORT_TLM (0x08C7).",
         "params": [
           {
             "name": "DataID",
@@ -4025,7 +4059,8 @@
             "type": "uint8",
             "count": 3,
             "default": "0, 0, 0",
-            "description": "Padding"
+            "hidden": true,
+            "description": "Padding to 4-byte boundary"
           }
         ]
       },
@@ -4033,14 +4068,14 @@
         "name": "Request All Data",
         "mid": "0x18C6",
         "fc": 4,
-        "description": "Read all 12 BMS Data IDs.",
+        "description": "Read all 12 BMS Data IDs (0x01~0x0C) in sequence.",
         "params": []
       },
       {
-        "name": "Set Power ON",
+        "name": "Set Power",
         "mid": "0x18C6",
         "fc": 5,
-        "description": "Apply 3.3V power to BMS (PowerOn=1).",
+        "description": "Apply (PowerOn=1) or remove (PowerOn=0) 3.3V supply to BMS.",
         "params": [
           {
             "name": "PowerOn",
@@ -4058,33 +4093,8 @@
             "type": "uint8",
             "count": 3,
             "default": "0, 0, 0",
-            "description": "Padding"
-          }
-        ]
-      },
-      {
-        "name": "Set Power OFF",
-        "mid": "0x18C6",
-        "fc": 5,
-        "description": "Remove 3.3V power from BMS (PowerOn=0).",
-        "params": [
-          {
-            "name": "PowerOn",
-            "type": "enum",
-            "storage": "uint8",
-            "values": {
-              "OFF": 0,
-              "ON": 1
-            },
-            "default": "OFF",
-            "description": "1=ON, 0=OFF"
-          },
-          {
-            "name": "Spare",
-            "type": "uint8",
-            "count": 3,
-            "default": "0, 0, 0",
-            "description": "Padding"
+            "hidden": true,
+            "description": "Padding to 4-byte boundary"
           }
         ]
       },
@@ -4092,22 +4102,536 @@
         "name": "Reset BMS",
         "mid": "0x18C6",
         "fc": 6,
-        "description": "Software reset. Clears flags and BmsData cache.",
+        "description": "Software reset. Clears all fault flags and BmsData cache.",
         "params": []
       },
       {
-        "name": "Request Beacon (SCH)",
-        "mid": "0x18C8",
-        "fc": 0,
-        "description": "LGBAT_SEND_BCN_MID — SCH beacon trigger",
-        "params": []
-      },
-      {
-        "name": "Wakeup (SCH)",
+        "name": "Request HK",
         "mid": "0x18C7",
         "fc": 0,
-        "description": "LGBAT_WAKEUP_MID — SCH I2C poll trigger",
+        "description": "LGBAT_SEND_HK_MID — SCH wakeup: triggers I2C poll and publishes HK_TLM (0x08C6).",
         "params": []
+      },
+      {
+        "name": "Request Beacon",
+        "mid": "0x18C8",
+        "fc": 0,
+        "description": "LGBAT_SEND_BCN_MID — SCH beacon trigger: causes OBC to emit BCN_TLM (0x08C8).",
+        "params": []
+      }
+    ],
+    "telemetry": [
+      {
+        "name": "HK_TLM",
+        "mid": "0x08C6",
+        "description": "Housekeeping telemetry. struct fmt \">BBBBBxxxHhHBBBBB\" (19 B payload).",
+        "payload_bytes": 19,
+        "fields": [
+          {
+            "name": "CmdCounter",
+            "type": "uint8",
+            "unit": "",
+            "description": "Command accepted count"
+          },
+          {
+            "name": "ErrCounter",
+            "type": "uint8",
+            "unit": "",
+            "description": "Command error count"
+          },
+          {
+            "name": "PowerApplied",
+            "type": "uint8",
+            "unit": "",
+            "description": "1 if 3.3V applied to BMS"
+          },
+          {
+            "name": "MissionActive",
+            "type": "uint8",
+            "unit": "",
+            "description": "1 if mission mode active"
+          },
+          {
+            "name": "FirstCommDone",
+            "type": "uint8",
+            "unit": "",
+            "description": "1 after first successful I2C read"
+          },
+          {
+            "name": "_Spare",
+            "type": "uint8",
+            "count": 3,
+            "hidden": true
+          },
+          {
+            "name": "Pack_Voltage_mV",
+            "type": "uint16",
+            "unit": "mV",
+            "description": "Pack terminal voltage"
+          },
+          {
+            "name": "Pack_Current_mA",
+            "type": "int16",
+            "unit": "mA",
+            "description": "Pack current (positive=charge)"
+          },
+          {
+            "name": "SOC_x100",
+            "type": "uint16",
+            "unit": "%",
+            "scale": 0.01,
+            "description": "State of charge × 100"
+          },
+          {
+            "name": "SOH_pct",
+            "type": "uint8",
+            "unit": "%",
+            "description": "State of health"
+          },
+          {
+            "name": "Power_Supply_Status",
+            "type": "uint8",
+            "unit": "",
+            "enum": {
+              "0": "Rest",
+              "1": "Charge",
+              "2": "Discharge"
+            }
+          },
+          {
+            "name": "Failure_Level",
+            "type": "uint8",
+            "unit": "",
+            "enum": {
+              "0": "NONE",
+              "1": "WARNING",
+              "2": "FAULT",
+              "3": "CRITICAL"
+            }
+          },
+          {
+            "name": "FailStatus2_Raw",
+            "type": "uint8",
+            "unit": "",
+            "description": "Raw byte — see 0x0A bit-field table"
+          },
+          {
+            "name": "FailStatus3_Raw",
+            "type": "uint8",
+            "unit": "",
+            "description": "Raw byte — see 0x0A bit-field table"
+          }
+        ]
+      },
+      {
+        "name": "BCN_TLM",
+        "mid": "0x08C8",
+        "description": "Beacon telemetry. struct fmt covers BMS DataIDs 0x01~0x0C (86 B payload).",
+        "payload_bytes": 86,
+        "fields": [
+          {
+            "name": "CmdCounter",
+            "type": "uint8"
+          },
+          {
+            "name": "ErrCounter",
+            "type": "uint8"
+          },
+          {
+            "name": "PowerApplied",
+            "type": "uint8"
+          },
+          {
+            "name": "_Spare",
+            "type": "uint8",
+            "hidden": true
+          },
+          {
+            "name": "Pack_V",
+            "type": "uint16",
+            "unit": "mV",
+            "description": "[0x01] Pack voltage"
+          },
+          {
+            "name": "Pack_I",
+            "type": "int16",
+            "unit": "mA",
+            "description": "[0x01] Pack current"
+          },
+          {
+            "name": "TTE",
+            "type": "uint16",
+            "unit": "s",
+            "description": "[0x01] Time to empty"
+          },
+          {
+            "name": "TTF",
+            "type": "uint16",
+            "unit": "s",
+            "description": "[0x01] Time to full"
+          },
+          {
+            "name": "SOC",
+            "type": "uint16",
+            "unit": "%",
+            "scale": 0.01,
+            "description": "[0x02] SOC × 100"
+          },
+          {
+            "name": "SOH",
+            "type": "uint8",
+            "unit": "%",
+            "description": "[0x02] State of health"
+          },
+          {
+            "name": "PSS",
+            "type": "uint8",
+            "unit": "",
+            "enum": {
+              "0": "Rest",
+              "1": "Charge",
+              "2": "Discharge"
+            },
+            "description": "[0x02] Power supply status"
+          },
+          {
+            "name": "RC_Cap",
+            "type": "uint16",
+            "unit": "mAh",
+            "description": "[0x02] Remaining capacity"
+          },
+          {
+            "name": "AE_Energy",
+            "type": "uint16",
+            "unit": "x0.1Wh",
+            "description": "[0x02] Available energy"
+          },
+          {
+            "name": "SysMaxV",
+            "type": "uint16",
+            "unit": "x0.1V",
+            "description": "[0x03] System max voltage"
+          },
+          {
+            "name": "PsHealth",
+            "type": "uint8",
+            "description": "[0x03] Pack health indicator"
+          },
+          {
+            "name": "_Spare03",
+            "type": "uint8",
+            "hidden": true
+          },
+          {
+            "name": "FETTestV",
+            "type": "uint16",
+            "unit": "x0.01V",
+            "description": "[0x03] FET test voltage"
+          },
+          {
+            "name": "ChgPct",
+            "type": "uint16",
+            "unit": "%",
+            "scale": 0.1,
+            "description": "[0x04] Charge percentage × 10"
+          },
+          {
+            "name": "DesCap",
+            "type": "uint16",
+            "unit": "mAh",
+            "description": "[0x04] Design capacity"
+          },
+          {
+            "name": "Cap",
+            "type": "uint16",
+            "unit": "mAh",
+            "description": "[0x04] Full-charge capacity"
+          },
+          {
+            "name": "Chg",
+            "type": "uint16",
+            "unit": "mAh",
+            "description": "[0x04] Current charge"
+          },
+          {
+            "name": "CVMax",
+            "type": "uint16",
+            "unit": "mV",
+            "description": "[0x05] Max cell voltage"
+          },
+          {
+            "name": "CVMin",
+            "type": "uint16",
+            "unit": "mV",
+            "description": "[0x05] Min cell voltage"
+          },
+          {
+            "name": "CTMax",
+            "type": "int16",
+            "unit": "x0.1°C",
+            "description": "[0x05] Max cell temperature"
+          },
+          {
+            "name": "CTMin",
+            "type": "int16",
+            "unit": "x0.1°C",
+            "description": "[0x05] Min cell temperature"
+          },
+          {
+            "name": "CV01",
+            "type": "uint16",
+            "unit": "mV",
+            "description": "[0x06] Cell 1 voltage"
+          },
+          {
+            "name": "CV02",
+            "type": "uint16",
+            "unit": "mV",
+            "description": "[0x06] Cell 2 voltage"
+          },
+          {
+            "name": "CT02",
+            "type": "int16",
+            "unit": "x0.1°C",
+            "description": "[0x07] Cell 2 temperature"
+          },
+          {
+            "name": "CT01",
+            "type": "int16",
+            "unit": "x0.1°C",
+            "description": "[0x07] Cell 1 temperature"
+          },
+          {
+            "name": "BalT",
+            "type": "int16",
+            "unit": "x0.1°C",
+            "description": "[0x07] Balancing temperature"
+          },
+          {
+            "name": "PreChgT",
+            "type": "int16",
+            "unit": "x0.1°C",
+            "description": "[0x07] Pre-charge temperature"
+          },
+          {
+            "name": "FDnT",
+            "type": "int16",
+            "unit": "x0.1°C",
+            "description": "[0x08] FET turn-down temperature"
+          },
+          {
+            "name": "FUpT",
+            "type": "int16",
+            "unit": "x0.1°C",
+            "description": "[0x08] FET turn-up temperature"
+          },
+          {
+            "name": "CtrlCB",
+            "type": "uint16",
+            "format": "hex",
+            "description": "[0x08] Control CB flags"
+          },
+          {
+            "name": "SoftVer",
+            "type": "uint8",
+            "description": "[0x08] Software version"
+          },
+          {
+            "name": "_Spare08",
+            "type": "uint8",
+            "hidden": true
+          },
+          {
+            "name": "FailLvl",
+            "type": "uint8",
+            "enum": {
+              "0": "NONE",
+              "1": "WARNING",
+              "2": "FAULT",
+              "3": "CRITICAL"
+            },
+            "description": "[0x09] Failure level"
+          },
+          {
+            "name": "DFETSt",
+            "type": "uint8",
+            "description": "[0x09] Discharge FET state"
+          },
+          {
+            "name": "CFETSt",
+            "type": "uint8",
+            "description": "[0x09] Charge FET state"
+          },
+          {
+            "name": "VDiag",
+            "type": "uint8",
+            "description": "[0x09] Voltage diagnostic"
+          },
+          {
+            "name": "IDiag",
+            "type": "uint8",
+            "description": "[0x09] Current diagnostic"
+          },
+          {
+            "name": "TDiag",
+            "type": "uint8",
+            "description": "[0x09] Temperature diagnostic"
+          },
+          {
+            "name": "FailStatus2",
+            "type": "uint8",
+            "format": "hex",
+            "description": "[0x0A] Fail Status 2 byte",
+            "bitfields": [
+              {
+                "bit": 7,
+                "name": "TimeoutPreCharge"
+              },
+              {
+                "bit": 6,
+                "name": "OvertempPreCharge"
+              },
+              {
+                "bit": 5,
+                "name": "OvertempCB"
+              },
+              {
+                "bit": 4,
+                "name": "AFE_CommLoss"
+              },
+              {
+                "bit": 3,
+                "name": "AFE_Shutdown"
+              },
+              {
+                "bit": 2,
+                "name": "TempOpen_Cell"
+              },
+              {
+                "bit": 1,
+                "name": "TempOpen_CB"
+              },
+              {
+                "bit": 0,
+                "name": "TempOpen_FET"
+              }
+            ]
+          },
+          {
+            "name": "FailStatus3",
+            "type": "uint8",
+            "format": "hex",
+            "description": "[0x0A] Fail Status 3 byte",
+            "bitfields": [
+              {
+                "bit": 7,
+                "name": "DFET_Fault"
+              },
+              {
+                "bit": 5,
+                "name": "OvertempCDFET"
+              }
+            ]
+          },
+          {
+            "name": "BOOST_Out",
+            "type": "uint16",
+            "unit": "mV",
+            "description": "[0x0B] Boost converter output"
+          },
+          {
+            "name": "MCU_B",
+            "type": "uint16",
+            "unit": "mV",
+            "description": "[0x0B] MCU B+ rail"
+          },
+          {
+            "name": "MCU_P",
+            "type": "uint16",
+            "unit": "mV",
+            "description": "[0x0B] MCU P+ rail"
+          },
+          {
+            "name": "MCU_BMIC",
+            "type": "uint16",
+            "unit": "mV",
+            "description": "[0x0B] MCU BMIC rail"
+          },
+          {
+            "name": "BMS_I",
+            "type": "int16",
+            "unit": "mA",
+            "description": "[0x0C] BMS current"
+          },
+          {
+            "name": "PCB_T",
+            "type": "int16",
+            "unit": "x0.1°C",
+            "description": "[0x0C] PCB temperature"
+          },
+          {
+            "name": "BOOST_T",
+            "type": "int16",
+            "unit": "x0.1°C",
+            "description": "[0x0C] Boost converter temperature"
+          },
+          {
+            "name": "SBC_AMUX",
+            "type": "uint16",
+            "unit": "mV",
+            "description": "[0x0C] SBC analog mux voltage"
+          }
+        ]
+      },
+      {
+        "name": "REPORT_TLM",
+        "mid": "0x08C7",
+        "description": "Command report / response packet. Carries return code and optional data from Request Data (FC=3). struct fmt \">HBBiH\" header + up to 512 B return value.",
+        "payload_bytes_min": 10,
+        "payload_bytes_max": 522,
+        "fields": [
+          {
+            "name": "OrigMsgID",
+            "type": "uint16",
+            "format": "hex",
+            "description": "MID of the command that triggered this report"
+          },
+          {
+            "name": "CC",
+            "type": "uint8",
+            "description": "Function code of the originating command"
+          },
+          {
+            "name": "ReturnType",
+            "type": "uint8",
+            "enum": {
+              "0": "SUCCESS",
+              "1": "OSAL",
+              "2": "CFE",
+              "3": "LIB",
+              "4": "APP",
+              "5": "HW"
+            },
+            "description": "Return code category"
+          },
+          {
+            "name": "ReturnCode",
+            "type": "int32",
+            "format": "hex",
+            "description": "Signed return code from the handler"
+          },
+          {
+            "name": "ReturnDataSize",
+            "type": "uint16",
+            "description": "Number of valid bytes in ReturnValue (0 if none)"
+          },
+          {
+            "name": "ReturnValue",
+            "type": "bytes",
+            "max_length": 512,
+            "description": "Raw return data; valid length = ReturnDataSize"
+          }
+        ]
       }
     ]
   },

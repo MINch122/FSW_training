@@ -4,9 +4,6 @@
 #include "lgbat_eventids.h"
 #include "lgbat_msgids.h"
 
-
-// LGBAT_VerifyCmdLength
-
 bool LGBAT_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
 {
     bool   result = true;
@@ -31,7 +28,6 @@ bool LGBAT_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLengt
         result = false;
         LGBAT_Data.ErrCounter++;
 
-        // Send RPT with actual and expected lengths in the return value buffer
         LGBAT_ReportTlm_t *BufPtr =
             (LGBAT_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(LGBAT_ReportTlm_t));
         if (BufPtr == NULL) goto cleanup;
@@ -63,9 +59,6 @@ cleanup:
     return result;
 }
 
-
-// LGBAT_ProcessGroundCommand
-
 void LGBAT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 {
     CFE_MSG_FcnCode_t CC = 0xFF;
@@ -85,7 +78,10 @@ void LGBAT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 
         case LGBAT_SEND_BCN_CC:
             if (LGBAT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(LGBAT_SendBcnCmd_t)))
-                LGBAT_SendBeaconCmd();
+            {
+                LGBAT_Data.CmdCounter++;
+                LGBAT_SendBeaconCmd(&SBBufPtr->Msg);
+            }
             break;
 
         case LGBAT_REQUEST_DATA_CC:
@@ -109,7 +105,6 @@ void LGBAT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             break;
 
         default:
-            // Unknown CC: count the error and send RPT
             LGBAT_Data.ErrCounter++;
             CFE_EVS_SendEvent(LGBAT_CC_ERR_EID, CFE_EVS_EventType_ERROR,
                               "LGBAT: Invalid CC=%d", (int)CC);
@@ -143,12 +138,8 @@ void LGBAT_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
     }
 }
 
-
-// LGBAT_SendHkHandler
-
-static void LGBAT_SendHkHandler(void)
+static void LGBAT_SendHkHandler(const CFE_SB_Buffer_t *SBBufPtr)
 {
-    // Check whether the 2-week mission window has expired
     CFE_TIME_SysTime_t Now     = CFE_TIME_GetTime();
     CFE_TIME_SysTime_t Elapsed = CFE_TIME_Subtract(Now, LGBAT_Data.MissionStartTime);
 
@@ -165,14 +156,12 @@ static void LGBAT_SendHkHandler(void)
         return;
     }
 
-    // Skip I2C reads if 3.3V is not applied
     if (!LGBAT_Data.PowerApplied)
     {
         OS_printf("LGBAT HK: skipped I2C poll. PowerApplied=0\n");
         return;
     }
 
-    // Read all 12 Data IDs: 0x01 through 0x0C
     bool CycleOk = true;
     for (uint8_t id = LGBAT_BMS_DATA_ID_MIN; id <= LGBAT_BMS_DATA_ID_MAX; id++)
     {
@@ -186,7 +175,6 @@ static void LGBAT_SendHkHandler(void)
         }
     }
 
-    // Build and transmit HK TLM (0x08C6) with summary fields
     LGBAT_HkTlm_Payload_t *HK = &LGBAT_Data.HkTlm.Payload;
     memset(HK, 0, sizeof(*HK));
     HK->CmdCounter          = LGBAT_Data.CmdCounter;
@@ -201,27 +189,23 @@ static void LGBAT_SendHkHandler(void)
     HK->Power_Supply_Status = LGBAT_Data.BmsData.Data02.Power_Supply_Status;
     HK->Failure_Level       = LGBAT_0x09_GET_FAILURE_LEVEL(
                                   LGBAT_Data.BmsData.Data09.TempFailLevel);
-    HK->BMS_Wakeup          = LGBAT_Data.BmsData.Data09.BMS_Wakeup;
     HK->FailStatus2_Raw     = LGBAT_Data.BmsData.Data0A.FailStatus2;
     HK->FailStatus3_Raw     = LGBAT_Data.BmsData.Data0A.FailStatus3;
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(LGBAT_Data.HkTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(LGBAT_Data.HkTlm.TelemetryHeader), true);
 
-    // Run health check after every full poll cycle
     LGBAT_CheckBmsHealth();
 
-    // Record first successful full cycle
     if (CycleOk && !LGBAT_Data.FirstCommSuccess)
     {
         LGBAT_Data.FirstCommSuccess = true;
         CFE_EVS_SendEvent(LGBAT_MISSION_START_INF_EID, CFE_EVS_EventType_INFORMATION,
                           "LGBAT: First BMS comm cycle SUCCESS. Mission Criteria met.");
     }
+
+    (void)SBBufPtr;
 }
-
-
-// LGBAT_TaskPipe
 
 void LGBAT_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 {
@@ -230,16 +214,17 @@ void LGBAT_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 
     switch (CFE_SB_MsgIdToValue(MsgId))
     {
-        case LGBAT_CMD_MID:      // 0x18C6 Ground command
+        case LGBAT_CMD_MID:
             LGBAT_ProcessGroundCommand(SBBufPtr);
             break;
 
-        case LGBAT_SEND_HK_MID: // 0x18C7 SCH periodic HK/I2C poll trigger
-            LGBAT_SendHkHandler();
+        case LGBAT_SEND_HK_MID:
+            LGBAT_SendHkHandler(SBBufPtr);
             break;
 
-        case LGBAT_SEND_BCN_MID: // 0x18C8 SCH beacon send request
-            LGBAT_SendBeaconCmd();
+        case LGBAT_SEND_BCN_MID:
+            LGBAT_Data.CmdCounter++;
+            LGBAT_SendBeaconCmd(&SBBufPtr->Msg);
             break;
 
         default:

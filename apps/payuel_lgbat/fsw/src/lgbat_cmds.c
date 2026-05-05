@@ -4,25 +4,16 @@
 #include "lgbat_msgids.h"
 #include "osapi.h"
 
-
-
-// Local helpers
-
-
-// Read a 2-byte big-endian value from a byte buffer and return as uint16.
 static inline uint16_t LGBAT_BE16(const uint8_t *p)
 {
     return (uint16_t)(((uint16_t)p[0] << 8) | p[1]);
 }
 
-// Read a 2-byte big-endian value from a byte buffer and return as signed int16.
 static inline int16_t LGBAT_BE16S(const uint8_t *p)
 {
     return (int16_t)(((uint16_t)p[0] << 8) | p[1]);
 }
 
-// Verify XOR checksum of a 10-byte BMS response buffer.
-// The checksum byte is the last byte; the XOR of all previous bytes must equal it.
 static inline bool LGBAT_VerifyChecksum(const uint8_t *Buf, uint8_t Len)
 {
     if (Buf == NULL || Len < 2) return false;
@@ -31,7 +22,6 @@ static inline bool LGBAT_VerifyChecksum(const uint8_t *Buf, uint8_t Len)
     return (xorVal == Buf[Len - 1]);
 }
 
-// Return a human-readable name string for a BMS Data ID.
 static const char *LGBAT_GetDataIdName(uint8_t DataID)
 {
     switch (DataID)
@@ -52,15 +42,18 @@ static const char *LGBAT_GetDataIdName(uint8_t DataID)
     }
 }
 
-
-// RPT helper: send one command report telemetry packet.
-
-static void LGBAT_SendReport(uint16_t MsgID, uint8_t CC, CFE_Status_t RetCode,
-                             const void *Data, uint32_t DataSize)
+void LGBAT_SendReport(const CFE_MSG_Message_t *TriggerMsg, uint8_t CC,
+                      CFE_Status_t RetCode, const void *Data, uint32_t DataSize)
 {
-    RPT_Report_t report;
+    RPT_Report_t   report;
+    CFE_SB_MsgId_t trigMid = CFE_SB_INVALID_MSG_ID;
+
     memset(&report, 0, sizeof(report));
-    report.MsgID          = MsgID;
+
+    if (TriggerMsg != NULL)
+        CFE_MSG_GetMsgId(TriggerMsg, &trigMid);
+
+    report.MsgID          = (uint16_t)CFE_SB_MsgIdToValue(trigMid);
     report.CommandCode    = CC;
     report.ReturnType     = (RetCode == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_CFE;
     report.ReturnCode     = RetCode;
@@ -79,11 +72,6 @@ static void LGBAT_SendReport(uint16_t MsgID, uint8_t CC, CFE_Status_t RetCode,
     CFE_SB_TransmitMsg(CFE_MSG_PTR(LGBAT_Data.ReportTlm.TelemetryHeader), true);
 }
 
-
-// OS_printf helpers for ICD-format log output
-
-
-// Print the raw I2C receive buffer in [i]=0xXX format.
 static void LGBAT_PrintRawRxData(uint8_t DataID, const uint8_t *Buf, uint8_t Len)
 {
     if (Buf == NULL || Len == 0) return;
@@ -92,12 +80,10 @@ static void LGBAT_PrintRawRxData(uint8_t DataID, const uint8_t *Buf, uint8_t Len
     OS_printf("\n");
 }
 
-// Print parsed field values for each Data ID in ICD-aligned format.
 static void LGBAT_PrintParsedData(uint8_t DataID)
 {
     switch (DataID)
     {
-        // Data ID 0x01: Pack Power and Time
         case LGBAT_DATA_ID_POWER_TIME:
             OS_printf("LGBAT I2C [0x01 %s]:"
                       " Pack_Voltage=%u Pack_Current=%d"
@@ -110,7 +96,6 @@ static void LGBAT_PrintParsedData(uint8_t DataID)
                       LGBAT_Data.BmsData.Data01.CheckSum);
             break;
 
-        // Data ID 0x02: Capacity and Status
         case LGBAT_DATA_ID_CAPACITY_STATUS:
             OS_printf("LGBAT I2C [0x02 %s]:"
                       " Power_Supply_Status=%u SOH=%u SOC=%u"
@@ -124,7 +109,6 @@ static void LGBAT_PrintParsedData(uint8_t DataID)
                       LGBAT_Data.BmsData.Data02.CheckSum);
             break;
 
-        // Data ID 0x03: Battery Information
         case LGBAT_DATA_ID_BATTERY_INFO:
             OS_printf("LGBAT I2C [0x03 %s]:"
                       " System_Max_Voltage=%u Power_Supply_Health=%u"
@@ -140,7 +124,6 @@ static void LGBAT_PrintParsedData(uint8_t DataID)
                       LGBAT_Data.BmsData.Data03.CheckSum);
             break;
 
-        // Data ID 0x04: Charge State
         case LGBAT_DATA_ID_CHARGE_STATE:
             OS_printf("LGBAT I2C [0x04 %s]:"
                       " Percentage=%u Design_Capacity=%u"
@@ -153,7 +136,6 @@ static void LGBAT_PrintParsedData(uint8_t DataID)
                       LGBAT_Data.BmsData.Data04.CheckSum);
             break;
 
-        // Data ID 0x05: Cell Voltage and Temperature Extremes
         case LGBAT_DATA_ID_CELL_EXTREMES:
             OS_printf("LGBAT I2C [0x05 %s]:"
                       " Cell_Voltage_Max=%u Cell_Voltage_Min=%u"
@@ -166,7 +148,6 @@ static void LGBAT_PrintParsedData(uint8_t DataID)
                       LGBAT_Data.BmsData.Data05.CheckSum);
             break;
 
-        // Data ID 0x06: Cell Voltages
         case LGBAT_DATA_ID_CELL_VOLTAGE:
             OS_printf("LGBAT I2C [0x06 %s]:"
                       " Cell_Voltage_01=%u Cell_Voltage_02=%u"
@@ -179,8 +160,6 @@ static void LGBAT_PrintParsedData(uint8_t DataID)
                       LGBAT_Data.BmsData.Data06.CheckSum);
             break;
 
-        // Data ID 0x07: Cell Temperatures
-        // ICD byte order: byte[1-2]=T02, byte[3-4]=T01
         case LGBAT_DATA_ID_CELL_TEMPERATURE:
             OS_printf("LGBAT I2C [0x07 %s]:"
                       " Cell_Temperature_01=%d Cell_Temperature_02=%d"
@@ -193,7 +172,6 @@ static void LGBAT_PrintParsedData(uint8_t DataID)
                       LGBAT_Data.BmsData.Data07.CheckSum);
             break;
 
-        // Data ID 0x08: FET Temperature and Software Version
         case LGBAT_DATA_ID_FET_STATUS:
             OS_printf("LGBAT I2C [0x08 %s]:"
                       " FET_Down_Temperature=%d FET_Up_Temperature=%d"
@@ -207,18 +185,16 @@ static void LGBAT_PrintParsedData(uint8_t DataID)
                       LGBAT_Data.BmsData.Data08.CheckSum);
             break;
 
-        // Data ID 0x09: BMS Status
         case LGBAT_DATA_ID_BMS_STATUS:
             OS_printf("LGBAT I2C [0x09 %s]:"
                       " BMS_Wakeup=%u WakeupHoldStatus=0x%02X"
-                      " Wakeup_Hold_MCU=%u BMS_Wakeup_Signal=%u"
+                      " Wakeup_Hold_MCU=%u"
                       " VoltageDiag=%u CurrentDiag=%u TempDiag=%u FailureLevel=%u"
                       " DFET=%u CFET=%u CheckSum=0x%02X\n",
                       LGBAT_GetDataIdName(DataID),
                       LGBAT_Data.BmsData.Data09.BMS_Wakeup,
                       LGBAT_Data.BmsData.Data09.WakeupHoldStatus,
                       LGBAT_0x09_GET_WAKEUP_HOLD_MCU(LGBAT_Data.BmsData.Data09.WakeupHoldStatus),
-                      LGBAT_0x09_GET_BMS_WAKEUP_SIGNAL(LGBAT_Data.BmsData.Data09.WakeupHoldStatus),
                       LGBAT_0x09_GET_VOLTAGE_DIAG(LGBAT_Data.BmsData.Data09.VoltCurrDiag),
                       LGBAT_0x09_GET_CURRENT_DIAG(LGBAT_Data.BmsData.Data09.VoltCurrDiag),
                       LGBAT_0x09_GET_TEMP_DIAG(LGBAT_Data.BmsData.Data09.TempFailLevel),
@@ -228,7 +204,6 @@ static void LGBAT_PrintParsedData(uint8_t DataID)
                       LGBAT_Data.BmsData.Data09.CheckSum);
             break;
 
-        // Data ID 0x0A: Failure Status
         case LGBAT_DATA_ID_FAIL_STATUS:
             OS_printf("LGBAT I2C [0x0A %s]:"
                       " FailStatus2=0x%02X"
@@ -254,7 +229,6 @@ static void LGBAT_PrintParsedData(uint8_t DataID)
                       LGBAT_Data.BmsData.Data0A.CheckSum);
             break;
 
-        // Data ID 0x0B: Boost and MCU Voltages
         case LGBAT_DATA_ID_MCU_VOLTAGE:
             OS_printf("LGBAT I2C [0x0B %s]:"
                       " BOOST_Out_Voltage=%u MCU_B_Plus_Volt=%u"
@@ -267,7 +241,6 @@ static void LGBAT_PrintParsedData(uint8_t DataID)
                       LGBAT_Data.BmsData.Data0B.CheckSum);
             break;
 
-        // Data ID 0x0C: PCB Current and Boost Status
         case LGBAT_DATA_ID_DCDC_STATUS:
             OS_printf("LGBAT I2C [0x0C %s]:"
                       " BMS_Current=%d PCB_Temperature=%d"
@@ -284,9 +257,6 @@ static void LGBAT_PrintParsedData(uint8_t DataID)
             break;
     }
 }
-
-
-// BMS I2C Data Parsing: copy raw big-endian bytes into structs.
 
 static void LGBAT_ParseBmsData(uint8_t DataID, const uint8_t *Buf)
 {
@@ -310,7 +280,6 @@ static void LGBAT_ParseBmsData(uint8_t DataID, const uint8_t *Buf)
             LGBAT_Data.BmsData.Data02.AE_Available_Energy   = LGBAT_BE16(&Buf[7]);
             LGBAT_Data.BmsData.Data02.CheckSum              = Buf[9];
 
-            // Warn if SOC is below the sleep threshold (10%)
             if (LGBAT_Data.BmsData.Data02.SOC < LGBAT_SOC_SLEEP_THRESHOLD_X100)
             {
                 CFE_EVS_SendEvent(LGBAT_BMS_LOW_SOC_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -358,7 +327,6 @@ static void LGBAT_ParseBmsData(uint8_t DataID, const uint8_t *Buf)
             break;
 
         case 0x07:
-            // ICD buffer byte order: byte[1-2]=T02, byte[3-4]=T01
             LGBAT_Data.BmsData.Data07.ID                      = Buf[0];
             LGBAT_Data.BmsData.Data07.Cell_Temperature_02     = LGBAT_BE16S(&Buf[1]);
             LGBAT_Data.BmsData.Data07.Cell_Temperature_01     = LGBAT_BE16S(&Buf[3]);
@@ -421,9 +389,6 @@ static void LGBAT_ParseBmsData(uint8_t DataID, const uint8_t *Buf)
     }
 }
 
-
-// LGBAT_I2C_ReadBmsData
-
 CFE_Status_t LGBAT_I2C_ReadBmsData(uint8_t DataID)
 {
     uint8_t TxBuf[1];
@@ -459,10 +424,8 @@ CFE_Status_t LGBAT_I2C_ReadBmsData(uint8_t DataID)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    // Print raw receive buffer in ICD format
     LGBAT_PrintRawRxData(DataID, RxBuf, LGBAT_BMS_BYTES_PER_ID);
 
-    // Verify that the first byte echoes the requested DataID
     if (RxBuf[0] != DataID)
     {
         CFE_EVS_SendEvent(LGBAT_I2C_READ_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -471,7 +434,6 @@ CFE_Status_t LGBAT_I2C_ReadBmsData(uint8_t DataID)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    // Verify XOR checksum over bytes 0-8; result must equal byte 9
     if (!LGBAT_VerifyChecksum(RxBuf, LGBAT_BMS_BYTES_PER_ID))
     {
         CFE_EVS_SendEvent(LGBAT_I2C_CHECKSUM_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -479,16 +441,11 @@ CFE_Status_t LGBAT_I2C_ReadBmsData(uint8_t DataID)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    // Parse raw bytes into the cached BMS data structure
     LGBAT_ParseBmsData(DataID, RxBuf);
-    // Print parsed fields in ICD-aligned format
     LGBAT_PrintParsedData(DataID);
 
     return CFE_SUCCESS;
 }
-
-
-// LGBAT_CheckBmsHealth
 
 void LGBAT_CheckBmsHealth(void)
 {
@@ -538,7 +495,6 @@ void LGBAT_CheckBmsHealth(void)
         sendCritical = true;
     }
 
-    // Send a critical alert report when any fault or warning is detected
     if (sendCritical)
     {
         LGBAT_CriticalTlm_Payload_t *CP = &LGBAT_Data.CriticalTlm.Payload;
@@ -549,46 +505,42 @@ void LGBAT_CheckBmsHealth(void)
         CP->FailStatus2_Raw = FS2;
         CP->FailStatus3_Raw = FS3;
 
-        // Send via ReportTlm channel (RPT pattern)
-        LGBAT_SendReport(LGBAT_CMD_MID, 0xFF, CFE_STATUS_EXTERNAL_RESOURCE_FAIL,
-                         CP, sizeof(*CP));
+        LGBAT_Data.ReportTlm.Payload.MsgID          = LGBAT_CMD_MID;
+        LGBAT_Data.ReportTlm.Payload.CommandCode    = LGBAT_CRITICAL_ALERT_CC;
+        LGBAT_Data.ReportTlm.Payload.ReturnType     = RPT_RETTYPE_APP;
+        LGBAT_Data.ReportTlm.Payload.ReturnCode     = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+        LGBAT_Data.ReportTlm.Payload.ReturnDataSize = (uint16_t)sizeof(*CP);
+        memcpy(LGBAT_Data.ReportTlm.Payload.ReturnValue, CP, sizeof(*CP));
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(LGBAT_Data.ReportTlm.TelemetryHeader));
+        CFE_SB_TransmitMsg(CFE_MSG_PTR(LGBAT_Data.ReportTlm.TelemetryHeader), true);
+
         OS_printf("LGBAT: CriticalAlert sent. FailLvl=%u FS2=0x%02X FS3=0x%02X\n",
                   FailLvl, FS2, FS3);
     }
 }
 
-
-// Ground command handlers
-
-
-// CC 0: No-operation command. Increments counter, sends RPT.
 CFE_Status_t LGBAT_NoopCmd(const LGBAT_NoopCmd_t *Msg)
 {
-    (void)Msg;
     LGBAT_Data.CmdCounter++;
     OS_printf("LGBAT CMD [NOOP_CC]: NOOP received. CmdCounter=%u\n",
               LGBAT_Data.CmdCounter);
     CFE_EVS_SendEvent(LGBAT_INIT_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "LGBAT: NOOP. CmdCnt=%u", LGBAT_Data.CmdCounter);
-    LGBAT_SendReport(LGBAT_CMD_MID, LGBAT_NOOP_CC, CFE_SUCCESS, NULL, 0);
+    LGBAT_SendReport(&Msg->CommandHeader.Msg, LGBAT_NOOP_CC, CFE_SUCCESS, NULL, 0);
     return CFE_SUCCESS;
 }
 
-// CC 1: Reset command and error counters to zero.
 CFE_Status_t LGBAT_ResetCounterCmd(const LGBAT_ResetCounterCmd_t *Msg)
 {
-    (void)Msg;
     OS_printf("LGBAT CMD [RESET_COUNTER_CC]: CmdCounter=%u ErrCounter=%u -> 0\n",
               LGBAT_Data.CmdCounter, LGBAT_Data.ErrCounter);
     LGBAT_Data.CmdCounter = 0;
     LGBAT_Data.ErrCounter = 0;
-    LGBAT_SendReport(LGBAT_CMD_MID, LGBAT_RESET_COUNTER_CC, CFE_SUCCESS, NULL, 0);
+    LGBAT_SendReport(&Msg->CommandHeader.Msg, LGBAT_RESET_COUNTER_CC, CFE_SUCCESS, NULL, 0);
     return CFE_SUCCESS;
 }
 
-// CC 2 / SEND_BCN_MID handler: Compose and transmit beacon telemetry.
-// Fills BcnTlm_Payload with BMS data from all 12 cached Data IDs.
-CFE_Status_t LGBAT_SendBeaconCmd(void)
+CFE_Status_t LGBAT_SendBeaconCmd(const CFE_MSG_Message_t *TriggerMsg)
 {
     LGBAT_BcnTlm_Payload_t *P = &LGBAT_Data.BcnTlm.Payload;
 
@@ -597,85 +549,67 @@ CFE_Status_t LGBAT_SendBeaconCmd(void)
 
     memset(P, 0, sizeof(*P));
 
-    // App status fields
     P->CmdCounter    = LGBAT_Data.CmdCounter;
     P->CmdErrCounter = LGBAT_Data.ErrCounter;
     P->PowerApplied  = LGBAT_Data.PowerApplied ? 1u : 0u;
 
     if (LGBAT_Data.PowerApplied)
     {
-        // Data ID 0x01: Pack Power and Time
         P->Pack_Voltage_mV       = LGBAT_Data.BmsData.Data01.Pack_Voltage;
         P->Pack_Current_mA       = LGBAT_Data.BmsData.Data01.Pack_Current;
         P->Avg_Time_To_Empty_sec = LGBAT_Data.BmsData.Data01.Average_Time_To_Empty;
         P->Avg_Time_To_Full_sec  = LGBAT_Data.BmsData.Data01.Average_Time_To_Full;
 
-        // Data ID 0x02: Capacity and Status
         P->SOC_x100            = LGBAT_Data.BmsData.Data02.SOC;
         P->SOH_pct             = LGBAT_Data.BmsData.Data02.SOH;
         P->Power_Supply_Status = LGBAT_Data.BmsData.Data02.Power_Supply_Status;
         P->RC_Remaining_Cap    = LGBAT_Data.BmsData.Data02.RC_Remaining_Capacity;
         P->AE_Available_Energy = LGBAT_Data.BmsData.Data02.AE_Available_Energy;
 
-        // Data ID 0x03: Battery Information
         P->System_Max_Voltage      = LGBAT_Data.BmsData.Data03.System_Max_Voltage;
         P->Power_Supply_Health     = LGBAT_Data.BmsData.Data03.Power_Supply_Health;
         P->FETTestRequiredVoltage  = LGBAT_Data.BmsData.Data03.FETTestRequiredVoltage;
 
-        // Data ID 0x04: Charge State
         P->Charge_Percentage = LGBAT_Data.BmsData.Data04.Percentage;
         P->Design_Capacity   = LGBAT_Data.BmsData.Data04.Design_Capacity;
         P->Capacity          = LGBAT_Data.BmsData.Data04.Capacity;
         P->Charge            = LGBAT_Data.BmsData.Data04.Charge;
 
-        // Data ID 0x05: Cell Voltage and Temperature Extremes
         P->Cell_Voltage_Max_mV = LGBAT_Data.BmsData.Data05.Cell_Voltage_Max;
         P->Cell_Voltage_Min_mV = LGBAT_Data.BmsData.Data05.Cell_Voltage_Min;
         P->Cell_Temp_Max_x10   = LGBAT_Data.BmsData.Data05.Cell_Temperature_Max;
         P->Cell_Temp_Min_x10   = LGBAT_Data.BmsData.Data05.Cell_Temperature_Min;
 
-        // Data ID 0x06: Cell Voltages
         P->Cell_Voltage_01_mV = LGBAT_Data.BmsData.Data06.Cell_Voltage_01;
         P->Cell_Voltage_02_mV = LGBAT_Data.BmsData.Data06.Cell_Voltage_02;
 
-        // Data ID 0x07: Cell Temperatures
-        // Struct stores T02 first and T01 second (ICD buffer byte order preserved)
-        P->Cell_Temp_01_x10     = LGBAT_Data.BmsData.Data07.Cell_Temperature_01;
+        /* ICD 0x07: struct stores T02 at byte[1-2], T01 at byte[3-4] */
         P->Cell_Temp_02_x10     = LGBAT_Data.BmsData.Data07.Cell_Temperature_02;
+        P->Cell_Temp_01_x10     = LGBAT_Data.BmsData.Data07.Cell_Temperature_01;
         P->Balancing_R_Temp_x10 = LGBAT_Data.BmsData.Data07.Balancing_R_Temperature;
         P->PreCharge_R_Temp_x10 = LGBAT_Data.BmsData.Data07.PreCharge_R_Temperature;
 
-        // Data ID 0x08: FET Status and Software Version
         P->FET_Down_Temp_x10 = LGBAT_Data.BmsData.Data08.FET_Down_Temperature;
         P->FET_Up_Temp_x10   = LGBAT_Data.BmsData.Data08.FET_Up_Temperature;
         P->CtrlCBStatus      = LGBAT_Data.BmsData.Data08.CtrlCBStatus;
         P->SoftVersion       = LGBAT_Data.BmsData.Data08.SoftVersion;
 
-        // Data ID 0x09: BMS Status
-        // BMS_Wakeup is the raw HW status byte from the ICD; it is not an app flag.
-        // The BMS wakes up automatically when 3.3V is applied.
-        P->BMS_Wakeup        = LGBAT_Data.BmsData.Data09.BMS_Wakeup;
-        P->BMS_Wakeup_Signal = LGBAT_0x09_GET_BMS_WAKEUP_SIGNAL(
-                                   LGBAT_Data.BmsData.Data09.WakeupHoldStatus);
-        P->Failure_Level     = LGBAT_0x09_GET_FAILURE_LEVEL(
-                                   LGBAT_Data.BmsData.Data09.TempFailLevel);
-        P->DFET_Status       = LGBAT_0x09_GET_DFET(LGBAT_Data.BmsData.Data09.FETStatus);
-        P->CFET_Status       = LGBAT_0x09_GET_CFET(LGBAT_Data.BmsData.Data09.FETStatus);
-        P->Voltage_Diag      = LGBAT_0x09_GET_VOLTAGE_DIAG(LGBAT_Data.BmsData.Data09.VoltCurrDiag);
-        P->Current_Diag      = LGBAT_0x09_GET_CURRENT_DIAG(LGBAT_Data.BmsData.Data09.VoltCurrDiag);
-        P->Temp_Diag         = LGBAT_0x09_GET_TEMP_DIAG(LGBAT_Data.BmsData.Data09.TempFailLevel);
+        P->Failure_Level = LGBAT_0x09_GET_FAILURE_LEVEL(
+                               LGBAT_Data.BmsData.Data09.TempFailLevel);
+        P->DFET_Status   = LGBAT_0x09_GET_DFET(LGBAT_Data.BmsData.Data09.FETStatus);
+        P->CFET_Status   = LGBAT_0x09_GET_CFET(LGBAT_Data.BmsData.Data09.FETStatus);
+        P->Voltage_Diag  = LGBAT_0x09_GET_VOLTAGE_DIAG(LGBAT_Data.BmsData.Data09.VoltCurrDiag);
+        P->Current_Diag  = LGBAT_0x09_GET_CURRENT_DIAG(LGBAT_Data.BmsData.Data09.VoltCurrDiag);
+        P->Temp_Diag     = LGBAT_0x09_GET_TEMP_DIAG(LGBAT_Data.BmsData.Data09.TempFailLevel);
 
-        // Data ID 0x0A: Failure Status
         P->FailStatus2_Raw = LGBAT_Data.BmsData.Data0A.FailStatus2;
         P->FailStatus3_Raw = LGBAT_Data.BmsData.Data0A.FailStatus3;
 
-        // Data ID 0x0B: Boost and MCU Voltages
         P->BOOST_Out_Voltage_mV     = LGBAT_Data.BmsData.Data0B.BOOST_Out_Voltage;
         P->MCU_B_Plus_Volt_mV       = LGBAT_Data.BmsData.Data0B.MCU_B_Plus_Volt;
         P->MCU_P_Plus_Volt_mV       = LGBAT_Data.BmsData.Data0B.MCU_P_Plus_Volt;
         P->MCU_BMIC_REG_Out_Volt_mV = LGBAT_Data.BmsData.Data0B.MCU_BMIC_REG_Out_Volt;
 
-        // Data ID 0x0C: PCB Current and Boost Status
         P->BMS_Current_mA          = LGBAT_Data.BmsData.Data0C.BMS_Current;
         P->PCB_Temperature_x10     = LGBAT_Data.BmsData.Data0C.PCB_Temperature;
         P->BOOST_Temperature_x10   = LGBAT_Data.BmsData.Data0C.BOOST_Temperature;
@@ -689,12 +623,10 @@ CFE_Status_t LGBAT_SendBeaconCmd(void)
               " PowerApplied=%u Pack_Voltage_mV=%u SOC_x100=%u\n",
               P->PowerApplied, P->Pack_Voltage_mV, P->SOC_x100);
 
-    // Send RPT only when called from the ground command CC path
-    LGBAT_SendReport(LGBAT_CMD_MID, LGBAT_SEND_BCN_CC, CFE_SUCCESS, NULL, 0);
+    LGBAT_SendReport(TriggerMsg, LGBAT_SEND_BCN_CC, CFE_SUCCESS, NULL, 0);
     return CFE_SUCCESS;
 }
 
-// CC 3: Read one BMS Data ID via I2C2.
 CFE_Status_t LGBAT_RequestDataCmd(const LGBAT_RequestDataCmd_t *Msg)
 {
     uint8_t DataID = Msg->DataID;
@@ -704,7 +636,7 @@ CFE_Status_t LGBAT_RequestDataCmd(const LGBAT_RequestDataCmd_t *Msg)
         CFE_EVS_SendEvent(LGBAT_CC_ERR_EID, CFE_EVS_EventType_ERROR,
                           "LGBAT: Invalid DataID=0x%02X (valid range: 0x01-0x0C)", DataID);
         LGBAT_Data.ErrCounter++;
-        LGBAT_SendReport(LGBAT_CMD_MID, LGBAT_REQUEST_DATA_CC,
+        LGBAT_SendReport(&Msg->CommandHeader.Msg, LGBAT_REQUEST_DATA_CC,
                          CFE_STATUS_BAD_COMMAND_CODE, NULL, 0);
         return CFE_STATUS_BAD_COMMAND_CODE;
     }
@@ -719,23 +651,19 @@ CFE_Status_t LGBAT_RequestDataCmd(const LGBAT_RequestDataCmd_t *Msg)
     OS_printf("LGBAT CMD [REQUEST_DATA_CC]: DataID=0x%02X completed with Status=0x%08lX\n",
               DataID, (unsigned long)Status);
 
-    LGBAT_SendReport(LGBAT_CMD_MID, LGBAT_REQUEST_DATA_CC, Status, NULL, 0);
+    LGBAT_SendReport(&Msg->CommandHeader.Msg, LGBAT_REQUEST_DATA_CC, Status, NULL, 0);
     return Status;
 }
 
-// CC 4: Read all 12 Data IDs (0x01-0x0C) sequentially, then send HK telemetry.
-// Skips I2C reads if 3.3V power is not applied.
 CFE_Status_t LGBAT_RequestAllDataCmd(const LGBAT_RequestAllDataCmd_t *Msg)
 {
-    (void)Msg;
-
     OS_printf("LGBAT CMD [REQUEST_ALL_DATA_CC]: read all DataID 0x%02X through 0x%02X.\n",
               LGBAT_BMS_DATA_ID_MIN, LGBAT_BMS_DATA_ID_MAX);
 
     if (!LGBAT_Data.PowerApplied)
     {
         OS_printf("LGBAT CMD [REQUEST_ALL_DATA_CC]: skipped. PowerApplied=0\n");
-        LGBAT_SendReport(LGBAT_CMD_MID, LGBAT_REQUEST_ALL_DATA_CC,
+        LGBAT_SendReport(&Msg->CommandHeader.Msg, LGBAT_REQUEST_ALL_DATA_CC,
                          CFE_STATUS_NOT_IMPLEMENTED, NULL, 0);
         return CFE_SUCCESS;
     }
@@ -755,7 +683,6 @@ CFE_Status_t LGBAT_RequestAllDataCmd(const LGBAT_RequestAllDataCmd_t *Msg)
         }
     }
 
-    // Build and send HK telemetry with a summary of the BMS state
     LGBAT_HkTlm_Payload_t *HK = &LGBAT_Data.HkTlm.Payload;
     memset(HK, 0, sizeof(*HK));
     HK->CmdCounter         = LGBAT_Data.CmdCounter;
@@ -770,7 +697,6 @@ CFE_Status_t LGBAT_RequestAllDataCmd(const LGBAT_RequestAllDataCmd_t *Msg)
     HK->Power_Supply_Status = LGBAT_Data.BmsData.Data02.Power_Supply_Status;
     HK->Failure_Level      = LGBAT_0x09_GET_FAILURE_LEVEL(
                                  LGBAT_Data.BmsData.Data09.TempFailLevel);
-    HK->BMS_Wakeup         = LGBAT_Data.BmsData.Data09.BMS_Wakeup;
     HK->FailStatus2_Raw    = LGBAT_Data.BmsData.Data0A.FailStatus2;
     HK->FailStatus3_Raw    = LGBAT_Data.BmsData.Data0A.FailStatus3;
 
@@ -778,10 +704,8 @@ CFE_Status_t LGBAT_RequestAllDataCmd(const LGBAT_RequestAllDataCmd_t *Msg)
     CFE_SB_TransmitMsg(CFE_MSG_PTR(LGBAT_Data.HkTlm.TelemetryHeader), true);
     OS_printf("LGBAT CMD [REQUEST_ALL_DATA_CC]: HK TLM transmitted.\n");
 
-    // Run health check after every full poll cycle
     LGBAT_CheckBmsHealth();
 
-    // Record the first successful full cycle
     if (LastStatus == CFE_SUCCESS && !LGBAT_Data.FirstCommSuccess)
     {
         LGBAT_Data.FirstCommSuccess = true;
@@ -792,12 +716,10 @@ CFE_Status_t LGBAT_RequestAllDataCmd(const LGBAT_RequestAllDataCmd_t *Msg)
     OS_printf("LGBAT CMD [REQUEST_ALL_DATA_CC]: completed. Status=0x%08lX\n",
               (unsigned long)LastStatus);
 
-    LGBAT_SendReport(LGBAT_CMD_MID, LGBAT_REQUEST_ALL_DATA_CC, LastStatus, NULL, 0);
+    LGBAT_SendReport(&Msg->CommandHeader.Msg, LGBAT_REQUEST_ALL_DATA_CC, LastStatus, NULL, 0);
     return LastStatus;
 }
 
-// CC 5: Turn 3.3V power on or off.
-// The BMS wakes up automatically when 3.3V is applied (no extra wakeup command needed).
 CFE_Status_t LGBAT_SetPowerCmd(const LGBAT_SetPowerCmd_t *Msg)
 {
     LGBAT_Data.CmdCounter++;
@@ -818,19 +740,17 @@ CFE_Status_t LGBAT_SetPowerCmd(const LGBAT_SetPowerCmd_t *Msg)
         OS_printf("LGBAT: 3.3V OFF. BMS entering sleep.\n");
     }
 
-    LGBAT_SendReport(LGBAT_CMD_MID, LGBAT_SET_POWER_CC, CFE_SUCCESS, NULL, 0);
+    LGBAT_SendReport(&Msg->CommandHeader.Msg, LGBAT_SET_POWER_CC, CFE_SUCCESS, NULL, 0);
     return CFE_SUCCESS;
 }
 
-// CC 6: Reset cached BMS data and clear power applied flag.
 CFE_Status_t LGBAT_ResetBmsCmd(const LGBAT_ResetBmsCmd_t *Msg)
 {
-    (void)Msg;
     LGBAT_Data.CmdCounter++;
     OS_printf("LGBAT CMD [RESET_BMS_CC]: clearing cached BMS data and power state.\n");
     LGBAT_Data.PowerApplied     = false;
     LGBAT_Data.FirstCommSuccess = false;
     memset(&LGBAT_Data.BmsData, 0, sizeof(LGBAT_Data.BmsData));
-    LGBAT_SendReport(LGBAT_CMD_MID, LGBAT_RESET_BMS_CC, CFE_SUCCESS, NULL, 0);
+    LGBAT_SendReport(&Msg->CommandHeader.Msg, LGBAT_RESET_BMS_CC, CFE_SUCCESS, NULL, 0);
     return CFE_SUCCESS;
 }
