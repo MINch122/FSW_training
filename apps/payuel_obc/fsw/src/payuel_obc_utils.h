@@ -10,26 +10,20 @@
 
 typedef struct
 {
-    uint8  Status;
     uint8  CameraID;
-    uint8  ImageValid;
     uint8  ImageIndex;
-    uint32 ImageSize;
-    uint32 ImageFileCRC32;
-    uint8  LastChunkSize;
     uint16 ChunkCount;
+    uint8  LastChunkSize;
+    uint32 ImageFileCRC32;
 } PAYUEL_OBC_ImageMetaInfo_t;
 
 typedef struct
 {
-    uint8  Status;
     uint8  DataSlot;
-    uint8  BinValid;
     uint8  DataIndex;
-    uint32 BinSize;
-    uint32 BinFileCRC32;
-    uint8  LastChunkSize;
     uint16 ChunkCount;
+    uint8  LastChunkSize;
+    uint32 BinFileCRC32;
 } PAYUEL_OBC_SensorMetaInfo_t;
 
 uint16_t     PAYUEL_OBC_ReadU16BE(const uint8_t *Data);

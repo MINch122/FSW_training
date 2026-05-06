@@ -52,7 +52,7 @@ CFE_Status_t PAYUEL_OBC_ChunkDownloadCmd(const PAYUEL_OBC_ChunkDownloadCmd_t *Ms
 /*
  * 0x54 Sensor-data metadata command.
  * Fill DataSlot and DataNumber for the sensor dataset whose metadata you want to query.
- * Use this before a manual 0x55 sensor chunk download so total chunks and final size are known.
+ * Use this before a manual 0x55 sensor chunk download so total chunks and last-chunk size are known.
  * Example: DataSlot=1, DataNumber=4 requests metadata for sensor dataset 4 in slot 1.
  */
 CFE_Status_t PAYUEL_OBC_SensorMetaCmd(const PAYUEL_OBC_SensorMetaCmd_t *Msg);

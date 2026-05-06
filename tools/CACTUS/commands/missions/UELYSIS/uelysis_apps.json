@@ -4857,7 +4857,7 @@
         "name": "Chunk Download",
         "mid": "0x18C0",
         "fc": 6,
-        "description": "PAYUEL_OBC_CHUNK_DOWNLOAD_CC; CSP 0x45 image chunk. Response uses Status, CameraID, uint16 ImageNumber, uint16 ChunkNumber, up to 247B data, CRC16",
+        "description": "PAYUEL_OBC_CHUNK_DOWNLOAD_CC; CSP 0x45 image chunk. Response uses CameraID, ImageNumber, uint16 ChunkNumber, up to 247B data, CRC32",
         "params": [
           {
             "name": "CameraID",
@@ -4894,7 +4894,7 @@
             "name": "DataSlot",
             "type": "uint8",
             "default": "0",
-            "description": "Sensor data slot, 0..255"
+            "description": "Sensor data slot, 0..9"
           },
           {
             "name": "DataNumber",
@@ -4908,13 +4908,13 @@
         "name": "Sensor Chunk",
         "mid": "0x18C0",
         "fc": 8,
-        "description": "PAYUEL_OBC_SENSOR_CHUNK_CC; CSP 0x55 sensor chunk. Response uses Status, DataSlot, DataNumber, uint16 ChunkNumber, up to 247B data, CRC16",
+        "description": "PAYUEL_OBC_SENSOR_CHUNK_CC; CSP 0x55 sensor chunk. Response uses DataSlot, DataNumber, uint16 ChunkNumber, up to 247B data, CRC32",
         "params": [
           {
             "name": "DataSlot",
             "type": "uint8",
             "default": "0",
-            "description": "Sensor data slot, 0..255"
+            "description": "Sensor data slot, 0..9"
           },
           {
             "name": "DataNumber",
@@ -4965,7 +4965,7 @@
             "name": "DataSlot",
             "type": "uint8",
             "default": "0",
-            "description": "Sensor data slot, 0..255"
+            "description": "Sensor data slot, 0..9"
           },
           {
             "name": "DataNumber",

@@ -243,9 +243,8 @@ CFE_Status_t PAYUEL_OBC_CamShotCmd(const PAYUEL_OBC_CamShotCmd_t *Msg)
 /* ===================================================================
  * 0x44 - 이미지 다운로드 메타 요청 (UEL OBC)
  * TX  (5 B): [0x44][Camera ID][ImageNumber][CRC16_H][CRC16_L]
- * RX (18 B): [0x44][Status][CameraID][ImageValid][ImageIndex]
- *            [ImageSize(4B,BE)][ImageFileCRC32(4B,BE)][LastChunkSz]
- *            [ChunkCount(2B,BE)][CRC16_H][CRC16_L]
+ * RX (12 B): [0x44][CameraID][ImageIndex][ChunkCount(2B,BE)]
+ *            [LastChunkSz][ImageFileCRC32(4B,BE)][CRC16_H][CRC16_L]
  * =================================================================== */
 CFE_Status_t PAYUEL_OBC_DownloadMetaCmd(const PAYUEL_OBC_DownloadMetaCmd_t *Msg)
 {
@@ -278,9 +277,8 @@ CFE_Status_t PAYUEL_OBC_DownloadMetaCmd(const PAYUEL_OBC_DownloadMetaCmd_t *Msg)
             PAYUEL_OBC_WriteU32BE(&report_data[5], Meta.ImageFileCRC32);
 
             OS_printf("PAYUEL_OBC: DownloadMeta CameraID=0x%02X, ImageIndex=%u, "
-                      "ImageValid=%u, ImageSize=%u, ChunkCount=%u, LastChunkSz=%u, "
-                      "ImageFileCRC32=0x%08X\n",
-                      Meta.CameraID, Meta.ImageIndex, Meta.ImageValid, Meta.ImageSize,
+                      "ChunkCount=%u, LastChunkSz=%u, ImageFileCRC32=0x%08X\n",
+                      Meta.CameraID, Meta.ImageIndex,
                       Meta.ChunkCount, Meta.LastChunkSize, Meta.ImageFileCRC32);
         }
         else if (payload_error[0] != 0U)
@@ -299,9 +297,9 @@ CFE_Status_t PAYUEL_OBC_DownloadMetaCmd(const PAYUEL_OBC_DownloadMetaCmd_t *Msg)
  * 0x45 - 이미지 청크 다운로드 요청 (UEL OBC)
  * TX via CSP CAN (7 B):   [0x45][CameraID][ImageNumber][ChunkNum_H][ChunkNum_L]
  *                         [CRC16_H][CRC16_L]
- * RX via CSP CAN:         [0x45][Status][CameraID][ImgNum_H][ImgNum_L]
- *                         [ChunkNum_H][ChunkNum_L][ImageData][CRC16_H][CRC16_L]
- *                         length = 7 + valid data length + 2, max 256 B
+ * RX via CSP CAN:         [0x45][CameraID][ImageNumber][ChunkNum_H][ChunkNum_L]
+ *                         [ImageData][CRC32]
+ *                         length = 5 + valid data length + 4, max 256 B
  * =================================================================== */
 CFE_Status_t PAYUEL_OBC_ChunkDownloadCmd(const PAYUEL_OBC_ChunkDownloadCmd_t *Msg)
 {
@@ -395,9 +393,8 @@ CFE_Status_t PAYUEL_OBC_ChunkDownloadCmd(const PAYUEL_OBC_ChunkDownloadCmd_t *Ms
 /* ===================================================================
  * 0x54 - 센서 데이터 다운로드 메타 요청
  * TX (5 B): [0x54][DataSlot][DataNumber][CRC16_H][CRC16_L]
- * RX (18 B): [0x54][Status][DataSlot][BinValid][DataIndex]
- *            [BinSize(4B,BE)][BinFileCRC32(4B,BE)][LastChunkSz]
- *            [ChunkCount(2B,BE)][CRC16_H][CRC16_L]
+ * RX (12 B): [0x54][DataSlot][DataIndex][ChunkCount(2B,BE)]
+ *            [LastChunkSz][BinFileCRC32(4B,BE)][CRC16_H][CRC16_L]
  * =================================================================== */
 CFE_Status_t PAYUEL_OBC_SensorMetaCmd(const PAYUEL_OBC_SensorMetaCmd_t *Msg)
 {
@@ -429,9 +426,9 @@ CFE_Status_t PAYUEL_OBC_SensorMetaCmd(const PAYUEL_OBC_SensorMetaCmd_t *Msg)
             report_data[4] = Meta.LastChunkSize;
             PAYUEL_OBC_WriteU32BE(&report_data[5], Meta.BinFileCRC32);
 
-            OS_printf("PAYUEL_OBC: SensorMeta Slot=%u, DataNum=%u, BinValid=%u, BinSize=%u, "
+            OS_printf("PAYUEL_OBC: SensorMeta Slot=%u, DataNum=%u, "
                       "ChunkCount=%u, LastChunkSz=%u, BinFileCRC32=0x%08X\n",
-                      Meta.DataSlot, Meta.DataIndex, Meta.BinValid, Meta.BinSize,
+                      Meta.DataSlot, Meta.DataIndex,
                       Meta.ChunkCount, Meta.LastChunkSize, Meta.BinFileCRC32);
         }
         else if (payload_error[0] != 0U)
@@ -450,9 +447,9 @@ CFE_Status_t PAYUEL_OBC_SensorMetaCmd(const PAYUEL_OBC_SensorMetaCmd_t *Msg)
  * 0x55 - 센서 데이터 청크 다운로드 요청
  * TX via CSP CAN (7 B):   [0x55][DataSlot][DataNumber][ChunkNum_H][ChunkNum_L]
  *                         [CRC16_H][CRC16_L]
- * RX via CSP CAN:         [0x55][Status][DataSlot][DataNumber][ChunkNum_H][ChunkNum_L]
- *                         [SensorData(valid bytes)][CRC16_H][CRC16_L]
- *                         length = 6 + valid data length + 2, max 255 B
+ * RX via CSP CAN:         [0x55][DataSlot][DataNumber][ChunkNum_H][ChunkNum_L]
+ *                         [SensorData(valid bytes)][CRC32]
+ *                         length = 5 + valid data length + 4, max 256 B
  * =================================================================== */
 CFE_Status_t PAYUEL_OBC_SensorChunkCmd(const PAYUEL_OBC_SensorChunkCmd_t *Msg)
 {

@@ -287,7 +287,8 @@ static CFE_Status_t PAYUEL_OBC_DownloadSensorInChild(uint8_t DataSlot, uint8_t D
 
     /*
      * First ask the payload for sensor metadata.
-     * That tells us how many chunks to fetch and how large the last chunk is.
+     * That tells us how many chunks to fetch, how large the last chunk is,
+     * and what CRC32 the finished file must match.
      */
     status = PAYUEL_OBC_RequestSensorMeta(DataSlot, DataNumber, &Meta, &return_type, NULL);
     if (status != CFE_SUCCESS)
