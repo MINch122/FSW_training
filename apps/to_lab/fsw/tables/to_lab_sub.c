@@ -39,24 +39,11 @@
 #include "sample_app_msgids.h"
 #endif
 
-#ifdef HAVE_HS
-#include "hs_msgids.h"
-#endif
-
-
 #include "fm_msgids.h"
 
 
-#ifdef HAVE_SC
-#include "sc_msgids.h"
-#endif
-
 #ifdef HAVE_DS
 #include "ds_msgids.h"
-#endif
-
-#ifdef HAVE_LC
-#include "lc_msgids.h"
 #endif
 
 #include "rpt_msgids.h"
@@ -96,22 +83,12 @@ TO_LAB_Subs_t TO_LAB_Subs = {.Subs = {/* CFS App Subscriptions */
 #ifdef HAVE_SAMPLE_APP
                                       // {CFE_SB_MSGID_WRAP_VALUE(SAMPLE_APP_HK_TLM_MID), {0, 0}, 4},
 #endif
-#ifdef HAVE_HS
-                                      // {CFE_SB_MSGID_WRAP_VALUE(HS_HK_TLM_MID), {0, 0}, 4},
-#endif
 #ifdef HAVE_FM
                                       // {CFE_SB_MSGID_WRAP_VALUE(FM_HK_TLM_MID), {0, 0}, 4},
-#endif
-#ifdef HAVE_SC
-                                      // {CFE_SB_MSGID_WRAP_VALUE(SC_HK_TLM_MID), {0, 0}, 4},
 #endif
 #ifdef HAVE_DS
                                       // {CFE_SB_MSGID_WRAP_VALUE(DS_HK_TLM_MID), {0, 0}, 4},
 #endif
-#ifdef HAVE_LC
-                                      // {CFE_SB_MSGID_WRAP_VALUE(LC_HK_TLM_MID), {0, 0}, 4},
-#endif
-
                                       /* CFE_SB_MSGID_RESERVED entry to mark the end of valid MsgIds */
                                       {CFE_SB_MSGID_RESERVED, {0, 0}, 0}}};
 

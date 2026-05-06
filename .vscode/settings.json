@@ -128,7 +128,6 @@
         "cfe_rf_typedef.h": "c",
         "hk_msgids.h": "c",
         "adcs_msg.h": "c",
-        "sc_msgids.h": "c",
         "cfe_srl_core_internal.h": "c",
         "cfe_config_core_internal.h": "c",
         "cfe_time_core_internal.h": "c",

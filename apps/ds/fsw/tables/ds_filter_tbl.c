@@ -52,11 +52,8 @@
 /* #include "ds_msgids.h"  */
 /* #include "fm_msgids.h"  */
 /* #include "hk_msgids.h"  */
-/* #include "hs_msgids.h"  */
-/* #include "lc_msgids.h"  */
 /* #include "md_msgids.h"  */
 /* #include "mm_msgids.h"  */
-/* #include "sc_msgids.h"  */
 /* #include "sch_msgids.h" */
 #include "hk_msgids.h"
 #include "rpt_msgids.h"

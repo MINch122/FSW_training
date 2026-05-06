@@ -34,7 +34,6 @@ PAYUZUC,                    PAYUZUC_CMD,        0x1830, LE, UdpCommands.py,  192
 PAYUZUT,                    PAYUZUT_CMD,        0x1835, LE, UdpCommands.py,  192.168.16.221, 1236
 uel App,                    uel_app_cmd_file,   0x1885, LE, UdpCommands.py,  192.168.16.221, 1236
 Solar Panel,                SP_CMD,             0x1858, LE, UdpCommands.py,  192.168.16.221, 1236
-Stored command,             SC_CMD,             0x1820, LE, UdpCommands.py,  192.168.16.221, 1236
 Limit Checker,              LC_CMD,             0x181D, LE, UdpCommands.py,  192.168.16.221, 1236
 EPS,                        EPS_CMD,            0x1871, LE, UdpCommands.py,  192.168.16.221, 1236
 STRX,                       STRX_CMD,           0x1854, LE, UdpCommands.py,  192.168.16.221, 1236

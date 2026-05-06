@@ -237,15 +237,7 @@ void EO_ValidateOperationData(const RPT_OpsTlm_t *Msg) {
     EO_PRINTF("%s: Received Epoch sec : %u\n", __func__, EO_Data.Epoch.Seconds);
     EO_PRINTF("%s: Received Epoch Subsec : %u\n", __func__, EO_Data.Epoch.Subseconds);
 
-    /* If Boot Count is `1`, Start EO sequence after 45 min */
-    if (BootCount == 1) {
-        /* SC RTS 2 shall handle this */
-        EO_EnableRTS2();
-        EO_StartRTS2();
-    }
-
-    /* If not, Start EO sequence immediately */
-    else {
+    if (BootCount != 1) {
         CFE_ES_CreateChildTask(&EO_Data.ChildTaskId, EO_CHILD_TASK_NAME, EO_ChildTask, 0, EO_CHILD_TASK_STACK_SIZE,
                                    EO_CHILD_TASK_PRIORITY, 0);
     }

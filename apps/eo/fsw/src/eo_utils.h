@@ -76,11 +76,6 @@ void EO_RequestMMTTlm(void);
 
 void EO_AdcsDetumble(void);
 
-void EO_EnableRTS2(void);
-void EO_StartRTS2(void);
-
-
-
 void EO_FinalizePhase(void);
 
 #endif

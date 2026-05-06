@@ -11,7 +11,7 @@
 - Add CSP configuration tool - refer `csp_config.json`
 - Revise SRL module
   - Add SRL Task for TCTM
-- Add LC, HS, FM apps
+- Add FM app
 
 - Unlink several cFS submodule (e.g. cfe, ci_lab, sch_lab)
 > That means these modules managed as same repository
@@ -66,7 +66,7 @@ The cFS Framework is a core subset of cFS, with an extensive ecosystem of applic
 
 ## Distributions
 
-This is the open-source version of cFS, released under an Apache 2.0 license. The open source cFS is limited to the framework and common apps, libraries, and tools, which includes and is limited to: cFE, OSAL, PSP, Command Ingest (Lab), Telemetry Output (Lab), Scheduler (Lab), Sample App, Sample Lib, Data Storage, File Manager, HouseKeeping, Health and Safety, Memory Dwell, CFDP File Transfer, CheckSum, Limit Checker, Memory Manager, Stored Command, cFS Ground System, elf2cfetbl, and tblCRCTool. Changes to the open repositories are limited to bug fixes and minor enhancements to those components.
+This is the open-source version of cFS, released under an Apache 2.0 license. The open source cFS is limited to the framework and common apps, libraries, and tools, which includes and is limited to: cFE, OSAL, PSP, Command Ingest (Lab), Telemetry Output (Lab), Scheduler (Lab), Sample App, Sample Lib, Data Storage, File Manager, HouseKeeping, Memory Dwell, CFDP File Transfer, CheckSum, Memory Manager, cFS Ground System, elf2cfetbl, and tblCRCTool. Changes to the open repositories are limited to bug fixes and minor enhancements to those components.
 
 A Government-use (Distro C) version of cFS with features for a full flight mission is available through a Software User Agreement. For more information about government version features or to explore partnerships, please [contact the cFS team](<mailto:cfs-program@lists.nasa.gov>).
 
@@ -242,12 +242,9 @@ See the [cFE Application Developer's Guide](https://github.com/nasa/cFE/blob/mai
   - DS: Data Store application at <https://github.com/nasa/DS>
   - FM: File Manager application at <https://github.com/nasa/FM>
   - HK: Housekeeping application at <https://github.com/nasa/HK>
-  - HS: Health and Safety application at <https://github.com/nasa/HS>
-  - LC: Limit Checker application at <https://github.com/nasa/LC>
   - MD: Memory Dwell application at <https://github.com/nasa/MD>
   - MM: Memory Manager application at <https://github.com/nasa/MM>
   - SBN: Software Bus Network application at <https://github.com/nasa/SBN>
-  - SC: Stored Commands application at <https://github.com/nasa/SC>
   - SCA: Stored Command Absolute application at <https://github.com/nasa/SCA>
   - Skeleton App: A bare-bones application to which you can add your business logic at <https://github.com/nasa/skeleton_app>
 - Other Interfaces

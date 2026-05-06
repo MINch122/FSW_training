@@ -35,26 +35,13 @@
 #include "sample_app_msgids.h"
 #endif
 
-#ifdef HAVE_HS
-#include "hs_msgids.h"
-#endif
-
 #ifdef HAVE_FM
 #include "fm_msgids.h"
-#endif
-
-#ifdef HAVE_SC
-#include "sc_msgids.h"
 #endif
 
 #ifdef HAVE_DS
 #include "ds_msgids.h"
 #endif
-
-#ifdef HAVE_LC
-#include "lc_msgids.h"
-#endif
-
 
 /**
  * Include the hdr `*_msgids.h` of each app
@@ -152,7 +139,6 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_SB_SEND_HK_MID), 97, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(CFE_EVS_SEND_HK_MID), 96, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_SEND_HK_MID), 1000, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(SC_ONEHZ_WAKEUP_MID), SCH_LAB_TICK_RATE/2, 0}, // 0.5 sec per wakeup
         // {CFE_SB_MSGID_WRAP_VALUE(CI_LAB_WAKEUP_MID), SCH_LAB_TICK_RATE * 10, 0}, // 10 sec per wakeup
 
 /* Example of including additional open source apps */
@@ -165,21 +151,11 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
 #ifdef HAVE_SAMPLE_APP
         // {CFE_SB_MSGID_WRAP_VALUE(SAMPLE_APP_SEND_HK_MID), 93, 0},
 #endif
-#ifdef HAVE_SC
-        {CFE_SB_MSGID_WRAP_VALUE(SC_ONEHZ_WAKEUP_MID), SCH_LAB_TICK_RATE, 0},
-#endif
-#ifdef HAVE_HS
-        {CFE_SB_MSGID_WRAP_VALUE(HS_SEND_HK_MID), SCH_LAB_TICK_RATE * 10, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(HS_WAKEUP_MID), SCH_LAB_TICK_RATE, 0},
-#endif
 #ifdef HAVE_FM
         // {CFE_SB_MSGID_WRAP_VALUE(FM_SEND_HK_MID), 101, 0},
 #endif
 #ifdef HAVE_DS
         // {CFE_SB_MSGID_WRAP_VALUE(DS_SEND_HK_MID), 102, 0},
-#endif
-#ifdef HAVE_LC
-        {CFE_SB_MSGID_WRAP_VALUE(LC_SAMPLE_AP_MID), SCH_LAB_TICK_RATE * 5, 0, 8, {0, 175, 1}},
 #endif
 #ifdef HAVE_TTC
         {CFE_SB_MSGID_WRAP_VALUE(TTC_ONEHZ_WAKEUP_MID), SCH_LAB_TICK_RATE, 0},
