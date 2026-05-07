@@ -123,6 +123,15 @@
         (dst) = (uint8_t)(value != 0); \
     } while (0)
 
+#define EPS_P80_RPARAM_GET_ARRAY(table_id, addr, type, dst, count) \
+    do \
+    { \
+        err = gs_rparam_get_array(csp_node, (table_id), (addr), (type), \
+                                  GS_RPARAM_MAGIC_CHECKSUM, timeout_ms, \
+                                  (dst), sizeof((dst)[0]), (count)); \
+        if (err != GS_OK) return err; \
+    } while (0)
+
 /* ========================================================================== */
 /*  Power Interface Commands                                                  */
 /* ========================================================================== */
@@ -176,6 +185,10 @@ gs_error_t EPS_P80_Drv_PMU_GetHk(uint8_t csp_node, EPS_P80_Drv_PMU_HkTlm_t *hk, 
 {
     const uint8_t table_id = GS_P80_PMU_TELEMETRY_TABLE_MEM_ID;
     EPS_P80_Drv_PMU_HkTlm_t next_hk = {0};
+    uint8_t out_en[6] = {0};
+    int16_t out_i[6] = {0};
+    uint8_t sm_en[8] = {0};
+    int16_t temp[2] = {0};
     gs_error_t err;
 
     if (hk == NULL)
@@ -190,23 +203,19 @@ gs_error_t EPS_P80_Drv_PMU_GetHk(uint8_t csp_node, EPS_P80_Drv_PMU_HkTlm_t *hk, 
     EPS_P80_RPARAM_GET_UINT8 (table_id, GS_P80_PMU_TELEMETRY_BATT_MODE,    next_hk.batt_mode);
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_PMU_TELEMETRY_VBAT_V,       next_hk.vbat_v);
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_PMU_TELEMETRY_VCC_V,        next_hk.vcc_v);
-    EPS_P80_RPARAM_GET_INT16 (table_id, GS_P80_PMU_TELEMETRY_TEMP(0),      next_hk.temp[0]);
-    EPS_P80_RPARAM_GET_INT16 (table_id, GS_P80_PMU_TELEMETRY_TEMP(1),      next_hk.temp[1]);
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_PMU_TELEMETRY_GND_WDT_CNT,  next_hk.gnd_wdt_cnt);
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_PMU_TELEMETRY_BUS_WDT_CNT,  next_hk.bus_wdt_cnt);
     EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_PMU_TELEMETRY_GND_WDT_LEFT, next_hk.gnd_wdt_left);
     EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_PMU_TELEMETRY_BUS_WDT_LEFT, next_hk.bus_wdt_left);
 
-    for (int i = 0; i < 6; i++)
-    {
-        EPS_P80_RPARAM_GET_BOOL (table_id, GS_P80_PMU_TELEMETRY_OUT_EN(i), next_hk.out_en[i]);
-        EPS_P80_RPARAM_GET_INT16(table_id, GS_P80_PMU_TELEMETRY_OUT_I(i),  next_hk.out_i[i]);
-    }
-
-    for (int i = 0; i < 8; i++)
-    {
-        EPS_P80_RPARAM_GET_BOOL(table_id, GS_P80_PMU_TELEMETRY_SM_EN(i), next_hk.sm_en[i]);
-    }
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PMU_TELEMETRY_TEMP(0),   GS_PARAM_INT16, temp,   2);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PMU_TELEMETRY_OUT_EN(0), GS_PARAM_BOOL,  out_en, 6);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PMU_TELEMETRY_OUT_I(0),  GS_PARAM_INT16, out_i,  6);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PMU_TELEMETRY_SM_EN(0),  GS_PARAM_BOOL,  sm_en,  8);
+    memcpy(next_hk.temp, temp, sizeof(next_hk.temp));
+    memcpy(next_hk.out_en, out_en, sizeof(next_hk.out_en));
+    memcpy(next_hk.out_i, out_i, sizeof(next_hk.out_i));
+    memcpy(next_hk.sm_en, sm_en, sizeof(next_hk.sm_en));
 
     *hk = next_hk;
 
@@ -221,6 +230,8 @@ gs_error_t EPS_P80_Drv_PDU_GetHk(uint8_t csp_node, EPS_P80_Drv_PDU_HkTlm_t *hk, 
 {
     const uint8_t table_id = GS_P80_PDU_TELEMETRY_TABLE_MEM_ID;
     EPS_P80_Drv_PDU_HkTlm_t next_hk = {0};
+    uint8_t out_en[24] = {0};
+    int16_t out_i[24] = {0};
     gs_error_t err;
 
     if (hk == NULL)
@@ -240,11 +251,10 @@ gs_error_t EPS_P80_Drv_PDU_GetHk(uint8_t csp_node, EPS_P80_Drv_PDU_HkTlm_t *hk, 
     EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_PDU_TELEMETRY_GND_WDT_LEFT, next_hk.gnd_wdt_left);
     EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_PDU_TELEMETRY_BUS_WDT_LEFT, next_hk.bus_wdt_left);
 
-    for (int i = 0; i < 24; i++)
-    {
-        EPS_P80_RPARAM_GET_BOOL (table_id, GS_P80_PDU_TELEMETRY_OUT_EN(i), next_hk.out_en[i]);
-        EPS_P80_RPARAM_GET_INT16(table_id, GS_P80_PDU_TELEMETRY_OUT_I(i),  next_hk.out_i[i]);
-    }
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PDU_TELEMETRY_OUT_EN(0), GS_PARAM_BOOL,  out_en, 24);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PDU_TELEMETRY_OUT_I(0),  GS_PARAM_INT16, out_i,  24);
+    memcpy(next_hk.out_en, out_en, sizeof(next_hk.out_en));
+    memcpy(next_hk.out_i, out_i, sizeof(next_hk.out_i));
 
     *hk = next_hk;
 
@@ -259,6 +269,9 @@ gs_error_t EPS_P80_Drv_ACU_GetHk(uint8_t csp_node, EPS_P80_Drv_ACU_HkTlm_t *hk, 
 {
     const uint8_t table_id = GS_P80_ACU_TELEMETRY_TABLE_MEM_ID;
     EPS_P80_Drv_ACU_HkTlm_t next_hk = {0};
+    int16_t input_i[6] = {0};
+    uint16_t input_v[6] = {0};
+    int16_t temp[3] = {0};
     gs_error_t err;
 
     if (hk == NULL)
@@ -270,18 +283,16 @@ gs_error_t EPS_P80_Drv_ACU_GetHk(uint8_t csp_node, EPS_P80_Drv_ACU_HkTlm_t *hk, 
     EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_ACU_TELEMETRY_BOOTCOUNT,    next_hk.bootcount);
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_ACU_TELEMETRY_VCC_V,        next_hk.vcc_v);
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_ACU_TELEMETRY_VBAT_V,       next_hk.vbat_v);
-    EPS_P80_RPARAM_GET_INT16 (table_id, GS_P80_ACU_TELEMETRY_TEMP(0),      next_hk.temp[0]);
-    EPS_P80_RPARAM_GET_INT16 (table_id, GS_P80_ACU_TELEMETRY_TEMP(1),      next_hk.temp[1]);
-    EPS_P80_RPARAM_GET_INT16 (table_id, GS_P80_ACU_TELEMETRY_TEMP(2),      next_hk.temp[2]);
     EPS_P80_RPARAM_GET_UINT8 (table_id, GS_P80_ACU_TELEMETRY_MPPT_MODE,    next_hk.mppt_mode);
     EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_ACU_TELEMETRY_GND_WDT_CNT,  next_hk.gnd_wdt_cnt);
     EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_ACU_TELEMETRY_GND_WDT_LEFT, next_hk.gnd_wdt_left);
 
-    for (int i = 0; i < 6; i++)
-    {
-        EPS_P80_RPARAM_GET_INT16 (table_id, GS_P80_ACU_TELEMETRY_INPUT_I(i), next_hk.input_i[i]);
-        EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_ACU_TELEMETRY_INPUT_V(i), next_hk.input_v[i]);
-    }
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_ACU_TELEMETRY_INPUT_I(0), GS_PARAM_INT16,  input_i, 6);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_ACU_TELEMETRY_INPUT_V(0), GS_PARAM_UINT16, input_v, 6);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_ACU_TELEMETRY_TEMP(0),    GS_PARAM_INT16,  temp,    3);
+    memcpy(next_hk.input_i, input_i, sizeof(next_hk.input_i));
+    memcpy(next_hk.input_v, input_v, sizeof(next_hk.input_v));
+    memcpy(next_hk.temp, temp, sizeof(next_hk.temp));
 
     *hk = next_hk;
 
@@ -385,6 +396,9 @@ gs_error_t EPS_P80_Drv_PMU_GetBcn(uint8_t csp_node, EPS_P80_Drv_PMU_BcnTlm_t *bc
 {
     const uint8_t table_id = GS_P80_PMU_TELEMETRY_TABLE_MEM_ID;
     EPS_P80_Drv_PMU_BcnTlm_t next_bcn = {0};
+    uint8_t out_en[6] = {0};
+    int16_t temp[2] = {0};
+    uint8_t sm_en[8] = {0};
     gs_error_t err;
 
     if (bcn == NULL)
@@ -393,25 +407,19 @@ gs_error_t EPS_P80_Drv_PMU_GetBcn(uint8_t csp_node, EPS_P80_Drv_PMU_BcnTlm_t *bc
     EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_PMU_TELEMETRY_BOOTCAUSE,  next_bcn.bootcause);
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_PMU_TELEMETRY_RESETCAUSE, next_bcn.resetcause);
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_PMU_TELEMETRY_BOOTCOUNT,  next_bcn.bootcount);
-    for (int i = 0; i < 6; i++)
-    {
-        EPS_P80_RPARAM_GET_BOOL(table_id, GS_P80_PMU_TELEMETRY_OUT_EN(i), next_bcn.out_en[i]);
-    }
-    for (int i = 0; i < 2; i++)
-    {
-        EPS_P80_RPARAM_GET_INT16(table_id, GS_P80_PMU_TELEMETRY_TEMP(i), next_bcn.temp[i]);
-    }
     EPS_P80_RPARAM_GET_UINT8 (table_id, GS_P80_PMU_TELEMETRY_BATT_MODE, next_bcn.batt_mode);
     EPS_P80_RPARAM_GET_INT16 (table_id, GS_P80_PMU_TELEMETRY_BATT_I,    next_bcn.batt_i);
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_PMU_TELEMETRY_BATT_V,    next_bcn.batt_v);
-    for (int i = 0; i < 8; i++)
-    {
-        EPS_P80_RPARAM_GET_BOOL(table_id, GS_P80_PMU_TELEMETRY_SM_EN(i), next_bcn.sm_en[i]);
-    }
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_PMU_TELEMETRY_GND_WDT_CNT,  next_bcn.gnd_wdt_cnt);
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_PMU_TELEMETRY_BUS_WDT_CNT,  next_bcn.bus_wdt_cnt);
     EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_PMU_TELEMETRY_GND_WDT_LEFT, next_bcn.gnd_wdt_left);
     EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_PMU_TELEMETRY_BUS_WDT_LEFT, next_bcn.bus_wdt_left);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PMU_TELEMETRY_OUT_EN(0), GS_PARAM_BOOL,  out_en, 6);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PMU_TELEMETRY_TEMP(0),   GS_PARAM_INT16, temp,   2);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PMU_TELEMETRY_SM_EN(0),  GS_PARAM_BOOL,  sm_en,  8);
+    memcpy(next_bcn.out_en, out_en, sizeof(next_bcn.out_en));
+    memcpy(next_bcn.temp, temp, sizeof(next_bcn.temp));
+    memcpy(next_bcn.sm_en, sm_en, sizeof(next_bcn.sm_en));
 
     *bcn = next_bcn;
 
@@ -435,15 +443,14 @@ gs_error_t EPS_P80_Drv_PDU_GetBcn(uint8_t csp_node, EPS_P80_Drv_PDU_BcnTlm_t *bc
 {
     const uint8_t table_id = GS_P80_PDU_TELEMETRY_TABLE_MEM_ID;
     EPS_P80_Drv_PDU_BcnTlm_t next_bcn = {0};
+    uint8_t out_en[24] = {0};
     gs_error_t err;
 
     if (bcn == NULL)
         return GS_ERROR_ARG;
 
-    for (int i = 0; i < 24; i++)
-    {
-        EPS_P80_RPARAM_GET_BOOL(table_id, GS_P80_PDU_TELEMETRY_OUT_EN(i), next_bcn.out_en[i]);
-    }
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PDU_TELEMETRY_OUT_EN(0), GS_PARAM_BOOL, out_en, 24);
+    memcpy(next_bcn.out_en, out_en, sizeof(next_bcn.out_en));
 
     *bcn = next_bcn;
 
@@ -465,20 +472,18 @@ gs_error_t EPS_P80_Drv_ACU_GetBcn(uint8_t csp_node, EPS_P80_Drv_ACU_BcnTlm_t *bc
 {
     const uint8_t table_id = GS_P80_ACU_TELEMETRY_TABLE_MEM_ID;
     EPS_P80_Drv_ACU_BcnTlm_t next_bcn = {0};
+    int16_t input_i[6] = {0};
+    uint16_t input_v[6] = {0};
     gs_error_t err;
 
     if (bcn == NULL)
         return GS_ERROR_ARG;
 
-    for (int i = 0; i < 6; i++)
-    {
-        EPS_P80_RPARAM_GET_INT16(table_id, GS_P80_ACU_TELEMETRY_INPUT_I(i), next_bcn.input_i[i]);
-    }
-    for (int i = 0; i < 6; i++)
-    {
-        EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_ACU_TELEMETRY_INPUT_V(i), next_bcn.input_v[i]);
-    }
     EPS_P80_RPARAM_GET_UINT8(table_id, GS_P80_ACU_TELEMETRY_MPPT_MODE, next_bcn.mppt_mode);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_ACU_TELEMETRY_INPUT_I(0), GS_PARAM_INT16,  input_i, 6);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_ACU_TELEMETRY_INPUT_V(0), GS_PARAM_UINT16, input_v, 6);
+    memcpy(next_bcn.input_i, input_i, sizeof(next_bcn.input_i));
+    memcpy(next_bcn.input_v, input_v, sizeof(next_bcn.input_v));
 
     *bcn = next_bcn;
 

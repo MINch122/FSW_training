@@ -54,9 +54,19 @@
         (dst) = value; \
     } while (0)
 
+#define EPS_BP8_RPARAM_GET_ARRAY(addr, type, dst, count) \
+    do \
+    { \
+        err = gs_rparam_get_array(csp_node, EPS_BP8_TABLE_TELEMETRY, (addr), (type), \
+                                  GS_RPARAM_MAGIC_CHECKSUM, timeout_ms, \
+                                  (dst), sizeof((dst)[0]), (count)); \
+        if (err != GS_OK) return err; \
+    } while (0)
+
 gs_error_t EPS_BP8_Drv_GetHk(uint8_t csp_node, EPS_BP8_Drv_HkTlm_t *hk, uint32_t timeout_ms)
 {
     EPS_BP8_Drv_HkTlm_t next_hk = {0};
+    int16_t bat_temp[4] = {0};
     bool bat_fault = false;
     gs_error_t err;
 
@@ -75,10 +85,8 @@ gs_error_t EPS_BP8_Drv_GetHk(uint8_t csp_node, EPS_BP8_Drv_HkTlm_t *hk, uint32_t
     EPS_BP8_RPARAM_GET_UINT16(EPS_BP8_TLM_HEATER_I,     next_hk.HeaterCurrent);
     EPS_BP8_RPARAM_GET_INT16 (EPS_BP8_TLM_INT_TEMP,     next_hk.IntTemp);
     EPS_BP8_RPARAM_GET_FLOAT (EPS_BP8_TLM_BAT_AVR_TEMP, next_hk.BatAvrTemp);
-    EPS_BP8_RPARAM_GET_INT16 (EPS_BP8_TLM_BAT_1_TEMP,   next_hk.BatTemp[0]);
-    EPS_BP8_RPARAM_GET_INT16 (EPS_BP8_TLM_BAT_2_TEMP,   next_hk.BatTemp[1]);
-    EPS_BP8_RPARAM_GET_INT16 (EPS_BP8_TLM_BAT_3_TEMP,   next_hk.BatTemp[2]);
-    EPS_BP8_RPARAM_GET_INT16 (EPS_BP8_TLM_BAT_4_TEMP,   next_hk.BatTemp[3]);
+    EPS_BP8_RPARAM_GET_ARRAY (EPS_BP8_TLM_BAT_1_TEMP,   GS_PARAM_INT16, bat_temp, 4);
+    memcpy(next_hk.BatTemp, bat_temp, sizeof(next_hk.BatTemp));
     EPS_BP8_RPARAM_GET_UINT16(EPS_BP8_TLM_O_VOLT_COUNT, next_hk.OVoltCount);
 
     err = gs_rparam_get(csp_node, EPS_BP8_TABLE_TELEMETRY, EPS_BP8_TLM_BAT_FAULT,
