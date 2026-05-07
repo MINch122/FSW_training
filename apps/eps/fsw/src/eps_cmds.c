@@ -36,6 +36,7 @@
 
 #include <gs/param/internal/types.h>
 #include <gs/param/table.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "eps_p80_drv.h"
@@ -44,11 +45,93 @@
 #define EPS_CSP_PING_DEFAULT_SIZE 1U
 #define EPS_CSP_PING_MAX_SIZE     128U
 
+static void EPS_SendQueryReport(const void *Msg, uint8_t source, uint8_t dataId,
+                                uint8_t arg0, uint8_t arg1,
+                                const void *data, size_t dataSize)
+{
+    const uint8_t *bytes = (const uint8_t *)data;
+    size_t reportSize = (data == NULL) ? 0 : dataSize;
+    size_t offset = 0;
+    uint16_t sequence = 0;
+
+    if (reportSize > UINT16_MAX)
+    {
+        reportSize = UINT16_MAX;
+    }
+
+    do
+    {
+        EPS_Query_Report_Payload_t report = {0};
+        size_t remaining = reportSize - offset;
+        size_t chunkSize = (remaining > sizeof(report.data)) ? sizeof(report.data) : remaining;
+        uint16_t payloadSize = (uint16_t)(sizeof(report) - sizeof(report.data) + chunkSize);
+
+        report.source     = source;
+        report.data_id    = dataId;
+        report.arg0       = arg0;
+        report.arg1       = arg1;
+        report.sequence   = sequence;
+        report.offset     = (uint16_t)offset;
+        report.total_size = (uint16_t)reportSize;
+        report.chunk_size = (uint16_t)chunkSize;
+
+        if (chunkSize > 0)
+        {
+            memcpy(report.data, &bytes[offset], chunkSize);
+        }
+
+        EPS_SendReport(Msg, &report, payloadSize, CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
+
+        offset += chunkSize;
+        sequence++;
+    }
+    while (offset < reportSize);
+}
+
+static void EPS_SendHkQueryReport(const void *Msg, uint8_t cspNode)
+{
+    switch (cspNode)
+    {
+        case EPS_P80_PMU_CSP_NODE:
+            EPS_SendQueryReport(Msg, cspNode, EPS_QUERY_REPORT_P80_PMU_HK, 0, 0,
+                                &EPS_AppData.PMU_HkTlm.Payload, sizeof(EPS_AppData.PMU_HkTlm.Payload));
+            break;
+
+        case EPS_P80_PDU_CSP_NODE:
+            EPS_SendQueryReport(Msg, cspNode, EPS_QUERY_REPORT_P80_PDU_HK, 0, 0,
+                                &EPS_AppData.PDU_HkTlm.Payload, sizeof(EPS_AppData.PDU_HkTlm.Payload));
+            break;
+
+        case EPS_P80_ACU1_CSP_NODE:
+        case EPS_P80_ACU2_CSP_NODE:
+            EPS_SendQueryReport(Msg, cspNode, EPS_QUERY_REPORT_P80_ACU_HK, 0, 0,
+                                &EPS_AppData.ACU_HkTlm.Payload, sizeof(EPS_AppData.ACU_HkTlm.Payload));
+            break;
+
+        case EPS_BP8_CSP_NODE:
+            EPS_SendQueryReport(Msg, cspNode, EPS_QUERY_REPORT_BP8_HK, 0, 0,
+                                &EPS_AppData.BP8_HkTlm.Payload, sizeof(EPS_AppData.BP8_HkTlm.Payload));
+            break;
+
+        default:
+            break;
+    }
+}
+
 CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg)
 {
+    CFE_Status_t status;
+
     (void)Msg;
 
-    EPS_UpdateBcnTlmFromHw();
+    status = EPS_UpdateBcnTlmFromHw();
+    if (status != CFE_SUCCESS)
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: BCN send aborted, hardware fetch failed");
+        return status;
+    }
 
     /* Timestamp and transmit beacon on SB */
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(EPS_AppData.BcnTlm.TelemetryHeader));
@@ -59,13 +142,22 @@ CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg)
 CFE_Status_t EPS_ReportBcnCmd(const EPS_ReportBcnCmd_t *Msg)
 {
     EPS_BcnTlm_Full_Payload_t *bcn = &EPS_AppData.BcnTlm.Payload;
+    CFE_Status_t status;
 
     (void)Msg;
 
-    EPS_UpdateBcnTlmFromHw();
+    status = EPS_UpdateBcnTlmFromHw();
+    if (status != CFE_SUCCESS)
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: BCN report aborted, hardware fetch failed");
+        return status;
+    }
+
     EPS_PrintBcnReport(bcn);
 
-    //EPS_SendReport(Msg, bcn, sizeof(*bcn), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
+    EPS_SendReport(Msg, bcn, sizeof(*bcn), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
     CFE_EVS_SendEvent(EPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "EPS: BCN report sent (%u bytes)", (unsigned)sizeof(*bcn));
@@ -116,6 +208,8 @@ CFE_Status_t EPS_P80_Power_If_Get_Cmd(const EPS_P80_Power_If_Get_Cmd_t *Msg)
     }
 
     EPS_PrintP80PowerIfStatus("EPS: Power Interface Get command succeeded", &status);
+    EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_P80_POWER_IF_STATUS, 0, 0,
+                        &status, sizeof(status));
 
     return CFE_SUCCESS;
 }
@@ -157,6 +251,8 @@ CFE_Status_t EPS_P80_Power_If_List_Cmd(const EPS_P80_Power_If_List_Cmd_t *Msg)
     }
 
     EPS_PrintP80PowerIfList(&list);
+    EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_P80_POWER_IF_LIST, 0, 0,
+                        &list, sizeof(list));
 
     return CFE_SUCCESS;
 }
@@ -189,6 +285,7 @@ CFE_Status_t EPS_Get_HK_Cmd(const EPS_Get_HK_Cmd_t *Msg)
     }
 
     EPS_PrintHk(Msg->Payload.csp_node);
+    EPS_SendHkQueryReport(Msg, Msg->Payload.csp_node);
 
     return CFE_SUCCESS;
 }
@@ -222,6 +319,7 @@ CFE_Status_t EPS_Get_HK_All_Cmd(const EPS_Get_HK_All_Cmd_t *Msg)
         else
         {
             EPS_PrintHk(node);
+            EPS_SendHkQueryReport(Msg, node);
         }
     }
     OS_printf("[EPS] Get HK All DONE success=%u fail=%u\n",
@@ -453,6 +551,11 @@ CFE_Status_t EPS_RParam_Get_Cmd(const EPS_RParam_Get_Cmd_t *Msg)
         OS_printf("%02X ", data[i]);
     OS_printf("\n");
 
+    EPS_RParam_Get_Cmd_Payload_t report = Msg->Payload;
+    memcpy(report.data, data, Msg->Payload.size);
+    EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_RPARAM_VALUE,
+                        Msg->Payload.table_id, Msg->Payload.type, &report, sizeof(report));
+
     return CFE_SUCCESS;
 }
 
@@ -478,6 +581,19 @@ CFE_Status_t EPS_RParam_Get_Full_Table_Cmd(const EPS_RParam_Get_Full_Table_Cmd_t
     }
 
     EPS_PrintRParamFullTable(Msg->Payload.csp_node, Msg->Payload.table_id, &tinst);
+    if (tinst.rows != NULL)
+    {
+        EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_RPARAM_TABLE_ROWS,
+                            Msg->Payload.table_id, 0,
+                            tinst.rows, tinst.row_count * sizeof(*tinst.rows));
+    }
+
+    if (tinst.memory != NULL && tinst.rows != NULL)
+    {
+        size_t memorySize = gs_param_calc_table_size(tinst.rows, tinst.row_count);
+        EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_RPARAM_TABLE_MEMORY,
+                            Msg->Payload.table_id, 0, tinst.memory, memorySize);
+    }
     gs_param_table_free(&tinst);
 
     return CFE_SUCCESS;
@@ -657,7 +773,7 @@ CFE_Status_t EPS_RParam_Save_All_Cmd(const EPS_RParam_Save_All_Cmd_t *Msg)
 /*  CSP Standard Service Commands                                             */
 /* ========================================================================== */
 
-static int EPS_CSP_PrintPs(uint8_t node, uint32_t timeout)
+static int EPS_CSP_PrintPs(const EPS_CSP_PS_Cmd_t *Msg, uint8_t node, uint32_t timeout)
 {
     bool         received_any = false;
     csp_conn_t  *conn         = csp_connect(CSP_PRIO_NORM, node, CSP_PS, 0, 0);
@@ -694,6 +810,8 @@ static int EPS_CSP_PrintPs(uint8_t node, uint32_t timeout)
 
         packet->data[text_len] = 0;
         OS_printf("%s", (char *)packet->data);
+        EPS_SendQueryReport(Msg, node, EPS_QUERY_REPORT_CSP_PS_TEXT, 0, 0,
+                            packet->data, text_len);
 
         csp_buffer_free(packet);
         packet = NULL;
@@ -713,7 +831,7 @@ CFE_Status_t EPS_CSP_PS_Cmd(const EPS_CSP_PS_Cmd_t *Msg)
     int         err    = 0;
 
     OS_printf("[EPS] CSP PS BEGIN device=%s node=%u\n", device, Msg->Payload.csp_node);
-    err = EPS_CSP_PrintPs(Msg->Payload.csp_node, CSP_TIMEOUT(1));
+    err = EPS_CSP_PrintPs(Msg, Msg->Payload.csp_node, CSP_TIMEOUT(1));
     if (err != CSP_ERR_NONE)
     {
         EPS_AppData.Counters.ErrCounter++;
@@ -749,6 +867,8 @@ CFE_Status_t EPS_CSP_MemFree_Cmd(const EPS_CSP_MemFree_Cmd_t *Msg)
 
     OS_printf("[EPS] CSP MemFree OK device=%s node=%u bytes=%lu\n",
               device, Msg->Payload.csp_node, (unsigned long)memfree);
+    EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_CSP_MEMFREE, 0, 0,
+                        &memfree, sizeof(memfree));
 
     return CFE_SUCCESS;
 }
@@ -773,6 +893,8 @@ CFE_Status_t EPS_CSP_BufFree_Cmd(const EPS_CSP_BufFree_Cmd_t *Msg)
 
     OS_printf("[EPS] CSP BufFree OK device=%s node=%u buffers=%lu\n",
               device, Msg->Payload.csp_node, (unsigned long)buf_free);
+    EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_CSP_BUF_FREE, 0, 0,
+                        &buf_free, sizeof(buf_free));
 
     return CFE_SUCCESS;
 }
@@ -797,6 +919,8 @@ CFE_Status_t EPS_CSP_Uptime_Cmd(const EPS_CSP_Uptime_Cmd_t *Msg)
 
     OS_printf("[EPS] CSP Uptime OK device=%s node=%u seconds=%lu\n",
               device, Msg->Payload.csp_node, (unsigned long)uptime);
+    EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_CSP_UPTIME, 0, 0,
+                        &uptime, sizeof(uptime));
 
     return CFE_SUCCESS;
 }
@@ -832,6 +956,9 @@ CFE_Status_t EPS_CSP_Ping_Cmd(const EPS_CSP_Ping_Cmd_t *Msg)
 
     OS_printf("[EPS] CSP Ping OK device=%s node=%u size=%u opts=0x%02X rtt=%d ms\n",
               device, Msg->Payload.csp_node, size, Msg->Payload.opts, elapsed_ms);
+    int32_t elapsedReport = elapsed_ms;
+    EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_CSP_PING_MS, 0, 0,
+                        &elapsedReport, sizeof(elapsedReport));
 
     return CFE_SUCCESS;
 }

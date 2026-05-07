@@ -5,6 +5,89 @@
   ],
   "packets": [
     {
+      "app": "CFE_ES",
+      "name": "Housekeeping",
+      "mid": "0x0800",
+      "description": "cFE Executive Services housekeeping telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "CommandCounter", "type": "uint8" },
+        { "name": "CommandErrorCounter", "type": "uint8" },
+        { "name": "CFECoreChecksum", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "CFEMajorVersion", "type": "uint8" },
+        { "name": "CFEMinorVersion", "type": "uint8" },
+        { "name": "CFERevision", "type": "uint8" },
+        { "name": "CFEMissionRevision", "type": "uint8" },
+        { "name": "OSALMajorVersion", "type": "uint8" },
+        { "name": "OSALMinorVersion", "type": "uint8" },
+        { "name": "OSALRevision", "type": "uint8" },
+        { "name": "OSALMissionRevision", "type": "uint8" },
+        { "name": "PSPMajorVersion", "type": "uint8" },
+        { "name": "PSPMinorVersion", "type": "uint8" },
+        { "name": "PSPRevision", "type": "uint8" },
+        { "name": "PSPMissionRevision", "type": "uint8" },
+        { "name": "SysLogBytesUsed", "type": "uint32" },
+        { "name": "SysLogSize", "type": "uint32" },
+        { "name": "SysLogEntries", "type": "uint32" },
+        {
+          "name": "SysLogMode",
+          "type": "enum",
+          "storage": "uint32",
+          "values": {
+            "OVERWRITE": 0,
+            "DISCARD": 1
+          }
+        },
+        { "name": "ERLogIndex", "type": "uint32" },
+        { "name": "ERLogEntries", "type": "uint32" },
+        { "name": "RegisteredCoreApps", "type": "uint32" },
+        { "name": "RegisteredExternalApps", "type": "uint32" },
+        { "name": "RegisteredTasks", "type": "uint32" },
+        { "name": "RegisteredLibs", "type": "uint32" },
+        {
+          "name": "ResetType",
+          "type": "enum",
+          "storage": "uint32",
+          "values": {
+            "PROCESSOR": 1,
+            "POWERON": 2
+          }
+        },
+        { "name": "ResetSubtype", "type": "uint32" },
+        { "name": "ProcessorResets", "type": "uint32" },
+        { "name": "MaxProcessorResets", "type": "uint32" },
+        { "name": "BootSource", "type": "uint32" },
+        { "name": "PerfState", "type": "uint32" },
+        { "name": "PerfMode", "type": "uint32" },
+        { "name": "PerfTriggerCount", "type": "uint32" },
+        { "name": "PerfFilterMask", "type": "uint32", "count": 4, "format": "hex", "hex_digits": 8 },
+        { "name": "PerfTriggerMask", "type": "uint32", "count": 4, "format": "hex", "hex_digits": 8 },
+        { "name": "PerfDataStart", "type": "uint32" },
+        { "name": "PerfDataEnd", "type": "uint32" },
+        { "name": "PerfDataCount", "type": "uint32" },
+        { "name": "PerfDataToWrite", "type": "uint32" },
+        { "name": "HeapBytesFree", "type": "uint32" },
+        { "name": "HeapBlocksFree", "type": "uint32" },
+        { "name": "HeapMaxBlockSize", "type": "uint32" }
+      ]
+    },
+    {
+      "app": "CFE_ES",
+      "name": "App Info",
+      "mid": "0x0801",
+      "description": "cFE Executive Services single-application info telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": []
+    },
+    {
+      "app": "CFE_ES",
+      "name": "Memory Pool Stats",
+      "mid": "0x0802",
+      "description": "cFE Executive Services memory pool statistics telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": []
+    },
+    {
       "app": "PAYUEL_CAM",
       "name": "Beacon",
       "mid": "0x08C5",
@@ -234,6 +317,46 @@
         { "name": "TimeSeconds", "type": "uint32", "units": "s" },
         { "name": "TimeSubseconds", "type": "uint32", "format": "hex", "hex_digits": 8 }
       ]
+    },
+    {
+      "app": "FM",
+      "name": "File Info",
+      "mid": "0x0815",
+      "description": "File Manager file information telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": []
+    },
+    {
+      "app": "FM",
+      "name": "Directory List",
+      "mid": "0x0816",
+      "description": "File Manager directory listing telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": []
+    },
+    {
+      "app": "FM",
+      "name": "Open Files",
+      "mid": "0x0817",
+      "description": "File Manager open-file listing telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": []
+    },
+    {
+      "app": "FM",
+      "name": "Free Space",
+      "mid": "0x0818",
+      "description": "File Manager free-space telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": []
+    },
+    {
+      "app": "HK",
+      "name": "Combined Packet 1",
+      "mid": "0x081A",
+      "description": "Housekeeping combined beacon packet",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": []
     }
   ]
 }

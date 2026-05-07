@@ -10,6 +10,7 @@
 #include "to_lab_tbl.h"
 
 #include "rpt_msgids.h"
+#include "eps_msgids.h"
 #include "hk_msgids.h"
 
 void TO_LAB_ForwardTelemetryRF(void) {
@@ -48,6 +49,7 @@ void TO_LAB_ForwardTelemetryRF(void) {
             switch (CFE_SB_MsgIdToValue(MsgId)) {
                 case (CFE_SB_MsgId_Atom_t)RPT_REPORT_TLM_MID:
                 case (CFE_SB_MsgId_Atom_t)RPT_CRITICAL_TLM_MID:
+                case (CFE_SB_MsgId_Atom_t)EPS_REPORT_MID:
                     Port = CFE_RF_DPORT_RPT;
                     break;
                 case (CFE_SB_MsgId_Atom_t)HK_COMBINED_PKT1_MID:

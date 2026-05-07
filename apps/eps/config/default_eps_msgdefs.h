@@ -26,6 +26,7 @@
 
 #include "common_types.h"
 #include "default_eps_fcncodes.h"
+#include "rpt_interface_cfg.h"
 
 #define EPS_P80_POWER_IF_NAME_LEN 8
 
@@ -35,6 +36,46 @@
 /* Matches libgscsp RPARAM store/slot fields: 25 chars plus NUL. */
 #define EPS_RPARAM_STORE_NAME_LEN 26
 #define EPS_RPARAM_STORE_SLOT_LEN 26
+
+/*
+ * EPS query command report envelope.
+ *
+ * These payloads are carried inside RPT_Report_t.ReturnValue for EPS commands
+ * whose successful response data used to be printed only through OS_printf().
+ */
+#define EPS_QUERY_REPORT_HEADER_SIZE   12
+#define EPS_QUERY_REPORT_DATA_MAX_LEN  (RPT_RET_VALUE_BUF_SIZE - EPS_QUERY_REPORT_HEADER_SIZE)
+
+typedef enum
+{
+    EPS_QUERY_REPORT_P80_POWER_IF_STATUS = 1,
+    EPS_QUERY_REPORT_P80_POWER_IF_LIST   = 2,
+    EPS_QUERY_REPORT_P80_PMU_HK          = 3,
+    EPS_QUERY_REPORT_P80_PDU_HK          = 4,
+    EPS_QUERY_REPORT_P80_ACU_HK          = 5,
+    EPS_QUERY_REPORT_BP8_HK              = 6,
+    EPS_QUERY_REPORT_RPARAM_VALUE        = 7,
+    EPS_QUERY_REPORT_RPARAM_TABLE_ROWS   = 8,
+    EPS_QUERY_REPORT_RPARAM_TABLE_MEMORY = 9,
+    EPS_QUERY_REPORT_CSP_PING_MS         = 10,
+    EPS_QUERY_REPORT_CSP_PS_TEXT         = 11,
+    EPS_QUERY_REPORT_CSP_MEMFREE         = 12,
+    EPS_QUERY_REPORT_CSP_BUF_FREE        = 13,
+    EPS_QUERY_REPORT_CSP_UPTIME          = 14
+} EPS_Query_Report_DataId_t;
+
+typedef struct EPS_PACK
+{
+    uint8  source;      /* CSP node for hardware query reports. */
+    uint8  data_id;     /* EPS_Query_Report_DataId_t */
+    uint8  arg0;        /* Command-specific: RPARAM table id when applicable. */
+    uint8  arg1;        /* Command-specific: RPARAM type when applicable. */
+    uint16 sequence;    /* Chunk sequence, starting at 0. */
+    uint16 offset;      /* Byte offset into the full command result. */
+    uint16 total_size;  /* Full result size in bytes. */
+    uint16 chunk_size;  /* Valid bytes in data[]. */
+    uint8  data[EPS_QUERY_REPORT_DATA_MAX_LEN];
+} EPS_Query_Report_Payload_t;
 
 
 

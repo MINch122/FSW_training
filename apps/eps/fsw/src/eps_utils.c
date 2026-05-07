@@ -539,9 +539,15 @@ void EPS_SendReport(const void *cmd, const void *data, uint16 dataSize, int32 re
 {
     CFE_SB_MsgId_t    cmdMid;
     CFE_MSG_FcnCode_t cmdCode;
+    uint16            copySize = 0;
 
     CFE_MSG_GetMsgId(cmd, &cmdMid);
     CFE_MSG_GetFcnCode(cmd, &cmdCode);
+
+    if (data != NULL && dataSize > 0)
+    {
+        copySize = (dataSize > RPT_RET_VALUE_BUF_SIZE) ? RPT_RET_VALUE_BUF_SIZE : dataSize;
+    }
 
     CFE_MSG_Init(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader), CFE_SB_ValueToMsgId(EPS_REPORT_MID),
                  sizeof(EPS_AppData.Report));
@@ -549,11 +555,11 @@ void EPS_SendReport(const void *cmd, const void *data, uint16 dataSize, int32 re
     EPS_AppData.Report.Payload.CommandCode    = cmdCode;
     EPS_AppData.Report.Payload.ReturnType     = retType;
     EPS_AppData.Report.Payload.ReturnCode     = retCode;
-    EPS_AppData.Report.Payload.ReturnDataSize = dataSize;
-    if (data && dataSize)
+    EPS_AppData.Report.Payload.ReturnDataSize = copySize;
+    memset(EPS_AppData.Report.Payload.ReturnValue, 0, sizeof(EPS_AppData.Report.Payload.ReturnValue));
+    if (copySize > 0)
     {
-        memcpy(EPS_AppData.Report.Payload.ReturnValue, data,
-               dataSize > RPT_RET_VALUE_BUF_SIZE ? RPT_RET_VALUE_BUF_SIZE : dataSize);
+        memcpy(EPS_AppData.Report.Payload.ReturnValue, data, copySize);
     }
     CFE_SB_TransmitMsg(CFE_MSG_PTR(EPS_AppData.Report.TelemetryHeader), true);
 }
@@ -566,16 +572,19 @@ CFE_Status_t EPS_ReportAppDataCmd(const EPS_ReportAppDataCmd_t *Msg)
     return CFE_SUCCESS;
 }
 
-void EPS_UpdateBcnTlmFromHw(void)
+CFE_Status_t EPS_UpdateBcnTlmFromHw(void)
 {
-    EPS_BcnTlm_Full_Payload_t *bcn = &EPS_AppData.BcnTlm.Payload;
+    EPS_BcnTlm_Full_Payload_t next_bcn = {0};
+    EPS_BcnTlm_Full_Payload_t *bcn = &next_bcn;
     gs_error_t err;
+    uint8_t fail_count = 0;
 
     /* --- PMU Beacon (node 1) --- */
     EPS_P80_Drv_PMU_BcnTlm_t pmu_bcn = {0};
     err = EPS_P80_Drv_PMU_GetBcn(EPS_P80_PMU_CSP_NODE, &pmu_bcn, CSP_TIMEOUT(1));
     if (err != GS_OK)
     {
+        fail_count++;
         EPS_AppData.Counters.GetBcnErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: BCN PMU fetch failed, err=%d", err);
@@ -603,6 +612,7 @@ void EPS_UpdateBcnTlmFromHw(void)
     err = EPS_P80_Drv_PDU_GetBcn(EPS_P80_PDU_CSP_NODE, &pdu_bcn, CSP_TIMEOUT(1));
     if (err != GS_OK)
     {
+        fail_count++;
         EPS_AppData.Counters.GetBcnErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: BCN PDU fetch failed, err=%d", err);
@@ -620,6 +630,7 @@ void EPS_UpdateBcnTlmFromHw(void)
         err = EPS_P80_Drv_ACU_GetBcn(AcuNodes[acu], &acu_bcn, CSP_TIMEOUT(1));
         if (err != GS_OK)
         {
+            fail_count++;
             EPS_AppData.Counters.GetBcnErrCounter++;
             CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                               "EPS: BCN ACU%u fetch failed, node=%u, err=%d",
@@ -638,6 +649,7 @@ void EPS_UpdateBcnTlmFromHw(void)
     err = EPS_BP8_Drv_GetHk(EPS_BP8_CSP_NODE, &bp8_hk, CSP_TIMEOUT(1));
     if (err != GS_OK)
     {
+        fail_count++;
         EPS_AppData.Counters.GetBcnErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: BCN BP8 fetch failed, err=%d", err);
@@ -653,4 +665,15 @@ void EPS_UpdateBcnTlmFromHw(void)
         bcn->BP8.current      = bp8_hk.Current;
         bcn->BP8.heater_i     = bp8_hk.HeaterCurrent;
     }
+
+    if (fail_count > 0)
+    {
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: BCN update failed on %u node(s), telemetry not updated",
+                          (unsigned int)fail_count);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    EPS_AppData.BcnTlm.Payload = next_bcn;
+    return CFE_SUCCESS;
 }

@@ -880,7 +880,7 @@ class TelemetryDialog(QDialog):
         super().__init__(parent)
         self._packet = packet or {}
         self.setWindowTitle('Edit Telemetry Definition' if packet else 'Add Telemetry Definition')
-        self.setMinimumWidth(760)
+        self.setMinimumWidth(1120)
         self.setMinimumHeight(620)
         self._build(existing_apps)
 
@@ -917,33 +917,216 @@ class TelemetryDialog(QDialog):
         root.addLayout(form)
 
         help_lbl = QLabel(
-            'Fields JSON must be an array. Each item supports keys like '
-            '`name`, `type`, `length`, `count`, `storage`, `values`, `format`, '
-            '`units`, `scale`, `display_length_from`, `hidden`.'
+            'Define telemetry payload fields in packet order. Length/count can be numeric '
+            'or mission constants; Values JSON is used for enum labels.'
         )
         help_lbl.setWordWrap(True)
         help_lbl.setStyleSheet('color:#777;')
         root.addWidget(help_lbl)
 
-        self.fields_edit = QTextEdit()
-        self.fields_edit.setFont(QFont('Courier', 9))
-        self.fields_edit.setPlaceholderText(
-            '[\n'
-            '  { "name": "State", "type": "uint8" },\n'
-            '  { "name": "Counter", "type": "uint16" }\n'
-            ']'
+        self.field_table = QTableWidget(0, 11)
+        self.field_table.setHorizontalHeaderLabels(
+            [
+                'Name', 'Type', 'Length', 'Count', 'Storage', 'Values JSON',
+                'Format', 'Units', 'Scale', 'Display Len From', 'Hidden',
+            ]
         )
-        fields_text = json.dumps(self._packet.get('fields', [
-            {'name': 'State', 'type': 'uint8'},
-            {'name': 'Counter', 'type': 'uint16'},
-        ]), indent=2)
-        self.fields_edit.setPlainText(fields_text)
-        root.addWidget(self.fields_edit, 1)
+        hh = self.field_table.horizontalHeader()
+        for col in range(self.field_table.columnCount()):
+            hh.setSectionResizeMode(col, QHeaderView.ResizeToContents)
+        hh.setSectionResizeMode(5, QHeaderView.Stretch)
+        self.field_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        root.addWidget(self.field_table, 1)
+
+        fields = self._packet.get('fields')
+        if fields is None:
+            fields = [
+                {'name': 'State', 'type': 'uint8'},
+                {'name': 'Counter', 'type': 'uint16'},
+            ]
+        for field_def in fields:
+            self._add_row(field_def)
+
+        btn_row = QHBoxLayout()
+        add_f = QPushButton('+ Add Field')
+        add_f.clicked.connect(lambda: self._add_row())
+        rm_f = QPushButton('Remove Selected')
+        rm_f.clicked.connect(self._remove_rows)
+        up_f = QPushButton('▲')
+        up_f.setFixedWidth(30)
+        up_f.clicked.connect(self._move_up)
+        dn_f = QPushButton('▼')
+        dn_f.setFixedWidth(30)
+        dn_f.clicked.connect(self._move_down)
+        btn_row.addWidget(add_f)
+        btn_row.addWidget(rm_f)
+        btn_row.addWidget(up_f)
+        btn_row.addWidget(dn_f)
+        btn_row.addStretch()
+        root.addLayout(btn_row)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self._validate_and_accept)
         buttons.rejected.connect(self.reject)
         root.addWidget(buttons)
+
+    def _add_row(self, field_def: dict = None) -> None:
+        field_def = dict(field_def or {'name': 'Field', 'type': 'uint8'})
+        row = self.field_table.rowCount()
+        self.field_table.insertRow(row)
+
+        self.field_table.setItem(row, 0, QTableWidgetItem(str(field_def.get('name', ''))))
+
+        type_cb = QComboBox()
+        type_cb.addItems(ALL_TYPES)
+        type_cb.setCurrentText(str(field_def.get('type', 'uint8')))
+        self.field_table.setCellWidget(row, 1, type_cb)
+
+        self.field_table.setItem(row, 2, QTableWidgetItem(str(field_def.get('length', ''))))
+        self.field_table.setItem(row, 3, QTableWidgetItem(str(field_def.get('count', ''))))
+
+        storage_cb = QComboBox()
+        storage_cb.addItem('')
+        storage_cb.addItems(list(SCALAR_TYPES.keys()))
+        storage_cb.setCurrentText(str(field_def.get('storage', '')))
+        self.field_table.setCellWidget(row, 4, storage_cb)
+
+        values = field_def.get('values', '')
+        values_text = json.dumps(values, separators=(', ', ': ')) if isinstance(values, dict) else str(values)
+        self.field_table.setItem(row, 5, QTableWidgetItem(values_text))
+        self.field_table.setItem(row, 6, QTableWidgetItem(str(field_def.get('format', ''))))
+        self.field_table.setItem(row, 7, QTableWidgetItem(str(field_def.get('units', ''))))
+        self.field_table.setItem(row, 8, QTableWidgetItem(str(field_def.get('scale', ''))))
+        self.field_table.setItem(row, 9, QTableWidgetItem(str(field_def.get('display_length_from', ''))))
+
+        hidden_item = QTableWidgetItem('')
+        hidden_item.setFlags(hidden_item.flags() | Qt.ItemIsUserCheckable)
+        hidden_item.setCheckState(Qt.Checked if field_def.get('hidden', False) else Qt.Unchecked)
+        self.field_table.setItem(row, 10, hidden_item)
+
+    def _remove_rows(self) -> None:
+        rows = sorted({idx.row() for idx in self.field_table.selectedIndexes()}, reverse=True)
+        for row in rows:
+            self.field_table.removeRow(row)
+
+    def _move_up(self) -> None:
+        rows = sorted({idx.row() for idx in self.field_table.selectedIndexes()})
+        if not rows or rows[0] == 0:
+            return
+        fields = self._collect_fields(show_errors=False)
+        for row in rows:
+            fields[row - 1], fields[row] = fields[row], fields[row - 1]
+        self._replace_fields(fields)
+        for row in rows:
+            self.field_table.selectRow(row - 1)
+
+    def _move_down(self) -> None:
+        rows = sorted({idx.row() for idx in self.field_table.selectedIndexes()}, reverse=True)
+        if not rows or rows[0] == self.field_table.rowCount() - 1:
+            return
+        fields = self._collect_fields(show_errors=False)
+        for row in rows:
+            fields[row + 1], fields[row] = fields[row], fields[row + 1]
+        self._replace_fields(fields)
+        for row in rows:
+            self.field_table.selectRow(row + 1)
+
+    def _replace_fields(self, fields: List[dict]) -> None:
+        self.field_table.setRowCount(0)
+        for field_def in fields:
+            self._add_row(field_def)
+
+    @staticmethod
+    def _parse_optional_int_expr(text: str):
+        text = text.strip()
+        if not text:
+            return None
+        try:
+            return int(text, 0)
+        except ValueError:
+            return text
+
+    @staticmethod
+    def _parse_optional_scale(text: str):
+        text = text.strip()
+        if not text:
+            return None
+        try:
+            value = float(text)
+        except ValueError as exc:
+            raise ValueError(f'scale must be numeric, got {text!r}') from exc
+        return int(value) if value.is_integer() else value
+
+    def _item_text(self, row: int, col: int) -> str:
+        item = self.field_table.item(row, col)
+        return item.text().strip() if item is not None else ''
+
+    def _collect_fields(self, show_errors: bool) -> List[dict]:
+        fields: List[dict] = []
+        for row in range(self.field_table.rowCount()):
+            type_cb = self.field_table.cellWidget(row, 1)
+            storage_cb = self.field_table.cellWidget(row, 4)
+            hidden_item = self.field_table.item(row, 10)
+
+            name = self._item_text(row, 0)
+            ptype = type_cb.currentText().strip() if isinstance(type_cb, QComboBox) else 'uint8'
+            hidden = hidden_item.checkState() == Qt.Checked if hidden_item is not None else False
+
+            if show_errors and not name and not hidden:
+                raise ValueError(f'Field #{row + 1} is missing a name')
+            if show_errors and ptype not in ALL_TYPES:
+                raise ValueError(f'Field #{row + 1} has unknown type {ptype!r}')
+
+            field_def: dict = {}
+            if name:
+                field_def['name'] = name
+            field_def['type'] = ptype
+
+            length = self._parse_optional_int_expr(self._item_text(row, 2))
+            count = self._parse_optional_int_expr(self._item_text(row, 3))
+            if length is not None:
+                field_def['length'] = length
+            if count is not None:
+                field_def['count'] = count
+
+            storage = storage_cb.currentText().strip() if isinstance(storage_cb, QComboBox) else ''
+            if storage:
+                if show_errors and storage not in SCALAR_TYPES:
+                    raise ValueError(f'Field #{row + 1} has unknown storage type {storage!r}')
+                field_def['storage'] = storage
+
+            values_text = self._item_text(row, 5)
+            if values_text:
+                try:
+                    values = json.loads(values_text)
+                except Exception as exc:
+                    if show_errors:
+                        raise ValueError(f'Field #{row + 1} values JSON: {exc}') from exc
+                    values = values_text
+                if show_errors and not isinstance(values, dict):
+                    raise ValueError(f'Field #{row + 1} values JSON must be an object')
+                field_def['values'] = values
+
+            for col, key in ((6, 'format'), (7, 'units'), (9, 'display_length_from')):
+                value = self._item_text(row, col)
+                if value:
+                    parsed = self._parse_optional_int_expr(value) if key == 'display_length_from' else value
+                    field_def[key] = parsed
+
+            try:
+                scale = self._parse_optional_scale(self._item_text(row, 8))
+            except ValueError:
+                if show_errors:
+                    raise
+                scale = self._item_text(row, 8)
+            if scale is not None:
+                field_def['scale'] = scale
+
+            if hidden:
+                field_def['hidden'] = True
+
+            fields.append(field_def)
+        return fields
 
     def _validate_and_accept(self) -> None:
         if not self.app_combo.currentText().strip():
@@ -968,37 +1151,21 @@ class TelemetryDialog(QDialog):
             return
 
         try:
-            fields = json.loads(self.fields_edit.toPlainText() or '[]')
-        except Exception as exc:
-            QMessageBox.warning(self, 'Invalid Fields JSON', str(exc))
+            self._collect_fields(show_errors=True)
+        except ValueError as exc:
+            QMessageBox.warning(self, 'Invalid Field', str(exc))
             return
-
-        if not isinstance(fields, list):
-            QMessageBox.warning(self, 'Invalid Fields JSON', 'Fields must be a JSON array.')
-            return
-
-        for idx, field_def in enumerate(fields):
-            if not isinstance(field_def, dict):
-                QMessageBox.warning(self, 'Invalid Field', f'Field #{idx + 1} must be a JSON object.')
-                return
-            if 'type' not in field_def:
-                QMessageBox.warning(self, 'Invalid Field', f'Field #{idx + 1} is missing `type`.')
-                return
-            if 'name' not in field_def and not field_def.get('hidden', False):
-                QMessageBox.warning(self, 'Invalid Field', f'Field #{idx + 1} is missing `name`.')
-                return
 
         self.accept()
 
     def get_packet_dict(self) -> dict:
-        fields = json.loads(self.fields_edit.toPlainText() or '[]')
         return {
             'app': self.app_combo.currentText().strip(),
             'name': self.name_edit.text().strip(),
             'mid': self.mid_edit.text().strip(),
             'payload_offset': self.offset_edit.text().strip(),
             'description': self.desc_edit.text().strip(),
-            'fields': fields,
+            'fields': self._collect_fields(show_errors=True),
         }
 
 
@@ -1170,6 +1337,7 @@ class MainWindow(QMainWindow):
         QApplication.instance().setPalette(make_palette(dark))
         self.cmd_panel.apply_theme(dark)
         self._populate_tree(self.search_edit.text())
+        self._populate_tlm_tree()
 
         if dark:
             self.delete_btn.setStyleSheet('''
@@ -1352,6 +1520,54 @@ class MainWindow(QMainWindow):
         root.setContentsMargins(4, 4, 4, 4)
         root.setSpacing(4)
 
+        defs_hdr = QHBoxLayout()
+        defs_hdr.addWidget(QLabel('Telemetry definitions (telemetry.json)'))
+        defs_hdr.addStretch()
+
+        add_tlm_btn = QPushButton('Add')
+        add_tlm_btn.setFixedWidth(55)
+        add_tlm_btn.setToolTip('Add a telemetry packet definition to telemetry.json')
+        add_tlm_btn.clicked.connect(self._add_telemetry_def)
+        defs_hdr.addWidget(add_tlm_btn)
+
+        self.edit_tlm_btn = QPushButton('Edit')
+        self.edit_tlm_btn.setFixedWidth(55)
+        self.edit_tlm_btn.setEnabled(False)
+        self.edit_tlm_btn.setToolTip('Edit the selected telemetry packet definition')
+        self.edit_tlm_btn.clicked.connect(self._edit_telemetry_def)
+        defs_hdr.addWidget(self.edit_tlm_btn)
+
+        self.delete_tlm_btn = QPushButton('Delete')
+        self.delete_tlm_btn.setFixedWidth(65)
+        self.delete_tlm_btn.setEnabled(False)
+        self.delete_tlm_btn.setToolTip('Delete the selected telemetry packet definition')
+        self.delete_tlm_btn.clicked.connect(self._delete_telemetry_def)
+        defs_hdr.addWidget(self.delete_tlm_btn)
+
+        reload_tlm_btn = QPushButton('Reload')
+        reload_tlm_btn.setFixedWidth(65)
+        reload_tlm_btn.setToolTip('Reload commands and telemetry definitions from disk')
+        reload_tlm_btn.clicked.connect(self._load_commands)
+        defs_hdr.addWidget(reload_tlm_btn)
+        root.addLayout(defs_hdr)
+
+        defs_split = QSplitter(Qt.Horizontal)
+        self.tlm_tree = QTreeWidget()
+        self.tlm_tree.setHeaderHidden(True)
+        self.tlm_tree.setIndentation(14)
+        self.tlm_tree.currentItemChanged.connect(self._tlm_tree_current_changed)
+        self.tlm_tree.itemDoubleClicked.connect(lambda *_: self._edit_telemetry_def())
+        defs_split.addWidget(self.tlm_tree)
+
+        self.tlm_schema = QTextEdit()
+        self.tlm_schema.setReadOnly(True)
+        self.tlm_schema.setFont(QFont('Courier', 9))
+        defs_split.addWidget(self.tlm_schema)
+        defs_split.setStretchFactor(0, 1)
+        defs_split.setStretchFactor(1, 2)
+        defs_split.setSizes([320, 680])
+        root.addWidget(defs_split, 1)
+
         live_hdr = QHBoxLayout()
         live_hdr.addWidget(QLabel('Received telemetry packets (all payload bytes shown)'))
         live_hdr.addStretch()
@@ -1372,7 +1588,7 @@ class MainWindow(QMainWindow):
         self.tlm_edit = QTextEdit()
         self.tlm_edit.setReadOnly(True)
         self.tlm_edit.setFont(QFont('Courier', 9))
-        root.addWidget(self.tlm_edit)
+        root.addWidget(self.tlm_edit, 1)
 
         return w
 
@@ -1407,6 +1623,15 @@ class MainWindow(QMainWindow):
     def _update_tlm_actions(self) -> None:
         if hasattr(self, 'subscribe_all_btn'):
             self.subscribe_all_btn.setEnabled(self.conn.is_connected and bool(self.telemetry_defs))
+        self._update_tlm_def_buttons()
+
+    def _update_tlm_def_buttons(self) -> None:
+        selected = self._get_selected_tlm_def()
+        enabled = selected is not None
+        if hasattr(self, 'edit_tlm_btn'):
+            self.edit_tlm_btn.setEnabled(enabled)
+        if hasattr(self, 'delete_tlm_btn'):
+            self.delete_tlm_btn.setEnabled(enabled)
 
     def _populate_tlm_tree(self) -> None:
         if not hasattr(self, 'tlm_tree'):
@@ -1421,6 +1646,7 @@ class MainWindow(QMainWindow):
             placeholder.setForeground(0, QColor('#555' if dark else '#999'))
             placeholder.setFlags(Qt.NoItemFlags)
             self.tlm_tree.addTopLevelItem(placeholder)
+            self._update_tlm_def_buttons()
             return
 
         apps: Dict[str, QTreeWidgetItem] = {}
@@ -1442,6 +1668,7 @@ class MainWindow(QMainWindow):
 
         for item in apps.values():
             item.setExpanded(True)
+        self._update_tlm_def_buttons()
 
     def _tlm_tree_current_changed(self, current: QTreeWidgetItem, _prev: QTreeWidgetItem) -> None:
         tlm_def = current.data(0, Qt.UserRole) if current is not None else None
@@ -1449,6 +1676,7 @@ class MainWindow(QMainWindow):
             self.tlm_schema.setPlainText(self._render_tlm_definition(tlm_def))
         else:
             self.tlm_schema.clear()
+        self._update_tlm_def_buttons()
 
     @staticmethod
     def _render_tlm_definition(tlm_def: TelemetryDef) -> str:
@@ -1462,6 +1690,9 @@ class MainWindow(QMainWindow):
             lines.append(f'Description:   {tlm_def.description}')
         lines.append('')
         lines.append('Fields:')
+
+        if not tlm_def.fields:
+            lines.append('- <raw payload only>')
 
         for field_def in tlm_def.fields:
             name = field_def.get('name', '<unnamed>')
@@ -2152,7 +2383,8 @@ class MainWindow(QMainWindow):
                 )
             else:
                 line = (
-                    f'{header}<span style="color:{c["tlm_name"]}">Unregistered telemetry</span><br>'
+                    f'{header}<span style="color:{c["tlm_name"]}">TO/Raw Telemetry</span> '
+                    f'<span style="color:{c["tlm_meta"]}">(no CACTUS decoder registered)</span><br>'
                     f'&nbsp;&nbsp;<span style="color:{c["tlm_hex"]}">'
                     f'payload@{payload_offset} ({len(payload)}B): {payload_hex}</span><br>'
                     f'&nbsp;&nbsp;<span style="color:{c["tlm_raw"]}">'

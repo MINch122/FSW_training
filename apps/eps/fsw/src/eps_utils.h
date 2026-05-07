@@ -39,7 +39,7 @@
 
 CFE_Status_t EPS_TblValidationFunc(void *TblData);
 void         EPS_GetCrc(const char *TableName);
-void         EPS_UpdateBcnTlmFromHw(void);
+CFE_Status_t EPS_UpdateBcnTlmFromHw(void);
 void         EPS_SendReport(const void *cmd, const void *data, uint16 dataSize, int32 retCode, uint8 retType);
 const char  *EPS_GetCspNodeDeviceName(uint8 cspNode);
 const char  *EPS_GetRParamTableName(uint8 cspNode, uint8 tableId);
