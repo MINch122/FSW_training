@@ -115,7 +115,7 @@ typedef struct EPS_P80_DRV_PACK {
 gs_error_t EPS_P80_Drv_PowerIfGet(uint8_t csp_node, const char *name,
                                    power_if_ch_status_t *status, uint32_t timeout_ms);
 gs_error_t EPS_P80_Drv_PowerIfSet(uint8_t csp_node, const char *name,
-                                   uint8_t mode, uint8_t on_cnt, uint8_t off_cnt,
+                                   uint8_t mode, uint16_t on_cnt, uint16_t off_cnt,
                                    power_if_ch_status_t *status, uint32_t timeout_ms);
 gs_error_t EPS_P80_Drv_PowerIfList(uint8_t csp_node, power_if_cmd_list_response_t *list,
                                     uint32_t timeout_ms);

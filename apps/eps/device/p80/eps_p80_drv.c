@@ -8,7 +8,6 @@
 #include <gs/param/internal/types.h>
 #include <gs/param/rparam.h>
 #include <gs/param/table.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -150,7 +149,7 @@ gs_error_t EPS_P80_Drv_PowerIfGet(uint8_t csp_node, const char *name,
 }
 
 gs_error_t EPS_P80_Drv_PowerIfSet(uint8_t csp_node, const char *name,
-                                   uint8_t mode, uint8_t on_cnt, uint8_t off_cnt,
+                                   uint8_t mode, uint16_t on_cnt, uint16_t off_cnt,
                                    power_if_ch_status_t *status, uint32_t timeout_ms)
 {
     if (status == NULL)

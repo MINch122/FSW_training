@@ -8,7 +8,6 @@
 #include <gs/param/internal/types.h>
 #include <gs/param/rparam.h>
 #include <gs/param/table.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -67,7 +66,7 @@ gs_error_t EPS_BP8_Drv_GetHk(uint8_t csp_node, EPS_BP8_Drv_HkTlm_t *hk, uint32_t
 {
     EPS_BP8_Drv_HkTlm_t next_hk = {0};
     int16_t bat_temp[4] = {0};
-    bool bat_fault = false;
+    uint8_t bat_fault = 0;
     gs_error_t err;
 
     if (hk == NULL)
@@ -94,7 +93,7 @@ gs_error_t EPS_BP8_Drv_GetHk(uint8_t csp_node, EPS_BP8_Drv_HkTlm_t *hk, uint32_t
                         &bat_fault, sizeof(bat_fault));
     if (err != GS_OK)
         return err;
-    next_hk.BatFault = (uint8_t)bat_fault;
+    next_hk.BatFault = (uint8_t)(bat_fault != 0);
 
     *hk = next_hk;
 

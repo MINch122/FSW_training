@@ -36,6 +36,7 @@
 
 #include <gs/param/internal/types.h>
 #include <gs/param/table.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -44,6 +45,11 @@
 
 #define EPS_CSP_PING_DEFAULT_SIZE 1U
 #define EPS_CSP_PING_MAX_SIZE     128U
+
+static bool EPS_IsP80PowerIfNode(uint8_t csp_node)
+{
+    return (csp_node == EPS_P80_PMU_CSP_NODE) || (csp_node == EPS_P80_PDU_CSP_NODE);
+}
 
 static void EPS_SendQueryReport(const void *Msg, uint8_t source, uint8_t dataId,
                                 uint8_t arg0, uint8_t arg1,
@@ -196,6 +202,17 @@ CFE_Status_t EPS_P80_Power_If_Get_Cmd(const EPS_P80_Power_If_Get_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
+    if (!EPS_IsP80PowerIfNode(Msg->Payload.csp_node))
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: Power Interface Get rejected, node %u is not PMU/PDU",
+                          Msg->Payload.csp_node);
+        OS_printf("[EPS] Power Interface Get REJECTED node=%u: valid nodes are PMU(1) or PDU(4)\n",
+                  Msg->Payload.csp_node);
+        return CFE_STATUS_RANGE_ERROR;
+    }
+
     power_if_ch_status_t status = {0};
     gs_error_t err = EPS_P80_Drv_PowerIfGet(Msg->Payload.csp_node, Msg->Payload.name,
                                              &status, CSP_TIMEOUT(1));
@@ -218,7 +235,24 @@ CFE_Status_t EPS_P80_Power_If_Set_Cmd(const EPS_P80_Power_If_Set_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
 
+    const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
+    char name[EPS_P80_POWER_IF_NAME_LEN + 1];
     power_if_ch_status_t status = {0};
+
+    EPS_CopyCmdString(name, sizeof(name), Msg->Payload.name, sizeof(Msg->Payload.name));
+
+    if (!EPS_IsP80PowerIfNode(Msg->Payload.csp_node))
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: Power Interface Set rejected, node %u is not PMU/PDU",
+                          Msg->Payload.csp_node);
+        OS_printf("[EPS] Power Interface Set REJECTED node=%u request_args: name=%s mode=%u on_cnt=%u off_cnt=%u; valid nodes are PMU(1) or PDU(4)\n",
+                  Msg->Payload.csp_node, name, Msg->Payload.mode,
+                  Msg->Payload.on_cnt, Msg->Payload.off_cnt);
+        return CFE_STATUS_RANGE_ERROR;
+    }
+
     gs_error_t err = EPS_P80_Drv_PowerIfSet(Msg->Payload.csp_node, Msg->Payload.name,
                                              Msg->Payload.mode, Msg->Payload.on_cnt,
                                              Msg->Payload.off_cnt, &status, CSP_TIMEOUT(1));
@@ -227,10 +261,16 @@ CFE_Status_t EPS_P80_Power_If_Set_Cmd(const EPS_P80_Power_If_Set_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: Power Interface Set command failed, err=%d", err);
+        OS_printf("[EPS] Power Interface Set FAILED device=%s node=%u request_args: name=%s mode=%u on_cnt=%u off_cnt=%u err=%d\n",
+                  device, Msg->Payload.csp_node, name, Msg->Payload.mode,
+                  Msg->Payload.on_cnt, Msg->Payload.off_cnt, err);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_PrintP80PowerIfStatus("EPS Power_If_Set Response Succeeded", &status);
+    OS_printf("[EPS] Power Interface Set OK device=%s node=%u\n", device, Msg->Payload.csp_node);
+    OS_printf("  request_args: name=%s mode=%u on_cnt=%u off_cnt=%u\n",
+              name, Msg->Payload.mode, Msg->Payload.on_cnt, Msg->Payload.off_cnt);
+    OS_printf("  no readback in this response; run Power Interface Get for applied status fields such as voltage/current/latchup\n");
 
     return CFE_SUCCESS;
 }
@@ -239,6 +279,17 @@ CFE_Status_t EPS_P80_Power_If_Set_Cmd(const EPS_P80_Power_If_Set_Cmd_t *Msg)
 CFE_Status_t EPS_P80_Power_If_List_Cmd(const EPS_P80_Power_If_List_Cmd_t *Msg)
 {
     EPS_AppData.Counters.CmdCounter++;
+
+    if (!EPS_IsP80PowerIfNode(Msg->Payload.csp_node))
+    {
+        EPS_AppData.Counters.ErrCounter++;
+        CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "EPS: Power Interface List rejected, node %u is not PMU/PDU",
+                          Msg->Payload.csp_node);
+        OS_printf("[EPS] Power Interface List REJECTED node=%u: valid nodes are PMU(1) or PDU(4)\n",
+                  Msg->Payload.csp_node);
+        return CFE_STATUS_RANGE_ERROR;
+    }
 
     power_if_cmd_list_response_t list = {0};
     gs_error_t err = EPS_P80_Drv_PowerIfList(Msg->Payload.csp_node, &list, CSP_TIMEOUT(1));
@@ -487,7 +538,7 @@ CFE_Status_t EPS_RParam_Set_Cmd(const EPS_RParam_Set_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam Set command failed, err=%d", err);
-        OS_printf("[EPS] RParam Set FAILED device=%s node=%u table=%u(%s) addr=%u type=%u size=%u data=",
+        OS_printf("[EPS] RParam Set FAILED device=%s node=%u table=%u(%s) addr=%u type=%u size=%u request_data=",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
                   Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size);
         for (uint16_t i = 0; i < Msg->Payload.size && i < sizeof(Msg->Payload.data); i++)
@@ -496,7 +547,7 @@ CFE_Status_t EPS_RParam_Set_Cmd(const EPS_RParam_Set_Cmd_t *Msg)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    OS_printf("[EPS] RParam Set OK device=%s node=%u table=%u(%s) addr=%u type=%u size=%u data=",
+    OS_printf("[EPS] RParam Set OK device=%s node=%u table=%u(%s) addr=%u type=%u size=%u request_data=",
               device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
               Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size);
     for (uint16_t i = 0; i < Msg->Payload.size && i < sizeof(Msg->Payload.data); i++)

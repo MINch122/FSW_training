@@ -50,6 +50,16 @@ void EPS_CopyCmdString(char *dst, size_t dst_size, const char *src, size_t src_s
     dst[copy_size] = '\0';
 }
 
+static double EPS_DeciDegCToDegC(int16_t temp_ddegc)
+{
+    return (double)temp_ddegc / 10.0;
+}
+
+static double EPS_MilliAmpToAmp(uint16_t current_ma)
+{
+    return (double)current_ma / 1000.0;
+}
+
 void EPS_PrintP80PowerIfStatus(const char *title, const power_if_ch_status_t *status)
 {
     OS_printf("%s\n", title);
@@ -106,6 +116,9 @@ void EPS_PrintP80PduHk(const EPS_P80_PDU_HkTlm_Payload_t *hk)
     OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
               hk->uptime, hk->bootcount, hk->bootcause, hk->resetcause);
     OS_printf("[PDU]    VCC: %u mV (%u mA) | VBAT: %u mV\n", hk->vcc_v, hk->vcc_i, hk->vbat_v);
+    OS_printf("[OUTPUT] IDX | EN | Curr(mA)\n");
+    for (int i = 0; i < 24; i++)
+        OS_printf("         %3d | %2s | %8d\n", i, hk->out_en[i] ? "ON" : "OFF", hk->out_i[i]);
     OS_printf("[TEMP]   %d (deci-degC) | BattMode: %u\n", hk->temp, hk->batt_mode);
     OS_printf("[WDT]    GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n",
               hk->gnd_wdt_cnt, hk->gnd_wdt_left, hk->bus_wdt_cnt, hk->bus_wdt_left);
@@ -177,12 +190,13 @@ void EPS_PrintBP8Hk(const EPS_BP8_HkTlm_Payload_t *hk)
     OS_printf("[BP8] Vbat: %u mV | SOC: %.2f | Current: %.3f A\n",
               hk->Vbat, (double)hk->Soc, (double)hk->Current);
     OS_printf("[BP8] InCurrent: %.3f A | OutCurrent: %.3f A | HeaterI: %u mA\n",
-              (double)hk->InCurrent, (double)hk->OutCurrent, hk->HeaterCurrent);
+              EPS_MilliAmpToAmp(hk->InCurrent), EPS_MilliAmpToAmp(hk->OutCurrent),
+              hk->HeaterCurrent);
     OS_printf("[BP8] IntTemp: %.1f | BatAvrTemp: %.1f degC\n",
-              (double)hk->IntTemp, (double)hk->BatAvrTemp);
+              EPS_DeciDegCToDegC(hk->IntTemp), (double)hk->BatAvrTemp);
     OS_printf("[BP8] BatTemp: %.1f / %.1f / %.1f / %.1f degC\n",
-              (double)hk->BatTemp[0], (double)hk->BatTemp[1],
-              (double)hk->BatTemp[2], (double)hk->BatTemp[3]);
+              EPS_DeciDegCToDegC(hk->BatTemp[0]), EPS_DeciDegCToDegC(hk->BatTemp[1]),
+              EPS_DeciDegCToDegC(hk->BatTemp[2]), EPS_DeciDegCToDegC(hk->BatTemp[3]));
     OS_printf("[BP8] OVoltCount: %u | BatFault: %u\n", hk->OVoltCount, hk->BatFault);
     OS_printf("=================================================\n");
 }
@@ -476,7 +490,9 @@ static void EPS_PrintParamTableRow(const gs_param_table_instance_t *tinst, const
     char buf[128] = {0};
     unsigned int written = 0;
     uint16_t addr = GS_PARAM_ADDR(row);
-    size_t value_size = (size_t)GS_PARAM_SIZE(row) * (size_t)GS_PARAM_ARRAY_SIZE(row);
+    size_t elem_size = (size_t)GS_PARAM_SIZE(row);
+    size_t elem_count = (size_t)GS_PARAM_ARRAY_SIZE(row);
+    size_t value_size = elem_size * elem_count;
 
     if ((size_t)addr >= tinst->memory_size || value_size > ((size_t)tinst->memory_size - (size_t)addr))
     {
@@ -484,15 +500,21 @@ static void EPS_PrintParamTableRow(const gs_param_table_instance_t *tinst, const
         return;
     }
 
-    const void *value = (const uint8_t *)tinst->memory + addr;
-    gs_error_t err = gs_param_to_string(row, value, true, buf, sizeof(buf), 0, &written);
-    if (err != GS_OK)
+    OS_printf("  [%3u] %-14.14s", addr, row->name);
+    for (size_t i = 0; i < elem_count; i++)
     {
-        OS_printf("  [%3u] %-14.14s <decode err=%d>\n", addr, row->name, err);
-        return;
+        const void *value = (const uint8_t *)tinst->memory + addr + (elem_size * i);
+        gs_error_t err = gs_param_to_string(row, value, (i == 0), buf, sizeof(buf), 0, &written);
+        if (err != GS_OK)
+        {
+            OS_printf(" <decode err[%u]=%d>\n", (unsigned int)i, err);
+            return;
+        }
+
+        OS_printf(" %s", buf);
     }
 
-    OS_printf("  [%3u] %-14.14s %s\n", addr, row->name, buf);
+    OS_printf("\n");
 }
 
 void EPS_PrintParamTable(const char *title, uint8 cspNode, uint8 tableId,

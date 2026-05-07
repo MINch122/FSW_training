@@ -2631,13 +2631,15 @@
           {
             "name": "csp_node",
             "type": "uint8",
-            "default": "1"
+            "default": "1",
+            "description": "Power interface nodes only: 1=PMU, 4=PDU"
           },
           {
             "name": "name",
             "type": "string",
             "length": 8,
-            "default": "5V"
+            "default": "1",
+            "description": "Numeric channel string or 8-byte channel name, e.g. 1 or st_5v"
           }
         ]
       },
@@ -2649,28 +2651,33 @@
           {
             "name": "csp_node",
             "type": "uint8",
-            "default": "1"
+            "default": "1",
+            "description": "Power interface nodes only: 1=PMU, 4=PDU"
           },
           {
             "name": "mode",
             "type": "uint8",
-            "default": "1"
+            "default": "1",
+            "description": "1=ON, 0=OFF"
           },
           {
             "name": "on_cnt",
-            "type": "uint8",
-            "default": "0"
+            "type": "uint16",
+            "default": "0",
+            "description": "Delay in seconds before turning on"
           },
           {
             "name": "off_cnt",
-            "type": "uint8",
-            "default": "0"
+            "type": "uint16",
+            "default": "0",
+            "description": "Delay in seconds before turning off"
           },
           {
             "name": "name",
             "type": "string",
             "length": 8,
-            "default": "5V"
+            "default": "1",
+            "description": "Numeric channel string or 8-byte channel name, e.g. 1 or st_5v"
           }
         ]
       },
@@ -2682,7 +2689,8 @@
           {
             "name": "csp_node",
             "type": "uint8",
-            "default": "1"
+            "default": "1",
+            "description": "Power interface nodes only: 1=PMU, 4=PDU"
           }
         ]
       },
@@ -2736,7 +2744,7 @@
           {
             "name": "table_id",
             "type": "uint8",
-            "default": "0"
+            "default": "4"
           },
           {
             "name": "addr",
@@ -2881,7 +2889,8 @@
             "name": "store",
             "type": "string",
             "length": 26,
-            "default": "primary"
+            "default": "persistent",
+            "description": "Manual store name, e.g. persistent/protected/flash"
           },
           {
             "name": "slot",
@@ -2910,7 +2919,8 @@
             "name": "store",
             "type": "string",
             "length": 26,
-            "default": "primary"
+            "default": "persistent",
+            "description": "Manual store name, e.g. persistent/protected/flash"
           },
           {
             "name": "slot",

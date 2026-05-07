@@ -87,23 +87,25 @@ typedef struct EPS_PACK
  * P80 Power_If_Set payload:
  * csp_node = P80 PMU(1) or P80 PDU(4).
  * mode     = GomSpace power_if SET mode.
- * on_cnt   = GomSpace power_if SET on counter.
- * off_cnt  = GomSpace power_if SET off counter.
- * name     = target power-if channel name; CACTUS string input is
- *            fixed-length and NUL-padded to EPS_P80_POWER_IF_NAME_LEN.
+ * on_cnt   = GomSpace power_if SET on counter in seconds.
+ * off_cnt  = GomSpace power_if SET off counter in seconds.
+ * name     = target power-if channel name or decimal channel string;
+ *            CACTUS string input is fixed-length and NUL-padded to
+ *            EPS_P80_POWER_IF_NAME_LEN.
  */
 typedef struct EPS_PACK {
     uint8_t csp_node; //PMU or PDU
     uint8_t mode;
-    uint8_t on_cnt;
-    uint8_t off_cnt;
+    uint16_t on_cnt;
+    uint16_t off_cnt;
     char    name[EPS_P80_POWER_IF_NAME_LEN];
 }EPS_P80_Power_If_Set_Cmd_Payload_t;
 
 /*
  * P80 Power_If_Get payload:
  * csp_node = P80 PMU(1) or P80 PDU(4).
- * name     = power-if channel name, up to EPS_P80_POWER_IF_NAME_LEN bytes.
+ * name     = power-if channel name or decimal channel string, up to
+ *            EPS_P80_POWER_IF_NAME_LEN bytes.
  */
 typedef struct EPS_PACK {
     uint8_t csp_node; //PMU or PDU
@@ -206,7 +208,8 @@ typedef EPS_RParam_Table_Save_Cmd_Payload_t EPS_RParam_Table_Load_Cmd_Payload_t;
  * RParam Save/Load Store payload:
  * csp_node = same mapping as RParam Set.
  * table_id = same mapping as RParam Set.
- * store    = required param-4 store name.
+ * store    = required param-4 store name, for example persistent,
+ *            protected, or flash.
  * slot     = optional slot name; leave empty to request the default slot.
  */
 typedef struct EPS_PACK {
