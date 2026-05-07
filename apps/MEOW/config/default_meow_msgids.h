@@ -1,0 +1,15 @@
+/**
+ * @file
+ *   MEOW Application Message IDs
+ */
+#ifndef DEFAULT_MEOW_MSGIDS_H
+#define DEFAULT_MEOW_MSGIDS_H
+
+#include "meow_msgid_values.h"
+
+#define MEOW_CMD_MID        MEOW_CMD_PLATFORM_MIDVAL(CMD)
+#define MEOW_SEND_HK_MID    MEOW_CMD_PLATFORM_MIDVAL(SEND_HK)
+#define MEOW_HK_TLM_MID     MEOW_TLM_PLATFORM_MIDVAL(HK_TLM)
+#define MEOW_REPORT_TLM_MID MEOW_TLM_PLATFORM_MIDVAL(REPORT_TLM)
+
+#endif /* DEFAULT_MEOW_MSGIDS_H */
