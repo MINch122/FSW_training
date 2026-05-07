@@ -4416,6 +4416,790 @@
     ]
   },
   {
+    "app": "MEOW",
+    "description": "MEOW shell, file, system, and CSP utility app",
+    "mids": {
+      "CMD": "0x1886",
+      "SEND_HK": "0x1887",
+      "HK_TLM": "0x0888",
+      "REPORT_TLM": "0x0889"
+    },
+    "commands": [
+      {
+        "name": "Noop",
+        "mid": "0x1886",
+        "fc": 0,
+        "description": "MEOW_NOOP_CC",
+        "params": []
+      },
+      {
+        "name": "Reset Counters",
+        "mid": "0x1886",
+        "fc": 1,
+        "description": "MEOW_RESET_COUNTERS_CC",
+        "params": []
+      },
+      {
+        "name": "Shell Exec Sync",
+        "mid": "0x1886",
+        "fc": 10,
+        "description": "Run a shell command synchronously.",
+        "params": [
+          {
+            "name": "Cmd",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_CMD_LEN",
+            "default": "true"
+          },
+          {
+            "name": "RedirPath",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          },
+          {
+            "name": "TimeoutMs",
+            "type": "uint32",
+            "default": "5000"
+          },
+          {
+            "name": "_Spare",
+            "type": "bytes",
+            "length": 4,
+            "hidden": true,
+            "default": "00 00 00 00"
+          }
+        ]
+      },
+      {
+        "name": "Shell Exec Async",
+        "mid": "0x1886",
+        "fc": 11,
+        "description": "Run a shell command asynchronously.",
+        "params": [
+          {
+            "name": "Cmd",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_CMD_LEN",
+            "default": "true"
+          },
+          {
+            "name": "RedirPath",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          }
+        ]
+      },
+      {
+        "name": "Shell Poll",
+        "mid": "0x1886",
+        "fc": 12,
+        "description": "Poll an asynchronous shell process.",
+        "params": [
+          {
+            "name": "Pid",
+            "type": "int32",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Shell Kill",
+        "mid": "0x1886",
+        "fc": 13,
+        "description": "Signal an asynchronous shell process.",
+        "params": [
+          {
+            "name": "Pid",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "Sig",
+            "type": "int32",
+            "default": "15"
+          }
+        ]
+      },
+      {
+        "name": "Shell Exec Sync Force",
+        "mid": "0x1886",
+        "fc": 14,
+        "description": "Run a synchronous command with the force magic guard.",
+        "params": [
+          {
+            "name": "Cmd",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_CMD_LEN",
+            "default": "true"
+          },
+          {
+            "name": "RedirPath",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          },
+          {
+            "name": "TimeoutMs",
+            "type": "uint32",
+            "default": "5000"
+          },
+          {
+            "name": "Magic",
+            "type": "bytes",
+            "length": 4,
+            "description": "Big-endian MEOW_MISSION_SHELL_FORCE_MAGIC",
+            "default": "DE AD C0 DE"
+          }
+        ]
+      },
+      {
+        "name": "Shell Exec Async Force",
+        "mid": "0x1886",
+        "fc": 15,
+        "description": "Run an asynchronous command with the force magic guard.",
+        "params": [
+          {
+            "name": "Cmd",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_CMD_LEN",
+            "default": "true"
+          },
+          {
+            "name": "RedirPath",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          },
+          {
+            "name": "Magic",
+            "type": "bytes",
+            "length": 4,
+            "description": "Big-endian MEOW_MISSION_SHELL_FORCE_MAGIC",
+            "default": "DE AD C0 DE"
+          }
+        ]
+      },
+      {
+        "name": "File Read",
+        "mid": "0x1886",
+        "fc": 20,
+        "description": "Read bytes from a file.",
+        "params": [
+          {
+            "name": "Path",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          },
+          {
+            "name": "Offset",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "Size",
+            "type": "uint32",
+            "default": "256"
+          }
+        ]
+      },
+      {
+        "name": "File Write",
+        "mid": "0x1886",
+        "fc": 21,
+        "description": "Write bytes to a file.",
+        "params": [
+          {
+            "name": "Path",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          },
+          {
+            "name": "Offset",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "DataLen",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "Flags",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "_Spare",
+            "type": "uint8",
+            "hidden": true,
+            "default": "0"
+          },
+          {
+            "name": "Data",
+            "type": "bytes",
+            "length": "MEOW_MISSION_MAX_WRITE_LEN"
+          }
+        ]
+      },
+      {
+        "name": "File Remove",
+        "mid": "0x1886",
+        "fc": 22,
+        "description": "Remove a file.",
+        "params": [
+          {
+            "name": "Path",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          }
+        ]
+      },
+      {
+        "name": "File Copy",
+        "mid": "0x1886",
+        "fc": 23,
+        "description": "Copy a file.",
+        "params": [
+          {
+            "name": "Src",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          },
+          {
+            "name": "Dst",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.copy"
+          }
+        ]
+      },
+      {
+        "name": "File Move",
+        "mid": "0x1886",
+        "fc": 24,
+        "description": "Move or rename a file.",
+        "params": [
+          {
+            "name": "Src",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          },
+          {
+            "name": "Dst",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.copy"
+          }
+        ]
+      },
+      {
+        "name": "File Stat",
+        "mid": "0x1886",
+        "fc": 25,
+        "description": "Return file status.",
+        "params": [
+          {
+            "name": "Path",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          }
+        ]
+      },
+      {
+        "name": "File Truncate",
+        "mid": "0x1886",
+        "fc": 26,
+        "description": "Truncate a file.",
+        "params": [
+          {
+            "name": "Path",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          }
+        ]
+      },
+      {
+        "name": "File Tail",
+        "mid": "0x1886",
+        "fc": 27,
+        "description": "Read the tail of a file.",
+        "params": [
+          {
+            "name": "Path",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          },
+          {
+            "name": "NBytes",
+            "type": "uint32",
+            "default": "256"
+          },
+          {
+            "name": "Size",
+            "type": "uint32",
+            "default": "256"
+          }
+        ]
+      },
+      {
+        "name": "File Checksum",
+        "mid": "0x1886",
+        "fc": 28,
+        "description": "Return file checksum.",
+        "params": [
+          {
+            "name": "Path",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.out"
+          }
+        ]
+      },
+      {
+        "name": "Disk Stat",
+        "mid": "0x1886",
+        "fc": 29,
+        "description": "Return filesystem statistics.",
+        "params": [
+          {
+            "name": "Path",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/"
+          }
+        ]
+      },
+      {
+        "name": "Sys Shutdown",
+        "mid": "0x1886",
+        "fc": 40,
+        "description": "Request reboot, halt, or poweroff with magic guard.",
+        "params": [
+          {
+            "name": "Type",
+            "type": "enum",
+            "storage": "int32",
+            "values": {
+              "REBOOT": 0,
+              "HALT": 1,
+              "POWEROFF": 2
+            },
+            "default": "REBOOT"
+          },
+          {
+            "name": "Magic",
+            "type": "bytes",
+            "length": 4,
+            "description": "Big-endian MEOW_MISSION_SYS_SHUTDOWN_MAGIC",
+            "default": "90 0D B0 07"
+          }
+        ]
+      },
+      {
+        "name": "Sys Sync",
+        "mid": "0x1886",
+        "fc": 41,
+        "description": "Flush pending filesystem writes.",
+        "params": []
+      },
+      {
+        "name": "Sys Info",
+        "mid": "0x1886",
+        "fc": 42,
+        "description": "Return system information.",
+        "params": []
+      },
+      {
+        "name": "Sys Time Get",
+        "mid": "0x1886",
+        "fc": 43,
+        "description": "Return system time.",
+        "params": []
+      },
+      {
+        "name": "Sys Time Set",
+        "mid": "0x1886",
+        "fc": 44,
+        "description": "Set system time.",
+        "params": [
+          {
+            "name": "Sec",
+            "type": "int64",
+            "default": "0"
+          },
+          {
+            "name": "Nsec",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "_Spare",
+            "type": "bytes",
+            "length": 4,
+            "hidden": true,
+            "default": "00 00 00 00"
+          }
+        ]
+      },
+      {
+        "name": "Sys Force Kill",
+        "mid": "0x1886",
+        "fc": 45,
+        "description": "Force MEOW process termination or crash with magic guard.",
+        "params": [
+          {
+            "name": "Magic",
+            "type": "bytes",
+            "length": 4,
+            "description": "Big-endian MEOW_MISSION_SYS_FORCE_KILL_MAGIC",
+            "default": "DE AD FA CE"
+          },
+          {
+            "name": "Mode",
+            "type": "enum",
+            "storage": "int32",
+            "values": {
+              "EXIT": 1,
+              "UNFORGIVABLE": 2,
+              "ABORT": 3,
+              "SIGKILL": 4,
+              "SYSRQ": 5
+            },
+            "default": "EXIT"
+          }
+        ]
+      },
+      {
+        "name": "CSP Server Start",
+        "mid": "0x1886",
+        "fc": 50,
+        "description": "Start the MEOW CSP server.",
+        "params": []
+      },
+      {
+        "name": "CSP Server Stop",
+        "mid": "0x1886",
+        "fc": 51,
+        "description": "Stop the MEOW CSP server.",
+        "params": []
+      },
+      {
+        "name": "CSP Set Read Timeout",
+        "mid": "0x1886",
+        "fc": 52,
+        "description": "Set CSP read timeout.",
+        "params": [
+          {
+            "name": "TimeoutMs",
+            "type": "uint32",
+            "default": "1000"
+          }
+        ]
+      },
+      {
+        "name": "CSP Handler Load",
+        "mid": "0x1886",
+        "fc": 53,
+        "description": "Load a CSP port handler module.",
+        "params": [
+          {
+            "name": "Port",
+            "type": "uint8",
+            "default": "10"
+          },
+          {
+            "name": "Path",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/cf/meow_handler.so"
+          },
+          {
+            "name": "Symbol",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_SYMBOL_LEN",
+            "default": "MEOW_CSP_Handler"
+          }
+        ]
+      },
+      {
+        "name": "CSP Handler Clear",
+        "mid": "0x1886",
+        "fc": 54,
+        "description": "Clear a CSP port handler.",
+        "params": [
+          {
+            "name": "Port",
+            "type": "uint8",
+            "default": "10"
+          }
+        ]
+      },
+      {
+        "name": "CSP Send",
+        "mid": "0x1886",
+        "fc": 55,
+        "description": "Send a raw CSP packet.",
+        "params": [
+          {
+            "name": "Dst",
+            "type": "uint8",
+            "default": "1"
+          },
+          {
+            "name": "DstPort",
+            "type": "uint8",
+            "default": "10"
+          },
+          {
+            "name": "SrcPort",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "Prio",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "TimeoutMs",
+            "type": "uint32",
+            "default": "1000"
+          },
+          {
+            "name": "Len",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "Data",
+            "type": "bytes",
+            "length": "MEOW_MISSION_MAX_WRITE_LEN"
+          },
+          {
+            "name": "_StructPadding",
+            "type": "bytes",
+            "length": 2,
+            "hidden": true,
+            "default": "00 00"
+          }
+        ]
+      },
+      {
+        "name": "CSP FTP Upload",
+        "mid": "0x1886",
+        "fc": 56,
+        "description": "Upload a file over CSP FTP.",
+        "params": [
+          {
+            "name": "Host",
+            "type": "uint8",
+            "default": "1"
+          },
+          {
+            "name": "Port",
+            "type": "uint8",
+            "default": "10"
+          },
+          {
+            "name": "TimeoutMs",
+            "type": "uint16",
+            "default": "1000"
+          },
+          {
+            "name": "ChunkSize",
+            "type": "uint16",
+            "default": "185"
+          },
+          {
+            "name": "LocalPath",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.local"
+          },
+          {
+            "name": "RemotePath",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.remote"
+          }
+        ]
+      },
+      {
+        "name": "CSP FTP Download",
+        "mid": "0x1886",
+        "fc": 57,
+        "description": "Download a file over CSP FTP.",
+        "params": [
+          {
+            "name": "Host",
+            "type": "uint8",
+            "default": "1"
+          },
+          {
+            "name": "Port",
+            "type": "uint8",
+            "default": "10"
+          },
+          {
+            "name": "TimeoutMs",
+            "type": "uint16",
+            "default": "1000"
+          },
+          {
+            "name": "ChunkSize",
+            "type": "uint16",
+            "default": "185"
+          },
+          {
+            "name": "LocalPath",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.local"
+          },
+          {
+            "name": "RemotePath",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_PATH_LEN",
+            "default": "/tmp/meow.remote"
+          }
+        ]
+      },
+      {
+        "name": "CSP Ifstats",
+        "mid": "0x1886",
+        "fc": 58,
+        "description": "Return CSP interface statistics.",
+        "params": [
+          {
+            "name": "IfaceName",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_IFACE_NAME_LEN",
+            "default": "CAN"
+          }
+        ]
+      },
+      {
+        "name": "CSP Route Set",
+        "mid": "0x1886",
+        "fc": 59,
+        "description": "Set a CSP route.",
+        "params": [
+          {
+            "name": "Dst",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "Mask",
+            "type": "uint8",
+            "default": "8"
+          },
+          {
+            "name": "Via",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "_Spare",
+            "type": "uint8",
+            "hidden": true,
+            "default": "0"
+          },
+          {
+            "name": "IfaceName",
+            "type": "string",
+            "length": "MEOW_MISSION_MAX_IFACE_NAME_LEN",
+            "default": "CAN"
+          }
+        ]
+      },
+      {
+        "name": "CSP Reroute Set",
+        "mid": "0x1886",
+        "fc": 60,
+        "description": "Set a CSP reroute entry.",
+        "params": [
+          {
+            "name": "Idx",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "DstPort",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "SrcNode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "FwdDst",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "FwdDstPort",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "FwdSrcPort",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "Active",
+            "type": "uint8",
+            "default": "1"
+          },
+          {
+            "name": "_Spare",
+            "type": "uint8",
+            "hidden": true,
+            "default": "0"
+          },
+          {
+            "name": "TimeoutMs",
+            "type": "uint16",
+            "default": "1000"
+          }
+        ]
+      },
+      {
+        "name": "CSP Reroute Clear",
+        "mid": "0x1886",
+        "fc": 61,
+        "description": "Clear a CSP reroute entry.",
+        "params": [
+          {
+            "name": "Idx",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Send HK",
+        "mid": "0x1887",
+        "fc": 0,
+        "description": "MEOW_SEND_HK_MID",
+        "params": []
+      }
+    ]
+  },
+  {
     "app": "PAYUEL_AOS",
     "description": "Generated from apps/payuel_aos",
     "commands": [

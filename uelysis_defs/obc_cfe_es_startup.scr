@@ -16,6 +16,7 @@ CFE_APP, ttc,         TTC_Main,           TTC,          50,   16384, 0x0, 0;
 CFE_APP, utrx,        UTRX_AppMain,       UTRX,         55,   16384, 0x0, 0;
 CFE_APP, stx,         STX_Main,           STX,          60,   16384, 0x0, 0;
 CFE_APP, gps,         GPS_AppMain,        GPS,          65,   16384, 0x0, 0;
+CFE_APP, meow,        MEOW_Main,          MEOW,         70,   16384, 0x0, 0;
 CFE_APP, adcs2,       ADCS2_AppMain,      ADCS2,        38,   16384, 0x0, 0;
 CFE_APP, payuel_cam,  PAYUEL_CAM_Main,    PAYUEL_CAM,   75,   16384, 0x0, 0;
 CFE_APP, lgbat,       LGBAT_Main,         LGBAT,        80,   16384, 0x0, 0;

@@ -253,6 +253,45 @@
       ]
     },
     {
+      "app": "MEOW",
+      "name": "Housekeeping",
+      "mid": "0x0888",
+      "description": "MEOW housekeeping telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "CommandCounter", "type": "uint16" },
+        { "name": "CommandErrorCounter", "type": "uint16" }
+      ]
+    },
+    {
+      "app": "MEOW",
+      "name": "Report",
+      "mid": "0x0889",
+      "description": "MEOW command report telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "MsgID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "CommandCode", "type": "uint8", "format": "hex", "hex_digits": 2 },
+        {
+          "name": "ReturnType",
+          "type": "enum",
+          "storage": "uint8",
+          "values": {
+            "SUCCESS": 0
+          }
+        },
+        { "name": "ReturnCode", "type": "int32" },
+        { "name": "ReturnDataSize", "type": "uint16" },
+        {
+          "name": "ReturnValue",
+          "type": "bytes",
+          "length": "MEOW_MISSION_MAX_READ_LEN",
+          "display_length_from": "ReturnDataSize"
+        },
+        { "name": "_StructPadding", "type": "bytes", "length": 2, "hidden": true }
+      ]
+    },
+    {
       "app": "RPT",
       "name": "Report Queue Packet",
       "mid": "0x0825",
