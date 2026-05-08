@@ -629,7 +629,7 @@ CFE_Status_t EPS_RParam_Get_Full_Table_Cmd(const EPS_RParam_Get_Full_Table_Cmd_t
     gs_error_t err = EPS_RParamFetchFullTable(Msg->Payload.csp_node,
                                                Msg->Payload.table_id,
                                                &tinst,
-                                               CSP_TIMEOUT(1));
+                                               CSP_TIMEOUT(3));
     if (err != GS_OK)
     {
         EPS_AppData.Counters.ErrCounter++;
