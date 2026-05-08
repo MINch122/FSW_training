@@ -49,18 +49,28 @@ CFE_Status_t MEOW_SendHkCmd(const MEOW_SendHkCmd_t* msg)
 
 CFE_Status_t MEOW_NoopCmd(const MEOW_NoopCmd_t* msg)
 {
+    uint8 counters[2];
+
     MEOW_AppData.CmdCounter++;
     CFE_EVS_SendEvent(MEOW_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "MEOW: NOOP %s", MEOW_VERSION);
+    counters[0] = MEOW_AppData.CmdCounter;
+    counters[1] = MEOW_AppData.ErrCounter;
+    MEOW_SendReport(msg, counters, sizeof(counters), CFE_SUCCESS, 0);
     return CFE_SUCCESS;
 }
 
 CFE_Status_t MEOW_ResetCountersCmd(const MEOW_ResetCountersCmd_t* msg)
 {
+    uint8 counters[2];
+
     MEOW_AppData.CmdCounter = 0;
     MEOW_AppData.ErrCounter = 0;
     CFE_EVS_SendEvent(MEOW_RESET_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "MEOW: counters reset");
+    counters[0] = MEOW_AppData.CmdCounter;
+    counters[1] = MEOW_AppData.ErrCounter;
+    MEOW_SendReport(msg, counters, sizeof(counters), CFE_SUCCESS, 0);
     return CFE_SUCCESS;
 }
 

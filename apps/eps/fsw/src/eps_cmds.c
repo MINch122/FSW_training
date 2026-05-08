@@ -177,6 +177,8 @@ CFE_Status_t EPS_NoopCmd(const EPS_NoopCmd_t *Msg)
 
     CFE_EVS_SendEvent(EPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "EPS: NOOP command %s",
                       EPS_VERSION);
+    EPS_SendReport(Msg, &EPS_AppData.Counters, sizeof(EPS_AppData.Counters),
+                   CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
@@ -189,6 +191,8 @@ CFE_Status_t EPS_ResetCountersCmd(const EPS_ResetCountersCmd_t *Msg)
     EPS_AppData.Counters.GetBcnErrCounter = 0;
 
     CFE_EVS_SendEvent(EPS_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "EPS: RESET Counters command");
+    EPS_SendReport(Msg, &EPS_AppData.Counters, sizeof(EPS_AppData.Counters),
+                   CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }

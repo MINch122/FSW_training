@@ -20,6 +20,9 @@ CFE_Status_t PAYUEL_OBC_NoopCmd(const PAYUEL_OBC_NoopCmd_t *Msg)
     PAYUEL_OBC_Data.CmdCounter++;
     CFE_EVS_SendEvent(PAYUEL_OBC_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "PAYUEL_OBC: NOOP command %s", PAYUEL_OBC_VERSION);
+
+    PAYUEL_OBC_ReportCmdStatus(CFE_SB_ValueToMsgId(PAYUEL_OBC_CMD_MID), PAYUEL_OBC_NOOP_CC,
+                               CFE_SUCCESS, NULL, 0, RPT_RETTYPE_SUCCESS);
     return CFE_SUCCESS;
 }
 
@@ -34,6 +37,9 @@ CFE_Status_t PAYUEL_OBC_ResetCountersCmd(const PAYUEL_OBC_ResetCountersCmd_t *Ms
     PAYUEL_OBC_Data.ErrCounter = 0;
     CFE_EVS_SendEvent(PAYUEL_OBC_RESET_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "PAYUEL_OBC: RESET command");
+
+    PAYUEL_OBC_ReportCmdStatus(CFE_SB_ValueToMsgId(PAYUEL_OBC_CMD_MID), PAYUEL_OBC_RESET_COUNTERS_CC,
+                               CFE_SUCCESS, NULL, 0, RPT_RETTYPE_SUCCESS);
     return CFE_SUCCESS;
 }
 

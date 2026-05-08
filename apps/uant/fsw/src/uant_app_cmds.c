@@ -37,9 +37,38 @@
 #include <gs/gssb/internal/gssb_common.h>   /* gs_gssb_common_* 함수 선언 */
 #include <gs/gssb/internal/gssb_cmd_id.h>   /* GSSB_CMD_ 열거형 */
 #include <gs/gssb/gssb_autodeploy.h>
+#include <string.h>
 // !!!! Most of the cmds are in the device directory 
 /* The uant_lib module provides the UANT_Function() prototype */
 //#include "uant_lib.h"
+
+static void UANT_APP_SendCmdReport(uint8 command_code, int32 status, const void *data, uint16 data_size,
+                                   uint8 return_type)
+{
+    uint16 copy_size = 0;
+
+    if (data != NULL && data_size > 0)
+    {
+        copy_size = (data_size <= sizeof(UANT_APP_Data.rpt.Payload.ReturnValue))
+                        ? data_size
+                        : (uint16)sizeof(UANT_APP_Data.rpt.Payload.ReturnValue);
+    }
+
+    RPT_Report_t report = (RPT_Report_t){0};
+    report.MsgID          = UANT_APP_CMD_MID;
+    report.CommandCode    = command_code;
+    report.ReturnType     = return_type;
+    report.ReturnCode     = status;
+    report.ReturnDataSize = copy_size;
+    if (copy_size > 0)
+    {
+        memcpy(report.ReturnValue, data, copy_size);
+    }
+
+    UANT_APP_Data.rpt.Payload = report;
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(UANT_APP_Data.rpt.TelemetryHeader));
+    (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(UANT_APP_Data.rpt.TelemetryHeader), true);
+}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
@@ -167,10 +196,15 @@ CFE_Status_t UANT_APP_SendHkCmd(const UANT_APP_SendHkCmd_t *Msg)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t UANT_APP_NoopCmd(const UANT_APP_NoopCmd_t *Msg)
 {
+    uint8 counters[2];
+
     UANT_APP_Data.CmdCounter++;
 
     CFE_EVS_SendEvent(UANT_APP_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "UANT: NOOP command %s",
                       UANT_APP_VERSION);
+    counters[0] = UANT_APP_Data.CmdCounter;
+    counters[1] = UANT_APP_Data.ErrCounter;
+    UANT_APP_SendCmdReport(UANT_APP_NOOP_CC, CFE_SUCCESS, counters, sizeof(counters), RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
@@ -184,10 +218,16 @@ CFE_Status_t UANT_APP_NoopCmd(const UANT_APP_NoopCmd_t *Msg)
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 CFE_Status_t UANT_APP_ResetCountersCmd(const UANT_APP_ResetCountersCmd_t *Msg)
 {
+    uint8 counters[2];
+
     UANT_APP_Data.CmdCounter = 0;
     UANT_APP_Data.ErrCounter = 0;
 
     CFE_EVS_SendEvent(UANT_APP_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "UANT: RESET command");
+    counters[0] = UANT_APP_Data.CmdCounter;
+    counters[1] = UANT_APP_Data.ErrCounter;
+    UANT_APP_SendCmdReport(UANT_APP_RESET_COUNTERS_CC, CFE_SUCCESS, counters, sizeof(counters),
+                           RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }

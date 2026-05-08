@@ -13,7 +13,6 @@ import datetime
 import html
 import json
 import shutil
-import struct
 import threading
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -202,9 +201,7 @@ from .loader import AppDef, CommandDef, load_commands_dir, save_command
 from .payload import ALL_TYPES, SCALAR_TYPES, encode_param_array, param_byte_size
 from .scene import SceneWidget
 from .telemetry import (
-    DEFAULT_PAYLOAD_OFFSET,
     TelemetryDef,
-    decode_telemetry_packet,
     load_telemetry_defs,
     load_telemetry_file,
     save_telemetry_file,
@@ -227,9 +224,7 @@ DEFAULT_CONFIG: dict = {
 }
 
 TO_LAB_CMD_MID = 0x1880
-TO_LAB_ADD_PACKET_FC = 2
 TO_LAB_OUTPUT_ENABLE_FC = 6
-TO_LAB_DEFAULT_BUF_LIMIT = 4
 
 
 # ---------------------------------------------------------------------------
@@ -1337,7 +1332,7 @@ class MainWindow(QMainWindow):
         QApplication.instance().setPalette(make_palette(dark))
         self.cmd_panel.apply_theme(dark)
         self._populate_tree(self.search_edit.text())
-        self._populate_tlm_tree()
+        self._update_tlm_actions()
 
         if dark:
             self.delete_btn.setStyleSheet('''
@@ -1520,64 +1515,9 @@ class MainWindow(QMainWindow):
         root.setContentsMargins(4, 4, 4, 4)
         root.setSpacing(4)
 
-        defs_hdr = QHBoxLayout()
-        defs_hdr.addWidget(QLabel('Telemetry definitions (telemetry.json)'))
-        defs_hdr.addStretch()
-
-        add_tlm_btn = QPushButton('Add')
-        add_tlm_btn.setFixedWidth(55)
-        add_tlm_btn.setToolTip('Add a telemetry packet definition to telemetry.json')
-        add_tlm_btn.clicked.connect(self._add_telemetry_def)
-        defs_hdr.addWidget(add_tlm_btn)
-
-        self.edit_tlm_btn = QPushButton('Edit')
-        self.edit_tlm_btn.setFixedWidth(55)
-        self.edit_tlm_btn.setEnabled(False)
-        self.edit_tlm_btn.setToolTip('Edit the selected telemetry packet definition')
-        self.edit_tlm_btn.clicked.connect(self._edit_telemetry_def)
-        defs_hdr.addWidget(self.edit_tlm_btn)
-
-        self.delete_tlm_btn = QPushButton('Delete')
-        self.delete_tlm_btn.setFixedWidth(65)
-        self.delete_tlm_btn.setEnabled(False)
-        self.delete_tlm_btn.setToolTip('Delete the selected telemetry packet definition')
-        self.delete_tlm_btn.clicked.connect(self._delete_telemetry_def)
-        defs_hdr.addWidget(self.delete_tlm_btn)
-
-        reload_tlm_btn = QPushButton('Reload')
-        reload_tlm_btn.setFixedWidth(65)
-        reload_tlm_btn.setToolTip('Reload commands and telemetry definitions from disk')
-        reload_tlm_btn.clicked.connect(self._load_commands)
-        defs_hdr.addWidget(reload_tlm_btn)
-        root.addLayout(defs_hdr)
-
-        defs_split = QSplitter(Qt.Horizontal)
-        self.tlm_tree = QTreeWidget()
-        self.tlm_tree.setHeaderHidden(True)
-        self.tlm_tree.setIndentation(14)
-        self.tlm_tree.currentItemChanged.connect(self._tlm_tree_current_changed)
-        self.tlm_tree.itemDoubleClicked.connect(lambda *_: self._edit_telemetry_def())
-        defs_split.addWidget(self.tlm_tree)
-
-        self.tlm_schema = QTextEdit()
-        self.tlm_schema.setReadOnly(True)
-        self.tlm_schema.setFont(QFont('Courier', 9))
-        defs_split.addWidget(self.tlm_schema)
-        defs_split.setStretchFactor(0, 1)
-        defs_split.setStretchFactor(1, 2)
-        defs_split.setSizes([320, 680])
-        root.addWidget(defs_split, 1)
-
         live_hdr = QHBoxLayout()
-        live_hdr.addWidget(QLabel('Received telemetry packets (all payload bytes shown)'))
+        live_hdr.addWidget(QLabel('Received TO telemetry packets (raw CCSDS packets)'))
         live_hdr.addStretch()
-
-        self.subscribe_all_btn = QPushButton('Subscribe All')
-        self.subscribe_all_btn.setFixedWidth(96)
-        self.subscribe_all_btn.setEnabled(False)
-        self.subscribe_all_btn.setToolTip('Send TO_LAB Add Packet for every telemetry MID loaded from telemetry.json')
-        self.subscribe_all_btn.clicked.connect(self._subscribe_all_telemetry)
-        live_hdr.addWidget(self.subscribe_all_btn)
 
         clr = QPushButton('Clear')
         clr.setFixedWidth(55)
@@ -1588,6 +1528,7 @@ class MainWindow(QMainWindow):
         self.tlm_edit = QTextEdit()
         self.tlm_edit.setReadOnly(True)
         self.tlm_edit.setFont(QFont('Courier', 9))
+        self.tlm_edit.setLineWrapMode(QTextEdit.WidgetWidth)
         root.addWidget(self.tlm_edit, 1)
 
         return w
@@ -1604,7 +1545,6 @@ class MainWindow(QMainWindow):
             self.apps = []
             self.telemetry_defs = {}
             self._populate_tree()
-            self._populate_tlm_tree()
             self._update_tlm_actions()
             self._log('[INFO] No mission selected — choose a mission or add new commands')
 
@@ -1612,7 +1552,6 @@ class MainWindow(QMainWindow):
         self.apps = load_commands_dir(directory)
         self.telemetry_defs = load_telemetry_defs(directory)
         self._populate_tree()
-        self._populate_tlm_tree()
         self._update_tlm_actions()
         total = sum(len(a.commands) for a in self.apps)
         self._log(
@@ -1621,9 +1560,8 @@ class MainWindow(QMainWindow):
         )
 
     def _update_tlm_actions(self) -> None:
-        if hasattr(self, 'subscribe_all_btn'):
-            self.subscribe_all_btn.setEnabled(self.conn.is_connected and bool(self.telemetry_defs))
-        self._update_tlm_def_buttons()
+        # The telemetry tab is display-only, so there are no controls to enable.
+        pass
 
     def _update_tlm_def_buttons(self) -> None:
         selected = self._get_selected_tlm_def()
@@ -1988,45 +1926,6 @@ class MainWindow(QMainWindow):
         pkt = build_command_packet(mid, fc, payload, self.conn.seq_count)
         return self.conn.send(pkt)
 
-    def _send_to_lab_add_packet(self, mid: int) -> bool:
-        cmd = self._find_command('TO_LAB', 'Add Packet')
-        cmd_mid = cmd.mid if cmd else TO_LAB_CMD_MID
-        fc = cmd.fc if cmd else TO_LAB_ADD_PACKET_FC
-        endian = '<' if self.endian_cb.currentIndex() == 0 else '>'
-        payload = struct.pack(endian + 'IBBBB', mid, 0, 0, TO_LAB_DEFAULT_BUF_LIMIT, 0)
-        pkt = build_command_packet(cmd_mid, fc, payload, self.conn.seq_count)
-        return self.conn.send(pkt)
-
-    def _subscribe_all_telemetry(self) -> None:
-        if not self.conn.is_connected:
-            self._log('[ERROR] Connect before subscribing telemetry packets')
-            return
-
-        mids = sorted(self.telemetry_defs)
-        if not mids:
-            self._log('[WARN] No telemetry definitions loaded — nothing to subscribe')
-            return
-
-        if not self._send_to_lab_output_enable():
-            self._log('[WARN] Could not send TO_LAB Output Enable before bulk subscribe')
-
-        sent = 0
-        failed: List[int] = []
-        for mid in mids:
-            if self._send_to_lab_add_packet(mid):
-                sent += 1
-            else:
-                failed.append(mid)
-
-        mid_text = ', '.join(f'0x{mid:04X}' for mid in mids[:12])
-        if len(mids) > 12:
-            mid_text += f', ... +{len(mids) - 12}'
-        self._log(f'[INFO] Subscribed {sent}/{len(mids)} telemetry streams through TO_LAB: {mid_text}')
-
-        if failed:
-            failed_text = ', '.join(f'0x{mid:04X}' for mid in failed)
-            self._log(f'[ERROR] Failed to subscribe telemetry MID(s): {failed_text}')
-
     def _ping(self) -> None:
         if not self.conn.is_connected or self._ping_pending:
             return
@@ -2315,15 +2214,6 @@ class MainWindow(QMainWindow):
             return '(empty)'
         return ' '.join(f'{b:02X}' for b in data)
 
-    @staticmethod
-    def _telemetry_payload(data: bytes, tlm_def: Optional[TelemetryDef]) -> Tuple[int, bytes]:
-        if tlm_def is not None:
-            offset = int(tlm_def.payload_offset)
-        else:
-            offset = DEFAULT_PAYLOAD_OFFSET if len(data) >= DEFAULT_PAYLOAD_OFFSET else min(6, len(data))
-        offset = max(0, min(offset, len(data)))
-        return offset, data[offset:]
-
     def _on_telemetry(self, data: bytes) -> None:
         if self._ping_pending:
             self._ping_pending = False
@@ -2344,52 +2234,22 @@ class MainWindow(QMainWindow):
 
         if hdr:
             tlm_def = self.telemetry_defs.get(hdr.mid)
-            payload_offset, payload = self._telemetry_payload(data, tlm_def)
-            payload_hex = self._hex_dump(payload)
             packet_hex = self._hex_dump(data)
+            source = 'TO/Raw Telemetry'
+            if tlm_def:
+                source = f'{tlm_def.app}/{tlm_def.name}'
             header = (
                 f'<span style="color:{c["tlm_ts"]}">[{ts}]</span> '
                 f'<span style="color:{c["tlm_mid"]}">MID=0x{hdr.mid:04X}</span> '
                 f'<span style="color:{c["tlm_meta"]}"> seq={hdr.seq_count}'
                 f' len={hdr.data_length + 7}B</span> '
             )
-
-            if tlm_def:
-                endian = '<' if self.endian_cb.currentIndex() == 0 else '>'
-                decoded_fields, decode_error = decode_telemetry_packet(data, tlm_def, endian)
-                detail = (
-                    f'<span style="color:{c["tlm_name"]}">'
-                    f'{html.escape(tlm_def.app, quote=False)}/{html.escape(tlm_def.name, quote=False)}</span>'
-                )
-                if decoded_fields:
-                    detail += ' <span style="color:{0}">'.format(c["tlm_fields"])
-                    detail += ' | '.join(
-                        f'{html.escape(str(name), quote=False)}={html.escape(str(value), quote=False)}'
-                        for name, value in decoded_fields
-                    )
-                    detail += '</span>'
-                if decode_error:
-                    detail += (
-                        f' <span style="color:{c["tlm_error"]}">decode error: '
-                        f'{html.escape(decode_error, quote=False)}</span>'
-                    )
-                line = (
-                    f'{header}<br>'
-                    f'&nbsp;&nbsp;{detail}<br>'
-                    f'&nbsp;&nbsp;<span style="color:{c["tlm_hex"]}">'
-                    f'payload@{payload_offset} ({len(payload)}B): {payload_hex}</span><br>'
-                    f'&nbsp;&nbsp;<span style="color:{c["tlm_raw"]}">'
-                    f'packet ({len(data)}B): {packet_hex}</span>'
-                )
-            else:
-                line = (
-                    f'{header}<span style="color:{c["tlm_name"]}">TO/Raw Telemetry</span> '
-                    f'<span style="color:{c["tlm_meta"]}">(no CACTUS decoder registered)</span><br>'
-                    f'&nbsp;&nbsp;<span style="color:{c["tlm_hex"]}">'
-                    f'payload@{payload_offset} ({len(payload)}B): {payload_hex}</span><br>'
-                    f'&nbsp;&nbsp;<span style="color:{c["tlm_raw"]}">'
-                    f'packet ({len(data)}B): {packet_hex}</span>'
-                )
+            line = (
+                f'{header}<span style="color:{c["tlm_name"]}">'
+                f'{html.escape(source, quote=False)}</span><br>'
+                f'&nbsp;&nbsp;<span style="color:{c["tlm_raw"]}">'
+                f'packet ({len(data)}B): {packet_hex}</span>'
+            )
         else:
             line = (
                 f'<span style="color:{c["tlm_ts"]}">[{ts}]</span> '

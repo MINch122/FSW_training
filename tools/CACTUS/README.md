@@ -36,7 +36,7 @@ CACTUS is here for you to provide:
 - **Live hex preview** of every packet before you send it
 - **Runtime-editable IP, port, MID and Function Code**
 - **Adding commands during runtime** and saving back to the JSON
-- **Real-time telemetry display** with MID, sequence count, hex preview, and mission-defined field decoding
+- **Real-time telemetry display** with MID, sequence count, and raw packet hex as packets arrive
 - And a nice cat sitting next to the cactus
 
 ---
@@ -234,27 +234,19 @@ Place a `telemetry.json` file next to the mission command JSON files:
 }
 ```
 
-CACTUS splits incoming TO_LAB UDP datagrams using the CCSDS packet length, then
-matches each packet by `MID`.  Every received packet is shown in the telemetry
-tab with its full payload bytes and full packet bytes.  When a definition is
-found, decoded field values are shown above the raw hex.  Field types match the
-command parameter types, with a few telemetry-specific display helpers:
+CACTUS splits incoming TO_LAB UDP datagrams using the CCSDS packet length.  Every
+received packet is shown in the telemetry tab as the raw packet bytes, with MID,
+sequence count, packet size, and the mission-defined app/name when available.
+Field definitions may still be present in `telemetry.json` for mission metadata,
+but the telemetry tab intentionally does not decode or edit them.
 
-- `format: "hex"` renders scalar values in hexadecimal
-- `units: "C"` appends display units
-- `scale: 0.01` applies a display-only multiplier
-- `display_length_from: "ReturnDataSize"` trims the shown portion of a fixed-size `bytes` field
+If no matching definition exists, CACTUS still shows the packet as raw TO
+telemetry, so new MIDs are visible before they are added to `telemetry.json`.
 
-If no matching definition exists, CACTUS still shows the packet as unregistered
-telemetry with the full payload hex, so new MIDs are visible before they are
-added to `telemetry.json`.
-
-Use **Subscribe All** in the telemetry tab to send TO_LAB `Add Packet` for every
-telemetry MID currently loaded from `telemetry.json`.  This avoids subscribing
-the listed telemetry streams one by one from the command tree.
-
-CACTUS loads `telemetry.json` in the background for names, offsets, and field
-decoding.  The telemetry tab itself stays focused on the live packet stream.
+cFS/TO owns telemetry routing through its normal table/configuration.  CACTUS
+does not auto-send `Output Enable` or `Add Packet`; the telemetry tab only shows
+whatever TO is already emitting.  There is no telemetry definition list or edit
+panel in the live telemetry view.
 
 ---
 

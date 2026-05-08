@@ -128,6 +128,9 @@ CFE_Status_t PAYUEL_ROMA_NoopCmd(const PAYUEL_ROMA_NoopCmd_t *Msg)
     if (Status == CFE_SUCCESS) {
         OS_printf("Rx Data: %s\n", RxBuf);
     }
+    PAYUEL_ROMA_HandleReport(Status, PAYUEL_ROMA_NOOP_CC,
+                             (Status == CFE_SUCCESS) ? RxBuf : NULL,
+                             (Status == CFE_SUCCESS) ? sizeof(RxBuf) : 0);
 
     return CFE_SUCCESS;
 }
@@ -163,6 +166,9 @@ CFE_Status_t PAYUEL_ROMA_ResetCountersCmd(const PAYUEL_ROMA_ResetCountersCmd_t *
     }
 
     CFE_EVS_SendEvent(PAYUEL_ROMA_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "RESET command");
+    PAYUEL_ROMA_HandleReport(Status, PAYUEL_ROMA_RESET_COUNTERS_CC,
+                             (Status == CFE_SUCCESS) ? RxBuf : NULL,
+                             (Status == CFE_SUCCESS) ? sizeof(RxBuf) : 0);
 
     return CFE_SUCCESS;
 }

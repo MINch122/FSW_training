@@ -31,8 +31,38 @@
 #include "utrx_utils.h"
 #include "utrx_msg.h"
 #include "utrx_dispatch.h"
+#include <string.h>
 
 /* The utrx_lib module provides the UTRX_Function() prototype */
+
+static void UTRX_SendCmdReport(uint8 command_code, int32 status, const void *data, uint16 data_size,
+                               uint8 return_type)
+{
+    uint16 copy_size = 0;
+
+    if (data != NULL && data_size > 0)
+    {
+        copy_size = (data_size <= sizeof(UTRX_AppData.RptPkt.Report.ReturnValue))
+                        ? data_size
+                        : (uint16)sizeof(UTRX_AppData.RptPkt.Report.ReturnValue);
+    }
+
+    memset(&UTRX_AppData.RptPkt, 0, sizeof(UTRX_AppData.RptPkt));
+    CFE_MSG_Init(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader), CFE_SB_ValueToMsgId(UTRX_RPT_TLM_MID),
+                 sizeof(UTRX_AppData.RptPkt));
+    UTRX_AppData.RptPkt.Report.MsgID          = UTRX_CMD_MID;
+    UTRX_AppData.RptPkt.Report.CommandCode    = command_code;
+    UTRX_AppData.RptPkt.Report.ReturnType     = return_type;
+    UTRX_AppData.RptPkt.Report.ReturnCode     = status;
+    UTRX_AppData.RptPkt.Report.ReturnDataSize = copy_size;
+    if (copy_size > 0)
+    {
+        memcpy(UTRX_AppData.RptPkt.Report.ReturnValue, data, copy_size);
+    }
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(UTRX_AppData.RptPkt.TelemetryHeader), true);
+}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
@@ -55,9 +85,15 @@ CFE_Status_t UTRX_SendHkCmd(const CFE_SB_Buffer_t *SBBufPtr)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t UTRX_NoopCmd(const UTRX_NoopCmd_t *Msg)
 {
+    uint8 counters[3];
+
     UTRX_AppData.CmdCounter++;
 
     CFE_EVS_SendEvent(UTRX_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "UTRX: NOOP command");
+    counters[0] = UTRX_AppData.CmdCounter;
+    counters[1] = UTRX_AppData.AppErrCounter;
+    counters[2] = UTRX_AppData.DeviceErrCounter;
+    UTRX_SendCmdReport(UTRX_NOOP_CC, CFE_SUCCESS, counters, sizeof(counters), RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
@@ -71,11 +107,17 @@ CFE_Status_t UTRX_NoopCmd(const UTRX_NoopCmd_t *Msg)
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 CFE_Status_t UTRX_ResetCountersCmd(const UTRX_ResetCountersCmd_t *Msg)
 {
+    uint8 counters[3];
+
     UTRX_AppData.CmdCounter = 0;
     UTRX_AppData.AppErrCounter = 0;
     UTRX_AppData.DeviceErrCounter = 0;
 
     CFE_EVS_SendEvent(UTRX_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "UTRX: RESET command");
+    counters[0] = UTRX_AppData.CmdCounter;
+    counters[1] = UTRX_AppData.AppErrCounter;
+    counters[2] = UTRX_AppData.DeviceErrCounter;
+    UTRX_SendCmdReport(UTRX_RESET_COUNTERS_CC, CFE_SUCCESS, counters, sizeof(counters), RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
@@ -84,22 +126,36 @@ CFE_Status_t UTRX_ResetCountersCmd(const UTRX_ResetCountersCmd_t *Msg)
 /**********************************************************************************/
 CFE_Status_t UTRX_ResetDeviceCmdCountersCmd(const UTRX_ResetDeviceCmdCountersCmd_t *Msg)
 {
+    uint8 counters[3];
+
     UTRX_AppData.CmdCounter = 0;
     UTRX_AppData.DeviceErrCounter = 0;
 
     CFE_EVS_SendEvent(UTRX_RESET_DEVICE_COUNTER_EID, CFE_EVS_EventType_INFORMATION,
                       "UTRX: Reset Device Cmd Counters");
+    counters[0] = UTRX_AppData.CmdCounter;
+    counters[1] = UTRX_AppData.AppErrCounter;
+    counters[2] = UTRX_AppData.DeviceErrCounter;
+    UTRX_SendCmdReport(UTRX_RESET_DEVICE_CMD_COUNTERS_CC, CFE_SUCCESS, counters, sizeof(counters),
+                       RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t UTRX_ResetAppCmdCountersCmd(const UTRX_ResetAppCmdCountersCmd_t *Msg)
 {
+    uint8 counters[3];
+
     UTRX_AppData.CmdCounter = 0;
     UTRX_AppData.AppErrCounter = 0;
 
     CFE_EVS_SendEvent(UTRX_RESET_APP_COUNTER_EID, CFE_EVS_EventType_INFORMATION,
                       "UTRX: Reset App Cmd Counters");
+    counters[0] = UTRX_AppData.CmdCounter;
+    counters[1] = UTRX_AppData.AppErrCounter;
+    counters[2] = UTRX_AppData.DeviceErrCounter;
+    UTRX_SendCmdReport(UTRX_RESET_APP_CMD_COUNTERS_CC, CFE_SUCCESS, counters, sizeof(counters),
+                       RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
