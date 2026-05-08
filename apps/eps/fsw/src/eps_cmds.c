@@ -569,15 +569,15 @@ CFE_Status_t EPS_RParam_Get_Cmd(const EPS_RParam_Get_Cmd_t *Msg)
     const char *table = EPS_GetRParamTableName(Msg->Payload.csp_node, Msg->Payload.table_id);
     uint8_t data[EPS_RPARAM_DATA_MAX_LEN] = {0};
 
-    if (Msg->Payload.size > sizeof(Msg->Payload.data))
+    if (Msg->Payload.size > EPS_RPARAM_DATA_MAX_LEN)
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam Get size too large, size=%u max=%u",
-                          Msg->Payload.size, (unsigned int)sizeof(Msg->Payload.data));
+                          Msg->Payload.size, (unsigned int)EPS_RPARAM_DATA_MAX_LEN);
         OS_printf("[EPS] RParam Get REJECTED device=%s node=%u table=%u(%s) addr=%u size=%u max=%u\n",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
-                  Msg->Payload.addr, Msg->Payload.size, (unsigned int)sizeof(Msg->Payload.data));
+                  Msg->Payload.addr, Msg->Payload.size, (unsigned int)EPS_RPARAM_DATA_MAX_LEN);
         return CFE_STATUS_RANGE_ERROR;
     }
 
@@ -606,7 +606,12 @@ CFE_Status_t EPS_RParam_Get_Cmd(const EPS_RParam_Get_Cmd_t *Msg)
         OS_printf("%02X ", data[i]);
     OS_printf("\n");
 
-    EPS_RParam_Get_Cmd_Payload_t report = Msg->Payload;
+    EPS_RParam_Get_Report_Payload_t report = {0};
+    report.csp_node = Msg->Payload.csp_node;
+    report.table_id = Msg->Payload.table_id;
+    report.addr     = Msg->Payload.addr;
+    report.type     = Msg->Payload.type;
+    report.size     = Msg->Payload.size;
     memcpy(report.data, data, Msg->Payload.size);
     EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_RPARAM_VALUE,
                         Msg->Payload.table_id, Msg->Payload.type, &report, sizeof(report));

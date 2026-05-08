@@ -2757,12 +2757,6 @@
             "default": "2"
           },
           {
-            "name": "data",
-            "type": "bytes",
-            "length": 128,
-            "default": ""
-          },
-          {
             "name": "size",
             "type": "uint16",
             "default": "4"

@@ -167,8 +167,19 @@ typedef struct EPS_PACK {
  * table_id = same mapping as RParam Set.
  * addr     = same mapping as RParam Set.
  * type     = same mapping as RParam Set.
- * data     = unused by the EPS app for GET but remains in the fixed layout.
  * size     = number of bytes to read, max EPS_RPARAM_DATA_MAX_LEN(128).
+ */
+typedef struct EPS_PACK {
+    uint8_t csp_node;
+    uint8_t table_id;
+    uint16_t    addr;
+    uint8_t     type;
+    uint16_t    size;
+}EPS_RParam_Get_Cmd_Payload_t;
+
+/*
+ * RParam Get report payload:
+ * data = bytes returned by the remote RPARAM get transaction.
  */
 typedef struct EPS_PACK {
     uint8_t csp_node;
@@ -177,7 +188,7 @@ typedef struct EPS_PACK {
     uint8_t     type;
     uint8_t     data[EPS_RPARAM_DATA_MAX_LEN];
     uint16_t    size;
-}EPS_RParam_Get_Cmd_Payload_t;
+}EPS_RParam_Get_Report_Payload_t;
 
 /*
  * RParam Get Full Table payload:
