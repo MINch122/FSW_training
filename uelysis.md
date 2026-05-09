@@ -1,4 +1,4 @@
-# UELYSIS Change Log
+# BEE1012 Change Log
 
 ## 2026-04-24 14:21 KST
 - `apps/sch_lab`에 지상국 명령 처리 경로를 추가했다.

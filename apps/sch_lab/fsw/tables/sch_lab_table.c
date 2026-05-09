@@ -68,9 +68,6 @@
 #include "uant_app_msgids.h"
 #include "uant_app_msg.h"
 
-#include "lgbat_msgids.h"
-#include "payuel_cam_msgids.h"
-#include "payuel_obc_msgids.h"
 /* End of COMS Header */
 
 /*********************

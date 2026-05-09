@@ -142,6 +142,13 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             } 
             break;
 
+        case ADCS_CSP_PING_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_CspPingCmd_t)))
+            {
+                ADCS_CspPingCmd((const ADCS_CspPingCmd_t *)SBBufPtr);
+            }
+            break;
+
         case ADCS_GPIO_BOOT_HIGH_CC:
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GpioBootHighCmd_t)))
             {

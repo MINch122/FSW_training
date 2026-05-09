@@ -1,6 +1,0 @@
-#ifndef PAYUEL_CAM_PERFIDS_H
-#define PAYUEL_CAM_PERFIDS_H
-
-#define PAYUEL_CAM_PERF_ID 92
-
-#endif

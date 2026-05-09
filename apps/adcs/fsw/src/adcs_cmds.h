@@ -34,6 +34,7 @@ CFE_Status_t ADCS_SendHkCmd(const ADCS_SendHkCmd_t *Msg);
 CFE_Status_t ADCS_SendBcnCmd(const ADCS_SendBcnCmd_t *Msg);
 CFE_Status_t ADCS_NoopCmd(const ADCS_NoopCmd_t *Msg);
 CFE_Status_t ADCS_ResetCountersCmd(const ADCS_ResetCountersCmd_t *Msg);
+CFE_Status_t ADCS_CspPingCmd(const ADCS_CspPingCmd_t *Msg);
 /*
 CFE_Status_t ADCS_EN_HighCmd(void);
 CFE_Status_t ADCS_EN_LowCmd(void);

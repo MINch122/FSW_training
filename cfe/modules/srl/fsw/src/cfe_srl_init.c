@@ -110,6 +110,34 @@ int32 CFE_SRL_EarlyInit(void) {
 	}
 	else CFE_ES_WriteToSysLog("%s: RS422 Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_RS422_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_RS422_HANDLE_INDEXER])->DevName);
 
+	/* GPIO SP_IN Init */
+	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_SP_IN_GPIO_INDEXER], "/dev/gpiochip2", 4, "SP_IN", 0, false);
+	if (Status != CFE_SUCCESS) {
+		CFE_ES_WriteToSysLog("%s: GPIO SP_IN Initialization failed! RC=%d\n", __func__, Status);
+		return CFE_SRL_SP_IN_INIT_ERR;
+	}
+
+	/* GPIO LTRX_EN Init */
+	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_LTRX_EN_GPIO_INDEXER], "/dev/gpiochip2", 5, "LTRX_EN", 0, true);
+	if (Status != CFE_SUCCESS) {
+		CFE_ES_WriteToSysLog("%s: GPIO LTRX_EN Initialization failed! RC=%d\n", __func__, Status);
+		return CFE_SRL_LTRX_EN_INIT_ERR;
+	}
+
+	/* GPIO DEP1_EN Init */
+	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_DEP1_EN_GPIO_INDEXER], "/dev/gpiochip0", 29, "DEP1_EN", 0, true);
+	if (Status != CFE_SUCCESS) {
+		CFE_ES_WriteToSysLog("%s: GPIO DEP1_EN Initialization failed! RC=%d\n", __func__, Status);
+		return CFE_SRL_DEP1_EN_INIT_ERR;
+	}
+
+	/* GPIO DEP2_EN Init */
+	Status = CFE_SRL_GpioInit(&GPIO[CFE_SRL_DEP2_EN_GPIO_INDEXER], "/dev/gpiochip0", 28, "DEP2_EN", 0, true);
+	if (Status != CFE_SUCCESS) {
+		CFE_ES_WriteToSysLog("%s: GPIO DEP2_EN Initialization failed! RC=%d\n", __func__, Status);
+		return CFE_SRL_DEP2_EN_INIT_ERR;
+	}
+
 	Status = CFE_SRL_InitCSP();
 	if (Status != CFE_SUCCESS) {
 		CFE_ES_WriteToSysLog("%s: CSP Initialization failed! RC=%d\n", __func__, Status);

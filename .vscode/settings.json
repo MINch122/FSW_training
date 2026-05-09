@@ -218,5 +218,5 @@
         "to_lab_msg.h": "c",
         "rtems.h": "c"
     },
-    "cmake.sourceDirectory": "/home/acl-cleanroom1/dss/0508/FSW_UELYSIS/apps/eo"
+    "cmake.sourceDirectory": "/home/acl-cleanroom1/dss/0508/FSW_BEE1012/apps/eo"
 }

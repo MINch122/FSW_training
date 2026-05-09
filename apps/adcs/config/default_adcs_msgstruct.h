@@ -63,6 +63,10 @@ typedef struct{
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_CspPingCmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_GpioBootHighCmd_t;
 
 typedef struct{

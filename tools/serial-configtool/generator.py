@@ -10,7 +10,7 @@ def get_defs_dir():
     if len(defs_dirs) == 1:
         return defs_dirs[0]
 
-    for name in ("uelysis_defs", "base5th_defs"):
+    for name in ("bee1012_defs", "base5th_defs"):
         candidate = repo_root / name
         if candidate.exists():
             return candidate

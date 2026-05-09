@@ -31,6 +31,9 @@
 #include "adcs_utils.h"
 #include "adcs_msg.h"
 #include "adcs_eventids.h"
+#include <csp/csp.h>
+
+#define ADCS_CSP_PING_TIMEOUT_MS 1000
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
 /*  Purpose:                                                                  */
@@ -120,6 +123,33 @@ CFE_Status_t ADCS_ResetCountersCmd(const ADCS_ResetCountersCmd_t *Msg)
     ADCS_HandleReport(CFE_SUCCESS, ADCS_RESET_COUNTERS_CC, Cmds, sizeof(Cmds));
 
     CFE_EVS_SendEvent(ADCS_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "ADCS: RESET command");
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_CspPingCmd(const ADCS_CspPingCmd_t *Msg)
+{
+    int32_t elapsed_ms;
+
+    (void)Msg;
+
+    ADCS_AppData.CmdCounter++;
+
+    elapsed_ms = csp_ping(CAN_ADDR_CC, ADCS_CSP_PING_TIMEOUT_MS, 1U, 0);
+    if (elapsed_ms < 0)
+    {
+        ADCS_AppData.ErrCounter++;
+        ADCS_HandleReport(CFE_STATUS_EXTERNAL_RESOURCE_FAIL, ADCS_CSP_PING_CC, NULL, 0);
+        CFE_EVS_SendEvent(ADCS_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "ADCS: CSP ping failed on node %u",
+                          (unsigned int)CAN_ADDR_CC);
+        OS_printf("[ADCS] CSP Ping FAILED node=%u\n", (unsigned int)CAN_ADDR_CC);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    ADCS_HandleReport(CFE_SUCCESS, ADCS_CSP_PING_CC, &elapsed_ms, sizeof(elapsed_ms));
+    CFE_EVS_SendEvent(ADCS_VALUE_INF_EID, CFE_EVS_EventType_INFORMATION, "ADCS: CSP ping OK node=%u rtt=%ld ms",
+                      (unsigned int)CAN_ADDR_CC, (long)elapsed_ms);
+    OS_printf("[ADCS] CSP Ping OK node=%u rtt=%ld ms\n", (unsigned int)CAN_ADDR_CC, (long)elapsed_ms);
 
     return CFE_SUCCESS;
 }

@@ -17,12 +17,14 @@ typedef enum {
 #define CFE_SRL_GNRL_DEVICE_NUM		(CFE_SRL_RS422_HANDLE_INDEXER + 1)
 
 /* \# of used gpio pin */
-#define CFE_SRL_TOT_GPIO_NUM		0
+#define CFE_SRL_TOT_GPIO_NUM		4
 
 typedef enum {
-	NOTHING
+	CFE_SRL_SP_IN_GPIO_INDEXER,
+	CFE_SRL_LTRX_EN_GPIO_INDEXER,
+	CFE_SRL_DEP1_EN_GPIO_INDEXER,
+	CFE_SRL_DEP2_EN_GPIO_INDEXER,
 } CFE_SRL_GPIO_Indexer_t;
-
 
 /* CSP Node  Configuration */
 typedef enum {
@@ -34,11 +36,12 @@ typedef enum {
 	CSP_NODE_ADCS = 6,
 	CSP_NODE_PAYUEL_OBC = 11,
 	CSP_NODE_UTRX = 5,
-	CSP_NODE_PAYUEL_CAM = 12,
-	CSP_NODE_ROMA = 19,
 	CSP_NODE_BP8 = 7,
 	CSP_NODE_GSTRX = 20,
 	CSP_NODE_GS_KISS = 8,
+	CSP_NODE_LTRX = 30,
+	CSP_NODE_PAY_IFB = 13,
+	CSP_NODE_PAY_EXP = 11,
 	CSP_NODE_TEST = 9,
 } CFE_SRL_CSP_Node_t;
 

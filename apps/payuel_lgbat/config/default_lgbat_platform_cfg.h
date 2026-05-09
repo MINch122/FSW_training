@@ -1,4 +1,0 @@
-#ifndef LGBAT_PLATFORM_CFG_H
-#define LGBAT_PLATFORM_CFG_H
-
-#endif /* LGBAT_PLATFORM_CFG_H */
