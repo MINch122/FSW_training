@@ -1,0 +1,28 @@
+/**
+ * @file
+ *
+ * Define MISSION Events IDs
+ */
+
+#ifndef MISSION_EVENTIDS_H
+#define MISSION_EVENTIDS_H
+
+#define MISSION_RESERVED_EID        0
+#define MISSION_INIT_INF_EID        1
+#define MISSION_CC_ERR_EID          2
+#define MISSION_MID_ERR_EID         3
+#define MISSION_CMD_LEN_ERR_EID     4
+#define MISSION_PIPE_ERR_EID        5
+#define MISSION_CR_PIPE_ERR_EID     6
+#define MISSION_SUB_CMD_ERR_EID     7
+#define MISSION_SUB_BCN_ERR_EID     8
+#define MISSION_SUB_HK_ERR_EID      9
+#define MISSION_SUB_ONEHZ_ERR_EID   10
+#define MISSION_TBL_ERR_EID         11
+#define MISSION_SEM_INIT_ERR_EID    16
+#define MISSION_MUT_INIT_ERR_EID    17
+#define MISSION_CHILD_CREATE_ERR_EID 18
+#define MISSION_PHASE_INIT_ERR_EID   19
+
+
+#endif

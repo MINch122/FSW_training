@@ -52,8 +52,8 @@
 #include "rpt_msgids.h"
 #include "rpt_msg.h"
 
-#include "eo_msgids.h"
-#include "eo_msg.h"
+#include "mission_msgids.h"
+#include "mission_msg.h"
 /* End of FSW Header */
 
 /*********************
@@ -112,7 +112,7 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
 
         /* Beacon requests for apps copied into HK_COMBINED_PKT1 */
         {CFE_SB_MSGID_WRAP_VALUE(RPT_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(EO_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        // {CFE_SB_MSGID_WRAP_VALUE(MISSION_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(STX_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(UANT_APP_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(UTRX_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},

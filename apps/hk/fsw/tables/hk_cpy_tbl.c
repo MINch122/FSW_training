@@ -43,8 +43,8 @@
 #include "rpt_msgids.h"
 #include "rpt_msg.h"
 
-#include "eo_msgids.h"
-#include "eo_msg.h"
+#include "mission_msgids.h"
+#include "mission_msg.h"
 
 #include "ci_lab_msgids.h"
 #include "ci_lab_msg.h"
@@ -96,7 +96,7 @@
 /* Beacon Packet */
 #define BCN_OFFSET_0            (CFE_MSG_TLM_HDR_SIZE - sizeof(((CFE_MSG_TelemetryHeader_t *)0)->Spare))
 #define BCN_OFFSET_1            BCN_OFFSET_0 + sizeof(RPT_BcnTlm_Payload_t)       
-#define BCN_OFFSET_2            BCN_OFFSET_1 + sizeof(EO_BcnTlm_Payload_t)       
+#define BCN_OFFSET_2            BCN_OFFSET_1 + sizeof(MISSION_BcnTlm_Payload_t)       
 #define BCN_OFFSET_3            BCN_OFFSET_2 + sizeof(STX_BCNTlm_Payload_t)   // not
 #define BCN_OFFSET_4            BCN_OFFSET_3 + sizeof(UANT_APP_BcnTlm_Payload_t)  // not
 #define BCN_OFFSET_5            BCN_OFFSET_4 + sizeof(UTRX_BcnTlm_Payload_t)
@@ -124,13 +124,13 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
         BCN_OFFSET_0,
         sizeof(RPT_BcnTlm_Payload_t),
     },
-    /*   1 : EO     */
+    /*   1 : MISSION     */
     {
-        CFE_SB_MSGID_WRAP_VALUE(EO_BCN_TLM_MID),
+        CFE_SB_MSGID_WRAP_VALUE(MISSION_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
         BCN_OFFSET_1,
-        sizeof(EO_BcnTlm_Payload_t),
+        sizeof(MISSION_BcnTlm_Payload_t),
     },
     /*   2 : STX    */
     {

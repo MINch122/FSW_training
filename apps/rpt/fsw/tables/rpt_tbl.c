@@ -12,7 +12,7 @@
 #include "adcs2_msgids.h"
 #include "eps_msgids.h"
 
-#include "eo_msgids.h"
+#include "mission_msgids.h"
 #include "gps_msgids.h"
 #include "sp_msgids.h"
 #include "stx_msgids.h"
@@ -103,8 +103,8 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 16 */
-    {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(EO_REPORT_TLM_MID),
+    {.UsedState = RPT_DISABLED,
+        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
         .Entry.IsCritical = RPT_NOT_CRITICAL},
     
     /* Entry 17 */

@@ -1,0 +1,5 @@
+#ifndef MISSION_PLATFORM_CFG_H
+#define MISSION_PLATFORM_CFG_H
+
+
+#endif
