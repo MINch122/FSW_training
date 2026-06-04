@@ -7,64 +7,112 @@
 #ifndef _OEM_UTILS_H_
 #define _OEM_UTILS_H_
 
-#include "oem_basetype.h"
-#include "mlk_list.h"
-
-#define oem_callbacklist            mlk_list_t
-#define oem_list_create()           mlk_list()
-#define oem_list_free(list)         mlk_list_free(list)
-#define oem_list_add_back(list, cb) mlk_list_add_ptr_back(list, cb)
-#define oem_list_tohead(list)       mlk_list_to_head(list)
-#define oem_list_nodes(list)        mlk_list_nodes(list)
-#define oem_list_tonext(list)       mlk_list_advance(list)
-#define oem_list_getdata(list)      mlk_list_node_data(list)
+#include "oem_types.h"
 
 
+/* ════════════════════════════════════════════════════════════════════════
+ *  Linked list utilities (log callback container)
+ * ════════════════════════════════════════════════════════════════════════ */
 
 /**
- * @brief               Return CRC32 checksum.
- * 
- * @param length        Byte-size.
- * @param buffer        Data buffer.
- * @return              32-bit CRC. 
+ * @brief Opaque list object.
  */
-uint32_t OEM_CalculateBlockCRC32(const void* data,
-                                 size_t length);
+typedef struct oem_list_s oem_list_t;
 
 /**
- * @brief               Validate the CRC32.
- * 
- * @param expected      Expected CRC.
- * @param msg           Data to be validated.
- * @param length        Data size in bytes.
- * @return              true if the data CRC is equal to the expected. Otherwise false.
+ * @brief Create an empty list.
+ * @return Pointer to the list, or NULL on calloc() failure.
  */
-static inline bool OEM_VerifyChecksum(oem_crc expected, const uint8_t* msg, oem_ushort length) {
-    return OEM_CalculateBlockCRC32(msg, length) == expected ? true : false;
-} 
+oem_list_t* oem_list_create(void);
+
+/**
+ * @brief Free the list and all its nodes.
+ * @param list Pointer to the list.
+ */
+void oem_list_free(oem_list_t* list);
+
+/**
+ * @brief Append a node containing @a data pointer to the back of @a list.
+ * @param list Pointer to the list.
+ * @param data Pointer to the data to append.
+ * @return OEM_OK, OEM_ERR_NULL (@a list is null), or OEM_ERR_NOMEM.
+ */
+int oem_list_add_back(oem_list_t* list, void* data);
+
+/**
+ * @brief Return the number of nodes in @a list.
+ * @param list Pointer to the list.
+ * @return Number of nodes, or 0 if @a list is null.
+ */
+int oem_list_nodes(const oem_list_t* list);
+
+/**
+ * @brief Move the iteration cursor to the head of the list.
+ * @param list Pointer to the list.
+ * @return true if successful, false if @a list is null or empty.
+ */
+bool oem_list_tohead(oem_list_t* list);
+
+/**
+ * @brief Move the iteration cursor to the next node. The cursor must be
+ *        first initialized by oem_list_tohead() before calling this.
+ * @param list Pointer to the list.
+ * @return true if successful, false if the cursor is at the end, @a list is
+ *         null/empty or oem_list_tohead() was never called before.
+ */
+bool oem_list_tonext(oem_list_t* list);
+
+/**
+ * @brief Return the data pointer of the node at the current cursor.
+ * @param list Pointer to the list.
+ * @return Data pointer, or NULL if @a list is null, empty, or
+ *         if oem_list_tohead() was never called before.
+ */
+void* oem_list_getdata(const oem_list_t* list);
 
 
-#if OEM_DEBUG
+/* ════════════════════════════════════════════════════════════════════════
+ *  CRC32
+ * ════════════════════════════════════════════════════════════════════════ */
 
-  typedef enum {
-      LL_NORMAL   = 0,
-      LL_ERROR    = 1,
-      LL_WARN     = 2,
-      LL_INFO     = 3,
-  } log_level;
-  int OEM_Debug(const char* caller, log_level level, const char* str, ...);
-  #define DebugError(...)    OEM_Debug(__func__, LL_ERROR, ##__VA_ARGS__)
-  #define DebugWarning(...)  OEM_Debug(__func__, LL_WARN, ##__VA_ARGS__)
-  #define DebugInfo(...)     OEM_Debug(__func__, LL_INFO, ##__VA_ARGS__)
-  #define Debug(...)         OEM_Debug(__func__, LL_NORMAL, ##__VA_ARGS__)
+/**
+ * @brief Return CRC32 checksum.
+ * @param data    Data.
+ * @param length  Byte-size.
+ * @return 32-bit CRC. 
+ */
+oem_crc oem_crc32(const void* data, size_t length);
 
-#else /* if OEM_DEBUG */
 
-  #define DebugError(...)    do {} while (0)
-  #define DebugWarning(...)  do {} while (0)
-  #define DebugInfo(...)     do {} while (0)
-  #define Debug(...)         do {} while (0)
 
-#endif /* if OEM_DEBUG */
+/* ════════════════════════════════════════════════════════════════════════
+ *  Debug output (only when OEM_DEBUG is defined)
+ * ════════════════════════════════════════════════════════════════════════ */
+
+  #if OEM_DEBUG
+
+    typedef enum {
+        LL_NORMAL   = 0,
+        LL_ERROR    = 1,
+        LL_WARN     = 2,
+        LL_INFO     = 3,
+        LL_MAX, /* Placeholder. */
+    } log_level_t;
+
+    void oem_debug(const char* caller, log_level_t level, const char* str, ...);
+    void oem_debug_hexdump(log_level_t level, const void *data, size_t len, bool c);
+    #define oem_debug_error(...)    oem_debug(__func__, LL_ERROR, ##__VA_ARGS__)
+    #define oem_debug_warning(...)  oem_debug(__func__, LL_WARN, ##__VA_ARGS__)
+    #define oem_debug_info(...)     oem_debug(__func__, LL_INFO, ##__VA_ARGS__)
+    #define oem_debug_normal(...)         oem_debug(__func__, LL_NORMAL, ##__VA_ARGS__)
+
+  #else /* if OEM_DEBUG */
+
+    #define oem_debug_error(...)    do {} while (0)
+    #define oem_debug_warning(...)  do {} while (0)
+    #define oem_debug_info(...)     do {} while (0)
+    #define oem_debug_normal(...)         do {} while (0)
+
+  #endif /* if OEM_DEBUG */
 
 #endif /* ifndef _OEM_UTILS_H_ */

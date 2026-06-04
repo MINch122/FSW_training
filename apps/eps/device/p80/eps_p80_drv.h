@@ -101,6 +101,7 @@ typedef struct EPS_P80_DRV_PACK {
 
 typedef struct EPS_P80_DRV_PACK {
     uint8_t out_en[24];
+    int16_t out_i[24];
 } EPS_P80_Drv_PDU_BcnTlm_t;
 
 typedef struct EPS_P80_DRV_PACK {

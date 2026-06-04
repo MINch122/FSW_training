@@ -110,6 +110,14 @@ static bool LTRX_PopReq(LTRX_SessionReq_t *out)
 
 void LTRX_SessionInit(void)
 {
+    /* Drain any pending requests from previous session */
+    if (OS_ObjectIdDefined(s_ReqQ))
+    {
+        LTRX_SessionReq_t r;
+        size_t actual;
+        while (OS_QueueGet(s_ReqQ, &r, sizeof(r), &actual, OS_CHECK) == OS_SUCCESS) { }
+    }
+    
     if (!OS_ObjectIdDefined(s_ReqQ))
     {
         int32 osrc = OS_QueueCreate(&s_ReqQ, LTRX_REQ_Q_NAME,

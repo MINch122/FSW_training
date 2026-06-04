@@ -152,6 +152,48 @@ void GPIO_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case GPIO_STX_EN_ON_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_StxEnOnCmd_t)))
+            {
+                GPIO_StxEnOnCmd((const GPIO_StxEnOnCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case GPIO_STX_EN_OFF_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_StxEnOffCmd_t)))
+            {
+                GPIO_StxEnOffCmd((const GPIO_StxEnOffCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case GPIO_ADCS_EN_ON_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_AdcsEnOnCmd_t)))
+            {
+                GPIO_AdcsEnOnCmd((const GPIO_AdcsEnOnCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case GPIO_ADCS_EN_OFF_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_AdcsEnOffCmd_t)))
+            {
+                GPIO_AdcsEnOffCmd((const GPIO_AdcsEnOffCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case GPIO_ADCS_BOOT_ON_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_AdcsBootOnCmd_t)))
+            {
+                GPIO_AdcsBootOnCmd((const GPIO_AdcsBootOnCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case GPIO_ADCS_BOOT_OFF_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_AdcsBootOffCmd_t)))
+            {
+                GPIO_AdcsBootOffCmd((const GPIO_AdcsBootOffCmd_t *)SBBufPtr);
+            }
+            break;
+
         case GPIO_SP_IN_READ_5S_CC:
             if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_SpInRead5sCmd_t)))
             {
@@ -188,6 +230,10 @@ void GPIO_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 
         case GPIO_SEND_HK_MID:
             GPIO_SendHkCmd((const GPIO_SendHkCmd_t *)SBBufPtr);
+            break;
+
+        case GPIO_SEND_BCN_MID:
+            GPIO_SendBcnCmd((const GPIO_SendBcnCmd_t *)SBBufPtr);
             break;
 
         default:

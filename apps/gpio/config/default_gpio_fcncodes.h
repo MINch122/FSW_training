@@ -46,6 +46,12 @@
 #define GPIO_DEP2_EN_ON_CC     8
 #define GPIO_DEP2_EN_OFF_CC    9
 #define GPIO_SP_IN_READ_5S_CC  10
+#define GPIO_STX_EN_ON_CC      11
+#define GPIO_STX_EN_OFF_CC     12
+#define GPIO_ADCS_EN_ON_CC     13
+#define GPIO_ADCS_EN_OFF_CC    14
+#define GPIO_ADCS_BOOT_ON_CC   15
+#define GPIO_ADCS_BOOT_OFF_CC  16
 
 
 #endif

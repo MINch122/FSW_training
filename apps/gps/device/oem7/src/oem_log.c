@@ -4,233 +4,173 @@
  * @author Han-Gyeol Ryu (ryu@yonsei.ac.kr)
  * Astrodynamics & Control Lab. 2025.
  */
+#include "oem_log.h"
+#include "oem_task.h"  /* oem_task_context_t */
+#include "oem_utils.h" /* mutex */
+
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
 #if OEM_DEBUG
-#include <stdio.h>`
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
 #endif
-
-#include "oem_log.h"
-
-#include "oem_task.h"  /* oem_task_context_t */
-#include "oem_utils.h" /* mutex */
 
 #define WEEK2SEC 604800U
 
 struct oem_log_handler_s {
     char                  name[OEM_LOG_HANDLER_NAME_LEN];
-    oem_callbacklist      callbacks;
-    void*                 recentMessage;
-    oem_log_handler_stat_t  stat;
-    oem_ushort            messageId;
-    oem_ushort            messageLength;
+    oem_list_t*           callbacks;
+    void*                 recent_message;
+    oem_log_stat_t        stat;
+    oem_ushort            message_id;
+    oem_ushort            message_length;
     uint8_t               status;
-    bool                  ignoreChecksum;
+    bool                  has_recent_message;
+    bool                  ignore_missing_crc;
 };
 
-/**
- * Future design requirements:
- * If the OBC received logs from more than one ports, the log handler should
- * either 1) have expanded slots for each port (logHandler[NUMPORTS][MAX]),
- * or have a dedicated mutex individually.
- */
-static oem_log_handler_t logHandler[OEM_LOG_HANDLER_MAX];
+static oem_log_handler_t log_handlers[OEM_LOG_HANDLER_MAX];
 
 static pthread_mutex_t hmut;
 
-int OEM_Log_HandlerInit(void)
+int oem_log_init(void)
 {
     pthread_mutexattr_t attr;
-    if (pthread_mutexattr_init(&attr)         != 0 ||
-        pthread_mutexattr_setprotocol(&attr,
-                        PTHREAD_PRIO_INHERIT) != 0 ||
-        pthread_mutexattr_settype(&attr,
-                    PTHREAD_MUTEX_RECURSIVE)  != 0 ||
-        pthread_mutex_init(&hmut,
-                           &attr)             != 0) {
-        return OEM_ERR_MUTEX_INIT;
+
+    if (pthread_mutexattr_init(&attr) != 0)
+        return OEM_ERR_LOG_MUTEX_INIT;
+
+    if (pthread_mutexattr_setprotocol(&attr, PTHREAD_PRIO_INHERIT)    != 0 ||
+            pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) != 0 ||
+            pthread_mutex_init(&hmut, &attr) != 0) {
+        pthread_mutexattr_destroy(&attr);
+#if OEM_DEBUG
+        oem_debug_error("Failed to initialize log handler mutex: %s (%d)\n",
+                         strerror(errno), errno);
+#endif
+        return OEM_ERR_LOG_MUTEX_INIT;
     }
+
     return OEM_OK;
 }
 
-int OEM_Log_HandlerLock(void)
+int oem_log_handler_lock(void)
 {
     return pthread_mutex_lock(&hmut) == 0 ?
            OEM_OK :
-           OEM_ERR_MUTEX_LOCK;
+           OEM_ERR_LOG_MUTEX_LOCK;
 }
 
-int OEM_Log_HandlerUnlock(void)
+int oem_log_handler_unlock(void)
 {
     return pthread_mutex_unlock(&hmut) == 0 ?
            OEM_OK :
-           OEM_ERR_MUTEX_UNLOCK;
+           OEM_ERR_LOG_MUTEX_UNLOCK;
 }
 
-static oem_log_handler_t* LogHandlerGetEmptySlot(void)
+static oem_log_handler_t* get_empty_handler_slot(void)
 {
-    for (int i = 0; i < OEM_LOG_HANDLER_MAX; ++i) {
-        if (logHandler[i].status == HANDLER_EMPTY) {
-            return &logHandler[i];
-        }
-    }
+    for (int i = 0; i < OEM_LOG_HANDLER_MAX; ++i)
+        if (log_handlers[i].status == HANDLER_EMPTY)
+            return &log_handlers[i];
     return NULL;
 }
 
-static oem_log_handler_t* GetHandlerInternal(oem_ushort id)
+static oem_log_handler_t* get_handler_by_id(oem_ushort id)
 {
-    for (int i = 0; i < OEM_LOG_HANDLER_MAX; ++i) {
-        if (logHandler[i].messageId == id)
-            return &logHandler[i];
-    }
+    if (id == 0)
+        return NULL;
+    for (int i = 0; i < OEM_LOG_HANDLER_MAX; ++i)
+        if (log_handlers[i].status != HANDLER_EMPTY &&
+            log_handlers[i].message_id == id)
+                return &log_handlers[i];
     return NULL;
 }
 
-const oem_log_handler_t* OEM_Log_GetHandler(oem_ushort id)
-{
-    const oem_log_handler_t* handler;
-    OEM_Log_HandlerLock();
-    handler = GetHandlerInternal(id);
-    OEM_Log_HandlerUnlock();
-    return handler;
-}
-
-static void LogHandlerPurge(oem_log_handler_t* handler)
+static void purge_handler(oem_log_handler_t* handler)
 {
     if (!handler)
         return;
-    if (handler->recentMessage) {
-        free(handler->recentMessage);
+    if (handler->recent_message) {
+        free(handler->recent_message);
     }
     if (handler->callbacks) {
         oem_list_free(handler->callbacks);
     }
     memset(handler, 0, sizeof(*handler));
-    handler->status = HANDLER_EMPTY;
 }
 
-int OEM_Log_RegisterHandler(const char* name,
+int oem_log_handler_register(const char* name,
                             oem_ushort id,
                             oem_ushort mlen)
 {
     oem_log_handler_t* newHandler = NULL;
     int ret = OEM_OK;
 
-    OEM_Log_HandlerLock();
+    oem_log_handler_lock();
 
-    if (GetHandlerInternal(id)) {
-        DebugError("Handler for MID %d has already been registered.\n",
-                   id);
+    if (get_handler_by_id(id)) {
+        oem_debug_error("Handler for MID %d has already been registered.\n",
+                        id);
         ret = OEM_ERR_EXISTS;
     }
-    else if ((newHandler = LogHandlerGetEmptySlot()) == NULL) {
-        DebugError("Handler queue is full: mid %d.\n",
-                   id);
+    else if ((newHandler = get_empty_handler_slot()) == NULL) {
+        oem_debug_error("Handler queue is full: mid %d.\n",
+                        id);
         ret = OEM_ERR_FULL;
     }
     else if ((newHandler->callbacks = oem_list_create()) == NULL) {
         ret = OEM_ERR_NOMEM;
     }
     else if (
-        (newHandler->recentMessage = malloc(mlen > 0 ?
-                                            mlen :
-                                            OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE)
+        (newHandler->recent_message = malloc(mlen > 0 ?
+                                             mlen :
+                                             OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE)
         ) == NULL
     ) {
-        DebugError("malloc failed for handler ID %d.\n",
-                    id);
-        mlk_list_free(newHandler->callbacks);
+        oem_debug_error("malloc failed for handler ID %d.\n",
+                        id);
+        oem_list_free(newHandler->callbacks);
         ret = OEM_ERR_NOMEM;
     }
     else {
-        strncpy(newHandler->name, name, sizeof(newHandler->name));
+        strncpy(newHandler->name, name ? name : "", sizeof(newHandler->name));
         newHandler->name[sizeof(newHandler->name) - 1] = '\0';
         memset(&newHandler->stat, 0, sizeof(newHandler->stat));
-        newHandler->messageId = id;
-        newHandler->messageLength = mlen;
+        newHandler->message_id = id;
+        newHandler->message_length = mlen;
         newHandler->status = HANDLER_INACTIVE;
-        newHandler->ignoreChecksum = false;
+        newHandler->has_recent_message = false;
     }
 
-    OEM_Log_HandlerUnlock();
+    oem_log_handler_unlock();
     return ret;
 
 }
 
-int OEM_Log_UnregisterHandler(oem_ushort id)
-{
-
-    oem_log_handler_t* handler;
-    int ret = OEM_OK;
-
-    OEM_Log_HandlerLock();
-
-    if ((handler = GetHandlerInternal(id)) == NULL) {
-        DebugError("No handler for MID %d found.\n",
-                  id);
-        ret = OEM_ERR_NOTFOUND;
-    }
-    else {
-        LogHandlerPurge(handler);
-    }
-
-    OEM_Log_HandlerUnlock();
-    return ret;
-
-}
-
-int OEM_Log_AddCallback(oem_ushort id,
-                        oem_log_callback_t callback)
+int oem_log_handler_unregister(oem_ushort id)
 {
     oem_log_handler_t* handler;
     int ret = OEM_OK;
 
-    OEM_Log_HandlerLock();
+    oem_log_handler_lock();
 
-    if ((handler = GetHandlerInternal(id)) == NULL) {
-        DebugError("No handler for MID %d found.\n",
-                  id);
-        ret = OEM_ERR_NOTFOUND;
+    if ((handler = get_handler_by_id(id)) == NULL) {
+        oem_debug_error("No handler for MID %d found.\n",
+                        id);
+        ret = OEM_ERR_NOT_FOUND;
     }
     else {
-        if (oem_list_add_back(handler->callbacks, *(void**)&callback) != M_SUCCESS) {
-            ret = OEM_ERR_LIST;
-            DebugError("Failed to add callback for MID %d: callbacklist at %p\n",
-                        id,
-                        handler->callbacks);
-        }
+        purge_handler(handler);
     }
 
-    OEM_Log_HandlerUnlock();
+    oem_log_handler_unlock();
     return ret;
 }
 
-int OEM_Log_ClearCallbacks(oem_ushort mid)
-{
-    oem_log_handler_t* handler;
-    int ret = OEM_OK;
-
-    OEM_Log_HandlerLock();
-
-    if ((handler = GetHandlerInternal(mid)) == NULL) {
-        DebugError("No handler for MID %d found.\n",
-                  mid);
-        ret = OEM_ERR_NOTFOUND;
-    }
-    else {
-        oem_list_free(handler->callbacks);
-        handler->callbacks = oem_list_create();
-        if (handler->callbacks == NULL) {
-            ret = OEM_ERR_NOMEM;
-        }
-    }
-
-    OEM_Log_HandlerUnlock();
-    return ret;
-}
-
-static bool IsValidStatusTransfer(uint8_t from, uint8_t to, bool wakeup)
+static bool is_valid_transfer(uint8_t from, uint8_t to, bool wakeup)
 {
     /**
      * No status can be autonomously transfered to or from EMPTY/BROKEN.
@@ -252,21 +192,21 @@ static bool IsValidStatusTransfer(uint8_t from, uint8_t to, bool wakeup)
     }
 
     /**
-     * Now the only options left are form ACTIVE/INACTIVE to either
+     * Now the only options left are from ACTIVE/INACTIVE to either
      * of those, or to dormant, which are all valid.
      */
     return true;
 }
 
 typedef enum {
-    STAT_NORMAL,
-    STAT_WAKEUP,
-    STAT_OVERRIDE,
+    ONORMAL,
+    OWAKEUP,
+    OOVERRIDE,
 } statopt;
 
-static int SetHandlerStatusInternal(oem_ushort id,
-                                    uint8_t status,
-                                    uint8_t opt)
+static int set_handler_status(oem_ushort id,
+                              uint8_t status,
+                              uint8_t opt)
 {
     int ret;
     oem_log_handler_t* handler;
@@ -279,22 +219,22 @@ static int SetHandlerStatusInternal(oem_ushort id,
     case HANDLER_BROKEN:
         break;
     default:
-        DebugError("%d is not a valid handler status (mid %d).\n",
-                   status,
-                   id);
+        oem_debug_error("%d is not a valid handler status (mid %d).\n",
+                        status,
+                        id);
         return OEM_ERR_RANGE;
     }
 
-    OEM_Log_HandlerLock();
+    oem_log_handler_lock();
 
-    if ((handler = GetHandlerInternal(id)) == NULL) {
-        DebugError("No handler for MID %d found.\n",
-                   id);
-        ret = OEM_ERR_NOTFOUND;
+    if ((handler = get_handler_by_id(id)) == NULL) {
+        oem_debug_error("No handler for MID %d found.\n",
+                        id);
+        ret = OEM_ERR_NOT_FOUND;
     }
     else {
-        if (opt == STAT_OVERRIDE ||
-            IsValidStatusTransfer(handler->status, status, opt == STAT_WAKEUP)) {
+        if (opt == OOVERRIDE ||
+            is_valid_transfer(handler->status, status, opt == OWAKEUP)) {
             handler->status = status;
             ret = OEM_OK;
         }
@@ -302,173 +242,180 @@ static int SetHandlerStatusInternal(oem_ushort id,
             ret = OEM_ERR_INVALID;
         }
     }
-    OEM_Log_HandlerUnlock();
+    oem_log_handler_unlock();
     return ret;
 }
 
-int OEM_Log_SetHandlerStatus(oem_ushort id,
-                             uint8_t status,
-                             bool override)
+int oem_log_handler_activate(oem_ushort id)
 {
-    return SetHandlerStatusInternal(id,
-                                    status,
-                                    override ? STAT_OVERRIDE : STAT_NORMAL);
+    return set_handler_status(id, HANDLER_ACTIVE, ONORMAL);
 }
 
-int OEM_Log_GetHandlerStatus(oem_ushort id,
-                             uint8_t* status)
+int oem_log_handler_deactivate(oem_ushort id)
+{
+    return set_handler_status(id, HANDLER_INACTIVE, ONORMAL);
+}
+
+int oem_log_handler_go_dormant(oem_ushort id)
+{
+    return set_handler_status(id, HANDLER_DORMANT, ONORMAL);
+}
+
+int oem_log_handler_wakeup(oem_ushort id)
+{
+    return set_handler_status(id, HANDLER_INACTIVE, OWAKEUP);
+}
+
+int oem_log_handler_activate_all(void)
+{
+    oem_log_handler_lock();
+    for (oem_log_handler_t* h = log_handlers;
+         h < log_handlers + OEM_LOG_HANDLER_MAX;
+         ++h) {
+        if (h->status == HANDLER_INACTIVE) {
+            h->status = HANDLER_ACTIVE;
+        }
+    }
+    oem_log_handler_unlock();
+    return OEM_OK;
+}
+
+int oem_log_handler_deactivate_all(void)
+{
+    oem_log_handler_lock();
+    for (oem_log_handler_t* h = log_handlers;
+         h < log_handlers + OEM_LOG_HANDLER_MAX;
+         ++h) {
+        if (h->status == HANDLER_ACTIVE) {
+            h->status = HANDLER_INACTIVE;
+        }
+    }
+    oem_log_handler_unlock();
+    return OEM_OK;
+}
+
+int oem_log_handler_mark_broken(oem_ushort mid)
+{
+    return set_handler_status(mid, HANDLER_BROKEN, OOVERRIDE);
+}
+
+int oem_log_handler_set_status(oem_ushort id,
+                               uint8_t status,
+                               bool override)
+{
+    return set_handler_status(id,
+                              status,
+                              override ? OOVERRIDE : ONORMAL);
+}
+
+int oem_log_handler_get_status(oem_ushort id,
+                               uint8_t* status)
 {
     oem_log_handler_t* h;
     if (!status) {
         return OEM_ERR_NULL;
     }
 
-    OEM_Log_HandlerLock();
-    if ((h = GetHandlerInternal(id)) == NULL) {
-        return OEM_ERR_NOTFOUND;
+    oem_log_handler_lock();
+    if ((h = get_handler_by_id(id)) == NULL) {
+        oem_log_handler_unlock();
+        return OEM_ERR_NOT_FOUND;
     }
     *status = h->status;
 
-    OEM_Log_HandlerUnlock();
+    oem_log_handler_unlock();
     return OEM_OK;
 }
 
-int OEM_Log_HandlerActivate(oem_ushort id)
+int oem_log_add_callback(oem_ushort id,
+                        oem_log_callback_t callback)
 {
-    return SetHandlerStatusInternal(id, HANDLER_ACTIVE, STAT_NORMAL);
-}
+    oem_log_handler_t* handler;
+    int ret = OEM_OK;
 
-int OEM_Log_HandlerDeacivate(oem_ushort id)
-{
-    return SetHandlerStatusInternal(id, HANDLER_INACTIVE, STAT_NORMAL);
-}
+    if (!callback)
+        return OEM_ERR_NULL;
 
-int OEM_Log_HandlerGoDormant(oem_ushort id)
-{
-    return SetHandlerStatusInternal(id, HANDLER_DORMANT, STAT_NORMAL);
-}
+    oem_log_handler_lock();
 
-int OEM_Log_HandlerWakeup(oem_ushort id)
-{
-    return SetHandlerStatusInternal(id, HANDLER_INACTIVE, STAT_WAKEUP);
-}
-
-int OEM_Log_HandlerActivateAll(void)
-{
-    OEM_Log_HandlerLock();
-    for (oem_log_handler_t* h = logHandler;
-         h < logHandler + OEM_LOG_HANDLER_MAX;
-         ++h) {
-        if (h->status == HANDLER_INACTIVE) {
-            h->status = HANDLER_ACTIVE;
+    if ((handler = get_handler_by_id(id)) == NULL) {
+        oem_debug_error("No handler for MID %d found.\n",
+                        id);
+        ret = OEM_ERR_NOT_FOUND;
+    }
+    else {
+        if (oem_list_add_back(handler->callbacks, *(void**)&callback) != OEM_OK) {
+            ret = OEM_ERR_LOG_LIST;
+            oem_debug_error("Failed to add callback for MID %d: callbacklist at %p\n",
+                            id,
+                            handler->callbacks);
         }
     }
-    OEM_Log_HandlerUnlock();
-    return OEM_OK;
-}
 
-int OEM_Log_HandlerDeactivateAll(void)
-{
-    OEM_Log_HandlerLock();
-    for (oem_log_handler_t* h = logHandler;
-         h < logHandler + OEM_LOG_HANDLER_MAX;
-         ++h) {
-        if (h->status == HANDLER_ACTIVE) {
-            h->status = HANDLER_INACTIVE;
-        }
-    }
-    OEM_Log_HandlerUnlock();
-    return OEM_OK;
-}
-
-int OEM_Log_HandlerSetBroken(oem_ushort mid)
-{
-    return SetHandlerStatusInternal(mid, HANDLER_BROKEN, STAT_OVERRIDE);
-}
-
-static int GetHandlerAttributeDirect(const oem_log_handler_t* handler,
-                                     void* attr,
-                                     size_t offset,
-                                     size_t len)
-{
-    if (!handler || !attr) {
-        return OEM_ERR_NULL;
-    }
-    if (len + offset > sizeof(*handler)) {
-        return OEM_ERR_RANGE;
-    }
-    memcpy(attr, ((const uint8_t*) handler) + offset, len);
-    return OEM_OK;
-}
-
-static int GetHandlerAttribute(oem_ushort id,
-                               void* attr,
-                               size_t offset,
-                               size_t len)
-{
-    const oem_log_handler_t* handler;
-    int ret;
-
-    if (!attr) {
-        return OEM_ERR_NULL;
-    }
-
-    OEM_Log_HandlerLock();
-
-    if ((handler = GetHandlerInternal(id)) == NULL) {
-        OEM_Log_HandlerUnlock();
-        return OEM_ERR_NOTFOUND;
-    }
-
-    ret = GetHandlerAttributeDirect(handler, attr, offset, len);
-
-    OEM_Log_HandlerUnlock();
+    oem_log_handler_unlock();
     return ret;
 }
 
-int OEM_Log_GetMessageLength(oem_ushort id,
-                             oem_ushort* mlen)
+int oem_log_clear_callbacks(oem_ushort mid)
 {
-    return GetHandlerAttribute(id,
-                               mlen,
-                               offsetof(oem_log_handler_t, messageLength),
-                               sizeof(*mlen));
+    oem_log_handler_t* handler;
+    int ret = OEM_OK;
+
+    oem_log_handler_lock();
+
+    if ((handler = get_handler_by_id(mid)) == NULL) {
+        oem_debug_error("No handler for MID %d found.\n",
+                        mid);
+        ret = OEM_ERR_NOT_FOUND;
+    }
+    else {
+        oem_list_free(handler->callbacks);
+        handler->callbacks = oem_list_create();
+        if (handler->callbacks == NULL) {
+            ret = OEM_ERR_NOMEM;
+        }
+    }
+
+    oem_log_handler_unlock();
+    return ret;
 }
 
-int OEM_Log_GetMessageStatistics(oem_ushort id,
-                                 oem_log_handler_stat_t* stat)
+int oem_log_get_stat(oem_ushort id,
+                     oem_log_stat_t* stat)
 {
-    return GetHandlerAttribute(id,
-                               stat,
-                               offsetof(oem_log_handler_t, stat),
-                               sizeof(*stat));
+    const oem_log_handler_t* h;
+
+    if (!stat)
+        return OEM_ERR_NULL;
+
+    oem_log_handler_lock();
+    if ((h = get_handler_by_id(id)) == NULL) {
+        oem_log_handler_unlock();
+        return OEM_ERR_NOT_FOUND;
+    }
+
+    *stat = h->stat;
+    oem_log_handler_unlock();
+    return OEM_OK;
 }
 
-int OEM_Log_GetHandlerName(oem_ushort id, char* name)
-{
-    return GetHandlerAttribute(id,
-                               name,
-                               offsetof(oem_log_handler_t, name),
-                               OEM_LOG_HANDLER_NAME_LEN);
-}
-
-int OEM_Log_ResetHandlerCounters(oem_ushort id)
+int oem_log_reset_stat(oem_ushort id)
 {
     oem_log_handler_t* h;
-    OEM_Log_HandlerLock();
-    if ((h = GetHandlerInternal(id)) == NULL) {
-        OEM_Log_HandlerUnlock();
-        return OEM_ERR_NOTFOUND;
+    oem_log_handler_lock();
+    if ((h = get_handler_by_id(id)) == NULL) {
+        oem_log_handler_unlock();
+        return OEM_ERR_NOT_FOUND;
     }
 
     memset(&h->stat, 0, sizeof(h->stat));
 
-    OEM_Log_HandlerUnlock();
+    oem_log_handler_unlock();
     return OEM_OK;
 }
 
-int OEM_Log_GethandlerHousekeeping(oem_ushort id,
-                                   oem_log_handler_hk_t* hk)
+int oem_log_get_handler_hk(oem_ushort id,
+                           oem_log_handler_hk_t* hk)
 {
     const oem_log_handler_t* h;
     const oem_binary_header_t* hdr;
@@ -477,108 +424,149 @@ int OEM_Log_GethandlerHousekeeping(oem_ushort id,
         return OEM_ERR_NULL;
     }
 
-    OEM_Log_HandlerLock();
-    if ((h = GetHandlerInternal(id)) == NULL) {
-        OEM_Log_HandlerUnlock();
-        return OEM_ERR_NOTFOUND;
+    oem_log_handler_lock();
+    if ((h = get_handler_by_id(id)) == NULL) {
+        oem_log_handler_unlock();
+        return OEM_ERR_NOT_FOUND;
     }
 
-    hdr = h->recentMessage;
-    hk->messageId = h->messageId;
-    hk->messageLength = h->messageLength;
-    hk->recentMsgTimeStamp =
-        OEM_Task_IsSynced(h->recentMessage)              ?
+    hdr = h->recent_message;
+    hk->message_id = h->message_id;
+    hk->message_length = h->message_length;
+    hk->recent_msg_timestamp =
+        h->has_recent_message ?
         (uint32_t) hdr->week * WEEK2SEC + hdr->ms / 1000 :
         0;
-    hk->attachedCallbacks = oem_list_nodes(h->callbacks);
-    hk->logCount = h->stat.logCount;
-    hk->logErrCount = h->stat.logErrCount;
-    hk->errorCause = h->stat.errorCause;
+    hk->callbacks = oem_list_nodes(h->callbacks);
+    hk->log_count = h->stat.log_count;
+    hk->log_err_count = h->stat.log_err_count;
+    hk->error_cause = h->stat.error_cause;
     hk->status = h->status;
-    hk->ignoreChecksum = h->ignoreChecksum;
     memcpy(hk->name, h->name, OEM_LOG_HANDLER_NAME_LEN);
 
-    OEM_Log_HandlerUnlock();
+    oem_log_handler_unlock();
     return OEM_OK;
 }
 
-int OEM_Log_DumpRecentMessage(oem_ushort id,
-                              void* buffer,
-                              size_t bufsize,
-                              size_t* copiedSize)
+int oem_log_get_recent_message(oem_ushort id,
+                               void* buffer,
+                               size_t offset,
+                               size_t limit,
+                               size_t* copied)
 {
     const oem_log_handler_t* h;
-    const oem_binary_header_t* hdr;
-    int ret;
+    size_t to_copy;
+    size_t total_message_length;
 
-    if (!buffer) {
+    if (!buffer)
         return OEM_ERR_NULL;
+
+    oem_log_handler_lock();
+
+    if ((h = get_handler_by_id(id)) == NULL) {
+        oem_log_handler_unlock();
+        return OEM_ERR_NOT_FOUND;
     }
 
-    OEM_Log_HandlerLock();
-
-    if ((h = GetHandlerInternal(id)) == NULL) {
-        ret = OEM_ERR_NOTFOUND;
-    }
-    else if (OEM_Task_IsSynced(h->recentMessage) != true) {
-        ret = OEM_ERR_EMPTY;
-    }
-    else {
-        if (h->messageLength > 0) {
-            bufsize = bufsize > h->messageLength ? h->messageLength : bufsize;
-        }
-        else {
-            hdr = h->recentMessage;
-            bufsize = bufsize > sizeof(*hdr) + hdr->messageLength ?
-                      sizeof(*hdr) + hdr->messageLength :
-                      bufsize;
-        }
-
-        if (copiedSize) {
-            *copiedSize = bufsize;
-        }
-
-        memcpy(buffer, h->recentMessage, bufsize);
-        ret = OEM_OK;
+    if (h->has_recent_message != true) {
+        oem_log_handler_unlock();
+        return OEM_ERR_EMPTY;
     }
 
-    OEM_Log_HandlerUnlock();
-    return ret;
-}
+    total_message_length = sizeof(oem_binary_header_t);
+    total_message_length += h->message_length == OEM_LOG_HANDLER_MLEN_VARIABLE             ?
+                            ((const oem_binary_header_t*)h->recent_message)->messageLength :
+                            h->message_length;
 
-int OEM_Log_DisableCsVerification(oem_ushort id)
-{
-    oem_log_handler_t* h;
-
-    OEM_Log_HandlerLock();
-    if ((h = GetHandlerInternal(id)) == NULL) {
-        OEM_Log_HandlerUnlock();
-        return OEM_ERR_NOTFOUND;
+    if (offset > total_message_length) {
+        oem_log_handler_unlock();
+        return OEM_ERR_RANGE;
     }
-    h->ignoreChecksum = true;
+    
+    to_copy = total_message_length - offset;
+    to_copy = to_copy > limit ? limit : to_copy;
 
-    OEM_Log_HandlerUnlock();
+    memcpy(buffer, ((const uint8_t*)h->recent_message) + offset, to_copy);
+        
+    if (copied)
+        *copied = to_copy;
+
+    oem_log_handler_unlock();
     return OEM_OK;
 }
 
-int OEM_Log_EnableCsVerification(oem_ushort id)
+int oem_log_get_message_length(oem_ushort id,
+                              oem_ushort* mlen)
 {
-    oem_log_handler_t* h;
+    const oem_log_handler_t* h;
 
-    OEM_Log_HandlerLock();
-    if ((h = GetHandlerInternal(id)) == NULL) {
-        OEM_Log_HandlerUnlock();
-        return OEM_ERR_NOTFOUND;
+    if (!mlen)
+        return OEM_ERR_NULL;
+
+    oem_log_handler_lock();
+    if ((h = get_handler_by_id(id)) == NULL) {
+        oem_log_handler_unlock();
+        return OEM_ERR_NOT_FOUND;
     }
-    h->ignoreChecksum = false;
 
-    OEM_Log_HandlerUnlock();
+    *mlen = h->message_length;
+    oem_log_handler_unlock();
     return OEM_OK;
 }
 
-static int ExecuteHandlerCallback(oem_log_handler_t* handler,
-                                  void* msg,
-                                  oem_task_context_t* ctx)
+int oem_log_get_handler_name(oem_ushort id, char* name)
+{
+    const oem_log_handler_t* h;
+
+    if (!name)
+        return OEM_ERR_NULL;
+
+    oem_log_handler_lock();
+    if ((h = get_handler_by_id(id)) == NULL) {
+        oem_log_handler_unlock();
+        return OEM_ERR_NOT_FOUND;
+    }
+
+    strncpy(name, h->name, OEM_LOG_HANDLER_NAME_LEN);
+    name[OEM_LOG_HANDLER_NAME_LEN - 1] = '\0';
+
+    oem_log_handler_unlock();
+    return OEM_OK;
+}
+
+int oem_log_ignore_missing_crc(oem_ushort id)
+{
+    oem_log_handler_t* h;
+
+    oem_log_handler_lock();
+    if ((h = get_handler_by_id(id)) == NULL) {
+        oem_log_handler_unlock();
+        return OEM_ERR_NOT_FOUND;
+    }
+    h->ignore_missing_crc = true;
+
+    oem_log_handler_unlock();
+    return OEM_OK;
+}
+
+int oem_log_reject_missing_crc(oem_ushort id)
+{
+    oem_log_handler_t* h;
+
+    oem_log_handler_lock();
+    if ((h = get_handler_by_id(id)) == NULL) {
+        oem_log_handler_unlock();
+        return OEM_ERR_NOT_FOUND;
+    }
+    h->ignore_missing_crc = false;
+
+    oem_log_handler_unlock();
+    return OEM_OK;
+}
+
+static int execute_callbacks(oem_log_handler_t* handler,
+                             void* msg,
+                             oem_task_context_t* ctx)
 {
     void* cb;
     int ret;
@@ -590,16 +578,29 @@ static int ExecuteHandlerCallback(oem_log_handler_t* handler,
      * again itself.
      */
 
-    if (!handler || !handler->callbacks || !msg) {
+    if (!handler || !handler->callbacks || !msg || !ctx) {
         ret = OEM_ERR_NULL;
+        goto early_return_callback;
     }
 
+    ctx->cb_exec_count = 0;
     ncb =  oem_list_nodes(handler->callbacks);
     if (ncb == 0) {
         /**
          * Zero callbacks.
          */
-        ret = OEM_ERR_EMPTY;
+        ret = OEM_OK;
+        goto early_return_callback;
+    }
+    if (ncb < 0) {
+        /**
+         * Callback list is in invalid state.
+         */
+        ret = handler->stat.error_cause = OEM_ERR_UTILS_LIST_NULL;
+        handler->status = HANDLER_BROKEN;
+        oem_debug_error("Invalid callback list for MID %d: list at %p\n",
+                        handler->message_id,
+                        handler->callbacks);
         goto early_return_callback;
     }
 
@@ -609,7 +610,7 @@ static int ExecuteHandlerCallback(oem_log_handler_t* handler,
             /**
              * Node exists but the callback is null; mark this handler broken.
              */
-            ret = handler->stat.errorCause = OEM_ERR_NOTFOUND;
+            ret = handler->stat.error_cause = OEM_ERR_NOT_FOUND;
             handler->status = HANDLER_BROKEN;
             goto early_return_callback;
         }
@@ -618,8 +619,13 @@ static int ExecuteHandlerCallback(oem_log_handler_t* handler,
          * to a data pointer is not a pedantic C rule" warning.
          */
         ret = (*(oem_log_callback_t*) ((void**) &cb))(msg);
-        if (ctx) {
-            ctx->callbackExecCnt++;
+        ctx->cb_exec_count++;
+
+        if (ret != OEM_OK) {
+            oem_debug_error("Callback %d for MID %d returned error code %d.",
+                            i, handler->message_id, ret);
+            handler->stat.error_cause = ret;
+            goto early_return_callback;
         }
         oem_list_tonext(handler->callbacks);
     }
@@ -627,35 +633,30 @@ static int ExecuteHandlerCallback(oem_log_handler_t* handler,
     ret = OEM_OK;
 
 early_return_callback:
-    if (ctx) {
-        ctx->taskLevel = TASK_CALLBACK;
-    }
+    ctx->task_level = TASK_CALLBACK;
     return ret;
 }
 
-int _DoLogHandle(void* msg,
-                 oem_task_context_t* ctx)
+int oem_log_do_handle(void* msg,
+                      oem_task_context_t* ctx)
 {
     oem_log_handler_t* handler;
-    const oem_binary_header_t* header = msg;
-    oem_crc crcAtSite;
-    oem_ushort mlen;
     int ret;
 
     if (!ctx)
         return OEM_ERR_NULL;
 
-    DebugInfo("New log detected: id %d, len %d\n",
-              header->messageID,
-              sizeof(*header) + header->messageLength);
+    oem_debug_warning("New log detected: id %d, len %d\n",
+                      ctx->message_id,
+                      sizeof(oem_binary_header_t) + ctx->message_length);
 
-    OEM_Log_HandlerLock();
+    oem_log_handler_lock();
 
-    handler = GetHandlerInternal(header->messageID);
+    handler = get_handler_by_id(ctx->message_id);
     if (handler == NULL) {
-        DebugError("No handler for MID %d: discarding msg.\n",
-                   header->messageID);
-        ret = OEM_ERR_STRAY;
+        oem_debug_error("No handler for MID %d: discarding msg.\n",
+                        ctx->message_id);
+        ret = OEM_ERR_LOG_STRAY;
         goto early_return_log;
     }
 
@@ -665,90 +666,79 @@ int _DoLogHandle(void* msg,
     if (handler->status == HANDLER_DORMANT ||
         handler->status == HANDLER_BROKEN) {
         ret = OEM_OK;
-        DebugWarning("Skipping dormant/broken handler '%s' at MID %d\n",
-                     handler->name,
-                     handler->messageId);
+        oem_debug_warning("Skipping dormant/broken handler '%s' at MID %d\n",
+                          handler->name,
+                          handler->message_id);
         goto early_return_log;
     }
-
-    handler->stat.logCount++;
+    
+    handler->stat.log_count++;
 
     /**
      * Check if the message length fits this handler.
      * Note that the handler's message length includes the header (misnomer).
      * Zero messageLength means the size is variable (e.g., "per GPS sat").
      */
-    mlen = sizeof(*header) + header->messageLength;
-    if (handler->messageLength > 0 &&
-        handler->messageLength != mlen) {
-        DebugError("Invalid mlen for MID %d: got %d, expected %d.\n",
-                  header->messageID,
-                  mlen,
-                  handler->messageLength);
-        handler->stat.logErrCount++;
-        ret = handler->stat.errorCause = OEM_ERR_LEN_MSG;
-        goto early_return_log;
+    size_t total_length = sizeof(oem_binary_header_t) + ctx->message_length;
+    if (handler->message_length > 0 &&
+        handler->message_length != total_length) {
+        oem_debug_error("Invalid mlen for MID %d: got %d, expected %d.\n",
+                        ctx->message_id,
+                        total_length,
+                        handler->message_length);
+        handler->stat.log_err_count++;
+        ret = handler->stat.error_cause = OEM_ERR_LOG_BODY_SIZE;
+        goto early_return_log;  
     }
 
-    if (handler->ignoreChecksum == false) {
-        if (ctx->crcReadSkipped) {
-            ret = handler->stat.errorCause = OEM_ERR_READ_CRC;
-            goto early_return_log;
-        }
-        crcAtSite = OEM_CalculateBlockCRC32(msg, mlen);
-        if (ctx->msgCrc != crcAtSite) {
-            DebugError("crc verification failed: MID %d, "
-                       "expected %08X, got %08X.\n",
-                        header->messageID,
-                        crcAtSite, ctx->msgCrc);
-            handler->stat.logErrCount++;
-            ret = handler->stat.errorCause = OEM_ERR_CRC;
-            goto early_return_log;
-        }
-        DebugInfo("Log message CRC verification passed: crc 0x%08X\n", ctx->msgCrc);
+    if (ctx->crc_read_skipped && handler->ignore_missing_crc == false) {
+        /* CRC was not read */
+        ret = handler->stat.error_cause = OEM_ERR_LOG_MISSING_CRC;
+        goto early_return_log;
     }
     else
-        Debug("Log %d CRC verification skipped: handler %s\n",
-              handler->messageId, handler->name);
+        oem_debug_warning("Log %d CRC verification skipped: handler %s\n",
+                          handler->message_id, handler->name);
 
-    /**
+    /** 
      * Store the recent message.
      */
-    if (handler->recentMessage == NULL) {
-        ret = handler->stat.errorCause = OEM_ERR_NOBUF;
+    if (handler->recent_message == NULL) {
+        ret = handler->stat.error_cause = OEM_ERR_NOBUF;
         handler->status = HANDLER_BROKEN;
-        DebugError("NULL message buffer for handler '%s' at MID %d! "
+        oem_debug_error("NULL message buffer for handler '%s' at MID %d! "
                    "Handler will be marked broken.\n",
                    handler->name,
-                   handler->messageId);
+                   handler->message_id);
         goto early_return_log;
     }
 
-    if (handler->messageLength == 0 &&
-        mlen > OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE) {
-        DebugWarning("Too long message size truncated (%d -> %d). MID %d\n",
-                     mlen, OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE,
-                     handler->messageId);
-        mlen = OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE;
+    if (handler->message_length == 0 &&
+        total_length > OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE) {
+        oem_debug_warning("Too long message size truncated (%d -> %d). MID %d\n",
+                          total_length, OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE,
+                          handler->message_id);
+        total_length = OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE;
     }
 
-    memcpy(handler->recentMessage, msg, mlen);
+    memcpy(handler->recent_message, msg, total_length);
+    handler->has_recent_message = true;
 
     if (handler->status == HANDLER_INACTIVE) {
-        ret = handler->stat.errorCause = OEM_OK;
-        DebugWarning("Skipping inactive handler '%s' at MID %d\n",
-                     handler->name,
-                     handler->messageId);
+        ret = handler->stat.error_cause = OEM_OK;
+        oem_debug_warning("Skipping inactive handler '%s' at MID %d\n",
+                          handler->name,
+                          handler->message_id);
         goto early_return_log;
     }
 
-    handler->stat.errorCause = OEM_OK;
+    handler->stat.error_cause = OEM_OK;
 
-    OEM_Log_HandlerUnlock();
-    return ExecuteHandlerCallback(handler, msg, ctx);
+    oem_log_handler_unlock();
+    return execute_callbacks(handler, msg, ctx);
 
 early_return_log:
-    OEM_Log_HandlerUnlock();
-    ctx->taskLevel = TASK_LOG;
+    oem_log_handler_unlock();
+    ctx->task_level = TASK_LOG;
     return ret;
 }

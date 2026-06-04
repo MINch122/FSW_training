@@ -58,7 +58,7 @@ bool GPS_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
 
         GPS_AppData.Counters.ErrCounter++;
     
-        GPS_SendReport(MsgPtr, &ActualLength, sizeof(ActualLength), -1, RPT_RETTYPE_APP); // TODO: define invalid length error.
+        GPS_SendReport(MsgPtr, &ActualLength, sizeof(ActualLength), -1, GPS_MISSION_REPORT_RETTYPE_APP); // TODO: define invalid length error.
     }
 
     return result;
@@ -73,240 +73,240 @@ void GPS_ProcessDeviceCommand(const CFE_SB_Buffer_t* SBBufPtr)
 
     switch (CommandCode) {
         case GPS_OEM_CMD_LOG_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMCmd_LogCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Cmd_Log_t)))
             {
-                GPS_OEMCmd_LogCmd((const GPS_OEMCmd_LogCmd_t*) SBBufPtr);
+                GPS_OEM_Cmd_Log((const GPS_OEM_Cmd_Log_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_CMD_LOG_ONCE_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMCmd_LogOnceCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Cmd_LogOnce_t)))
             {
-                GPS_OEMCmd_LogOnceCmd((const GPS_OEMCmd_LogOnceCmd_t*) SBBufPtr);
+                GPS_OEM_Cmd_LogOnce((const GPS_OEM_Cmd_LogOnce_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_CMD_LOG_ONTIME_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMCmd_LogOnTimeCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Cmd_LogOnTime_t)))
             {
-                GPS_OEMCmd_LogOnTimeCmd((const GPS_OEMCmd_LogOnTimeCmd_t*) SBBufPtr);
+                GPS_OEM_Cmd_LogOnTime((const GPS_OEM_Cmd_LogOnTime_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_CMD_LOG_ONCHANGED_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMCmd_LogOnChangedCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Cmd_LogOnChanged_t)))
             {
-                GPS_OEMCmd_LogOnChangedCmd((const GPS_OEMCmd_LogOnChangedCmd_t*) SBBufPtr);
+                GPS_OEM_Cmd_LogOnChanged((const GPS_OEM_Cmd_LogOnChanged_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_CMD_LOG_ONNEW_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMCmd_LogOnNewCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Cmd_LogOnNew_t)))
             {
-                GPS_OEMCmd_LogOnNewCmd((const GPS_OEMCmd_LogOnNewCmd_t*) SBBufPtr);
+                GPS_OEM_Cmd_LogOnNew((const GPS_OEM_Cmd_LogOnNew_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_CMD_UNLOG_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMCmd_UnlogCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Cmd_Unlog_t)))
             {
-                GPS_OEMCmd_UnlogCmd((const GPS_OEMCmd_UnlogCmd_t*) SBBufPtr);
+                GPS_OEM_Cmd_Unlog((const GPS_OEM_Cmd_Unlog_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_CMD_UNLOGALL_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMCmd_UnlogAllCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Cmd_UnlogAll_t)))
             {
-                GPS_OEMCmd_UnlogAllCmd((const GPS_OEMCmd_UnlogAllCmd_t*) SBBufPtr);
+                GPS_OEM_Cmd_UnlogAll((const GPS_OEM_Cmd_UnlogAll_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_CMD_ELEVATION_CUTOFF_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMCmd_ElevationCutoffCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Cmd_ElevationCutoff_t)))
             {
-                GPS_OEMCmd_ElevationCutoffCmd((const GPS_OEMCmd_ElevationCutoffCmd_t*) SBBufPtr);
+                GPS_OEM_Cmd_ElevationCutoff((const GPS_OEM_Cmd_ElevationCutoff_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_CMD_INTERFACE_MODE_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMCmd_InterfaceModeCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Cmd_InterfaceMode_t)))
             {
-                GPS_OEMCmd_InterfaceModeCmd((const GPS_OEMCmd_InterfaceModeCmd_t*) SBBufPtr);
+                GPS_OEM_Cmd_InterfaceMode((const GPS_OEM_Cmd_InterfaceMode_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_CMD_SERIAL_CONFIG_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMCmd_SerialConfigCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Cmd_SerialConfig_t)))
             {
-                GPS_OEMCmd_SerialConfigCmd((const GPS_OEMCmd_SerialConfigCmd_t*) SBBufPtr);
+                GPS_OEM_Cmd_SerialConfig((const GPS_OEM_Cmd_SerialConfig_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_CMD_PUBLISH_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMCmd_PublishCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Cmd_Publish_t)))
             {
-                GPS_OEMCmd_PublishCmd((const GPS_OEMCmd_PublishCmd_t*) SBBufPtr);
+                GPS_OEM_Cmd_Publish((const GPS_OEM_Cmd_Publish_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_LOG_GET_HANDLER_HK_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_GetHandlerHkCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_GetHandlerHk_t)))
             {
-                GPS_OEMLog_GetHandlerHkCmd((const GPS_OEMLog_GetHandlerHkCmd_t*) SBBufPtr);
+                GPS_OEM_Log_GetHandlerHk((const GPS_OEM_Log_GetHandlerHk_t*) SBBufPtr);
             }
             break;
 
-        case GPS_OEM_LOG_GET_MSG_STAT_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_GetMsgStatCmd_t)))
+        case GPS_OEM_LOG_GET_STAT_CC:
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_GetStat_t)))
             {
-                GPS_OEMLog_GetMsgStatCmd((const GPS_OEMLog_GetMsgStatCmd_t*) SBBufPtr);
+                GPS_OEM_Log_GetStat((const GPS_OEM_Log_GetStat_t*) SBBufPtr);
             }
             break;
 
-        case GPS_OEM_LOG_SET_HANDLER_STATUS_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_SetHandlerStatusCmd_t)))
+        case GPS_OEM_LOG_HANDLER_SET_STATUS_CC:
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_HandlerSetStatus_t)))
             {
-                GPS_OEMLog_SetHandlerStatusCmd((const GPS_OEMLog_SetHandlerStatusCmd_t*) SBBufPtr);
+                GPS_OEM_Log_HandlerSetStatus((const GPS_OEM_Log_HandlerSetStatus_t*) SBBufPtr);
             }
             break;
 
-        case GPS_OEM_LOG_GET_HANDLER_STATUS_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_GetHandlerStatusCmd_t)))
+        case GPS_OEM_LOG_HANDLER_GET_STATUS_CC:
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_HandlerGetStatus_t)))
             {
-                GPS_OEMLog_GetHandlerStatusCmd((const GPS_OEMLog_GetHandlerStatusCmd_t*) SBBufPtr);
+                GPS_OEM_Log_HandlerGetStatus((const GPS_OEM_Log_HandlerGetStatus_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_LOG_HANDLER_ACTIVATE_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_HandlerActivateCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_HandlerActivate_t)))
             {
-                GPS_OEMLog_HandlerActivateCmd((const GPS_OEMLog_HandlerActivateCmd_t*) SBBufPtr);
+                GPS_OEM_Log_HandlerActivate((const GPS_OEM_Log_HandlerActivate_t*) SBBufPtr);
             }
             break;
 
         case GPS_OEM_LOG_HANDLER_DEACTIVATE_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_HandlerDeactivateCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_HandlerDeactivate_t)))
             {
-                GPS_OEMLog_HandlerDeactivateCmd((const GPS_OEMLog_HandlerDeactivateCmd_t*) SBBufPtr);
+                GPS_OEM_Log_HandlerDeactivate((const GPS_OEM_Log_HandlerDeactivate_t*) SBBufPtr);
             }
             break;
      
         case GPS_OEM_LOG_HANDLER_GO_DORMANT_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_HandlerGoDormantCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_HandlerGoDormant_t)))
             {
-                GPS_OEMLog_HandlerGoDormantCmd((const GPS_OEMLog_HandlerGoDormantCmd_t*) SBBufPtr);
+                GPS_OEM_Log_HandlerGoDormant((const GPS_OEM_Log_HandlerGoDormant_t*) SBBufPtr);
             }
             break;
       
         case GPS_OEM_LOG_HANDLER_WAKEUP_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_HandlerWakeupCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_HandlerWakeup_t)))
             {
-                GPS_OEMLog_HandlerWakeupCmd((const GPS_OEMLog_HandlerWakeupCmd_t*) SBBufPtr);
+                GPS_OEM_Log_HandlerWakeup((const GPS_OEM_Log_HandlerWakeup_t*) SBBufPtr);
             }
             break;
       
-        case GPS_OEM_LOG_HANDLER_ACTIVATEALL_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_HandlerActivateAllCmd_t)))
+        case GPS_OEM_LOG_HANDLER_ACTIVATE_ALL_CC:
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_HandlerActivateAll_t)))
             {
-                GPS_OEMLog_HandlerActivateAllCmd((const GPS_OEMLog_HandlerActivateAllCmd_t*) SBBufPtr);
+                GPS_OEM_Log_HandlerActivateAll((const GPS_OEM_Log_HandlerActivateAll_t*) SBBufPtr);
             }
             break;
       
-        case GPS_OEM_LOG_HANDLER_DEACTIVATEALL_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_HandlerDeactivateAllCmd_t)))
+        case GPS_OEM_LOG_HANDLER_DEACTIVATE_ALL_CC:
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_HandlerDeactivateAll_t)))
             {
-                GPS_OEMLog_HandlerDeactivateAllCmd((const GPS_OEMLog_HandlerDeactivateAllCmd_t*) SBBufPtr);
+                GPS_OEM_Log_HandlerDeactivateAll((const GPS_OEM_Log_HandlerDeactivateAll_t*) SBBufPtr);
             }
             break;
       
         case GPS_OEM_LOG_HANDLER_REGISTER_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_HandlerRegisterCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_HandlerRegister_t)))
             {
-                GPS_OEMLog_HandlerRegisterCmd((const GPS_OEMLog_HandlerRegisterCmd_t*) SBBufPtr);
+                GPS_OEM_Log_HandlerRegister((const GPS_OEM_Log_HandlerRegister_t*) SBBufPtr);
             }
             break;
       
         case GPS_OEM_LOG_HANDLER_UNREGISTER_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_HandlerUnregisterCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_HandlerUnregister_t)))
             {
-                GPS_OEMLog_HandlerUnregisterCmd((const GPS_OEMLog_HandlerUnregisterCmd_t*) SBBufPtr);
+                GPS_OEM_Log_HandlerUnregister((const GPS_OEM_Log_HandlerUnregister_t*) SBBufPtr);
             }
             break;
       
         case GPS_OEM_LOG_ADD_CALLBACK_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_AddCallbackCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_AddCallback_t)))
             {
-                GPS_OEMLog_AddCallbackCmd((const GPS_OEMLog_AddCallbackCmd_t*) SBBufPtr);
+                GPS_OEM_Log_AddCallback((const GPS_OEM_Log_AddCallback_t*) SBBufPtr);
             }
             break;
       
-        case GPS_OEM_LOG_CLEAR_CALLBACK_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_ClearCallbackCmd_t)))
+        case GPS_OEM_LOG_CLEAR_CALLBACKS_CC:
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_ClearCallbacks_t)))
             {
-                GPS_OEMLog_ClearCallbackCmd((const GPS_OEMLog_ClearCallbackCmd_t*) SBBufPtr);
+                GPS_OEM_Log_ClearCallbacks((const GPS_OEM_Log_ClearCallbacks_t*) SBBufPtr);
             }
             break;
       
-        case GPS_OEM_LOG_HANDLER_SET_BROKEN_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_HandlerSetBrokenCmd_t)))
+        case GPS_OEM_LOG_HANDLER_MARK_BROKEN_CC:
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_HandlerMarkBroken_t)))
             {
-                GPS_OEMLog_HandlerSetBrokenCmd((const GPS_OEMLog_HandlerSetBrokenCmd_t*) SBBufPtr);
+                GPS_OEM_Log_HandlerMarkBroken((const GPS_OEM_Log_HandlerMarkBroken_t*) SBBufPtr);
             }
             break;
       
         case GPS_OEM_LOG_GET_MESSAGE_LENGTH_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_GetHandlerMsgLengthCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_GetMessageLength_t)))
             {
-                GPS_OEMLog_GetHandlerMsgLengthCmd((const GPS_OEMLog_GetHandlerMsgLengthCmd_t*) SBBufPtr);
+                GPS_OEM_Log_GetMessageLength((const GPS_OEM_Log_GetMessageLength_t*) SBBufPtr);
             }
             break;
       
         case GPS_OEM_LOG_GET_HANDLER_NAME_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_GetHandlerNameCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_GetHandlerName_t)))
             {
-                GPS_OEMLog_GetHandlerNameCmd((const GPS_OEMLog_GetHandlerNameCmd_t*) SBBufPtr);
+                GPS_OEM_Log_GetHandlerName((const GPS_OEM_Log_GetHandlerName_t*) SBBufPtr);
             }
             break;
       
-        case GPS_OEM_LOG_RESET_HANDLER_COUNTERS_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_ResetHandlerCountersCmd_t)))
+        case GPS_OEM_LOG_RESET_STAT_CC:
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_ResetStat_t)))
             {
-                GPS_OEMLog_ResetHandlerCountersCmd((const GPS_OEMLog_ResetHandlerCountersCmd_t*) SBBufPtr);
+                GPS_OEM_Log_ResetStat((const GPS_OEM_Log_ResetStat_t*) SBBufPtr);
             }
             break;
       
-        case GPS_OEM_LOG_DUMP_RECENT_MESSAGE_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_DumpRecentMsgCmd_t)))
+        case GPS_OEM_LOG_GET_RECENT_MESSAGE_CC:
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_GetRecentMessage_t)))
             {
-                GPS_OEMLog_DumpRecentMsgCmd((const GPS_OEMLog_DumpRecentMsgCmd_t*) SBBufPtr);
+                GPS_OEM_Log_GetRecentMessage((const GPS_OEM_Log_GetRecentMessage_t*) SBBufPtr);
             }
             break;
       
-        case GPS_OEM_LOG_IGNORE_CHECKSUM_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_IgnoreChecksumCmd_t)))
+        case GPS_OEM_LOG_REJECT_MISSING_CRC_CC:
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_RejectMissingCrc_t)))
             {
-                GPS_OEMLog_IgnoreChecksumCmd((const GPS_OEMLog_IgnoreChecksumCmd_t*) SBBufPtr);
+                GPS_OEM_Log_RejectMissingCrc((const GPS_OEM_Log_RejectMissingCrc_t*) SBBufPtr);
             }
             break;
              
-        case GPS_OEM_LOG_DONOT_IGNORE_CHECKSUM_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_DonotIgnoreChecksumCmd_t)))
+        case GPS_OEM_LOG_IGNORE_MISSING_CRC_CC:
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_IgnoreMissingCrc_t)))
             {
-                GPS_OEMLog_DonotIgnoreChecksumCmd((const GPS_OEMLog_DonotIgnoreChecksumCmd_t*) SBBufPtr);
+                GPS_OEM_Log_IgnoreMissingCrc((const GPS_OEM_Log_IgnoreMissingCrc_t*) SBBufPtr);
             }
             break;
                    
         case GPS_OEM_LOG_LOCK_HANDLERS_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_LockHandlersCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_LockHandlers_t)))
             {
-                GPS_OEMLog_LockHandlersCmd((const GPS_OEMLog_LockHandlersCmd_t*) SBBufPtr);
+                GPS_OEM_Log_LockHandlers((const GPS_OEM_Log_LockHandlers_t*) SBBufPtr);
             }
             break;
                    
         case GPS_OEM_LOG_UNLOCK_HANDLERS_CC:
-            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEMLog_UnlockHandlersCmd_t)))
+            if (GPS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPS_OEM_Log_UnlockHandlers_t)))
             {
-                GPS_OEMLog_UnlockHandlersCmd((const GPS_OEMLog_UnlockHandlersCmd_t*) SBBufPtr);
+                GPS_OEM_Log_UnlockHandlers((const GPS_OEM_Log_UnlockHandlers_t*) SBBufPtr);
             }
             break;
 
@@ -314,7 +314,7 @@ void GPS_ProcessDeviceCommand(const CFE_SB_Buffer_t* SBBufPtr)
             GPS_AppData.Counters.ErrCounter++;
             CFE_EVS_SendEvent(GPS_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid device command code: CC = %d",
                               CommandCode);
-            GPS_SendReport(SBBufPtr, &CommandCode, sizeof(CommandCode), -1, RPT_RETTYPE_APP); // TODO: define invalid cc error.
+            GPS_SendReport(SBBufPtr, &CommandCode, sizeof(CommandCode), -1, GPS_MISSION_REPORT_RETTYPE_APP); // TODO: define invalid cc error.
             break;
     }
 }

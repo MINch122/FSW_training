@@ -34,7 +34,7 @@ CFE_Status_t ADCS_SendHkCmd(const ADCS_SendHkCmd_t *Msg);
 CFE_Status_t ADCS_SendBcnCmd(const ADCS_SendBcnCmd_t *Msg);
 CFE_Status_t ADCS_NoopCmd(const ADCS_NoopCmd_t *Msg);
 CFE_Status_t ADCS_ResetCountersCmd(const ADCS_ResetCountersCmd_t *Msg);
-CFE_Status_t ADCS_CspPingCmd(const ADCS_CspPingCmd_t *Msg);
+CFE_Status_t ADCS_SetInterfaceTransportCmd(const ADCS_InterfaceTransportCmd_t *Msg);
 /*
 CFE_Status_t ADCS_EN_HighCmd(void);
 CFE_Status_t ADCS_EN_LowCmd(void);
@@ -59,6 +59,7 @@ CFE_Status_t ADCS_SetControlEstimationModeCmd(const ADCS_ControlEstimationModeCm
 CFE_Status_t ADCS_SetDisableMagRwlMntMngCmd(const ADCS_DisableMagRwlMntMngCmd_t *msg);	// 43
 CFE_Status_t ADCS_SetReferenceIRCVectorCmd(const ADCS_ReferenceIRCVectorCmd_t *msg);	// 47
 CFE_Status_t ADCS_SetReferenceLLHTargetCmd(const ADCS_ReferenceLLHTargetCmd_t *msg);		// 48
+CFE_Status_t ADCS_SetCommandedGNSSMeasurementsCmd(const ADCS_CommandedGNSSMeasurementsCmd_t *msg); // 49
 CFE_Status_t ADCS_SetOrbitModeCmd(const ADCS_OrbitModeCmd_t *msg);	// 51
 CFE_Status_t ADCS_SetMagDeployCmd(const ADCS_MagDeployCmd_t *msg);	// 52
 CFE_Status_t ADCS_SetReferenceRPYValuesCmd(const ADCS_ReferenceRPYvaluesCmd_t *msg);	// 54
@@ -116,6 +117,7 @@ CFE_Status_t ADCS_GetEstimationModeCmd(void);	// 199
 CFE_Status_t ADCS_GetOperationalStateCmd(void);	// 200
 CFE_Status_t ADCS_GetRawCSSSensorCmd(void);	// 203
 CFE_Status_t ADCS_GetRawGYRSensorCmd(void);	// 204
+CFE_Status_t ADCS_GetRawRWLSensorCmd(void);	// 205
 CFE_Status_t ADCS_GetCalibratedGYRSensorCmd(void);	// 207
 CFE_Status_t ADCS_GetMagSensingElmConfigCmd(void);	// 221
 CFE_Status_t ADCS_GetTlmLogInclMaskCmd(void); // 227
@@ -131,7 +133,5 @@ CFE_Status_t ADCS_SequenceCmd_Vpointing(void);
 CFE_Status_t ADCS_SequenceCmd_KSCpointing(void);
 CFE_Status_t ADCS_SequenceCmd_LGCpointing(void);
 CFE_Status_t ADCS_SequenceCmd_RPYpointing(const ADCS_SequenceCmdRPYpointingCmd_t *msg);
-
-CFE_Status_t ADCS_Loop(void);
 
 #endif /* ADCS_CMDS_H */

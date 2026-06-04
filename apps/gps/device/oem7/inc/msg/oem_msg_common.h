@@ -2,7 +2,7 @@
 #define _OEM_MSG_COMMON_H_
 
 
-#include "oem_basetype.h"
+#include "oem_types.h"
 #include "oem_ports.h"
 
 
@@ -28,7 +28,7 @@ typedef enum {
  */
 typedef enum {
     OEM_TRIGGER_ONNEW       = 0,
-    OEM_TRIGGER_ONCNANGED   = 1,
+    OEM_TRIGGER_ONCHANGED   = 1,
     OEM_TRIGGER_ONTIME      = 2,
     OEM_TRIGGER_ONNEXT      = 3,
     OEM_TRIGGER_ONCE        = 4,
@@ -205,5 +205,12 @@ typedef struct OEM_PACK {
      */
     char                response[];
 } oem_binary_response;
+
+#include <assert.h>
+
+/* The reply state machine assumes the response type includes the header */
+_Static_assert(offsetof(oem_binary_response, responseId)
+                == sizeof(oem_binary_header_t),
+                "oem_binary_response must overlay header");
 
 #endif

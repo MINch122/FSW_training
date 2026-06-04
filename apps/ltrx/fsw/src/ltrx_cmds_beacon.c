@@ -750,21 +750,17 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
             st->Version           = ReadLe16(&payload[0]);
             st->Temperature       = ReadLeI16(&payload[2]);
-
             st->AngularVelocityX  = ReadLeI32(&payload[4]);
             st->AngularVelocityY  = ReadLeI32(&payload[8]);
             st->AngularVelocityZ  = ReadLeI32(&payload[12]);
-
             st->AccelerationX     = ReadLeI32(&payload[16]);
             st->AccelerationY     = ReadLeI32(&payload[20]);
             st->AccelerationZ     = ReadLeI32(&payload[24]);
-
             st->ConnectionQuality = payload[28];
             st->BatteryIsCharging = payload[29];
             st->BatteryCapacity   = ReadLe16(&payload[30]);
-
-            /* Reserved[20] starts at offset 32 */
             memcpy(st->Reserved, &payload[32], sizeof(st->Reserved));
+
 
             LTRX_AppData.HaveBeaconStatus = true;
 

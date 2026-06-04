@@ -3,8 +3,8 @@
 
 #define OEM_CALLBACK_LOG_SAVE_PATH_ROOT  "/cf/sdcard/"
 
-int OEM_Callback_VERSION(void* msg);
-int OEM_Callback_HWMONITOR(void* msg);
-int OEM_Callback_BESTXYZ_Bin(void* msg);
+int oem_callback_VERSION_print(void* msg);
+int oem_callback_HWMONITOR_print(void* msg);
+int oem_callback_BESTXYZ_binfile(void* msg);
 
 #endif

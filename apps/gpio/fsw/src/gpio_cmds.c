@@ -31,10 +31,68 @@
 #include "gpio_msg.h"
 #include "cfe_srl.h"
 
-static CFE_Status_t GPIO_SetOutput(const char *Name, CFE_SRL_GPIO_Indexer_t Index, bool Value)
+#include <string.h>
+
+static void GPIO_SendReport(uint8 CC, int32 Status, const void *Data, uint16 DataSize, uint8 ReturnType)
+{
+    CFE_SB_Buffer_t *BufPtr = CFE_SB_AllocateMessageBuffer(sizeof(GPIO_ReportTlm_t));
+    uint16 CopySize = 0;
+
+    if (BufPtr == NULL)
+    {
+        return;
+    }
+
+    GPIO_ReportTlm_t *Report = (GPIO_ReportTlm_t *)BufPtr;
+    if (CFE_MSG_Init(CFE_MSG_PTR(Report->TelemetryHeader), CFE_SB_ValueToMsgId(GPIO_RPT_TLM_MID),
+                     sizeof(GPIO_ReportTlm_t)) != CFE_SUCCESS)
+    {
+        CFE_SB_ReleaseMessageBuffer(BufPtr);
+        return;
+    }
+
+    if (Data != NULL && DataSize > 0)
+    {
+        CopySize = (DataSize > RPT_RET_VALUE_BUF_SIZE) ? RPT_RET_VALUE_BUF_SIZE : DataSize;
+    }
+
+    Report->Report.MsgID = GPIO_CMD_MID;
+    Report->Report.CommandCode = CC;
+    Report->Report.ReturnType = ReturnType;
+    Report->Report.ReturnCode = Status;
+    Report->Report.ReturnDataSize = CopySize;
+    memset(Report->Report.ReturnValue, 0, sizeof(Report->Report.ReturnValue));
+    if (CopySize > 0)
+    {
+        memcpy(Report->Report.ReturnValue, Data, CopySize);
+    }
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report->TelemetryHeader));
+    if (CFE_SB_TransmitBuffer(BufPtr, true) != CFE_SUCCESS)
+    {
+        CFE_SB_ReleaseMessageBuffer(BufPtr);
+    }
+}
+
+static uint8 GPIO_StatusToReportType(int32 Status)
+{
+    return (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_HW;
+}
+
+static CFE_Status_t GPIO_SetOutput(const char *Name, CFE_SRL_GPIO_Indexer_t Index, uint8 StateBit, bool Value)
 {
     CFE_SRL_GPIO_Handle_t *Out = CFE_SRL_ApiGetGpioHandle(Index);
     int32                  Status;
+
+    if (Value)
+    {
+        GPIO_Data.OutputStateBits |= (uint16)(1u << StateBit);
+    }
+    else
+    {
+        GPIO_Data.OutputStateBits &= (uint16)~(1u << StateBit);
+    }
+    GPIO_Data.OutputCommandedBits |= (uint16)(1u << StateBit);
 
     if (Out == NULL)
     {
@@ -59,7 +117,26 @@ static CFE_Status_t GPIO_SetOutput(const char *Name, CFE_SRL_GPIO_Indexer_t Inde
     return CFE_SUCCESS;
 }
 
-static CFE_Status_t GPIO_ReadInputFor5Seconds(const char *Name, CFE_SRL_GPIO_Indexer_t Index)
+void GPIO_InitOutputDefaults(void)
+{
+    CFE_SRL_GPIO_Handle_t *StxEn  = CFE_SRL_ApiGetGpioHandle(CFE_SRL_STX_EN_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *AdcsEn = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_EN_GPIO_INDEXER);
+
+    GPIO_Data.OutputStateBits = (uint16)((1u << GPIO_OUTPUT_STX_EN_BIT) | (1u << GPIO_OUTPUT_ADCS_EN_BIT));
+    GPIO_Data.OutputCommandedBits = 0;
+    if (StxEn != NULL && CFE_SRL_ApiGpioSet(StxEn, true) != CFE_SUCCESS)
+    {
+        GPIO_Data.ErrCounter++;
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set STX_EN default ON");
+    }
+    if (AdcsEn != NULL && CFE_SRL_ApiGpioSet(AdcsEn, true) != CFE_SUCCESS)
+    {
+        GPIO_Data.ErrCounter++;
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set ADCS_EN default ON");
+    }
+}
+
+static CFE_Status_t GPIO_ReadInputFor1Second(const char *Name, CFE_SRL_GPIO_Indexer_t Index, bool *SawHighOut, bool CountCommand)
 {
     CFE_SRL_GPIO_Handle_t *In = CFE_SRL_ApiGetGpioHandle(Index);
     bool                   Value = false;
@@ -76,7 +153,7 @@ static CFE_Status_t GPIO_ReadInputFor5Seconds(const char *Name, CFE_SRL_GPIO_Ind
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    for (Sample = 0; Sample < 50; ++Sample)
+    for (Sample = 0; Sample < 10; ++Sample)
     {
         ReadStatus = CFE_SRL_ApiGpioGet(In, &Value);
         if (ReadStatus != CFE_SUCCESS)
@@ -97,11 +174,16 @@ static CFE_Status_t GPIO_ReadInputFor5Seconds(const char *Name, CFE_SRL_GPIO_Ind
         OS_TaskDelay(100);
     }
 
-    if (Status == CFE_SUCCESS)
+    if (SawHighOut != NULL)
+    {
+        *SawHighOut = SawHigh;
+    }
+
+    if (Status == CFE_SUCCESS && CountCommand)
     {
         GPIO_Data.CmdCounter++;
         CFE_EVS_SendEvent(GPIO_VALUE_INF_EID, CFE_EVS_EventType_INFORMATION,
-                          "GPIO: %s read for 5s, last=%u, saw_high=%u", Name, (unsigned int)LastValue,
+                          "GPIO: %s read for 1s, last=%u, saw_high=%u", Name, (unsigned int)LastValue,
                           (unsigned int)SawHigh);
     }
 
@@ -127,8 +209,7 @@ CFE_Status_t GPIO_SendHkCmd(const GPIO_SendHkCmd_t *Msg)
     /*
     ** Send housekeeping telemetry packet...
     */
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(GPIO_Data.HkTlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(GPIO_Data.HkTlm.TelemetryHeader), true);
+    GPIO_SendReport(0, CFE_SUCCESS, &GPIO_Data.HkTlm.Payload, sizeof(GPIO_Data.HkTlm.Payload), RPT_RETTYPE_SUCCESS);
 
     /*
     ** Manage any pending table loads, validations, etc.
@@ -138,15 +219,39 @@ CFE_Status_t GPIO_SendHkCmd(const GPIO_SendHkCmd_t *Msg)
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
+CFE_Status_t GPIO_SendBcnCmd(const GPIO_SendBcnCmd_t *Msg)
+{
+    bool IsDeployed = false;
+
+    GPIO_Data.BcnTlm.Payload.GpioState =
+        (uint16)((GPIO_Data.OutputStateBits & GPIO_OUTPUT_STATE_MASK) |
+                 ((GPIO_Data.OutputCommandedBits & GPIO_OUTPUT_STATE_MASK) << GPIO_OUTPUT_COMMANDED_SHIFT));
+    GPIO_Data.BcnTlm.Payload.isDeployed = 0;
+
+    if (GPIO_ReadInputFor1Second("SP_IN", CFE_SRL_SP_IN_GPIO_INDEXER, &IsDeployed, false) == CFE_SUCCESS)
+    {
+        GPIO_Data.BcnTlm.Payload.isDeployed = IsDeployed ? 1 : 0;
+    }
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(GPIO_Data.BcnTlm.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(GPIO_Data.BcnTlm.TelemetryHeader), true);
+
+    return CFE_SUCCESS;
+}
+
 /* SAMPLE NOOP commands                                                       */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t GPIO_NoopCmd(const GPIO_NoopCmd_t *Msg)
 {
+    static const char NoopReport[] = "Yosi In Space";
+
+    (void)Msg;
     GPIO_Data.CmdCounter++;
 
     CFE_EVS_SendEvent(GPIO_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "GPIO: NOOP command %s",
                       GPIO_VERSION);
+    GPIO_SendReport(GPIO_NOOP_CC, CFE_SUCCESS, NoopReport, sizeof(NoopReport), RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
@@ -160,10 +265,16 @@ CFE_Status_t GPIO_NoopCmd(const GPIO_NoopCmd_t *Msg)
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 CFE_Status_t GPIO_ResetCountersCmd(const GPIO_ResetCountersCmd_t *Msg)
 {
+    uint8 Counters[2];
+
+    (void)Msg;
     GPIO_Data.CmdCounter = 0;
     GPIO_Data.ErrCounter = 0;
+    Counters[0] = GPIO_Data.CmdCounter;
+    Counters[1] = GPIO_Data.ErrCounter;
 
     CFE_EVS_SendEvent(GPIO_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "GPIO: RESET command");
+    GPIO_SendReport(GPIO_RESET_COUNTERS_CC, CFE_SUCCESS, Counters, sizeof(Counters), RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
@@ -176,8 +287,8 @@ CFE_Status_t GPIO_ResetCountersCmd(const GPIO_ResetCountersCmd_t *Msg)
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 CFE_Status_t GPIO_ProcessCmd(const GPIO_ProcessCmd_t *Msg)
 {
-
-    // /* Invoke a function provided by GPIO_LIB */
+    (void)Msg;
+    GPIO_SendReport(GPIO_PROCESS_CC, CFE_SUCCESS, NULL, 0, RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
@@ -192,41 +303,98 @@ CFE_Status_t GPIO_DigpiolayParamCmd(const GPIO_DigpiolayParamCmd_t *Msg)
     CFE_EVS_SendEvent(GPIO_VALUE_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "GPIO: ValU32=%lu, ValI16=%d, ValStr=%s", (unsigned long)Msg->Payload.ValU32,
                       (int)Msg->Payload.ValI16, Msg->Payload.ValStr);
+    GPIO_SendReport(GPIO_DIGPIOLAY_PARAM_CC, CFE_SUCCESS, &Msg->Payload, sizeof(Msg->Payload), RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t GPIO_LtrxEnOnCmd(const GPIO_LtrxEnOnCmd_t *Msg)
 {
-    return GPIO_SetOutput("LTRX_EN", CFE_SRL_LTRX_EN_GPIO_INDEXER, true);
+    CFE_Status_t Status = GPIO_SetOutput("LTRX_EN", CFE_SRL_LTRX_EN_GPIO_INDEXER, GPIO_OUTPUT_LTRX_EN_BIT, true);
+    GPIO_SendReport(GPIO_LTRX_EN_ON_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
 }
 
 CFE_Status_t GPIO_LtrxEnOffCmd(const GPIO_LtrxEnOffCmd_t *Msg)
 {
-    return GPIO_SetOutput("LTRX_EN", CFE_SRL_LTRX_EN_GPIO_INDEXER, false);
+    CFE_Status_t Status = GPIO_SetOutput("LTRX_EN", CFE_SRL_LTRX_EN_GPIO_INDEXER, GPIO_OUTPUT_LTRX_EN_BIT, false);
+    GPIO_SendReport(GPIO_LTRX_EN_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
 }
 
 CFE_Status_t GPIO_Dep1EnOnCmd(const GPIO_Dep1EnOnCmd_t *Msg)
 {
-    return GPIO_SetOutput("DEP1_EN", CFE_SRL_DEP1_EN_GPIO_INDEXER, true);
+    CFE_Status_t Status = GPIO_SetOutput("DEP1_EN", CFE_SRL_DEP1_EN_GPIO_INDEXER, GPIO_OUTPUT_DEP1_EN_BIT, true);
+    GPIO_SendReport(GPIO_DEP1_EN_ON_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
 }
 
 CFE_Status_t GPIO_Dep1EnOffCmd(const GPIO_Dep1EnOffCmd_t *Msg)
 {
-    return GPIO_SetOutput("DEP1_EN", CFE_SRL_DEP1_EN_GPIO_INDEXER, false);
+    CFE_Status_t Status = GPIO_SetOutput("DEP1_EN", CFE_SRL_DEP1_EN_GPIO_INDEXER, GPIO_OUTPUT_DEP1_EN_BIT, false);
+    GPIO_SendReport(GPIO_DEP1_EN_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
 }
 
 CFE_Status_t GPIO_Dep2EnOnCmd(const GPIO_Dep2EnOnCmd_t *Msg)
 {
-    return GPIO_SetOutput("DEP2_EN", CFE_SRL_DEP2_EN_GPIO_INDEXER, true);
+    CFE_Status_t Status = GPIO_SetOutput("DEP2_EN", CFE_SRL_DEP2_EN_GPIO_INDEXER, GPIO_OUTPUT_DEP2_EN_BIT, true);
+    GPIO_SendReport(GPIO_DEP2_EN_ON_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
 }
 
 CFE_Status_t GPIO_Dep2EnOffCmd(const GPIO_Dep2EnOffCmd_t *Msg)
 {
-    return GPIO_SetOutput("DEP2_EN", CFE_SRL_DEP2_EN_GPIO_INDEXER, false);
+    CFE_Status_t Status = GPIO_SetOutput("DEP2_EN", CFE_SRL_DEP2_EN_GPIO_INDEXER, GPIO_OUTPUT_DEP2_EN_BIT, false);
+    GPIO_SendReport(GPIO_DEP2_EN_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
+}
+
+CFE_Status_t GPIO_StxEnOnCmd(const GPIO_StxEnOnCmd_t *Msg)
+{
+    CFE_Status_t Status = GPIO_SetOutput("STX_EN", CFE_SRL_STX_EN_GPIO_INDEXER, GPIO_OUTPUT_STX_EN_BIT, true);
+    GPIO_SendReport(GPIO_STX_EN_ON_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
+}
+
+CFE_Status_t GPIO_StxEnOffCmd(const GPIO_StxEnOffCmd_t *Msg)
+{
+    CFE_Status_t Status = GPIO_SetOutput("STX_EN", CFE_SRL_STX_EN_GPIO_INDEXER, GPIO_OUTPUT_STX_EN_BIT, false);
+    GPIO_SendReport(GPIO_STX_EN_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
+}
+
+CFE_Status_t GPIO_AdcsEnOnCmd(const GPIO_AdcsEnOnCmd_t *Msg)
+{
+    CFE_Status_t Status = GPIO_SetOutput("ADCS_EN", CFE_SRL_ADCS_EN_GPIO_INDEXER, GPIO_OUTPUT_ADCS_EN_BIT, true);
+    GPIO_SendReport(GPIO_ADCS_EN_ON_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
+}
+
+CFE_Status_t GPIO_AdcsEnOffCmd(const GPIO_AdcsEnOffCmd_t *Msg)
+{
+    CFE_Status_t Status = GPIO_SetOutput("ADCS_EN", CFE_SRL_ADCS_EN_GPIO_INDEXER, GPIO_OUTPUT_ADCS_EN_BIT, false);
+    GPIO_SendReport(GPIO_ADCS_EN_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
+}
+
+CFE_Status_t GPIO_AdcsBootOnCmd(const GPIO_AdcsBootOnCmd_t *Msg)
+{
+    CFE_Status_t Status = GPIO_SetOutput("ADCS_BOOT", CFE_SRL_ADCS_BOOT_GPIO_INDEXER, GPIO_OUTPUT_ADCS_BOOT_BIT, true);
+    GPIO_SendReport(GPIO_ADCS_BOOT_ON_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
+}
+
+CFE_Status_t GPIO_AdcsBootOffCmd(const GPIO_AdcsBootOffCmd_t *Msg)
+{
+    CFE_Status_t Status = GPIO_SetOutput("ADCS_BOOT", CFE_SRL_ADCS_BOOT_GPIO_INDEXER, GPIO_OUTPUT_ADCS_BOOT_BIT, false);
+    GPIO_SendReport(GPIO_ADCS_BOOT_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
 }
 
 CFE_Status_t GPIO_SpInRead5sCmd(const GPIO_SpInRead5sCmd_t *Msg)
 {
-    return GPIO_ReadInputFor5Seconds("SP_IN", CFE_SRL_SP_IN_GPIO_INDEXER);
+    CFE_Status_t Status = GPIO_ReadInputFor1Second("SP_IN", CFE_SRL_SP_IN_GPIO_INDEXER, NULL, true);
+    GPIO_SendReport(GPIO_SP_IN_READ_5S_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    return Status;
 }

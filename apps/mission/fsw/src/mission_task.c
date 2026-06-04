@@ -14,6 +14,7 @@ void MISSION_Main(void) {
     CFE_ES_PerfLogEntry(MISSION_PERF_ID);
 
     Status = MISSION_Init();
+    MISSION_APP_printf("MISSION: init status=0x%08lX\n", (unsigned long)Status);
     if (Status != CFE_SUCCESS) {
         MISSION_Data.RunStatus = CFE_ES_RunStatus_APP_ERROR;
     }
@@ -76,6 +77,8 @@ CFE_Status_t MISSION_Init(void) {
                         sizeof(MISSION_Data.HkTlm));
         CFE_MSG_Init(CFE_MSG_PTR(MISSION_Data.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(MISSION_BCN_TLM_MID),
                         sizeof(MISSION_Data.BcnTlm));
+        CFE_MSG_Init(CFE_MSG_PTR(MISSION_Data.Report.TelemetryHeader), CFE_SB_ValueToMsgId(MISSION_REPORT_TLM_MID),
+                        sizeof(MISSION_Data.Report));
         Status = CFE_SB_CreatePipe(&MISSION_Data.CmdPipe, MISSION_Data.PipeDepth, MISSION_Data.CmdPipeName);
         if (Status != CFE_SUCCESS) {
             CFE_EVS_SendEvent(MISSION_CR_PIPE_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -114,7 +117,8 @@ CFE_Status_t MISSION_Init(void) {
                               "MISSION: Error Subscribing to UTRX HK tlm, RC = 0x%08lX", (unsigned long)Status);
         }
     }
-    if (Status == CFE_SUCCESS) {
+    if (Status == CFE_SUCCESS && MISSION_ENABLE_LEOP_SEQUENCE) {
+        MISSION_APP_printf("MISSION: creating LEOP child task\n");
         Status = CFE_ES_CreateChildTask(&MISSION_Data.LEOPTaskId, MISSION_LEOP_TASK_NAME, MISSION_LEOP_Task,
                                         CFE_ES_TASK_STACK_ALLOCATE, MISSION_LEOP_TASK_STACK_SIZE,
                                         MISSION_LEOP_TASK_PRIORITY, 0);
@@ -122,6 +126,10 @@ CFE_Status_t MISSION_Init(void) {
             CFE_EVS_SendEvent(MISSION_PIPE_ERR_EID, CFE_EVS_EventType_ERROR,
                               "MISSION: Error creating LEOP task, RC = 0x%08lX", (unsigned long)Status);
         }
+    }
+
+    if (Status == CFE_SUCCESS && !MISSION_ENABLE_LEOP_SEQUENCE) {
+        MISSION_APP_printf("MISSION: LEOP child task disabled by config\n");
     }
 
     if (Status == CFE_SUCCESS) {

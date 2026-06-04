@@ -8,12 +8,96 @@
 #include "oem_config.h"
 #include "oem_utils.h"
 
+#include <stdlib.h>
+
 #if OEM_DEBUG
 #include <stdarg.h>
 #include <stdio.h>
 #include <errno.h>
-#include <stdlib.h>
 #endif
+
+
+typedef struct oem_list_node_s {
+    void* data;
+    struct oem_list_node_s* next;
+} oem_list_node_t;
+
+struct oem_list_s {
+    oem_list_node_t* head;
+    oem_list_node_t* cursor;
+    int              count;
+};
+
+oem_list_t* oem_list_create(void)
+{
+    return calloc(1, sizeof(oem_list_t));
+}
+
+void oem_list_free(oem_list_t* list)
+{
+    if (!list)
+        return;
+
+    oem_list_node_t* n = list->head;
+    while (n) {
+        oem_list_node_t* next = n->next;
+        free(n);
+        n = next;
+    }
+    free(list);
+}
+
+int oem_list_add_back(oem_list_t* list, void* data)
+{
+    if (!list)
+        return OEM_ERR_NULL;
+
+    oem_list_node_t* n = malloc(sizeof(*n));
+    if (!n)
+        return OEM_ERR_NOMEM;
+
+    n->data = data;
+    n->next = NULL;
+
+    if (!list->head) {
+        list->head = n;
+    }
+    else {
+        oem_list_node_t* t = list->head;
+        while (t->next)
+            t = t->next;
+        t->next = n;
+    }
+    list->count++;
+
+    return OEM_OK;
+}
+
+int oem_list_nodes(const oem_list_t* list)
+{
+    return list ? list->count : OEM_ERR_UTILS_LIST_NULL;
+}
+
+bool oem_list_tohead(oem_list_t* list)
+{
+    if (!list || !list->head)
+        return false;
+    list->cursor = list->head;
+    return true;
+}
+
+bool oem_list_tonext(oem_list_t* list)
+{
+    if (!list || !list->cursor || !list->cursor->next)
+        return false;
+    list->cursor = list->cursor->next;
+    return true;
+}
+
+void* oem_list_getdata(const oem_list_t* list)
+{
+    return (list && list->cursor) ? list->cursor->data : NULL;
+}
 
 
 #if OEM_CRC32_USE_LOOKUP
@@ -67,7 +151,7 @@ static uint32_t crc32_word(int32_t i)
 }
 #endif
 
-uint32_t OEM_CalculateBlockCRC32(const void* data,
+oem_crc oem_crc32(const void* data,
                                  size_t length)
 {
     uint32_t crc = 0;
@@ -86,65 +170,115 @@ uint32_t OEM_CalculateBlockCRC32(const void* data,
 }
 
 #if OEM_DEBUG
-static void SetStringSpec(FILE* stream,
-                          log_level level)
+
+#define LOG_HEXDUMP_MAX_DISPLAY_PER_ROW 32
+
+static bool use_color = true;
+
+#define CLR_RESET  "\033[0m"
+#define CLR_RED    "\033[31m"
+#define CLR_GREEN  "\033[32m"
+#define CLR_YELLOW "\033[33m"
+#define CLR_CYAN   "\033[36m"
+#define CLR_BWHITE "\033[97m"
+#define CLR_DIM    "\033[2m"
+#define CLR_MAGENTA "\033[35m"
+#define CLR_BOLD   "\033[1m"
+
+
+typedef struct {
+    const char *color;
+    const char *tag;
+    int indentLevel;
+    bool verbose;
+} log_style_t;
+
+static const log_style_t styles[] = {
+/*   Log Level     Color              Tag       Indent  Verbose */
+    [LL_NORMAL] = {CLR_RESET,         NULL,     0,      true },
+    [LL_ERROR ] = {CLR_RED CLR_BOLD, "[ERROR]", 0,      true },
+    [LL_WARN  ] = {CLR_YELLOW,       "[ WARN]", 1,      true },
+    [LL_INFO  ] = {CLR_GREEN,        "[ INFO]", 0,      true },
+};
+
+void oem_debug(const char* caller,
+               log_level_t level,
+               const char* str, ...)
 {
-    uint8_t color;
-    bool bold = false;
-    switch (level) {
-        case LL_NORMAL:
-            color = 0;
-            break;
-        case LL_ERROR:
-            color = 31; // Red.
-            bold = true;
-            break;
-        case LL_WARN:
-            color = 33; // Yellow.
-            break;
-        case LL_INFO:
-            color = 32; // Green.
-            break;
-        default: 
-            color = 0;
+    (void) caller; /* Unused for now, but may be used in the future for more advanced logging features. */
+    if (level >= LL_MAX)
+        return;
+
+    const log_style_t *s = &styles[level];
+
+    if (!s->verbose)
+        return;
+
+    for (int i = 0; i < s->indentLevel; i++)
+        printf("  ");
+
+    if (use_color)
+        printf("%s", s->color);
+
+    if (s->tag)
+        printf("%s ", s->tag);
+    
+    printf(CLR_RESET);
+
+    va_list ap;
+    va_start(ap, str);
+    vprintf(str, ap);
+    va_end(ap);
+
+    fflush(stdout);
+}
+
+void oem_debug_hexdump(log_level_t level, const void *data, size_t len, bool c)
+{
+    if (level >= LL_MAX)
+        return;
+
+    const log_style_t *s = &styles[level];
+    const uint8_t *p = data;
+
+    if (!s->verbose)
+        return;
+
+    for (int i = 0; i < s->indentLevel; i++)
+        printf("  ");
+
+    if (s->tag) {
+        if (use_color)
+            printf("%s%s%s ", s->color, s->tag, CLR_RESET);
+        else
+            printf("%s ", s->tag);
     }
-    fprintf(stream,
-            "\033[%u;%um",
-            bold, color);
-}
 
-static void UnSetStringSpec(FILE* stream)
-{
-    fprintf(stream, "\033[0;0m");
-}
+    printf("(%zu bytes)\n", len);
 
-static int DebugImpl(FILE* stream,
-                     const char* caller,
-                     log_level level,
-                     const char* str,
-                     va_list va)
-{
-    int n = -1;
-    if (stream) {
-        SetStringSpec(stream, level);
-        fprintf(stream, "<%s> ", caller);
-        n = vfprintf(stream, str, va);
-        UnSetStringSpec(stream);
-        fflush(stream);
+    for (size_t row = 0; row < len; row += LOG_HEXDUMP_MAX_DISPLAY_PER_ROW) {
+        size_t row_len = (row + LOG_HEXDUMP_MAX_DISPLAY_PER_ROW <= len)
+                         ? LOG_HEXDUMP_MAX_DISPLAY_PER_ROW : (len - row);
+
+        for (int i = 0; i < s->indentLevel; i++)
+            printf("  ");
+
+        printf("  %08zx  ", row);
+
+        for (size_t j = 0; j < row_len; j++)
+            printf("%02x ", p[row + j]);
+
+        if (c) {
+            for (size_t j = row_len; j < LOG_HEXDUMP_MAX_DISPLAY_PER_ROW; j++)
+                printf("   ");
+            printf(" |");
+            for (size_t j = 0; j < row_len; j++)
+                putchar(p[row + j] >= 0x20 && p[row + j] < 0x7f ? p[row + j] : '.');
+            putchar('|');
+        }
+
+        putchar('\n');
     }
-    return n;
-}
-
-int OEM_Debug(const char* caller,
-              log_level level,
-              const char* str, ...)
-{
-    int n;
-    va_list va; 
-    va_start(va, str);
-    n = DebugImpl(stderr, caller, level, str, va);
-    va_end(va);
-    return n;
 }
 
 #endif

@@ -10,7 +10,7 @@
 #ifndef _OEM_H_
 #define _OEM_H_
 
-#include "oem_basetype.h"
+#include "oem_types.h"
 #include "oem_config.h"
 
 #include "oem_cmd.h"

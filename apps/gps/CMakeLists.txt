@@ -20,11 +20,7 @@ list(APPEND APP_SRC_FILES
 
 # Append this only if the default linux serial callbacks are in use.
 list(APPEND APP_SRC_FILES
-  device/oem7/src/arch/oem_arch_io_linux.c
-)
-
-list(APPEND APP_SRC_FILES
-  device/oem7/mlk/list/src/mlk_list.c
+  device/oem7/src/io_drivers/oem_io_serial_linux.c
 )
 
 if (CFE_EDS_ENABLED_BUILD)
@@ -43,9 +39,6 @@ add_cfe_app(gps ${APP_SRC_FILES})
 target_include_directories(gps PUBLIC fsw/inc)
 target_include_directories(gps PUBLIC device/oem7/inc)
 target_include_directories(gps PUBLIC device/oem7/src)
-target_include_directories(gps PUBLIC device/oem7/mlk)
-target_include_directories(gps PUBLIC device/oem7/mlk/list/inc)
-target_include_directories(gps PUBLIC device/oem7/mlk/list/src)
 target_include_directories(gps PUBLIC device/oem7/callbacks)
 
 # If UT is enabled, then add the tests from the subdirectory

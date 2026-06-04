@@ -63,10 +63,6 @@ typedef struct{
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_CspPingCmd_t;
-
-typedef struct{
-    CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_GpioBootHighCmd_t;
 
 typedef struct{
@@ -76,6 +72,11 @@ typedef struct{
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_ExitBootLoaderCmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_InterfaceTransportCmd_Payload_t Payload;
+} ADCS_InterfaceTransportCmd_t;
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
@@ -139,6 +140,11 @@ typedef struct{ // ID 48
     CFE_MSG_CommandHeader_t CommandHeader;
     ADCS_ReferenceLLHTargetCmd_Payload_t Payload;
 } ADCS_ReferenceLLHTargetCmd_t;
+
+typedef struct{ // ID 49
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_CommandedGNSSMeasurementsCmd_Payload_t Payload;
+} ADCS_CommandedGNSSMeasurementsCmd_t;
 
 typedef struct{ // ID 51
     CFE_MSG_CommandHeader_t CommandHeader;
@@ -386,6 +392,10 @@ typedef struct{ // ID 204
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_GetRawGYRSensorCmd_t;
 
+typedef struct{ // ID 205
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS_GetRawRWLSensorCmd_t;
+
 typedef struct{ // ID 207
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_GetCalibratedGYRSensorCmd_t;
@@ -425,7 +435,6 @@ typedef struct
 {
     CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
     ADCS_BcnTlm_Payload_t Payload;         /**< \brief Telemetry payload */
-    bool IsSunlight;
 } ADCS_BcnTlm_t;
 
 /* Housekeeping SB MSG */

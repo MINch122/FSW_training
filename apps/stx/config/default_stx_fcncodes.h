@@ -37,6 +37,8 @@
 */
 #define STX_NOOP_CC           0
 #define STX_RESET_COUNTERS_CC 1
+#define STX_PARAM_INIT_CC     2
+#define STX_MODULE_ID_INIT_CC 3
 
 /**set**/
 #define STX_SET_SYMBOLRATE      10
@@ -84,4 +86,6 @@
 
 #define STX_HK_CC             67
 #define STX_BCN_CC             68
+
+
 #endif

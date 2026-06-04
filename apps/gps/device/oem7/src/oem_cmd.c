@@ -11,25 +11,24 @@
 #include "oem_io.h"
 #include "oem_utils.h"
 
-/**
- * @brief Length of the buffer containing the entire command, including the CRC.
- */
-#define OEM_CMD_BUFSIZ(msgPtr)      (sizeof(*msgPtr) + sizeof(oem_crc))
 
-
-int OEM_AssemblePublishCmd(int portIndex,
-                           oem_ushort mid,
-                           oem_ushort bodyLength,
-                           const void* body) {
+int oem_cmd_publish(int iface_idx,
+                    oem_ushort msg_id,
+                    oem_ushort body_size,
+                    const void* body)
+{
     oem_binary_header_t* cmd;
-    size_t packetSize;
+    size_t packet_size;
     oem_crc crc;
     int status;
 
-    packetSize = sizeof(oem_binary_header_t) + bodyLength + sizeof(crc);
-    if ((cmd = calloc(1, packetSize)) == NULL) {
-        DebugError("cmd publish error: malloc failed for mid %d.\n",
-                   mid);
+    if (iface_idx < 0 || iface_idx >= OEM_IO_INTERFACES)
+        return OEM_ERR_IO_IFACE_INDEX;
+
+    packet_size = sizeof(oem_binary_header_t) + body_size + sizeof(crc);
+    if ((cmd = calloc(1, packet_size)) == NULL) {
+        oem_debug_error("cmd publish error: malloc failed for mid %d.\n",
+                         msg_id);
         return OEM_ERR_NOMEM;
     }
 
@@ -40,154 +39,147 @@ int OEM_AssemblePublishCmd(int portIndex,
     cmd->sync[1]       = OEM_SYNC_BYTE2;
     cmd->sync[2]       = OEM_SYNC_BYTE3;
     cmd->headerLength  = sizeof(oem_binary_header_t);
-    cmd->messageID     = mid;
+    cmd->messageID     = msg_id;
     cmd->messageType   = OEM_MISSION_MSGTYPE;
     cmd->portAddress   = OEM_PORT_THIS;
-    cmd->messageLength = bodyLength;
+    cmd->messageLength = body_size;
 
     /**
      * Append the body.
      */
-    if (body && bodyLength > 0) {
-        memcpy(cmd + 1, body, bodyLength);
-    }
+    if (body && body_size > 0)
+        memcpy(cmd + 1, body, body_size);
 
     /**
      * Append trailing CRC.
      */
-    crc = OEM_CalculateBlockCRC32(cmd,
-                                  packetSize - sizeof(crc));
-    memcpy(((uint8_t*) cmd) + packetSize - sizeof(crc),
+    crc = oem_crc32(cmd, packet_size - sizeof(crc));
+    memcpy(((uint8_t*) cmd) + packet_size - sizeof(crc),
            &crc,
            sizeof(crc));
-
-// #if OEM_DEBUG
-//     for (int i = 0; i < OEM_CMD_BUFSIZ(msg); i++) {
-//         if (i != 0)
-//             if (i % 32 == 0) printf("\n");
-//             else if (i % 4 == 0) printf(" ");
-//         printf("%02X ", ((uint8*)msg)[i]);
-//     }
-//     printf("\n");
-// #endif
 
     /**
      * Send out the packet.
      */
-    status = OEM_IO_PortWrite(portIndex, cmd, packetSize);
+    status = oem_io_write(iface_idx, cmd, packet_size);
 
 #if OEM_DEBUG
-    if (status != OEM_OK) {
-        DebugError("cmd publish error: mid %d, returned %d\n",
-                   mid,
-                   status);
-    }
+    if (status != OEM_OK)
+        oem_debug_error("cmd publish error: msg_id %d, returned %d\n",
+                         msg_id,
+                         status);
 #endif
 
     free(cmd);
     return status;
 }
 
-int OEM_Cmd_LOG(int portIndex,
-                oem_ushort msgId,
+int oem_cmd_LOG(int iface_idx,
+                oem_ushort msg_id,
                 oem_enum port,
                 oem_char type,
                 oem_enum trigger,
                 oem_double period,
                 oem_double offset,
-                oem_enum hold) {
+                oem_enum hold)
+{
     oem_cmd_log body;
 
     memset(&body, 0, sizeof(body));
 
-    body.port = port;
-    body.messageId = msgId;
+    body.port        = port;
+    body.messageId   = msg_id;
     body.messageType = type;
-    body.trigger = trigger;
+    body.trigger     = trigger;
     if (trigger == OEM_TRIGGER_ONTIME) {
-        body.period = period;
-        body.offset = offset;
+        body.period  = period;
+        body.offset  = offset;
     }
     body.hold = hold;
 
-    return OEM_AssemblePublishCmd(portIndex,
-                                  OEM_ID_CMD_LOG,
-                                  sizeof(body),
-                                  &body);
+    return oem_cmd_publish(iface_idx,
+                           OEM_ID_CMD_LOG,
+                           sizeof(body),
+                           &body);
 }
 
-int OEM_Cmd_UNLOG(int portIndex,
+int oem_cmd_UNLOG(int iface_idx,
                   oem_enum port,
-                  oem_ushort msgId,
-                  oem_char msgType) {
+                  oem_ushort msg_id,
+                  oem_char msg_type)
+{
     oem_cmd_unlog body;
 
-    body.port = port;
-    body.message = msgId;
-    body.messageType = msgType;
-    body.reserved = 0;
+    body.port        = port;
+    body.message     = msg_id;
+    body.messageType = msg_type;
+    body.reserved    = 0;
 
-    return OEM_AssemblePublishCmd(portIndex,
-                                  OEM_ID_CMD_UNLOG,
-                                  sizeof(body),
-                                  &body);
+    return oem_cmd_publish(iface_idx,
+                           OEM_ID_CMD_UNLOG,
+                           sizeof(body),
+                           &body);
 }
 
-int OEM_Cmd_UNLOGALL(int portIndex,
+int oem_cmd_UNLOGALL(int iface_idx,
                      oem_enum port,
-                     oem_bool held) {
+                     oem_bool held)
+{
     oem_cmd_unlog_all body;
 
     body.port = port;
     body.held = held;
 
-    return OEM_AssemblePublishCmd(portIndex,
-                                  OEM_ID_CMD_UNLOGALL,
-                                  sizeof(body),
-                                  &body);
+    return oem_cmd_publish(iface_idx,
+                           OEM_ID_CMD_UNLOGALL,
+                           sizeof(body),
+                           &body);
 }
 
-int OEM_Cmd_ELEVATIONCUTOFF(int portIndex,
+int oem_cmd_ELEVATIONCUTOFF(int iface_idx,
                             oem_enum constellation,
-                            oem_float cutoff) {
+                            oem_float cutoff)
+{
     oem_cmd_elevation_cutoff body;
 
     body.constellation = constellation;
-    body.cutoff = cutoff;
-    body.reserved = 0;
+    body.cutoff        = cutoff;
+    body.reserved      = 0;
 
-    return OEM_AssemblePublishCmd(portIndex,
-                                  OEM_ID_CMD_ELEVATIONCUTOFF,
-                                  sizeof(body),
-                                  &body);
+    return oem_cmd_publish(iface_idx,
+                           OEM_ID_CMD_ELEVATIONCUTOFF,
+                           sizeof(body),
+                           &body);
 }
 
-int OEM_Cmd_INTERFACEMODE(int portIndex,
+int oem_cmd_INTERFACEMODE(int iface_idx,
                           oem_enum port,
-                          oem_enum rxType,
-                          oem_enum txType,
-                          oem_enum responses) {
+                          oem_enum rx_type,
+                          oem_enum tx_type,
+                          oem_enum responses)
+{
     oem_cmd_interface_mode body;
 
-    body.port = port;
-    body.rxType = rxType;
-    body.txType = txType;
+    body.port      = port;
+    body.rxType    = rx_type;
+    body.txType    = tx_type;
     body.responses = responses;
 
-    return OEM_AssemblePublishCmd(portIndex,
-                                  OEM_ID_CMD_INTERFACEMODE,
-                                  sizeof(body),
-                                  &body);
+    return oem_cmd_publish(iface_idx,
+                           OEM_ID_CMD_INTERFACEMODE,
+                           sizeof(body),
+                           &body);
 }
 
-int OEM_Cmd_SERIALCONFIG(int portIndex,
-                         oem_enum port,
+int oem_cmd_SERIALCONFIG(int iface_idx,
+                         oem_enum  port,
                          oem_ulong baud,
-                         oem_enum parity,
+                         oem_enum  parity,
                          oem_ulong databits,
                          oem_ulong stopbits,
-                         oem_enum handshake,
-                         oem_enum _break) {
+                         oem_enum  handshake,
+                         oem_enum _break)
+{
     oem_cmd_serial_config body;
 
     body.port = port;
@@ -198,8 +190,8 @@ int OEM_Cmd_SERIALCONFIG(int portIndex,
     body.handshake = handshake;
     body._break = _break;
 
-    return OEM_AssemblePublishCmd(portIndex,
-                                  OEM_ID_CMD_SERIALCONFIG,
-                                  sizeof(body),
-                                  &body);
+    return oem_cmd_publish(iface_idx,
+                           OEM_ID_CMD_SERIALCONFIG,
+                           sizeof(body),
+                           &body);
 }

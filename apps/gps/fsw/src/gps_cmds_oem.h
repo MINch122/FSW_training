@@ -33,45 +33,45 @@
 /*
 ** OEM receiver commands.
 */
-void GPS_OEMCmd_LogCmd(const GPS_OEMCmd_LogCmd_t* Msg);
-void GPS_OEMCmd_LogOnceCmd(const GPS_OEMCmd_LogOnceCmd_t* Msg);
-void GPS_OEMCmd_LogOnTimeCmd(const GPS_OEMCmd_LogOnTimeCmd_t* Msg);
-void GPS_OEMCmd_LogOnChangedCmd(const GPS_OEMCmd_LogOnChangedCmd_t* Msg);
-void GPS_OEMCmd_LogOnNewCmd(const GPS_OEMCmd_LogOnNewCmd_t* Msg);
-void GPS_OEMCmd_UnlogCmd(const GPS_OEMCmd_UnlogCmd_t* Msg);
-void GPS_OEMCmd_UnlogAllCmd(const GPS_OEMCmd_UnlogAllCmd_t* Msg);
-void GPS_OEMCmd_ElevationCutoffCmd(const GPS_OEMCmd_ElevationCutoffCmd_t* Msg);
-void GPS_OEMCmd_InterfaceModeCmd(const GPS_OEMCmd_InterfaceModeCmd_t* Msg);
-void GPS_OEMCmd_SerialConfigCmd(const GPS_OEMCmd_SerialConfigCmd_t* Msg);
-void GPS_OEMCmd_PublishCmd(const GPS_OEMCmd_PublishCmd_t* Msg);
+void GPS_OEM_Cmd_Log(const GPS_OEM_Cmd_Log_t* Msg);
+void GPS_OEM_Cmd_LogOnce(const GPS_OEM_Cmd_LogOnce_t* Msg);
+void GPS_OEM_Cmd_LogOnTime(const GPS_OEM_Cmd_LogOnTime_t* Msg);
+void GPS_OEM_Cmd_LogOnChanged(const GPS_OEM_Cmd_LogOnChanged_t* Msg);
+void GPS_OEM_Cmd_LogOnNew(const GPS_OEM_Cmd_LogOnNew_t* Msg);
+void GPS_OEM_Cmd_Unlog(const GPS_OEM_Cmd_Unlog_t* Msg);
+void GPS_OEM_Cmd_UnlogAll(const GPS_OEM_Cmd_UnlogAll_t* Msg);
+void GPS_OEM_Cmd_ElevationCutoff(const GPS_OEM_Cmd_ElevationCutoff_t* Msg);
+void GPS_OEM_Cmd_InterfaceMode(const GPS_OEM_Cmd_InterfaceMode_t* Msg);
+void GPS_OEM_Cmd_SerialConfig(const GPS_OEM_Cmd_SerialConfig_t* Msg);
+void GPS_OEM_Cmd_Publish(const GPS_OEM_Cmd_Publish_t* Msg);
 
 /*
 ** OEM log handler commands.
 */
-void GPS_OEMLog_GetHandlerHkCmd(const GPS_OEMLog_GetHandlerHkCmd_t* Msg);
-void GPS_OEMLog_GetMsgStatCmd(const GPS_OEMLog_GetMsgStatCmd_t* Msg);
-void GPS_OEMLog_SetHandlerStatusCmd(const GPS_OEMLog_SetHandlerStatusCmd_t* Msg);
-void GPS_OEMLog_GetHandlerStatusCmd(const GPS_OEMLog_GetHandlerStatusCmd_t* Msg);
-void GPS_OEMLog_HandlerActivateCmd(const GPS_OEMLog_HandlerActivateCmd_t* Msg);
-void GPS_OEMLog_HandlerDeactivateCmd(const GPS_OEMLog_HandlerDeactivateCmd_t* Msg);
-void GPS_OEMLog_HandlerGoDormantCmd(const GPS_OEMLog_HandlerGoDormantCmd_t* Msg);
-void GPS_OEMLog_HandlerWakeupCmd(const GPS_OEMLog_HandlerWakeupCmd_t* Msg);
-void GPS_OEMLog_HandlerActivateAllCmd(const GPS_OEMLog_HandlerActivateAllCmd_t* Msg);
-void GPS_OEMLog_HandlerDeactivateAllCmd(const GPS_OEMLog_HandlerDeactivateAllCmd_t* Msg);
+void GPS_OEM_Log_GetHandlerHk(const GPS_OEM_Log_GetHandlerHk_t* Msg);
+void GPS_OEM_Log_GetStat(const GPS_OEM_Log_GetStat_t* Msg);
+void GPS_OEM_Log_HandlerSetStatus(const GPS_OEM_Log_HandlerSetStatus_t* Msg);
+void GPS_OEM_Log_HandlerGetStatus(const GPS_OEM_Log_HandlerGetStatus_t* Msg);
+void GPS_OEM_Log_HandlerActivate(const GPS_OEM_Log_HandlerActivate_t* Msg);
+void GPS_OEM_Log_HandlerDeactivate(const GPS_OEM_Log_HandlerDeactivate_t* Msg);
+void GPS_OEM_Log_HandlerGoDormant(const GPS_OEM_Log_HandlerGoDormant_t* Msg);
+void GPS_OEM_Log_HandlerWakeup(const GPS_OEM_Log_HandlerWakeup_t* Msg);
+void GPS_OEM_Log_HandlerActivateAll(const GPS_OEM_Log_HandlerActivateAll_t* Msg);
+void GPS_OEM_Log_HandlerDeactivateAll(const GPS_OEM_Log_HandlerDeactivateAll_t* Msg);
 
-void GPS_OEMLog_HandlerRegisterCmd(const GPS_OEMLog_HandlerRegisterCmd_t* Msg);
-void GPS_OEMLog_HandlerUnregisterCmd(const GPS_OEMLog_HandlerUnregisterCmd_t* Msg);
-void GPS_OEMLog_AddCallbackCmd(const GPS_OEMLog_AddCallbackCmd_t* Msg);
-void GPS_OEMLog_ClearCallbackCmd(const GPS_OEMLog_ClearCallbackCmd_t* Msg);
-void GPS_OEMLog_HandlerSetBrokenCmd(const GPS_OEMLog_HandlerSetBrokenCmd_t* Msg);
-void GPS_OEMLog_GetHandlerMsgLengthCmd(const GPS_OEMLog_GetHandlerMsgLengthCmd_t* Msg);
-void GPS_OEMLog_GetHandlerNameCmd(const GPS_OEMLog_GetHandlerNameCmd_t* Msg);
-void GPS_OEMLog_ResetHandlerCountersCmd(const GPS_OEMLog_ResetHandlerCountersCmd_t* Msg);
-void GPS_OEMLog_DumpRecentMsgCmd(const GPS_OEMLog_DumpRecentMsgCmd_t* Msg);
-void GPS_OEMLog_IgnoreChecksumCmd(const GPS_OEMLog_IgnoreChecksumCmd_t* Msg);
-void GPS_OEMLog_DonotIgnoreChecksumCmd(const GPS_OEMLog_DonotIgnoreChecksumCmd_t* Msg);
+void GPS_OEM_Log_HandlerRegister(const GPS_OEM_Log_HandlerRegister_t* Msg);
+void GPS_OEM_Log_HandlerUnregister(const GPS_OEM_Log_HandlerUnregister_t* Msg);
+void GPS_OEM_Log_AddCallback(const GPS_OEM_Log_AddCallback_t* Msg);
+void GPS_OEM_Log_ClearCallbacks(const GPS_OEM_Log_ClearCallbacks_t* Msg);
+void GPS_OEM_Log_HandlerMarkBroken(const GPS_OEM_Log_HandlerMarkBroken_t* Msg);
+void GPS_OEM_Log_GetMessageLength(const GPS_OEM_Log_GetMessageLength_t* Msg);
+void GPS_OEM_Log_GetHandlerName(const GPS_OEM_Log_GetHandlerName_t* Msg);
+void GPS_OEM_Log_ResetStat(const GPS_OEM_Log_ResetStat_t* Msg);
+void GPS_OEM_Log_GetRecentMessage(const GPS_OEM_Log_GetRecentMessage_t* Msg);
+void GPS_OEM_Log_RejectMissingCrc(const GPS_OEM_Log_RejectMissingCrc_t* Msg);
+void GPS_OEM_Log_IgnoreMissingCrc(const GPS_OEM_Log_IgnoreMissingCrc_t* Msg);
 
-void GPS_OEMLog_LockHandlersCmd(const GPS_OEMLog_LockHandlersCmd_t* Msg);
-void GPS_OEMLog_UnlockHandlersCmd(const GPS_OEMLog_UnlockHandlersCmd_t* Msg);
+void GPS_OEM_Log_LockHandlers(const GPS_OEM_Log_LockHandlers_t* Msg);
+void GPS_OEM_Log_UnlockHandlers(const GPS_OEM_Log_UnlockHandlers_t* Msg);
 
 #endif

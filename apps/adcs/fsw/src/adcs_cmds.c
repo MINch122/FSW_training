@@ -31,9 +31,6 @@
 #include "adcs_utils.h"
 #include "adcs_msg.h"
 #include "adcs_eventids.h"
-#include <csp/csp.h>
-
-#define ADCS_CSP_PING_TIMEOUT_MS 1000
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
 /*  Purpose:                                                                  */
@@ -44,11 +41,58 @@
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 CFE_Status_t ADCS_SendHkCmd(const ADCS_SendHkCmd_t *Msg)
 {
-    /*
-    ** Send housekeeping telemetry packet...
-    */
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(ADCS_AppData.HkTlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(ADCS_AppData.HkTlm.TelemetryHeader), true);
+    int32 Status;
+    ADCS_HealthTlmMMTTlm_Payload_t MmtHealth = {0,};
+    ADCS_RawCubeSenseSunTlm_Payload_t RawSun = {0,};
+    ADCS_OpenLoopCmdMTQTlm_Payload_t MtqOpenLoop = {0,};
+    ADCS_MTQConfigTlm_Payload_t MtqConfig = {0,};
+    ADCS_RawCSSSensorTlm_Payload_t RawCSS = {0,};
+
+    memset(&ADCS_AppData.HkTlm.Payload, 0, sizeof(ADCS_AppData.HkTlm.Payload));
+
+    Status = ADCS_GetHealthTlmMMT(&MmtHealth);
+    if (Status == CFE_SUCCESS) {
+        ADCS_AppData.HkTlm.Payload.MAG0MCUCurrent = MmtHealth.Mag0MCUCurrent;
+    }
+
+    Status = ADCS_GetRawCubeSenseSun(&RawSun);
+    if (Status == CFE_SUCCESS) {
+        ADCS_AppData.HkTlm.Payload.FSS0CaptureResult = RawSun.FSS0CaptureResult;
+        ADCS_AppData.HkTlm.Payload.FSS0DetectionResult = RawSun.FSS0DetectionResult;
+    }
+
+    Status = ADCS_GetOpenLoopCmdMTQ(&MtqOpenLoop);
+    if (Status == CFE_SUCCESS) {
+        ADCS_AppData.HkTlm.Payload.MTQ0OpenLoopOnTimeCommand = MtqOpenLoop.MTQ0_OpenLoopCmd;
+        ADCS_AppData.HkTlm.Payload.MTQ1OpenLoopOnTimeCommand = MtqOpenLoop.MTQ1_OpenLoopCmd;
+        ADCS_AppData.HkTlm.Payload.MTQ2OpenLoopOnTimeCommand = MtqOpenLoop.MTQ2_OpenLoopCmd;
+    }
+
+    Status = ADCS_GetMTQConfig(&MtqConfig);
+    if (Status == CFE_SUCCESS) {
+        ADCS_AppData.HkTlm.Payload.mtq0Mmax = MtqConfig.MTQ0MaxDipoleMoment;
+        ADCS_AppData.HkTlm.Payload.mtq1Mmax = MtqConfig.MTQ1MaxDipoleMoment;
+        ADCS_AppData.HkTlm.Payload.mtq2Mmax = MtqConfig.MTQ2MaxDipoleMoment;
+        ADCS_AppData.HkTlm.Payload.onTimeMax = MtqConfig.MaxMTQOnTime;
+        ADCS_AppData.HkTlm.Payload.mtqFfac = MtqConfig.MagneticControlFilterFactor;
+    }
+
+    Status = ADCS_GetRawCSSSensor(&RawCSS);
+    if (Status == CFE_SUCCESS) {
+        ADCS_AppData.HkTlm.Payload.css0Raw = RawCSS.CSS0;
+        ADCS_AppData.HkTlm.Payload.css1Raw = RawCSS.CSS1;
+        ADCS_AppData.HkTlm.Payload.css2Raw = RawCSS.CSS2;
+        ADCS_AppData.HkTlm.Payload.css3Raw = RawCSS.CSS3;
+        ADCS_AppData.HkTlm.Payload.css4Raw = RawCSS.CSS4;
+        ADCS_AppData.HkTlm.Payload.css5Raw = RawCSS.CSS5;
+        ADCS_AppData.HkTlm.Payload.css6Raw = RawCSS.CSS6;
+        ADCS_AppData.HkTlm.Payload.css7Raw = RawCSS.CSS7;
+        ADCS_AppData.HkTlm.Payload.css8Raw = RawCSS.CSS8;
+        ADCS_AppData.HkTlm.Payload.css9Raw = RawCSS.CSS9;
+        ADCS_AppData.HkTlm.Payload.rawCssIsValid = RawCSS.CSSValidFlag;
+    }
+
+    ADCS_HandleReport(CFE_SUCCESS, 0, &ADCS_AppData.HkTlm.Payload, sizeof(ADCS_AppData.HkTlm.Payload));
 
     return CFE_SUCCESS;
 }
@@ -59,6 +103,9 @@ CFE_Status_t ADCS_SendBcnCmd(const ADCS_SendBcnCmd_t *Msg)
     ADCS_PowerStateTlm_Payload_t PwrStt = {0,};
     ADCS_ControlModeTlm_Payload_t CtrlMode = {0,};
     ADCS_CalibratedGYRSensorTlm_Payload_t CalGYR = {0,};
+    ADCS_RawCSSSensorTlm_Payload_t RawCSS = {0,};
+
+    memset(&ADCS_AppData.BcnTlm.Payload, 0, sizeof(ADCS_AppData.BcnTlm.Payload));
 
     Status = ADCS_GetPowerState(&PwrStt);
     if (Status == CFE_SUCCESS) {
@@ -83,7 +130,16 @@ CFE_Status_t ADCS_SendBcnCmd(const ADCS_SendBcnCmd_t *Msg)
         ADCS_AppData.BcnTlm.Payload.GYR0CalibratedRateYComponent = CalGYR.GYR0CalibratedRateY;
         ADCS_AppData.BcnTlm.Payload.GYR0CalibratedRateZComponent = CalGYR.GYR0CalibratedRateZ;
     }
-    
+    Status = ADCS_GetRawCSSSensor(&RawCSS);
+    if (Status == CFE_SUCCESS) {
+        ADCS_AppData.BcnTlm.Payload.CSS[0] = RawCSS.CSS0;
+        ADCS_AppData.BcnTlm.Payload.CSS[1] = RawCSS.CSS1;
+        ADCS_AppData.BcnTlm.Payload.CSS[2] = RawCSS.CSS2;
+        ADCS_AppData.BcnTlm.Payload.CSS[3] = RawCSS.CSS3;
+        ADCS_AppData.BcnTlm.Payload.CSS[4] = RawCSS.CSS4;
+        ADCS_AppData.BcnTlm.Payload.CSS[5] = RawCSS.CSS5;
+    }
+
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(ADCS_AppData.BcnTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(ADCS_AppData.BcnTlm.TelemetryHeader), true);
 
@@ -99,8 +155,8 @@ CFE_Status_t ADCS_NoopCmd(const ADCS_NoopCmd_t *Msg)
 {
     ADCS_AppData.CmdCounter++;
 
-    uint8_t Cmds[2] = {ADCS_AppData.CmdCounter, ADCS_AppData.ErrCounter};
-    ADCS_HandleReport(CFE_SUCCESS, ADCS_NOOP_CC, Cmds, sizeof(Cmds));
+    static const char NoopReport[] = "Yosi In Space";
+    ADCS_HandleReport(CFE_SUCCESS, ADCS_NOOP_CC, (void *)NoopReport, sizeof(NoopReport));
 
     CFE_EVS_SendEvent(ADCS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "ADCS: NOOP command received.");
 
@@ -127,29 +183,19 @@ CFE_Status_t ADCS_ResetCountersCmd(const ADCS_ResetCountersCmd_t *Msg)
     return CFE_SUCCESS;
 }
 
-CFE_Status_t ADCS_CspPingCmd(const ADCS_CspPingCmd_t *Msg)
+CFE_Status_t ADCS_SetInterfaceTransportCmd(const ADCS_InterfaceTransportCmd_t *Msg)
 {
-    int32_t elapsed_ms;
+    CFE_Status_t Status;
 
-    (void)Msg;
+    Status = ADCS_SetInterfaceTransport(Msg->Payload.TransportType);
 
-    ADCS_AppData.CmdCounter++;
+    ADCS_HandleReport(Status, ADCS_SET_INTERFACE_TRANSPORT_CC, (void *)&Msg->Payload, sizeof(Msg->Payload));
 
-    elapsed_ms = csp_ping(CAN_ADDR_CC, ADCS_CSP_PING_TIMEOUT_MS, 1U, 0);
-    if (elapsed_ms < 0)
+    if (Status != CFE_SUCCESS)
     {
-        ADCS_AppData.ErrCounter++;
-        ADCS_HandleReport(CFE_STATUS_EXTERNAL_RESOURCE_FAIL, ADCS_CSP_PING_CC, NULL, 0);
-        CFE_EVS_SendEvent(ADCS_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "ADCS: CSP ping failed on node %u",
-                          (unsigned int)CAN_ADDR_CC);
-        OS_printf("[ADCS] CSP Ping FAILED node=%u\n", (unsigned int)CAN_ADDR_CC);
-        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Interface Transport: 0x%08lx", (unsigned long)Status);
+        return Status;
     }
-
-    ADCS_HandleReport(CFE_SUCCESS, ADCS_CSP_PING_CC, &elapsed_ms, sizeof(elapsed_ms));
-    CFE_EVS_SendEvent(ADCS_VALUE_INF_EID, CFE_EVS_EventType_INFORMATION, "ADCS: CSP ping OK node=%u rtt=%ld ms",
-                      (unsigned int)CAN_ADDR_CC, (long)elapsed_ms);
-    OS_printf("[ADCS] CSP Ping OK node=%u rtt=%ld ms\n", (unsigned int)CAN_ADDR_CC, (long)elapsed_ms);
 
     return CFE_SUCCESS;
 }
@@ -267,10 +313,10 @@ CFE_Status_t ADCS_SetReset(void){
 
 
 /********************************************************
- * 
+ *
  * COSMIC Actual invoked command function
  * Upper functions are just the references
- * 
+ *
  ********************************************************/
 
 /* Set function */
@@ -393,6 +439,24 @@ CFE_Status_t ADCS_SetReferenceLLHTargetCmd(const ADCS_ReferenceLLHTargetCmd_t *m
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Set Reference LLH Target: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("ADCS cmd Success.");
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_SetCommandedGNSSMeasurementsCmd(const ADCS_CommandedGNSSMeasurementsCmd_t *msg) {
+    // ID 49
+    CFE_Status_t status;
+
+    status = ADCS_SetCommandedGNSSMeasurements(&msg->Payload);
+
+    ADCS_HandleReport(status, ADCS_SET_COMMANDED_GNSS_MEASUREMENTS_CC, NULL, 0);
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Commanded GNSS Measurements: 0x%08lx", (unsigned long)status);
         return status;
     }
     OS_printf("ADCS cmd Success.");
@@ -841,9 +905,9 @@ CFE_Status_t ADCS_SetInitiateEventLogTransferCmd(const ADCS_InitiateEventLogTran
 }
 
 /********************************************************
- * 
+ *
  * COSMIC Actual Get Command Function (Get tlm)
- * 
+ *
  ********************************************************/
 CFE_Status_t ADCS_GetErrorLogSettingCmd(void) {
     // ID 132
@@ -859,10 +923,10 @@ CFE_Status_t ADCS_GetErrorLogSettingCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Error Log Settings: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("ActiveState: %u || BufferFullAction: %u\n", RetVal.ActiveState, RetVal.BufferFullAction);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -880,10 +944,10 @@ CFE_Status_t ADCS_GetErrorLogSettingCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Current Unix Time: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Unix Time sec: %u || Unix Time subsec: %u\n", RetVal.CurrentUnixseconds, RetVal.CurrentUnixNanoseconds);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -907,7 +971,7 @@ CFE_Status_t ADCS_GetCurrentUnixTimeInternalCmd(void) {
     }
     if (ADCS_AppData.BootUpCheckCounter == 5)
         CFE_EVS_SendErr(ADCS_BOOTUP_CHECK_ERR_EID, "ADCS Boot up check fail. Need S/C Power reset.\n");
-    
+
     return CFE_SUCCESS;
 }
 
@@ -926,11 +990,11 @@ CFE_Status_t ADCS_GetPersistConfigDiagnosticCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Persist Config Diagonostic: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("State: %u\nLast Result: %u\nTimeStamp: %u\n",
                 RetVal.State, RetVal.LastResult, RetVal.Timestamp);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -948,14 +1012,14 @@ CFE_Status_t ADCS_GetCommunicationStatusCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Communication Status: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("[CAN Status]\n");
     OS_printf("TC counter          : %u\n", RetVal.CAN_TcCnt);
     OS_printf("TM Request counter  : %u\n", RetVal.CAN_TlmCnt);
     OS_printf("Errors in SW checkes: %u\n", RetVal.CAN_ErrSW);
     OS_printf("Erross by HW flags  : %u\n", RetVal.CAN_ErrHW);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -973,11 +1037,11 @@ CFE_Status_t ADCS_GetControlEstimationModeCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Control Estimation Mode: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Control Mode: %u || Main Estimator Mode: %u || Backup Estimator Mode: %u || Control Timeout: %u\n",
                 RetVal.ControlMode, RetVal.MainEstimatorMode, RetVal.BackupEstimatorMode, RetVal.ControlTimeout);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -995,10 +1059,10 @@ CFE_Status_t ADCS_GetReferenceIRCVectorCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get ReferenceIRC Vector: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("ECI pointing vector X: %f || ECI pointing vector Y: %f || ECI pointing vector Z: %f\n", RetVal.ECIPointingVectorX, RetVal.ECIPointingVectorY, RetVal.ECIPointingVectorZ);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1016,10 +1080,10 @@ CFE_Status_t ADCS_GetReferenceLLHTargetCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Reference LLH Target: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Latitude: %f || Longitude: %f || Altitude: %f\n", RetVal.Latitude, RetVal.Longitude, RetVal.Altitude);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1029,7 +1093,7 @@ CFE_Status_t ADCS_GetOrbitModeCmd(void) {
     ADCS_OrbitModeTlm_Payload_t RetVal = {0,};
 
     status = ADCS_GetOrbitMode(&RetVal);
-    
+
     ADCS_HandleReport(status, ADCS_GET_ORBIT_MODE_CC, &RetVal, sizeof(RetVal));
 
     if (status != CFE_SUCCESS)
@@ -1037,10 +1101,10 @@ CFE_Status_t ADCS_GetOrbitModeCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Orbit Mode: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Orbit Mode: %u\n", RetVal.OrbitMode);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1058,7 +1122,7 @@ CFE_Status_t ADCS_GetHealthTlmMMTCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Health Telemetry MMT: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("MAG0::\n");
     OS_printf("MCU Temp        : %d || MCU Current    : %u || MCU Voltage  : %u\n", RetVal.Mag0MCUTemperature, RetVal.Mag0MCUCurrent, RetVal.Mag0MCUVoltage);
@@ -1088,7 +1152,7 @@ CFE_Status_t ADCS_GetRawCubeSenseSunCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Raw CubeSense Sun: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("TimeSec: %u || TimeNanoSec: %u\n", RetVal.TimeSecond, RetVal.TimeNanoSecond);
     OS_printf("FSS0 Alpha: %d || Beta: %d || Capture Res: %u || Detection Res: %u\n", RetVal.FSS0AlphaAngle, RetVal.FSS0BetaAngle, RetVal.FSS0CaptureResult, RetVal.FSS0DetectionResult);
@@ -1096,7 +1160,7 @@ CFE_Status_t ADCS_GetRawCubeSenseSunCmd(void) {
     OS_printf("FSS2 Alpha: %d || Beta: %d || Capture Res: %u || Detection Res: %u\n", RetVal.FSS2AlphaAngle, RetVal.FSS2BetaAngle, RetVal.FSS2CaptureResult, RetVal.FSS2DetectionResult);
     OS_printf("FSS3 Alpha: %d || Beta: %d || Capture Res: %u || Detection Res: %u\n", RetVal.FSS3AlphaAngle, RetVal.FSS3BetaAngle, RetVal.FSS3CaptureResult, RetVal.FSS3DetectionResult);
     OS_printf("Valid Res: 0x%02X\n", RetVal.ValidResult);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1114,10 +1178,10 @@ CFE_Status_t ADCS_GetReferenceRPYvaluesCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Reference RPY Values: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
-    // Handling Retval    
+
+    // Handling Retval
     OS_printf("Roll: %f || Pitch: %f || Yaw: %f\n", RetVal.Roll, RetVal.Pitch, RetVal.Yaw);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1135,10 +1199,10 @@ CFE_Status_t ADCS_GetOpenLoopCmdMTQCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Open Loop Cmd MTQ: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
-    // Handling Retval    
+
+    // Handling Retval
     OS_printf("MTQ0_OpenLoopCmd: %d || MTQ1_OpenLoopCmd: %d || MTQ2_OpenLoopCmd: %d\n", RetVal.MTQ0_OpenLoopCmd, RetVal.MTQ1_OpenLoopCmd, RetVal.MTQ2_OpenLoopCmd);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1156,14 +1220,14 @@ CFE_Status_t ADCS_GetPowerStateCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Power State: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("RWL0: %u || RWL1: %u || RWL2: %u || RWL3: %u\n", RetVal.RWL0, RetVal.RWL1, RetVal.RWL2, RetVal.RWL3);
     OS_printf("MAG0: %u || MAG1: %u || GYR0: %u || GYR1: %u\n", RetVal.MAG0, RetVal.MAG1, RetVal.GYR0, RetVal.GYR1);
     OS_printf("FSS0: %u || FSS1: %u || FSS2: %u || FSS3: %u\n", RetVal.FSS0, RetVal.FSS1, RetVal.FSS2, RetVal.FSS3);
     OS_printf("HSS0: %u || HSS1: %u || STR0: %u || STR1: %u\n", RetVal.HSS0, RetVal.HSS1, RetVal.STR0, RetVal.STR1);
     OS_printf("EXT: Sensor0 %u || Sensor1: %u || GYR0: %u || GYR1: %u\n", RetVal.ExtSensor0, RetVal.ExtSensor1, RetVal.ExtGYR0, RetVal.ExtGYR1);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1181,10 +1245,10 @@ CFE_Status_t ADCS_GetRunModeCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Run Mode: %u\n", RetVal.RunMode);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1202,11 +1266,11 @@ CFE_Status_t ADCS_GetControlModeCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Control Mode: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Control Mode   : %u\n", RetVal.ControlMode);
     OS_printf("Control Timeout: %u\n", RetVal.ControlTimeout);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1224,7 +1288,7 @@ CFE_Status_t ADCS_GetWhlConfigCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Wheel Config Telemetry: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Rwl0Inertia: %f || Rwl0MaxMomentum: %f || Rwl0MaxToque: %f\n", RetVal.Rwl0Inertia, RetVal.Rwl0MaxMomentum, RetVal.Rwl0MaxToque);
     OS_printf("Rwl1Inertia: %f || Rwl1MaxMomentum: %f || Rwl1MaxToque: %f\n", RetVal.Rwl0Inertia, RetVal.Rwl0MaxMomentum, RetVal.Rwl0MaxToque);
@@ -1232,7 +1296,7 @@ CFE_Status_t ADCS_GetWhlConfigCmd(void) {
     OS_printf("Rwl3Inertia: %f || Rwl3MaxMomentum: %f || Rwl3MaxToque: %f\n", RetVal.Rwl0Inertia, RetVal.Rwl0MaxMomentum, RetVal.Rwl0MaxToque);
     OS_printf("WheelRampTorque: %f\n", RetVal.WheelRampTorque);
     OS_printf("WheelScheme: %u || FailedWheelID: %u\n", RetVal.WheelScheme, RetVal.FailedWheelID);
-        
+
     return CFE_SUCCESS;
 }
 
@@ -1250,7 +1314,7 @@ CFE_Status_t ADCS_GetSatelliteConfigCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Satellite Config: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("[MOI]\n");
     OS_printf("Ixx: %f || Iyy: %f || Izz: %f\n", RetVal.Ixx, RetVal.Iyy, RetVal.Izz);
@@ -1285,7 +1349,7 @@ CFE_Status_t ADCS_GetControllerConfigCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Controller Config: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Default Control Mode         : %u\n", RetVal.DefaultControlMode);
     OS_printf("[Gains]\n");
@@ -1318,7 +1382,7 @@ CFE_Status_t ADCS_GetControllerConfigCmd(void) {
     OS_printf("YawCompensationForEarthRotation: %u\n", RetVal.flags.YawCompensationForEarthRotation);
     OS_printf("Enable SunTracking In Eclipse: %u\n", RetVal.flags.EnableSunTrackingInEclipse);
     OS_printf("Enable SunAvoidance          : %u\n", RetVal.flags.EnableSunAvoidance);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1336,7 +1400,7 @@ CFE_Status_t ADCS_GetMag0MMTCalibConfigCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get MAG0 MMT Calibration Config: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("[Offset]\n");
     OS_printf("(RAW)  Channel 1: %d || Channel 2: %d || Channel 3: %d\n", RetVal.MMT_Ch1Offset, RetVal.MMT_Ch2Offset, RetVal.MMT_Ch3Offset);
@@ -1351,7 +1415,7 @@ CFE_Status_t ADCS_GetMag0MMTCalibConfigCmd(void) {
     OS_printf("S11: %f || S12: %f || S13: %f\n", RetVal.MMT_SensitivityMAT_S11*0.001, RetVal.MMT_SensitivityMAT_S12*0.001, RetVal.MMT_SensitivityMAT_S13*0.001);
     OS_printf("S21: %f || S22: %f || S23: %f\n", RetVal.MMT_SensitivityMAT_S21*0.001, RetVal.MMT_SensitivityMAT_S22*0.001, RetVal.MMT_SensitivityMAT_S23*0.001);
     OS_printf("S31: %f || S32: %f || S33: %f\n", RetVal.MMT_SensitivityMAT_S31*0.001, RetVal.MMT_SensitivityMAT_S32*0.001, RetVal.MMT_SensitivityMAT_S33*0.001);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1369,13 +1433,13 @@ CFE_Status_t ADCS_GetDefaultModeConfigCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Default Mode COnfig: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Default Run Mode            : %u\n", RetVal.DefaultRunMode);
     OS_printf("Default Operational State   : %u\n", RetVal.DefaultOperationalState);
     OS_printf("Default Control Mode in Safe: %u\n", RetVal.DefaultControlModeInOpStateSafe);
     OS_printf("Default Control Mode in Auto: %u\n", RetVal.DefaultControlModeInOpStateAuto);
-    
+
 
     return CFE_SUCCESS;
 }
@@ -1394,7 +1458,7 @@ CFE_Status_t ADCS_GetMountingConfigCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("[Direction ENUM]\n");
     OS_printf("| +X | -X | +Y | -Y | +Z | -Z |\n");
@@ -1406,13 +1470,13 @@ CFE_Status_t ADCS_GetMountingConfigCmd(void) {
 
     OS_printf("\n");
     OS_printf("[MTQ]\n");
-    OS_printf("0-1-2: %u-%u-%u\n", RetVal.MTQ0_mounting, RetVal.MTQ1_mounting, RetVal.MTQ2_mounting);    
-    
+    OS_printf("0-1-2: %u-%u-%u\n", RetVal.MTQ0_mounting, RetVal.MTQ1_mounting, RetVal.MTQ2_mounting);
+
     OS_printf("\n");
     OS_printf("[Wheel]\n");
     OS_printf("0-1-2-3: %u-%u-%u-%u\n", RetVal.Wheel0_mounting, RetVal.Wheel1_mounting, RetVal.Wheel2_mounting, RetVal.Wheel3_mounting);
     OS_printf("Pyramid alpha-beta-gamma: %u-%u-%u\n", RetVal.PyramidRWL_alpha, RetVal.PyramidRWL_beta, RetVal.PyramidRWL_gamma);
-    
+
     OS_printf("\n");
     OS_printf("[CSS]\n");
     OS_printf("0-1-2-3-4: %u-%u-%u-%u-%u\n", RetVal.CSS0_mounting, RetVal.CSS1_mounting, RetVal.CSS2_mounting, RetVal.CSS3_mounting, RetVal.CSS4_mounting);
@@ -1476,7 +1540,7 @@ CFE_Status_t ADCS_GetMag1MMTCalibConfigCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get MAG1 MMT Calibration Config: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("[Offset]\n");
     OS_printf("(RAW)  Channel 1: %d || Channel 2: %d || Channel 3: %d\n", RetVal.MMT_Ch1Offset, RetVal.MMT_Ch2Offset, RetVal.MMT_Ch3Offset);
@@ -1491,7 +1555,7 @@ CFE_Status_t ADCS_GetMag1MMTCalibConfigCmd(void) {
     OS_printf("S11: %f || S12: %f || S13: %f\n", RetVal.MMT_SensitivityMAT_S11*0.001, RetVal.MMT_SensitivityMAT_S12*0.001, RetVal.MMT_SensitivityMAT_S13*0.001);
     OS_printf("S21: %f || S22: %f || S23: %f\n", RetVal.MMT_SensitivityMAT_S21*0.001, RetVal.MMT_SensitivityMAT_S22*0.001, RetVal.MMT_SensitivityMAT_S23*0.001);
     OS_printf("S31: %f || S32: %f || S33: %f\n", RetVal.MMT_SensitivityMAT_S31*0.001, RetVal.MMT_SensitivityMAT_S32*0.001, RetVal.MMT_SensitivityMAT_S33*0.001);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1509,7 +1573,7 @@ CFE_Status_t ADCS_GetEstimatorConfigCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Estimator Config: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("[Default Estimator Mode]\n");
     OS_printf("Main / Backup: %u / %u\n", RetVal.DefaultMainEstimatorMode, RetVal.DefaultBackupEstimatorMode);
@@ -1532,10 +1596,10 @@ CFE_Status_t ADCS_GetEstimatorConfigCmd(void) {
     OS_printf("CSS: %u\n", RetVal.UseFSSinEKF);
     OS_printf("HSS: %u\n", RetVal.UseFSSinEKF);
     OS_printf("STR: %u\n", RetVal.UseFSSinEKF);
-    
+
     OS_printf("[Triad Vector]\n");
     OS_printf("Vector 1 / 2: %u / %u\n", RetVal.TriadVector1, RetVal.TriadVector2);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1553,7 +1617,7 @@ CFE_Status_t ADCS_GetSatOrbitParamConfigCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Satellite Orbit Param Config: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Epoch: %lf || Inclination: %lf || RAAN: %lf || Eccenctricity: %lf\n", RetVal.Epoch, RetVal.Inclination, RetVal.RAAN, RetVal.Eccentricity);
     OS_printf("AOP: %lf || Mean anomaly: %lf || Mean Motion: %lf || B_starDrag: %lf\n", RetVal.AOP, RetVal.MeanAnomaly, RetVal.MeanMotion, RetVal.B_StarDrag);
@@ -1574,9 +1638,9 @@ CFE_Status_t ADCS_GetNodeSelectionConfigCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Node Selection Config: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
-    
+
     OS_printf("RWA: ");
     for (int i = 7; i >= 0; i--) {
         if (RetVal.RWLSelectionFlags & (1 << i)) {
@@ -1649,7 +1713,7 @@ CFE_Status_t ADCS_GetNodeSelectionConfigCmd(void) {
         }
     }
     OS_printf("\n");
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1667,14 +1731,14 @@ CFE_Status_t ADCS_GetMTQConfigCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get MTQ Config: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("[Maximum Dipole Moment (Am2)]\n");
     OS_printf("MTQ0: %f || MTQ1: %f || MTQ2: %f\n", RetVal.MTQ0MaxDipoleMoment, RetVal.MTQ1MaxDipoleMoment, RetVal.MTQ2MaxDipoleMoment);
     OS_printf("[MTQ On Time (ms)]\n");
     OS_printf("Max: %u || Min: %u\n", RetVal.MaxMTQOnTime, RetVal.MinMTQOnTime);
     OS_printf("Control Filter Factor: %f\n", RetVal.MagneticControlFilterFactor);
-        
+
     return CFE_SUCCESS;
 }
 
@@ -1692,7 +1756,7 @@ CFE_Status_t ADCS_GetEstimationModeCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Estimation Mode: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("[Estimator Mode]\n");
     OS_printf("Main / Backup: %u / %u\n", RetVal.MainEstimatorMode, RetVal.BackupEstimatorMode);
@@ -1714,7 +1778,7 @@ CFE_Status_t ADCS_GetOperationalStateCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Operational State: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Operational Mode: %u\n", RetVal.OperationalMode);
 
@@ -1735,12 +1799,12 @@ CFE_Status_t ADCS_GetRawCSSSensorCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Raw CSS Sensor: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("TimeSec : %u || TimeNanoSec : %u\n", RetVal.TimeSeconds, RetVal.TimeNanoSeconds);
     OS_printf("CSS 0 : %u, 1 : %u, 2 : %u, 3 : %u, 4 : %u, 5 : %u, 6 : %u, 7 : %u, 8 : %u, 9 : %u",
                 RetVal.CSS0, RetVal.CSS1, RetVal.CSS2, RetVal.CSS3, RetVal.CSS4, RetVal.CSS5, RetVal.CSS6, RetVal.CSS7, RetVal.CSS8, RetVal.CSS9);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1758,13 +1822,39 @@ CFE_Status_t ADCS_GetRawGYRSensorCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Raw GYR Sensor: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("TimeSec : %u || TimeNanoSec : %u\n", RetVal.TimeSeconds, RetVal.TimeNanoSeconds);
     OS_printf("GYR0 RawRate X: %f || RawRate Y: %f || RawRate Z: %f\n", RetVal.GYR0RawRateX, RetVal.GYR0RawRateY, RetVal.GYR0RawRateZ);
     OS_printf("GYR1 RawRate X: %f || RawRate Y: %f || RawRate Z: %f\n", RetVal.GYR1RawRateX, RetVal.GYR1RawRateY, RetVal.GYR1RawRateZ);
     OS_printf("Valid Flag GYR0 : 0x%02X\n", RetVal.GYR0ValidFlag);
-    
+
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_GetRawRWLSensorCmd(void) {
+    // ID 205
+    CFE_Status_t status;
+    ADCS_RawRWLSensorTlm_Payload_t RetVal = {0,};
+
+    status = ADCS_GetRawRWLSensor(&RetVal);
+
+    ADCS_HandleReport(status, ADCS_GET_RAW_RWL_SENSOR_CC, &RetVal, sizeof(RetVal));
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Raw RWL Sensor: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+
+    OS_printf("TimeSec : %u || TimeNanoSec : %u\n", RetVal.TimeSeconds, RetVal.TimeNanoSeconds);
+    OS_printf("RWL0 Measured Speed: %f\n", RetVal.RWL0MeasuredSpeed);
+    OS_printf("RWL1 Measured Speed: %f\n", RetVal.RWL1MeasuredSpeed);
+    OS_printf("RWL2 Measured Speed: %f\n", RetVal.RWL2MeasuredSpeed);
+    OS_printf("RWL3 Measured Speed: %f\n", RetVal.RWL3MeasuredSpeed);
+    OS_printf("Valid Flag RWL0 : 0x%02X || RWL1 : 0x%02X || RWL2 : 0x%02X || RWL3 : 0x%02X\n",
+              RetVal.RWL0ValidFlag, RetVal.RWL1ValidFlag, RetVal.RWL2ValidFlag, RetVal.RWL3ValidFlag);
+
     return CFE_SUCCESS;
 }
 
@@ -1782,15 +1872,15 @@ CFE_Status_t ADCS_GetCalibratedGYRSensorCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Calibrated GYR Sensor: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("TimeSec : %u || TimeNanoSec : %u\n", RetVal.TimeSeconds, RetVal.TimeNanoSeconds);
     OS_printf("GYR0 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n", RetVal.GYR0CalibratedRateX, RetVal.GYR0CalibratedRateY, RetVal.GYR0CalibratedRateZ);
     OS_printf("GYR1 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n", RetVal.GYR1CalibratedRateX, RetVal.GYR1CalibratedRateY, RetVal.GYR1CalibratedRateZ);
     OS_printf("Ext GYR0 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n", RetVal.ExtGYR0CalibratedRateX, RetVal.ExtGYR0CalibratedRateY, RetVal.ExtGYR0CalibratedRateZ);
     OS_printf("Ext GYR1 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n", RetVal.ExtGYR1CalibratedRateX, RetVal.ExtGYR1CalibratedRateY, RetVal.ExtGYR1CalibratedRateZ);
-    OS_printf("Valid flag GYR0 : 0x%02X\n", RetVal.GYR0ValidFlag);    
-    
+    OS_printf("Valid flag GYR0 : 0x%02X\n", RetVal.GYR0ValidFlag);
+
     return CFE_SUCCESS;
 }
 
@@ -1808,10 +1898,10 @@ CFE_Status_t ADCS_GetMagSensingElmConfigCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Mag Sensing Element Config: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Mag0SensingElement : %u || Mag0SensingElement : %u\n", RetVal.Mag0SensingElement, RetVal.Mag1SensingElement);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1829,7 +1919,7 @@ CFE_Status_t ADCS_GetTlmLogInclMaskCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Telemetry Inclution BitMask: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("[Fast Inclusion Bitmask]\n");
     for (int j = 0; j < 5; j++) {
@@ -1875,7 +1965,7 @@ CFE_Status_t ADCS_GetUnsolicitTlmMsgSetupCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Unsolicit Telemetry Message Setup: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("[CAN Telemetry ID Inclusion Bitmask]\n");
     for (int j = 0; j < 5; j++) {
@@ -1908,7 +1998,7 @@ CFE_Status_t ADCS_GetUnsolicitEventMsgSetupCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Unsolicit Event Message Setup: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("[CAN Event ID Inclusion Bitmask]\n");
     OS_printf("Info Events         : %u\n", RetVal.InfoCAN);
@@ -1933,7 +2023,7 @@ CFE_Status_t ADCS_GetEventLogStatusResponseCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Event Log Status Response: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("Number of queued entries      : %u\n", RetVal.NumQueuedEntry);
     OS_printf("Number of buffered entries    : %u\n", RetVal.NumBufferedEntry);
@@ -1947,7 +2037,7 @@ CFE_Status_t ADCS_GetEventLogStatusResponseCmd(void) {
     OS_printf("Number of info events         : %u\n", RetVal.NumInfoEVS);
     OS_printf("Write counter                 : %u\n", RetVal.WriteCnt);
     OS_printf("Read-Queue state              : %u\n", RetVal.ReadQueState);
-    
+
     return CFE_SUCCESS;
 }
 
@@ -1965,7 +2055,7 @@ CFE_Status_t ADCS_GetPortMapCmd(void) {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Get Port Map: 0x%08lx", (unsigned long)status);
         return status;
     }
-    
+
     // Handling Retval
     OS_printf("[Sensors]\n");
     OS_printf("|Sensor #|Node Type|Abstract Node Type|Serial Number Integer|Address (CAN)|\n");
@@ -1984,8 +2074,8 @@ CFE_Status_t ADCS_GetPortMapCmd(void) {
     OS_printf("|2|%u|%u|%u|%u|\n", RetVal.NodeType_Wheel2, RetVal.AbstNodeType_Wheel2, RetVal.SerialNum_Wheel2, RetVal.Address_Wheel2);
     OS_printf("|3|%u|%u|%u|%u|\n", RetVal.NodeType_Wheel3, RetVal.AbstNodeType_Wheel3, RetVal.SerialNum_Wheel3, RetVal.Address_Wheel3);
     OS_printf("|4|%u|%u|%u|%u|\n", RetVal.NodeType_Wheel4, RetVal.AbstNodeType_Wheel4, RetVal.SerialNum_Wheel4, RetVal.Address_Wheel4);
-    
-    
+
+
     return CFE_SUCCESS;
 }
 
@@ -1997,7 +2087,7 @@ CFE_Status_t ADCS_SetErrorLogClearCmd(const ADCS_ErrorLogClearCmd_t *msg) {
 	SetVal_112.CANTlmRetrunInterval = 0;				// Return interval 1s
     SetVal_112.CANTlmEDInclusionBitmask[2] = 0;			// 0b0000 0001
     status = ADCS_SetUnsolicitTlmMsgSetup(&SetVal_112);
-    
+
 
     status = ADCS_SetErrorLogClear();
 
@@ -2038,8 +2128,8 @@ CFE_Status_t ADCS_SequenceCmd_Detumbling(void) {	// Detumbling w/o Commissioning
 			SetVal_56.GYR0 = 1;
 			SetVal_56.MAG0 = 1;
 		}
-		
-	}	
+
+	}
 	status = ADCS_SetPowerState(&SetVal_56);
     // ADCS_HandleReport(status, ADCS_SET_POWER_STATE_CC, NULL, 0);
     if (status != CFE_SUCCESS)
@@ -2047,6 +2137,8 @@ CFE_Status_t ADCS_SequenceCmd_Detumbling(void) {	// Detumbling w/o Commissioning
         CFE_ES_WriteToSysLog("Adcs App: Fail to Set Power State: 0x%08lx", (unsigned long)status);
         return status;
     }
+
+	OS_TaskDelay(5000);
 
 	// Estimation & Control Mode: EstGyro & ConBdot3
 	ADCS_ControllerConfig_Payload_t SetVal_62 = {0,};
@@ -2067,9 +2159,9 @@ CFE_Status_t ADCS_SequenceCmd_Detumbling(void) {	// Detumbling w/o Commissioning
 	SetVal_42.ControlMode = 3;
 	SetVal_42.ControlTimeout = 0;
 	status = ADCS_SetControllerConfig(&SetVal_62);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	status = ADCS_SetControlEstimationMode(&SetVal_42);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	// ADCS_HandleReport(status, ADCS_SET_CONTROL_ESTIMATION_MODE_CC, NULL, 0);
     if (status != CFE_SUCCESS)
     {
@@ -2080,20 +2172,6 @@ CFE_Status_t ADCS_SequenceCmd_Detumbling(void) {	// Detumbling w/o Commissioning
     OS_printf("ADCS cmd Success.");
     return CFE_SUCCESS;
 }
-
-// Complex Version
-/*
-CFE_Status_t ADCS_SequenceCmd_Detumbling(void) {
-	CFE_Status_t status;
-    status = ADCS_COMM_InitAngRateEst();
-	if (status != CFE_SUCCESS)
-    {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to COMMISSIONING: 0x%08lx", (unsigned long)status);
-        return status;
-    }
-    return CFE_SUCCESS;
-}
-*/
 
 
 /* CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) */
@@ -2125,6 +2203,8 @@ CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {	// Sunpointing w/o Commissioni
         return status;
     }
 
+	OS_TaskDelay(5000);
+
 	// Estimation & Control Mode: EstGyroEkf (EstFullEkf) & ConSunTrack
 	ADCS_ControllerConfig_Payload_t SetVal_62 = {0,};
 	ADCS_ControllerConfigTlm_Payload_t RetVal_190 = {0,};
@@ -2145,11 +2225,11 @@ CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {	// Sunpointing w/o Commissioni
 	SetVal_42.ControlMode = 13;
 	SetVal_42.ControlTimeout = 0;
 	status = ADCS_SetControllerConfig(&SetVal_62);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	status = ADCS_SetControlEstimationMode(&SetVal_42);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	// ADCS_HandleReport(status, ADCS_SET_CONTROL_ESTIMATION_MODE_CC, NULL, 0);
-	
+
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Operate  Sun Pointing: 0x%08lx", (unsigned long)status);
@@ -2204,6 +2284,8 @@ CFE_Status_t ADCS_SequenceCmd_Vpointing(void) {	// Velocity vector pointing w/o 
         return status;
     }
 
+	OS_TaskDelay(5000);
+
 	// Estimation & Control Mode: EstGyroEkf (EstFullEkf) & ConSunTrack
 	ADCS_ControllerConfig_Payload_t SetVal_62 = {0,};
 	ADCS_ControllerConfigTlm_Payload_t RetVal_190 = {0,};
@@ -2233,11 +2315,11 @@ CFE_Status_t ADCS_SequenceCmd_Vpointing(void) {	// Velocity vector pointing w/o 
 	OS_printf("Default Control mode: %u\n", SetVal_62.DefaultControlMode);
 
 	status = ADCS_SetReferenceRPYValues(&SetVal_54);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	status = ADCS_SetControllerConfig(&SetVal_62);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	status = ADCS_SetControlEstimationMode(&SetVal_42);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Operate  Velocity Pointing: 0x%08lx", (unsigned long)status);
@@ -2245,7 +2327,7 @@ CFE_Status_t ADCS_SequenceCmd_Vpointing(void) {	// Velocity vector pointing w/o 
     }
 
 	ADCS_HandleReport(status, ADCS_SEQ_VELPT_CC, NULL, 0);
-	
+
     OS_printf("ADCS cmd Success.");
     return CFE_SUCCESS;
 }
@@ -2277,6 +2359,8 @@ CFE_Status_t ADCS_SequenceCmd_KSCpointing(void) {	// KissCAM EARTH pointing w/o 
         return status;
     }
 
+	OS_TaskDelay(5000);
+
 	// Estimation & Control Mode: EstGyroEkf (EstFullEkf) & ConSunTrack
 	ADCS_ControllerConfig_Payload_t SetVal_62 = {0,};
 	ADCS_ControllerConfigTlm_Payload_t RetVal_190 = {0,};
@@ -2304,13 +2388,13 @@ CFE_Status_t ADCS_SequenceCmd_KSCpointing(void) {	// KissCAM EARTH pointing w/o 
 	SetVal_54.Yaw = 0.0;
 
 	status = ADCS_SetReferenceRPYValues(&SetVal_54);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	status = ADCS_SetControllerConfig(&SetVal_62);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	status = ADCS_SetControlEstimationMode(&SetVal_42);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	// ADCS_HandleReport(status, ADCS_SET_CONTROL_ESTIMATION_MODE_CC, NULL, 0);
-	
+
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Operate  KisCAM Earth Pointing: 0x%08lx", (unsigned long)status);
@@ -2318,7 +2402,7 @@ CFE_Status_t ADCS_SequenceCmd_KSCpointing(void) {	// KissCAM EARTH pointing w/o 
     }
 
 	ADCS_HandleReport(status, ADCS_SEQ_KSCPT_CC, NULL, 0);
-	
+
     OS_printf("ADCS cmd Success.");
     return CFE_SUCCESS;
 }
@@ -2350,6 +2434,8 @@ CFE_Status_t ADCS_SequenceCmd_LGCpointing(void) {	// LG CAM EARTH pointing w/o C
         return status;
     }
 
+	OS_TaskDelay(5000);
+
 	// Estimation & Control Mode: EstGyroEkf (EstFullEkf) & ConSunTrack
 	ADCS_ControllerConfig_Payload_t SetVal_62 = {0,};
 	ADCS_ControllerConfigTlm_Payload_t RetVal_190 = {0,};
@@ -2377,13 +2463,13 @@ CFE_Status_t ADCS_SequenceCmd_LGCpointing(void) {	// LG CAM EARTH pointing w/o C
 	SetVal_54.Yaw = 0.0;
 
 	status = ADCS_SetReferenceRPYValues(&SetVal_54);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	status = ADCS_SetControllerConfig(&SetVal_62);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	status = ADCS_SetControlEstimationMode(&SetVal_42);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	// ADCS_HandleReport(status, ADCS_SET_CONTROL_ESTIMATION_MODE_CC, NULL, 0);
-	
+
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Operate  LG CAM Earth Pointing: 0x%08lx", (unsigned long)status);
@@ -2391,7 +2477,7 @@ CFE_Status_t ADCS_SequenceCmd_LGCpointing(void) {	// LG CAM EARTH pointing w/o C
     }
 
 	ADCS_HandleReport(status, ADCS_SEQ_LGCPT_CC, NULL, 0);
-	
+
     OS_printf("ADCS cmd Success.");
     return CFE_SUCCESS;
 }
@@ -2424,6 +2510,8 @@ CFE_Status_t ADCS_SequenceCmd_RPYpointing(const ADCS_SequenceCmdRPYpointingCmd_t
         return status;
     }
 
+	OS_TaskDelay(5000);
+
 	// Estimation & Control Mode: EstGyroEkf (EstFullEkf) & ConSunTrack
 	ADCS_ControllerConfig_Payload_t SetVal_62 = {0,};
 	ADCS_ControllerConfigTlm_Payload_t RetVal_190 = {0,};
@@ -2447,13 +2535,13 @@ CFE_Status_t ADCS_SequenceCmd_RPYpointing(const ADCS_SequenceCmdRPYpointingCmd_t
 
 
 	status = ADCS_SetReferenceRPYValues(&msg->Payload);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	status = ADCS_SetControllerConfig(&SetVal_62);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	status = ADCS_SetControlEstimationMode(&SetVal_42);
-	OS_TaskDelay(10);
+	OS_TaskDelay(100);
 	// ADCS_HandleReport(status, ADCS_SET_CONTROL_ESTIMATION_MODE_CC, NULL, 0);
-	
+
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Adcs App: Fail to Operate  GS-based RPY Pointing: 0x%08lx", (unsigned long)status);
@@ -2461,70 +2549,7 @@ CFE_Status_t ADCS_SequenceCmd_RPYpointing(const ADCS_SequenceCmdRPYpointingCmd_t
     }
 
 	ADCS_HandleReport(status, ADCS_SEQ_LGCPT_CC, NULL, 0);
-	
+
     OS_printf("ADCS cmd Success.");
     return CFE_SUCCESS;
-}
-
-
-CFE_Status_t ADCS_Loop(void)
-{
-    int32 status = CFE_SUCCESS;
-
-	int contmode_save;
-	uint8 contmode_curr;
-
-	FILE *fp;
-	if ((fp = fopen("./cf/adcs_contmode.txt","r"))== NULL) {  // Previous Control mode: if mode = 0; before starting detumbling (EO)
-        fp = fopen("./cf/adcs_contmode.txt","w");
-        fprintf(fp,"%d",0);
-        fclose(fp);
-    }
-    else {
-        fscanf(fp,"%d",&contmode_save);
-        fclose(fp);
-    }
-
-	ADCS_ControlModeTlm_Payload_t RetVal_185 = {0,};
-	ADCS_GetControlMode(&RetVal_185);
-	contmode_curr = RetVal_185.ControlMode;
-
-	ADCS_CalibratedGYRSensorTlm_Payload_t RetVal_207 = {0,};
-	ADCS_GetCalibratedGYRSensor(&RetVal_207);
-	float angvel_norm_sq = 0.0;
-	angvel_norm_sq = RetVal_207.GYR0CalibratedRateX * RetVal_207.GYR0CalibratedRateX + RetVal_207.GYR0CalibratedRateY * RetVal_207.GYR0CalibratedRateY + RetVal_207.GYR0CalibratedRateZ * RetVal_207.GYR0CalibratedRateZ;
-
-	if (contmode_curr == 0) {
-		if ((contmode_save != 0) && (angvel_norm_sq > 0.5)) { // (After starting detumbling) && (|w| >0.5 [deg/s])
-			status = ADCS_SequenceCmd_Detumbling();
-			return CFE_SUCCESS;
-		}
-
-		// if (contmode_save == ADCS_SEQ_SUNPT_CC) {
-
-		// }
-
-		if (contmode_save == ADCS_SEQ_VELPT_CC) {
-			status = ADCS_SequenceCmd_Sunpointing();
-			return CFE_SUCCESS;
-		}
-
-		if (contmode_save == ADCS_SEQ_KSCPT_CC) {
-			status = ADCS_SequenceCmd_Sunpointing();
-			return CFE_SUCCESS;
-		}
-
-		if (contmode_save == ADCS_SEQ_LGCPT_CC) {
-			status = ADCS_SequenceCmd_Sunpointing();
-			return CFE_SUCCESS;
-		}
-
-		if (contmode_save == ADCS_SEQ_RPYPT_CC) {
-			status = ADCS_SequenceCmd_Sunpointing();
-			return CFE_SUCCESS;
-		}
-
-	}    
-
-    return status;
 }

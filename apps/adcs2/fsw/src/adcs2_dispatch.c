@@ -124,6 +124,13 @@ void ADCS2_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 				ADCS2_ResetCountersCmd((const ADCS2_ResetCountersCmd_t *)SBBufPtr);
 			}
 			break;
+
+		case ADCS2_SET_INTERFACE_TRANSPORT_CC:
+			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_InterfaceTransportCmd_t)))
+			{
+				ADCS2_SetInterfaceTransportCmd((const ADCS2_InterfaceTransportCmd_t *)SBBufPtr);
+			}
+			break;
 		
 		/*
 		* ADCS Telecommand
@@ -156,6 +163,13 @@ void ADCS2_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 			}
 			break;
 
+		case ADCS2_SET_ORBIT_MODE_CC:
+			// ID 51
+			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_OrbitModeCmd_t))) {
+				ADCS2_SetOrbitModeCmd((const ADCS2_OrbitModeCmd_t *)SBBufPtr);
+			}
+			break;
+
 		case ADCS2_SET_POWER_STATE_CC:
 			// ID 56
 			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_PowerStateCmd_t))) {
@@ -167,6 +181,27 @@ void ADCS2_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 			// ID 65
 			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_MountingConfigCmd_t))) {
 				ADCS2_SetMountingConfigCmd((const ADCS2_MountingConfigCmd_t *)SBBufPtr);
+			}
+			break;
+
+		case ADCS2_SET_ESTIMATOR_CONFIG_CC:
+			// ID 67
+			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_EstimatorConfigCmd_t))) {
+				ADCS2_SetEstimatorConfigCmd((const ADCS2_EstimatorConfigCmd_t *)SBBufPtr);
+			}
+			break;
+
+		case ADCS2_SET_SAT_ORBIT_PARAM_CONFIG_CC:
+			// ID 68
+			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_SatOrbitParamConfigCmd_t))) {
+				ADCS2_SetSatOrbitParamConfigCmd((const ADCS2_SatOrbitParamConfigCmd_t *)SBBufPtr);
+			}
+			break;
+
+		case ADCS2_SET_OPENLOOP_CMD_HXYZ_RW_CC:
+			// ID 76
+			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_OpenLoopCmdHxyzRWCmd_t))) {
+				ADCS2_SetOpenLoopCmdHxyzRWCmd((const ADCS2_OpenLoopCmdHxyzRWCmd_t *)SBBufPtr);
 			}
 			break;
 
@@ -209,10 +244,38 @@ void ADCS2_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case ADCS2_GET_ESTIMATOR_CONFIG_CC:
+            // ID 195
+            if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_GetEstimatorConfigCmd_t))) {
+                ADCS2_GetEstimatorConfigCmd();
+            }
+            break;
+
+        case ADCS2_GET_SAT_ORBIT_PARAM_CONFIG_CC:
+            // ID 196
+            if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_GetSatOrbitParamConfigCmd_t))) {
+                ADCS2_GetSatOrbitParamConfigCmd();
+            }
+            break;
+
         case ADCS2_GET_RAW_GYR_SENSOR_CC:
             // ID 204
             if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_GetRawGYRSensorCmd_t))) {
                 ADCS2_GetRawGYRSensorCmd();
+            }
+            break;
+
+        case ADCS2_GET_RAW_RWL_SENSOR_CC:
+            // ID 205
+            if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_GetRawRWLSensorCmd_t))) {
+                ADCS2_GetRawRWLSensorCmd();
+            }
+            break;
+
+        case ADCS2_GET_MAIN_ESTIMATOR_TLM_CC:
+            // ID 210
+            if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_GetMainEstimatorTlmCmd_t))) {
+                ADCS2_GetMainEstimatorTlmCmd();
             }
             break;
 
@@ -240,50 +303,50 @@ void ADCS2_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 			}
 			break;
 
-		// case ADCS2_COMM_04_CC:
-		// 	// Magnetometer calibration and deployment
-		// 	if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm04Cmd_t))) {
-		// 		ADCS2_Comm04Cmd((const ADCS2_Comm04Cmd_t *)SBBufPtr);
-		// 	}
-		// 	break;
+		case ADCS2_COMM_04_CC:
+			// Basic EKF with only Magnetometer + Get CSS
+			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm04Cmd_t))) {
+				ADCS2_Comm04Cmd((const ADCS2_Comm04Cmd_t *)SBBufPtr);
+			}
+			break;
 
-		// case ADCS2_COMM_05_CC:
-		// 	// EKF commissioning
-		// 	if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm05Cmd_t))) {
-		// 		ADCS2_Comm05Cmd((const ADCS2_Comm05Cmd_t *)SBBufPtr);
-		// 	}
-		// 	break;
+		case ADCS2_COMM_05_CC:
+			// FSS commissioning
+			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm05Cmd_t))) {
+				ADCS2_Comm05Cmd((const ADCS2_Comm05Cmd_t *)SBBufPtr);
+			}
+			break;
 
-		// case ADCS2_COMM_06_CC:
-		// 	// CSS commissioning
-		// 	if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm06Cmd_t))) {
-		// 		ADCS2_Comm06Cmd((const ADCS2_Comm06Cmd_t *)SBBufPtr);
-		// 	}
-		// 	break;
+		case ADCS2_COMM_06_CC:
+			// Wheel Commissioning
+			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm06Cmd_t))) {
+				ADCS2_Comm06Cmd((const ADCS2_Comm06Cmd_t *)SBBufPtr);
+			}
+			break;
 
-		// case ADCS2_COMM_07_CC:
-		// 	// FSS commissioning
-		// 	if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm07Cmd_t))) {
-		// 		ADCS2_Comm07Cmd((const ADCS2_Comm07Cmd_t *)SBBufPtr);
-		// 	}
-		// 	break;
+		case ADCS2_COMM_07_CC:
+			// Sun Tracking 3-axis Control Commissioning
+			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm07Cmd_t))) {
+				ADCS2_Comm07Cmd((const ADCS2_Comm07Cmd_t *)SBBufPtr);
+			}
+			break;
 
-		// case ADCS2_COMM_08_CC:
-		// 	// 3-axis Reaction wheel commissioning
-		// 	if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm08Cmd_t))) {
-		// 		ADCS2_Comm08Cmd((const ADCS2_Comm08Cmd_t *)SBBufPtr);
-		// 	}
-		// 	break;
+		case ADCS2_COMM_08_CC:
+			// HSS Commissioning
+			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm08Cmd_t))) {
+				ADCS2_Comm08Cmd((const ADCS2_Comm08Cmd_t *)SBBufPtr);
+			}
+			break;
 
-		// case ADCS2_COMM_09_CC:
-		// 	// 3-axis Reaction wheel control modes
-		// 	if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm09Cmd_t))) {
-		// 		ADCS2_Comm09Cmd((const ADCS2_Comm09Cmd_t *)SBBufPtr);
-		// 	}
-		// 	break;
+		case ADCS2_COMM_09_CC:
+			// Sun Tracking 3-axis Control
+			if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm09Cmd_t))) {
+				ADCS2_Comm09Cmd((const ADCS2_Comm09Cmd_t *)SBBufPtr);
+			}
+			break;
 
 		// case ADCS2_COMM_10_CC:
-		// 	// HSS commissioning
+		// 	// ??
 		// 	if (ADCS2_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS2_Comm10Cmd_t))) {
 		// 		ADCS2_Comm10Cmd((const ADCS2_Comm10Cmd_t *)SBBufPtr);
 		// 	}
@@ -300,7 +363,7 @@ void ADCS2_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 			/* RPT */
 			ADCS2_ReportTlm_t *BufPtr = (ADCS2_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(ADCS2_ReportTlm_t));
 			if (BufPtr == NULL) break;
-			if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(ADCS2_REPORT_TLM_MID), sizeof(ADCS2_ReportTlm_t) != CFE_SUCCESS)) {
+			if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(ADCS2_REPORT_TLM_MID), sizeof(ADCS2_ReportTlm_t)) != CFE_SUCCESS) {
 				CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
 				break;
 			}
@@ -338,6 +401,14 @@ void ADCS2_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 			ADCS2_ProcessGroundCommand(SBBufPtr);
 			break;
 
+		case ADCS2_SEND_HK_MID:
+			ADCS2_SendHkCmd((const ADCS2_SendHkCmd_t *)SBBufPtr);
+			break;
+
+		case ADCS2_SEND_BCN_MID:
+			ADCS2_SendBcnCmd((const ADCS2_SendBcnCmd_t *)SBBufPtr);
+			break;
+
 		default:
 			CFE_EVS_SendEvent(ADCS2_MID_ERR_EID, CFE_EVS_EventType_ERROR,
 							  "ADCS: invalid command packet,MID = 0x%x", (unsigned int)CFE_SB_MsgIdToValue(MsgId));
@@ -346,7 +417,7 @@ void ADCS2_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 			 /* RPT */
 			ADCS2_ReportTlm_t *BufPtr = (ADCS2_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(ADCS2_ReportTlm_t));
 			if (BufPtr == NULL) break;
-			if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(ADCS2_REPORT_TLM_MID), sizeof(ADCS2_ReportTlm_t) != CFE_SUCCESS)) {
+			if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(ADCS2_REPORT_TLM_MID), sizeof(ADCS2_ReportTlm_t)) != CFE_SUCCESS) {
 				CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
 				break;
 			}

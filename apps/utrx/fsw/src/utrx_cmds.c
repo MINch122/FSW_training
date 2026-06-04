@@ -85,15 +85,12 @@ CFE_Status_t UTRX_SendHkCmd(const CFE_SB_Buffer_t *SBBufPtr)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t UTRX_NoopCmd(const UTRX_NoopCmd_t *Msg)
 {
-    uint8 counters[3];
+    static const char NoopReport[] = "Yosi In Space";
 
     UTRX_AppData.CmdCounter++;
 
     CFE_EVS_SendEvent(UTRX_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "UTRX: NOOP command");
-    counters[0] = UTRX_AppData.CmdCounter;
-    counters[1] = UTRX_AppData.AppErrCounter;
-    counters[2] = UTRX_AppData.DeviceErrCounter;
-    UTRX_SendCmdReport(UTRX_NOOP_CC, CFE_SUCCESS, counters, sizeof(counters), RPT_RETTYPE_SUCCESS);
+    UTRX_SendCmdReport(UTRX_NOOP_CC, CFE_SUCCESS, NoopReport, sizeof(NoopReport), RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
@@ -198,49 +195,33 @@ void CmdErrCounter(uint8 *CmdCounter,
 
 void UTRX_ReportHousekeeping(void)
 {
-    int32 Status;
-    
-    UTRX_HkTlm_t *BufPtr = (UTRX_HkTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(UTRX_HkTlm_t));
-    if (BufPtr == NULL) return;
-
-    Status = CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
-                        CFE_SB_ValueToMsgId(UTRX_HK_TLM_MID), sizeof(UTRX_HkTlm_t));
-    if (Status != CFE_SUCCESS) {
-        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-        return;
-    }
-
-    UTRX_HkTlm_Payload_t *hk = &BufPtr->Payload;
-
+    UTRX_HkTlm_Payload_t hk;
     uint32 errmask = 0;
-    if (UTRX_TLM_GetTempBrd(&hk->TempBrd)       != DEVICE_SUCCESS) errmask |= (1u << 0);
-    if (UTRX_TLM_GetLastRssi(&hk->LastRssi)     != DEVICE_SUCCESS) errmask |= (1u << 1);
-    if (UTRX_TLM_GetLastRferr(&hk->LastRferr)   != DEVICE_SUCCESS) errmask |= (1u << 2);
-    if (UTRX_TLM_GetActiveConf(&hk->ActiveConf) != DEVICE_SUCCESS) errmask |= (1u << 3);
-    if (UTRX_TLM_GetBootCount(&hk->BootCount)   != DEVICE_SUCCESS) errmask |= (1u << 4);
-    if (UTRX_TLM_GetBootCause(&hk->BootCause)   != DEVICE_SUCCESS) errmask |= (1u << 5);
-    if (UTRX_TLM_GetLastContact(&hk->LastContact)!= DEVICE_SUCCESS) errmask |= (1u << 6);
-    if (UTRX_TLM_GetTotTxBytes(&hk->TotTxBytes) != DEVICE_SUCCESS) errmask |= (1u << 7);
-    if (UTRX_TLM_GetTotRxBytes(&hk->TotRxBytes) != DEVICE_SUCCESS) errmask |= (1u << 8);
+
+    memset(&hk, 0, sizeof(hk));
+
+    if (UTRX_TLM_GetTempBrd(&hk.TempBrd)       != DEVICE_SUCCESS) errmask |= (1u << 0);
+    if (UTRX_TLM_GetLastRssi(&hk.LastRssi)     != DEVICE_SUCCESS) errmask |= (1u << 1);
+    if (UTRX_TLM_GetLastRferr(&hk.LastRferr)   != DEVICE_SUCCESS) errmask |= (1u << 2);
+    if (UTRX_TLM_GetActiveConf(&hk.ActiveConf) != DEVICE_SUCCESS) errmask |= (1u << 3);
+    if (UTRX_TLM_GetBootCount(&hk.BootCount)   != DEVICE_SUCCESS) errmask |= (1u << 4);
+    if (UTRX_TLM_GetBootCause(&hk.BootCause)   != DEVICE_SUCCESS) errmask |= (1u << 5);
+    if (UTRX_TLM_GetLastContact(&hk.LastContact)!= DEVICE_SUCCESS) errmask |= (1u << 6);
+    if (UTRX_TLM_GetTotTxBytes(&hk.TotTxBytes) != DEVICE_SUCCESS) errmask |= (1u << 7);
+    if (UTRX_TLM_GetTotRxBytes(&hk.TotRxBytes) != DEVICE_SUCCESS) errmask |= (1u << 8);
 
     if (errmask != 0u) {
         OS_printf("[UTRX][HK] collected with errors mask=0x%08X\n", (unsigned)errmask);
     }
 
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
-    Status = CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true);
-    if (Status != CFE_SUCCESS) {
-        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-        return;
-    }
+    UTRX_SendCmdReport(0, CFE_SUCCESS, &hk, sizeof(hk), RPT_RETTYPE_SUCCESS);
 
-    /* Debugging */
     OS_printf("[UTRX][HK] temp=%d, rssi=%d, rferr=%d, act=%u, boot_cnt=%u, cause=0x%08X, "
               "last=%u, tx=%u, rx=%u\n",
-              (int)hk->TempBrd, (int)hk->LastRssi, (int)hk->LastRferr,
-              (unsigned)hk->ActiveConf, (unsigned)hk->BootCount,
-              (unsigned)hk->BootCause, (unsigned)hk->LastContact,
-              (unsigned)hk->TotTxBytes, (unsigned)hk->TotRxBytes);
+              (int)hk.TempBrd, (int)hk.LastRssi, (int)hk.LastRferr,
+              (unsigned)hk.ActiveConf, (unsigned)hk.BootCount,
+              (unsigned)hk.BootCause, (unsigned)hk.LastContact,
+              (unsigned)hk.TotTxBytes, (unsigned)hk.TotRxBytes);
 }
 
 

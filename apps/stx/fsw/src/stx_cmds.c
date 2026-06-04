@@ -37,6 +37,8 @@
 #include <unistd.h>
 #include "rpt_interface_cfg.h"
 
+extern uint16_t MODULE_ID;
+
 
 static stx_custom_dir_entry_t dir_entries[20];
 static int32_t                file_handle = -1;
@@ -48,6 +50,7 @@ static inline void STX_rptsend(uint8_t cc, uint8_t type, int32_t status,  size_t
     CFE_MSG_Init(CFE_MSG_PTR(STX_Data.RptPkt.TelemetryHeader), CFE_SB_ValueToMsgId(STX_APP_RPT_TLM_MID),
                  sizeof(STX_Data.RptPkt));
 
+    STX_Data.RptPkt.Report.MsgID       = STX_CMD_MID;
     STX_Data.RptPkt.Report.CommandCode = cc;
     STX_Data.RptPkt.Report.ReturnType  = type;
     STX_Data.RptPkt.Report.ReturnCode  = status;
@@ -102,7 +105,7 @@ void STX_SendHkCmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata3, sizeof(rxdata3));
-        
+
     }
 
     STX_Data.HkTlm.Payload.ALLPRAM        = rxdata1;
@@ -114,28 +117,58 @@ void STX_SendHkCmd(void)
     /*
     ** Send housekeeping telemetry packet...
     */
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(STX_Data.HkTlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(STX_Data.HkTlm.TelemetryHeader), true);
+    STX_rptsend(0, RPT_RETTYPE_SUCCESS, CFE_SUCCESS, sizeof(STX_Data.HkTlm.Payload), &STX_Data.HkTlm.Payload);
 }
 
 void STX_SendBCNCmd(void)
 {
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = CONFIG_CC_GET;
-    uint16_t type    = STATUS_TP_SIMPLE_REPORT;
-    uint16_t cstatus = 0;
-    STX_GET_Report_t rxdata3;
+    uint16_t type    = CONFIG_TP_ALLPARAM;
+
+    uint16_t          cstatus = 0;
+    STX_GET_ALLPRAM_t rxdata1;
 
     int32_t ret_status = ESUP(status, command, type, NULL, 0, &cstatus, 0);
 
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
-        ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata3, sizeof(rxdata3));
-        
+        ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata1, sizeof(rxdata1));
     }
 
+    status  = ESUP_INSIG;
+    command = CONFIG_CC_GET;
+    type    = CONFIG_TP_MODULATORDTIFC;
+    cstatus = 0;
+    STX_GET_ModulationInterface_t rxdata2;
+
+    ret_status = ESUP(status, command, type, NULL, 0, &cstatus, 0);
+
+    if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
+    {
+        ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata2, sizeof(rxdata2));
+    }
+
+    status  = ESUP_INSIG;
+    command = CONFIG_CC_GET;
+    type    = STATUS_TP_SIMPLE_REPORT;
+    cstatus = 0;
+    STX_GET_Report_t rxdata3;
+
+    ret_status = ESUP(status, command, type, NULL, 0, &cstatus, 0);
+
+    if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
+    {
+        ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata3, sizeof(rxdata3));
+
+    }
+
+    STX_Data.BCNTlm.Payload.ALLPRAM        = rxdata1;
+    STX_Data.BCNTlm.Payload.Modulator      = rxdata2;
     STX_Data.BCNTlm.Payload.SystemState    = rxdata3.SystemState;
     STX_Data.BCNTlm.Payload.StatusFlags    = rxdata3.StatusFlags;
+    STX_Data.BCNTlm.Payload.cputemperature = rxdata3.cputemperature;
 
     /*
     ** Send housekeeping telemetry packet...
@@ -147,28 +180,59 @@ void STX_SendBCNCmd(void)
 CFE_Status_t STX_NoopCmd(const STX_NoopCmd_t *Msg)
 {
     CFE_EVS_SendEvent(STX_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "SAMPLE: NOOP command %s", STX_VERSION);
-    uint16_t txdata[2] = {STX_Data.CmdCounter, STX_Data.ErrCounter};
-    STX_rptsend(STX_NOOP_CC, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(txdata), &txdata);
+    static const char NoopReport[] = "Yosi In Space";
+    STX_rptsend(STX_NOOP_CC, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(NoopReport), NoopReport);
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t STX_ResetCountersCmd(const STX_ResetCountersCmd_t *Msg)
 {
-    
+
     STX_Data.CmdCounter = 0;
     STX_Data.ErrCounter = 0;
 
     CFE_EVS_SendEvent(STX_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "SAMPLE: RESET command");
     uint16_t txdata[2] = {STX_Data.CmdCounter, STX_Data.ErrCounter};
-    STX_rptsend(STX_RESET_COUNTERS_CC, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(txdata), &txdata);
+    STX_rptsend(STX_RESET_COUNTERS_CC, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(txdata), &txdata);
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t STX_ModuleIdInitCmd(const STX_ModuleIdInitCmd_t *Msg)
+{
+    MODULE_ID = Msg->Payload.data;
+
+    uint16_t txdata = MODULE_ID;
+
+    CFE_EVS_SendEvent(STX_MODULEID_INIT_EID, CFE_EVS_EventType_INFORMATION, "STX: ModuleUd = %04x", MODULE_ID);
+    STX_rptsend(STX_MODULE_ID_INIT_CC, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(txdata), &txdata);
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t STX_ParamInitCmd(const STX_ParamInitCmd_t *Msg)
+{
+    STX_Set_SYMBOLRAtE_t init_symrate;
+    STX_Set_CENTERFREQ_t init_centfreq;
+    STX_Set_MODCOD_t init_modcod;
+    STX_Set_ROLLOFF_t init_rolloff;
+
+    init_symrate.Payload.data = 0x04;
+    init_centfreq.Payload.data = 2403.5;
+    init_modcod.Payload.data = 1;
+    init_rolloff.Payload.data = 2;
+
+    STX_SET_SYMBOLRATECmd(&init_symrate);
+    STX_Set_CENTERFREQCmd(&init_centfreq);
+    STX_Set_MODCODCmd(&init_modcod);
+    STX_Set_ROLLOFFCmd(&init_rolloff);
+
     return CFE_SUCCESS;
 }
 
 /* SET COMMNAD */
 void STX_SET_SYMBOLRATECmd(const STX_Set_SYMBOLRAtE_t *cmd)
 {
-    
+
 
     void    *txdata   = (void *)&cmd->Payload.data;
     uint16_t txlength = sizeof(cmd->Payload.data);
@@ -184,28 +248,28 @@ void STX_SET_SYMBOLRATECmd(const STX_Set_SYMBOLRAtE_t *cmd)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SET_SYMBOLRATE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SET_SYMBOLRATE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SET_SYMBOLRATE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SET_SYMBOLRATE, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SET_SYMBOLRATE_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_SYMBOLRATE,
                           (unsigned)cmd->Payload.data, ret_status);
-        STX_rptsend(STX_SET_SYMBOLRATE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SET_SYMBOLRATE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_SYMBOLRATE,
                           (unsigned)cmd->Payload.data, cstatus);
-        STX_rptsend(STX_SET_SYMBOLRATE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SET_SYMBOLRATE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_Set_TRANSMITPWCmd(const STX_Set_TRANSMITPW_t *Msg)
@@ -225,33 +289,33 @@ void STX_Set_TRANSMITPWCmd(const STX_Set_TRANSMITPW_t *Msg)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SET_TRANSMITPW, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SET_TRANSMITPW, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SET_TRANSMITPW, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SET_TRANSMITPW, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SET_TRANSMITPW_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_TRANSMITPW,
                           (unsigned)cmd->Payload.data, ret_status);
-        STX_rptsend(STX_SET_TRANSMITPW, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SET_TRANSMITPW, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_TRANSMITPW,
                           (unsigned)cmd->Payload.data, cstatus);
-        STX_rptsend(STX_SET_TRANSMITPW, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SET_TRANSMITPW, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_Set_CENTERFREQCmd(const STX_Set_CENTERFREQ_t *Msg)
 {
-    
+
     const STX_Set_CENTERFREQ_t *cmd      = (const STX_Set_CENTERFREQ_t *)Msg;
     void                       *txdata   = (void *)&cmd->Payload.data;
     uint16_t                    txlength = sizeof(cmd->Payload.data);
@@ -267,33 +331,33 @@ void STX_Set_CENTERFREQCmd(const STX_Set_CENTERFREQ_t *Msg)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SET_CENTERFREQ, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SET_CENTERFREQ, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SET_CENTERFREQ, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SET_CENTERFREQ, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SET_CENTERFREQ_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_CENTERFREQ,
                           (unsigned)cmd->Payload.data, ret_status);
-        STX_rptsend(STX_SET_CENTERFREQ, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SET_CENTERFREQ, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_CENTERFREQ,
                           (unsigned)cmd->Payload.data, cstatus);
-        STX_rptsend(STX_SET_CENTERFREQ, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SET_CENTERFREQ, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_Set_MODCODCmd(const STX_Set_MODCOD_t *Msg)
 {
-    
+
     const STX_Set_MODCOD_t *cmd      = (const STX_Set_MODCOD_t *)Msg;
     void                   *txdata   = (void *)&cmd->Payload.data;
     uint16_t                txlength = sizeof(cmd->Payload.data);
@@ -310,33 +374,33 @@ void STX_Set_MODCODCmd(const STX_Set_MODCOD_t *Msg)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SET_MODCOD, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SET_MODCOD, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SET_MODCOD, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SET_MODCOD, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SET_MODCOD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_MODCOD, (unsigned)cmd->Payload.data,
                           ret_status);
-        STX_rptsend(STX_SET_MODCOD, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SET_MODCOD, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_MODCOD, (unsigned)cmd->Payload.data,
                           cstatus);
-        STX_rptsend(STX_SET_MODCOD, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SET_MODCOD, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_Set_ROLLOFFCmd(const STX_Set_ROLLOFF_t *Msg)
 {
-    
+
     const STX_Set_ROLLOFF_t *cmd      = (const STX_Set_ROLLOFF_t *)Msg;
     void                    *txdata   = (void *)&cmd->Payload.data;
     uint16_t                 txlength = sizeof(cmd->Payload.data);
@@ -352,33 +416,33 @@ void STX_Set_ROLLOFFCmd(const STX_Set_ROLLOFF_t *Msg)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SET_ROLLOFF, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SET_ROLLOFF, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SET_ROLLOFF, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SET_ROLLOFF, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SET_ROLLOFF_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_ROLLOFF, (unsigned)cmd->Payload.data,
                           ret_status);
-        STX_rptsend(STX_SET_ROLLOFF, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SET_ROLLOFF, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_ROLLOFF, (unsigned)cmd->Payload.data,
                           cstatus);
-        STX_rptsend(STX_SET_ROLLOFF, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SET_ROLLOFF, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_Set_PILOTSIGCmd(const STX_Set_PILOTSIG_t *Msg)
 {
-    
+
     const STX_Set_PILOTSIG_t *cmd      = (const STX_Set_PILOTSIG_t *)Msg;
     void                     *txdata   = (void *)&cmd->Payload.data;
     uint16_t                  txlength = sizeof(cmd->Payload.data);
@@ -394,33 +458,33 @@ void STX_Set_PILOTSIGCmd(const STX_Set_PILOTSIG_t *Msg)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SET_PILOTSIG, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SET_PILOTSIG, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SET_PILOTSIG, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SET_PILOTSIG, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SET_PILOTSIG_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_PILOTSIG, (unsigned)cmd->Payload.data,
                           ret_status);
-        STX_rptsend(STX_SET_PILOTSIG, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SET_PILOTSIG, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_PILOTSIG, (unsigned)cmd->Payload.data,
                           cstatus);
-        STX_rptsend(STX_SET_PILOTSIG, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SET_PILOTSIG, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_Set_FECFRAMECmd(const STX_Set_FECFRAME_t *Msg)
 {
-    
+
     const STX_Set_FECFRAME_t *cmd      = (const STX_Set_FECFRAME_t *)Msg;
     void                     *txdata   = (void *)&cmd->Payload.data;
     uint16_t                  txlength = sizeof(cmd->Payload.data);
@@ -437,33 +501,33 @@ void STX_Set_FECFRAMECmd(const STX_Set_FECFRAME_t *Msg)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SET_FECFRAMESZ, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SET_FECFRAMESZ, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SET_FECFRAMESZ, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SET_FECFRAMESZ, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SET_FECFRAMESZ_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_FECFRAMESZ,
                           (unsigned)cmd->Payload.data, ret_status);
-        STX_rptsend(STX_SET_FECFRAMESZ, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SET_FECFRAMESZ, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_FECFRAMESZ,
                           (unsigned)cmd->Payload.data, cstatus);
-        STX_rptsend(STX_SET_FECFRAMESZ, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SET_FECFRAMESZ, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_Set_PRETX_DELAYCmd(const STX_Set_PRETX_DELAY_t *Msg)
 {
-    
+
     const STX_Set_PRETX_DELAY_t *cmd      = (const STX_Set_PRETX_DELAY_t *)Msg;
     void                        *txdata   = (void *)&cmd->Payload.data;
     uint16_t                     txlength = sizeof(cmd->Payload.data);
@@ -480,33 +544,33 @@ void STX_Set_PRETX_DELAYCmd(const STX_Set_PRETX_DELAY_t *Msg)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SET_PRETX_DELAY, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SET_PRETX_DELAY, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SET_PRETX_DELAY, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SET_PRETX_DELAY, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SET_PRETX_DELAY_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_PRETX_DELAY,
                           (unsigned)cmd->Payload.data, ret_status);
-        STX_rptsend(STX_SET_PRETX_DELAY, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SET_PRETX_DELAY, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_PRETX_DELAY,
                           (unsigned)cmd->Payload.data, cstatus);
-        STX_rptsend(STX_SET_PRETX_DELAY, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SET_PRETX_DELAY, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_Set_ALLPRAMCmd(const STX_Set_ALLPRAM_t *Msg)
 {
-    
+
     const STX_Set_ALLPRAM_t *cmd      = (const STX_Set_ALLPRAM_t *)Msg;
     void                    *txdata   = (void *)&cmd->Payload;
     uint16_t                 txlength = sizeof(cmd->Payload);
@@ -523,31 +587,31 @@ void STX_Set_ALLPRAMCmd(const STX_Set_ALLPRAM_t *Msg)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SET_ALL_PRAMETERS, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SET_ALL_PRAMETERS, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SET_ALL_PRAMETERS, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SET_ALL_PRAMETERS, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SET_ALL_PRAMETERS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_SET_ALL_PRAMETERS, ret_status);
-        STX_rptsend(STX_SET_ALL_PRAMETERS, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SET_ALL_PRAMETERS, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_SET_ALL_PRAMETERS, cstatus);
-        STX_rptsend(STX_SET_ALL_PRAMETERS, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SET_ALL_PRAMETERS, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_Set_RS485Cmd(const STX_Set_RS485_t *Msg)
 {
-    
+
     const STX_Set_RS485_t *cmd      = (const STX_Set_RS485_t *)Msg;
     void                  *txdata   = (void *)&cmd->Payload.data;
     uint16_t               txlength = sizeof(cmd->Payload.data);
@@ -564,33 +628,33 @@ void STX_Set_RS485Cmd(const STX_Set_RS485_t *Msg)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SET_RS485BAUD, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SET_RS485BAUD, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SET_RS485BAUD, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SET_RS485BAUD, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SET_RS485BAUD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_RS485BAUD,
                           (unsigned)cmd->Payload.data, ret_status);
-        STX_rptsend(STX_SET_RS485BAUD, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SET_RS485BAUD, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed (arg=%u), Status=%" PRId32, STX_SET_RS485BAUD,
                           (unsigned)cmd->Payload.data, cstatus);
-        STX_rptsend(STX_SET_RS485BAUD, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SET_RS485BAUD, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_Set_MODULATION_INTERFACECmd(const STX_Set_MODULATION_INTERFACE_t *Msg)
 {
-    
+
     const STX_Set_MODULATION_INTERFACE_t *cmd      = (const STX_Set_MODULATION_INTERFACE_t *)Msg;
     void                                 *txdata   = (void *)&cmd->Payload;
     uint16_t                              txlength = sizeof(cmd->Payload);
@@ -607,26 +671,26 @@ void STX_Set_MODULATION_INTERFACECmd(const STX_Set_MODULATION_INTERFACE_t *Msg)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SET_MODULATOR_DATA_INTERFACE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SET_MODULATOR_DATA_INTERFACE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SET_MODULATOR_DATA_INTERFACE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SET_MODULATOR_DATA_INTERFACE, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SET_MODULATOR_DATA_INTERFACE_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed Status=%" PRId32, STX_SET_MODULATOR_DATA_INTERFACE, ret_status);
-        STX_rptsend(STX_SET_MODULATOR_DATA_INTERFACE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SET_MODULATOR_DATA_INTERFACE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_SET_MODULATOR_DATA_INTERFACE, cstatus);
-        STX_rptsend(STX_SET_MODULATOR_DATA_INTERFACE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SET_MODULATOR_DATA_INTERFACE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 /*  FILE COMMAND */
@@ -638,7 +702,7 @@ static size_t STX_strnlen(const char *s, size_t maxlen)
 
 void STX_DIRCmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = FILESYS_CC_DIR;
     uint16_t type    = FILESYS_TP_NA;
@@ -704,34 +768,34 @@ void STX_DIRCmd(void)
             {
                 OS_printf("[%u] %s (%u bytes)\n", (uint16_t)(i + 1), dir_entries[i].path, (uint16_t)dir_entries[i].size);
             }
-            STX_rptsend(STX_FILESYS_CC_DIR, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_FILESYS_CC_DIR, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         }
         else
         {
             CFE_EVS_SendEvent(STX_FILESYS_DIR_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                               STX_FILESYS_CC_DIR, ret_status);
-            STX_rptsend(STX_FILESYS_CC_DIR, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_FILESYS_CC_DIR, STX_rpt_type_RESULT, ret_status, 0, NULL);
         }
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_FILESYS_DIR_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_FILESYS_CC_DIR, ret_status);
-        STX_rptsend(STX_FILESYS_CC_DIR, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_DIR, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_FILESYS_CC_DIR, cstatus);
-        STX_rptsend(STX_FILESYS_CC_DIR, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_DIR, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_DIRNEXTCmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = FILESYS_CC_DIRNEXT;
     uint16_t type    = FILESYS_TP_NA;
@@ -797,34 +861,34 @@ void STX_DIRNEXTCmd(void)
             {
                 OS_printf("[%u] %s (%u bytes)\n", (uint16_t)(i + 1), dir_entries[i].path, (uint16_t)dir_entries[i].size);
             }
-            STX_rptsend(STX_FILESYS_CC_DIRNEXT, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_FILESYS_CC_DIRNEXT, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         }
         else
         {
             CFE_EVS_SendEvent(STX_FILESYS_DIR_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                               STX_FILESYS_CC_DIR, ret_status);
-            STX_rptsend(STX_FILESYS_CC_DIRNEXT, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_FILESYS_CC_DIRNEXT, STX_rpt_type_RESULT, ret_status, 0, NULL);
         }
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_FILESYS_DIR_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_FILESYS_CC_DIR, ret_status);
-        STX_rptsend(STX_FILESYS_CC_DIRNEXT, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_DIRNEXT, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_FILESYS_CC_DIR, cstatus);
-        STX_rptsend(STX_FILESYS_CC_DIRNEXT, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_DIRNEXT, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_DELFILECmd(const STX_DELFILE_t *Msg)
 {
-    
+
     const STX_DELFILE_t *cmd = (const STX_DELFILE_t *)Msg;
 
     uint8_t  txbuf[31];
@@ -847,31 +911,31 @@ void STX_DELFILECmd(const STX_DELFILE_t *Msg)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, NULL, 0, &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_FILESYS_CC_DELFILE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_FILESYS_CC_DELFILE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_FILESYS_CC_DELFILE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_FILESYS_CC_DELFILE, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_FILESYS_DELFILE_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_FILESYS_CC_DELFILE, ret_status);
-        STX_rptsend(STX_FILESYS_CC_DELFILE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_DELFILE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_FILESYS_CC_DELFILE, cstatus);
-        STX_rptsend(STX_FILESYS_CC_DELFILE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_DELFILE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_DELALLFILECmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = FILESYS_CC_DELALLFILE;
     uint16_t type    = FILESYS_TP_NA;
@@ -884,31 +948,31 @@ void STX_DELALLFILECmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, NULL, 0, &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_FILESYS_CC_DELALLFILE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_FILESYS_CC_DELALLFILE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_FILESYS_CC_DELALLFILE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_FILESYS_CC_DELALLFILE, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_FILESYS_DELALLFILE_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_FILESYS_CC_DELALLFILE, ret_status);
-        STX_rptsend(STX_FILESYS_CC_DELALLFILE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_DELALLFILE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_FILESYS_CC_DELALLFILE, cstatus);
-        STX_rptsend(STX_FILESYS_CC_DELALLFILE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_DELALLFILE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_CREATEFILECmd(const STX_CREATEFILE_t *Msg)
 {
-    
+
     const STX_CREATEFILE_t *cmd = (const STX_CREATEFILE_t *)Msg;
 
     uint8_t  txbuf[35];
@@ -935,11 +999,11 @@ void STX_CREATEFILECmd(const STX_CREATEFILE_t *Msg)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, NULL, 0, &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_FILESYS_CC_CREATEFILE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_FILESYS_CC_CREATEFILE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_FILESYS_CC_CREATEFILE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_FILESYS_CC_CREATEFILE, STX_rpt_type_RESULT, ret_status, 0, NULL);
         file_handle = rxdata.file_handle;
         OS_printf("Creating file: %s, size: %u, txlen: %u\n", cmd->Payload.filename_max, cmd->Payload.file_size,
                  txlength);
@@ -948,16 +1012,16 @@ void STX_CREATEFILECmd(const STX_CREATEFILE_t *Msg)
     {
         CFE_EVS_SendEvent(STX_FILESYS_CREATEFILE_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_FILESYS_CC_CREATEFILE, ret_status);
-        STX_rptsend(STX_FILESYS_CC_CREATEFILE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_CREATEFILE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_FILESYS_CC_CREATEFILE, cstatus);
-        STX_rptsend(STX_FILESYS_CC_CREATEFILE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_CREATEFILE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 
     OS_printf("file_handle: %u\n", rxdata.file_handle);
 }
@@ -968,7 +1032,7 @@ void STX_CREATEFILECmd(const STX_CREATEFILE_t *Msg)
 /* 실험 필요*/
 void STX_WRITEFILECmd(const STX_WRITEFILE_t *Msg)
 {
-    
+
     const STX_WRITEFILE_t *cmd = (const STX_WRITEFILE_t *)Msg;
 
     FILE    *fp;
@@ -1042,7 +1106,7 @@ void STX_WRITEFILECmd(const STX_WRITEFILE_t *Msg)
         {
             write_status.ret           = ret_status;
             write_status.packet_number = packet_number;
-            STX_rptsend(STX_FILESYS_CC_WRITEFILE, STK_rpt_tpye_CFE_ERROR, ret_status, sizeof(write_status), &write_status);
+            STX_rptsend(STX_FILESYS_CC_WRITEFILE, STX_rpt_type_CFE_ERROR, ret_status, sizeof(write_status), &write_status);
             return;
         }
         else if (cstatus != ESUP_ACK)
@@ -1050,7 +1114,7 @@ void STX_WRITEFILECmd(const STX_WRITEFILE_t *Msg)
             write_status.ret           = ret_status;
             write_status.packet_number = packet_number;
             write_status.cstatus       = cstatus;
-            STX_rptsend(STX_FILESYS_CC_WRITEFILE, STK_rpt_tpye_ACK_ERROR, cstatus, sizeof(write_status), &write_status);
+            STX_rptsend(STX_FILESYS_CC_WRITEFILE, STX_rpt_type_ACK_ERROR, cstatus, sizeof(write_status), &write_status);
             return;
         }
         remaining -= bytes_read;
@@ -1063,7 +1127,7 @@ void STX_WRITEFILECmd(const STX_WRITEFILE_t *Msg)
 
     write_status.ret           = 0;
     write_status.packet_number = packet_number;
-    STX_rptsend(STX_FILESYS_CC_WRITEFILE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(write_status), &write_status);
+    STX_rptsend(STX_FILESYS_CC_WRITEFILE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(write_status), &write_status);
 }
 
 void STX_OPENFILECmd(const STX_OPENFILE_t *Msg)
@@ -1097,24 +1161,24 @@ void STX_OPENFILECmd(const STX_OPENFILE_t *Msg)
         if (ret_status == DEVICE_SUCCESS)
         {
             file_handle = rxdata.file_handle;
-            STX_rptsend(STX_FILESYS_CC_OPENFILE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_FILESYS_CC_OPENFILE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         }
         else
-            STX_rptsend(STX_FILESYS_CC_OPENFILE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_FILESYS_CC_OPENFILE, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
-        STX_rptsend(STX_FILESYS_CC_OPENFILE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_OPENFILE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
-        STX_rptsend(STX_FILESYS_CC_OPENFILE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_OPENFILE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 }
 
 void STX_READFILECmd(const STX_READFILE_t *Msg)
 {
-    
+
 
     void    *txdata   = (void *)&file_handle;
     uint16_t txlength = sizeof(file_handle);
@@ -1130,39 +1194,39 @@ void STX_READFILECmd(const STX_READFILE_t *Msg)
 
     uint16_t STX_timeout = 30;
     long t1 = latch_ms();
-    
+
     int32_t ret_status;
-    
+
     while(open_file_size && latch_ms() - t1 < STX_timeout){
-        
+
         ret_status = ESUP(status, command, type, txdata, txlength, &cstatus, 0);
-        
+
         if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
         {
             ret_status = ESUP(status, GETRES_CC_GETRES, command, NULL, 0, &rxdata, sizeof(rxdata));
-            
+
             OS_printf("read byte : %d \n", (int)rxdata.Packet_length);
-            
+
             open_file_size -= (uint32_t)rxdata.Packet_length;
 
             OS_printf("remain byte : %d \n", open_file_size);
-            
+
             if (ret_status == DEVICE_SUCCESS && rxdata.commad_status == 0)
             {
-                STX_rptsend(STX_FILESYS_CC_READFILE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+                STX_rptsend(STX_FILESYS_CC_READFILE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
 
                 uint8_t file_retdata[rxdata.Packet_length];
                 memcpy(file_retdata, rxdata.file_data, rxdata.Packet_length);
 
                 OS_printf("file_retdata: %s\n", file_retdata);
-                
+
                 t1 = latch_ms();
             }
             else
             {
                 CFE_EVS_SendEvent(STX_FILESYS_READFILE_ERR_EID, CFE_EVS_EventType_ERROR,
                                 "STX : CC=%u failed Status=%" PRId32, STX_FILESYS_CC_READFILE, ret_status);
-                STX_rptsend(STX_FILESYS_CC_READFILE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+                STX_rptsend(STX_FILESYS_CC_READFILE, STX_rpt_type_RESULT, ret_status, 0, NULL);
             }
         }
         else if (ret_status != CFE_SUCCESS)
@@ -1170,19 +1234,19 @@ void STX_READFILECmd(const STX_READFILE_t *Msg)
             OS_printf("ReadFile ERR \n");
             CFE_EVS_SendEvent(STX_FILESYS_READFILE_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                             STX_FILESYS_CC_READFILE, ret_status);
-            STX_rptsend(STX_FILESYS_CC_READFILE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+            STX_rptsend(STX_FILESYS_CC_READFILE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
         }
         else if (cstatus != ESUP_ACK)
         {
             OS_printf("Command status ERR\n");
             CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                             STX_FILESYS_CC_READFILE, cstatus);
-            STX_rptsend(STX_FILESYS_CC_READFILE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+            STX_rptsend(STX_FILESYS_CC_READFILE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
         }
-        
-           
+
+
     }
-   
+
 }
 
 void STX_SENDFILE_WITH_ERROR_Cmd(const STX_SENDFILE_t * Msg)
@@ -1190,18 +1254,18 @@ void STX_SENDFILE_WITH_ERROR_Cmd(const STX_SENDFILE_t * Msg)
     const STX_SENDFILE_t *cmd = (const STX_SENDFILE_t *)Msg;
     uint8_t txbuf[31];
     uint16_t txlength = 0;
-    
+
     memcpy(txbuf, cmd->Payload.filename_max, (size_t)cmd->Payload.filename_len);
-    
+
     txbuf[cmd->Payload.filename_len] = '\0';
-    
+
     void *txdata = (void *)txbuf;
     txlength = (uint16_t)(cmd->Payload.filename_len + 1);
-    
+
     int16_t status = ESUP_INSIG;
     uint16_t command = FILESYS_CC_SENDFILE;
     uint16_t type = FILESYS_TP_SENDFILERTI;
-    
+
     uint16_t cstatus = 0;
     uint8_t rxdata = 0;
 
@@ -1210,30 +1274,50 @@ void STX_SENDFILE_WITH_ERROR_Cmd(const STX_SENDFILE_t * Msg)
     {
         // 확인필요
         //*************************************************************************************************************************
-        uint16_t request_data = 0x0049;
+        uint16_t request_data = 0x0050;
         ret_status = ESUP(status, GETRES_CC_GETRES, command, (void *)&request_data, sizeof(request_data), &rxdata, sizeof(rxdata));
-        //************************************************************************************************************************* 
+        //*************************************************************************************************************************
         //ret_status = ESUP(status, GETRES_CC_GETRES, command, NULL, 0, &rxdata, sizeof(rxdata));
 
+        int i = 0;
+
+        while(!(rxdata == 0 && sizeof(rxdata) == sizeof(uint8)) ){
+            if (i == 48){
+                OS_printf("fail to get success execution data in 2min \n");
+                break;
+            }
+            sleep(5);
+            i ++;
+            rxdata = 1;
+            OS_printf("send Get Result command again \n");
+            ret_status = ESUP(status, GETRES_CC_GETRES, command, (void *)&request_data, sizeof(request_data), &rxdata, sizeof(rxdata));
+        }
+
+        ESUP_ACK_CMD(ESUP_ACK, command, FILESYS_TP_SENDFILE);
+
+        if (i == 48)
+        {
+            STX_rptsend(STX_FILESYS_CC_SENDFILERTI, STX_rpt_type_FINAL_ACK_ERROR, i, 0, NULL);
+        }
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_FILESYS_CC_SENDFILE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_FILESYS_CC_SENDFILERTI, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_FILESYS_CC_SENDFILE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_FILESYS_CC_SENDFILERTI, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
-        STX_rptsend(STX_FILESYS_CC_SENDFILE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_SENDFILERTI, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
-        STX_rptsend(STX_FILESYS_CC_SENDFILE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_SENDFILERTI, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
-    
+
 }
 
 void STX_SENDFILECmd(const STX_SENDFILE_t *Msg)
 {
-    
+
     const STX_SENDFILE_t *cmd = (const STX_SENDFILE_t *)Msg;
     uint8_t               txbuf[31];
     uint16_t              txlength = 0;
@@ -1250,30 +1334,50 @@ void STX_SENDFILECmd(const STX_SENDFILE_t *Msg)
     uint16_t type    = FILESYS_TP_SENDFILE;
 
     uint16_t cstatus = 0; // command status 받을 예정
-    uint8_t  rxdata  = 0; // data 받을 예정
+    uint8_t  rxdata  = 1; // data 받을 예정
 
     int32_t ret_status = ESUP(status, command, type, txdata, txlength, &cstatus, 0);
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         // 확인필요
         //*************************************************************************************************************************
-        uint16_t request_data = 0x0049;
+        uint16_t request_data = 0x0050;
         ret_status = ESUP(status, GETRES_CC_GETRES, command, (void *)&request_data, sizeof(request_data), &rxdata, sizeof(rxdata));
-        //************************************************************************************************************************* 
+        //*************************************************************************************************************************
         //ret_status = ESUP(status, GETRES_CC_GETRES, command, NULL, 0, &rxdata, sizeof(rxdata));
 
+        int i = 0;
+
+        while(!(rxdata == 0 && sizeof(rxdata) == sizeof(uint8)) ){
+            if (i == 48){
+                OS_printf("fail to get success execution data in 2min \n");
+                break;
+            }
+            sleep(5);
+            i ++;
+            rxdata = 1;
+            OS_printf("send Get Result command again \n");
+            ret_status = ESUP(status, GETRES_CC_GETRES, command, (void *)&request_data, sizeof(request_data), &rxdata, sizeof(rxdata));
+        }
+
+        ESUP_ACK_CMD(ESUP_ACK, command, FILESYS_TP_SENDFILE);
+
+        if (i == 48)
+        {
+            STX_rptsend(STX_FILESYS_CC_SENDFILERTI, STX_rpt_type_FINAL_ACK_ERROR, i, 0, NULL);
+        }
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_FILESYS_CC_SENDFILE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_FILESYS_CC_SENDFILE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_FILESYS_CC_SENDFILE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_FILESYS_CC_SENDFILE, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
-        STX_rptsend(STX_FILESYS_CC_SENDFILE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_SENDFILE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
-        STX_rptsend(STX_FILESYS_CC_SENDFILE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_FILESYS_CC_SENDFILE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 }
 
@@ -1281,45 +1385,65 @@ void STX_SENDFILECmd(const STX_SENDFILE_t *Msg)
 
 void STX_SYSCONF_CC_TRANSMITMODECmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = SYSCONF_CC_TRANSMITMODE;
     uint16_t type    = SYSCONF_TP_NA;
 
     uint16_t cstatus = 0; // command status 받을 예정
-    uint8_t  rxdata;      // data 받을 예정
+    uint8_t  rxdata = 1;      // data 받을 예정
 
     int32_t ret_status = ESUP(status, command, type, NULL, 0, &cstatus, 0);
 
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
-        sleep(50);
+        sleep(15);
         ret_status = ESUP(status, GETRES_CC_GETRES, command, NULL, 0, &rxdata, sizeof(rxdata));
-        
+
+        int i = 0;
+
+        while(!(rxdata == 0 && sizeof(rxdata) == sizeof(uint8))){
+            if (i == 9){
+                OS_printf("fail to get success execution data in 1min \n");
+                break;
+            }
+            sleep(5);
+            i ++;
+            rxdata = 1;
+            OS_printf("send Get Result command again \n");
+            ret_status = ESUP(status, GETRES_CC_GETRES, command, NULL, 0, &rxdata, sizeof(rxdata));
+        }
+
+        ESUP_ACK_CMD(ESUP_ACK, command, FILESYS_TP_SENDFILE);
+
+        if (i == 9)
+        {
+            STX_rptsend(STX_FILESYS_CC_SENDFILERTI, STX_rpt_type_FINAL_ACK_ERROR, i, 0, NULL);
+        }
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SYSCONF_CC_TRANSMITMODE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SYSCONF_CC_TRANSMITMODE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SYSCONF_CC_TRANSMITMODE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SYSCONF_CC_TRANSMITMODE, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SYSCONF_TRANSMITMODE_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed Status=%" PRId32, STX_SYSCONF_CC_TRANSMITMODE, ret_status);
-        STX_rptsend(STX_SYSCONF_CC_TRANSMITMODE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SYSCONF_CC_TRANSMITMODE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_SYSCONF_CC_TRANSMITMODE, cstatus);
-        STX_rptsend(STX_SYSCONF_CC_TRANSMITMODE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SYSCONF_CC_TRANSMITMODE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_SYSCONF_CC_IDLEMODECmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = SYSCONF_CC_IDLEMODE;
     uint16_t type    = SYSCONF_TP_NA;
@@ -1331,31 +1455,31 @@ void STX_SYSCONF_CC_IDLEMODECmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, NULL, 0, &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SYSCONF_CC_IDLEMODE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SYSCONF_CC_IDLEMODE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SYSCONF_CC_IDLEMODE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SYSCONF_CC_IDLEMODE, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SYSCONF_IDLEMODE_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_SYSCONF_CC_IDLEMODE, ret_status);
-        STX_rptsend(STX_SYSCONF_CC_IDLEMODE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SYSCONF_CC_IDLEMODE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_SYSCONF_CC_IDLEMODE, cstatus);
-        STX_rptsend(STX_SYSCONF_CC_IDLEMODE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SYSCONF_CC_IDLEMODE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_SYSCONF_CC_SAFESHUTDOWNCmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = SYSCONF_CC_SAFESHUTDOWN;
     uint16_t type    = SYSCONF_TP_NA;
@@ -1367,33 +1491,33 @@ void STX_SYSCONF_CC_SAFESHUTDOWNCmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, NULL, 0, &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_SYSCONF_CC_SAFESHUTDOWN, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_SYSCONF_CC_SAFESHUTDOWN, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_SYSCONF_CC_SAFESHUTDOWN, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_SYSCONF_CC_SAFESHUTDOWN, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_SYSCONF_SAFESHUTDOWN_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed Status=%" PRId32, STX_SYSCONF_CC_SAFESHUTDOWN, ret_status);
-        STX_rptsend(STX_SYSCONF_CC_SAFESHUTDOWN, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_SYSCONF_CC_SAFESHUTDOWN, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_SYSCONF_CC_SAFESHUTDOWN, cstatus);
-        STX_rptsend(STX_SYSCONF_CC_SAFESHUTDOWN, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_SYSCONF_CC_SAFESHUTDOWN, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 /* Get command */
 
 void STX_GET_SYMBOL_RATECmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = CONFIG_CC_GET;
     uint16_t type    = CONFIG_TP_SYMBOLRATE;
@@ -1406,31 +1530,31 @@ void STX_GET_SYMBOL_RATECmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_GET_SYMBOL_RATE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_GET_SYMBOL_RATE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_GET_SYMBOL_RATE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_GET_SYMBOL_RATE, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_GET_SYMBOL_RATE_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_SYMBOL_RATE, ret_status);
-        STX_rptsend(STX_GET_SYMBOL_RATE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_GET_SYMBOL_RATE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_SYMBOL_RATE, cstatus);
-        STX_rptsend(STX_GET_SYMBOL_RATE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_GET_SYMBOL_RATE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_GET_TX_POWERCmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = CONFIG_CC_GET;
     uint16_t type    = CONFIG_TP_TRANSMITPW;
@@ -1443,31 +1567,31 @@ void STX_GET_TX_POWERCmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_GET_TX_POWER, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_GET_TX_POWER, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_GET_TX_POWER, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_GET_TX_POWER, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_GET_TX_POWER_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_TX_POWER, ret_status);
-        STX_rptsend(STX_GET_TX_POWER, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_GET_TX_POWER, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_TX_POWER, cstatus);
-        STX_rptsend(STX_GET_TX_POWER, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_GET_TX_POWER, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_GET_CENTER_FREQCmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = CONFIG_CC_GET;
     uint16_t type    = CONFIG_TP_CENTERFREQ;
@@ -1480,31 +1604,31 @@ void STX_GET_CENTER_FREQCmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_GET_CENTER_FREQ, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_GET_CENTER_FREQ, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_GET_CENTER_FREQ, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_GET_CENTER_FREQ, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_GET_CENTER_FREQ_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_CENTER_FREQ, ret_status);
-        STX_rptsend(STX_GET_CENTER_FREQ, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_GET_CENTER_FREQ, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_CENTER_FREQ, cstatus);
-        STX_rptsend(STX_GET_CENTER_FREQ, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_GET_CENTER_FREQ, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_GET_MODCODCmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = CONFIG_CC_GET;
     uint16_t type    = CONFIG_TP_MODCOD;
@@ -1517,31 +1641,31 @@ void STX_GET_MODCODCmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_GET_MODCOD, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_GET_MODCOD, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_GET_MODCOD, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_GET_MODCOD, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_GET_MODCOD_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_MODCOD, ret_status);
-        STX_rptsend(STX_GET_MODCOD, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_GET_MODCOD, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_MODCOD, cstatus);
-        STX_rptsend(STX_GET_MODCOD, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_GET_MODCOD, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_GET_ROLL_OFFCmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = CONFIG_CC_GET;
     uint16_t type    = CONFIG_TP_ROLLOFF;
@@ -1554,31 +1678,31 @@ void STX_GET_ROLL_OFFCmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_GET_ROLL_OFF, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_GET_ROLL_OFF, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_GET_ROLL_OFF, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_GET_ROLL_OFF, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_GET_ROLL_OFF_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_ROLL_OFF, ret_status);
-        STX_rptsend(STX_GET_ROLL_OFF, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_GET_ROLL_OFF, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_ROLL_OFF, cstatus);
-        STX_rptsend(STX_GET_ROLL_OFF, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_GET_ROLL_OFF, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_GET_PILOT_SIGNALCmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = CONFIG_CC_GET;
     uint16_t type    = CONFIG_TP_PILOTSIG;
@@ -1591,31 +1715,31 @@ void STX_GET_PILOT_SIGNALCmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_GET_PILOT_SIGNAL, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_GET_PILOT_SIGNAL, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_GET_PILOT_SIGNAL, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_GET_PILOT_SIGNAL, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_GET_PILOT_SIGNAL_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_PILOT_SIGNAL, ret_status);
-        STX_rptsend(STX_GET_PILOT_SIGNAL, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_GET_PILOT_SIGNAL, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_PILOT_SIGNAL, cstatus);
-        STX_rptsend(STX_GET_PILOT_SIGNAL, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_GET_PILOT_SIGNAL, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_GET_FEC_FRAME_SIZECmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = CONFIG_CC_GET;
     uint16_t type    = CONFIG_TP_FECFRAMESZ;
@@ -1628,31 +1752,31 @@ void STX_GET_FEC_FRAME_SIZECmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_GET_FEC_FRAME_SIZE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_GET_FEC_FRAME_SIZE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_GET_FEC_FRAME_SIZE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_GET_FEC_FRAME_SIZE, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_GET_FEC_FRAME_SIZE_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_FEC_FRAME_SIZE, ret_status);
-        STX_rptsend(STX_GET_FEC_FRAME_SIZE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_GET_FEC_FRAME_SIZE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_FEC_FRAME_SIZE, cstatus);
-        STX_rptsend(STX_GET_FEC_FRAME_SIZE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_GET_FEC_FRAME_SIZE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_GET_PRETX_DELAYCmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = CONFIG_CC_GET;
     uint16_t type    = CONFIG_TP_PRETXSTUFFDEL;
@@ -1665,31 +1789,31 @@ void STX_GET_PRETX_DELAYCmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_GET_PRETX_DELAY, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_GET_PRETX_DELAY, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_GET_PRETX_DELAY, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_GET_PRETX_DELAY, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_GET_PRETX_DELAY_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_PRETX_DELAY, ret_status);
-        STX_rptsend(STX_GET_PRETX_DELAY, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_GET_PRETX_DELAY, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_PRETX_DELAY, cstatus);
-        STX_rptsend(STX_GET_PRETX_DELAY, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_GET_PRETX_DELAY, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_GET_ALL_PRAMETERSCmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = CONFIG_CC_GET;
     uint16_t type    = CONFIG_TP_ALLPARAM;
@@ -1702,31 +1826,31 @@ void STX_GET_ALL_PRAMETERSCmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_GET_ALL_PRAMETERS, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_GET_ALL_PRAMETERS, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_GET_ALL_PRAMETERS, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_GET_ALL_PRAMETERS, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_GET_ALL_PRAMETERS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_ALL_PRAMETERS, ret_status);
-        STX_rptsend(STX_GET_ALL_PRAMETERS, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_GET_ALL_PRAMETERS, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_ALL_PRAMETERS, cstatus);
-        STX_rptsend(STX_GET_ALL_PRAMETERS, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_GET_ALL_PRAMETERS, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_GET_REPORTCmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = CONFIG_CC_GET;
     uint16_t type    = STATUS_TP_SIMPLE_REPORT;
@@ -1739,31 +1863,31 @@ void STX_GET_REPORTCmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_GET_REPORT, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_GET_REPORT, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_GET_REPORT, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_GET_REPORT, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_GET_REPORT_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_REPORT, ret_status);
-        STX_rptsend(STX_GET_REPORT, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_GET_REPORT, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_REPORT, cstatus);
-        STX_rptsend(STX_GET_REPORT, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_GET_REPORT, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
 }
 
 void STX_GET_MODULATOR_DATA_INTERFACECmd(void)
 {
-    
+
     int16_t  status  = ESUP_INSIG;
     uint16_t command = CONFIG_CC_GET;
     uint16_t type    = CONFIG_TP_MODULATORDTIFC;
@@ -1776,24 +1900,42 @@ void STX_GET_MODULATOR_DATA_INTERFACECmd(void)
     if (cstatus == ESUP_ACK && ret_status == CFE_SUCCESS)
     {
         ret_status = ESUP(status, GETRES_CC_GETRES, command, &type, sizeof(type), &rxdata, sizeof(rxdata));
-        
+
         if (ret_status == DEVICE_SUCCESS)
-            STX_rptsend(STX_GET_MODULATOR_DATA_INTERFACE, STK_rpt_tpye_REULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
+            STX_rptsend(STX_GET_MODULATOR_DATA_INTERFACE, STX_rpt_type_RESULT, DEVICE_SUCCESS, sizeof(rxdata), &rxdata);
         else
-            STX_rptsend(STX_GET_MODULATOR_DATA_INTERFACE, STK_rpt_tpye_REULT, ret_status, 0, NULL);
+            STX_rptsend(STX_GET_MODULATOR_DATA_INTERFACE, STX_rpt_type_RESULT, ret_status, 0, NULL);
     }
     else if (ret_status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(STX_GET_MODULATOR_DATA_INTERFACE_ERR_EID, CFE_EVS_EventType_ERROR,
                           "STX : CC=%u failed Status=%" PRId32, STX_GET_MODULATOR_DATA_INTERFACE, ret_status);
-        STX_rptsend(STX_GET_MODULATOR_DATA_INTERFACE, STK_rpt_tpye_CFE_ERROR, ret_status, 0, NULL);
+        STX_rptsend(STX_GET_MODULATOR_DATA_INTERFACE, STX_rpt_type_CFE_ERROR, ret_status, 0, NULL);
     }
     else if (cstatus != ESUP_ACK)
     {
         CFE_EVS_SendEvent(STX_COMMAND_STATUS_ERR_EID, CFE_EVS_EventType_ERROR, "STX : CC=%u failed Status=%" PRId32,
                           STX_GET_MODULATOR_DATA_INTERFACE, cstatus);
-        STX_rptsend(STX_GET_MODULATOR_DATA_INTERFACE, STK_rpt_tpye_ACK_ERROR, cstatus, 0, NULL);
+        STX_rptsend(STX_GET_MODULATOR_DATA_INTERFACE, STX_rpt_type_ACK_ERROR, cstatus, 0, NULL);
     }
 
-   
+
+}
+
+void STX_Param_init(void)
+{
+    STX_Set_SYMBOLRAtE_t init_symrate;
+    STX_Set_CENTERFREQ_t init_centfreq;
+    STX_Set_MODCOD_t init_modcod;
+    STX_Set_ROLLOFF_t init_rolloff;
+
+    init_symrate.Payload.data = 0x04;
+    init_centfreq.Payload.data = 2403.5;
+    init_modcod.Payload.data = 1;
+    init_rolloff.Payload.data = 2;
+
+    STX_SET_SYMBOLRATECmd(&init_symrate);
+    STX_Set_CENTERFREQCmd(&init_centfreq);
+    STX_Set_MODCODCmd(&init_modcod);
+    STX_Set_ROLLOFFCmd(&init_rolloff);
 }

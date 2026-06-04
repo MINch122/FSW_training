@@ -33,5 +33,15 @@
 
 #include "gps_interface_cfg.h"
 
+#ifndef DEBUG_GPS
+#define DEBUG_GPS false
+#endif
+
+#if DEBUG_GPS
+#define GPS_APP_printf(...) OS_printf(__VA_ARGS__)
+#else
+#define GPS_APP_printf(...) do { } while (0)
+#endif
+
 
 #endif

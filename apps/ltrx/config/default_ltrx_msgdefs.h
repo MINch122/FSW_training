@@ -190,7 +190,7 @@ typedef struct LTRX_PACKED
     int32  AccelerationY;
     int32  AccelerationZ;
     uint8  ConnectionQuality;  /* 0..10 */
-    uint8  BatteryIsCharging;  /* 0/1 */
+    uint8  BatteryIsCharging;  /* 0 or 1 */
     uint16 BatteryCapacity;    /* 0.1% */
     uint8  Reserved[20];
 } LTRX_BeaconStatus_Payload_t;

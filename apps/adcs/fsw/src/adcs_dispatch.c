@@ -124,6 +124,13 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
                 ADCS_ResetCountersCmd((const ADCS_ResetCountersCmd_t *)SBBufPtr);
             }
             break;
+
+        case ADCS_SET_INTERFACE_TRANSPORT_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_InterfaceTransportCmd_t)))
+            {
+                ADCS_SetInterfaceTransportCmd((const ADCS_InterfaceTransportCmd_t *)SBBufPtr);
+            }
+            break;
         
         /*
          * ADCS UTILS
@@ -140,13 +147,6 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             {
                 // ADCS_EN_LowCmd();
             } 
-            break;
-
-        case ADCS_CSP_PING_CC:
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_CspPingCmd_t)))
-            {
-                ADCS_CspPingCmd((const ADCS_CspPingCmd_t *)SBBufPtr);
-            }
             break;
 
         case ADCS_GPIO_BOOT_HIGH_CC:
@@ -224,6 +224,13 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             // ID 48
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_ReferenceLLHTargetCmd_t))) {
                 ADCS_SetReferenceLLHTargetCmd((const ADCS_ReferenceLLHTargetCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_SET_COMMANDED_GNSS_MEASUREMENTS_CC:
+            // ID 49
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_CommandedGNSSMeasurementsCmd_t))) {
+                ADCS_SetCommandedGNSSMeasurementsCmd((const ADCS_CommandedGNSSMeasurementsCmd_t *)SBBufPtr);
             }
             break;
 
@@ -608,6 +615,13 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case ADCS_GET_RAW_RWL_SENSOR_CC:
+            // ID 205
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRawRWLSensorCmd_t))) {
+                ADCS_GetRawRWLSensorCmd();
+            }
+            break;
+
         case ADCS_GET_CALIBRATED_GYR_SENSOR_CC:
             // ID 207
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetCalibratedGYRSensorCmd_t))) {
@@ -704,12 +718,7 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
 			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetCurrentUnixTimeCmd_t))) {
                 ADCS_GetCurrentUnixTimeInternalCmd();
             }
-            break;
-
-		// case ADCS_LOOPTEST_CC:
-		// 	ADCS_Loop();
-		// 	break;
-		
+            break;		
         /* default case already found during FC vs length test */
         default:
             CFE_EVS_SendEvent(ADCS_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
@@ -719,7 +728,7 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             /* RPT */
             ADCS_ReportTlm_t *BufPtr = (ADCS_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(ADCS_ReportTlm_t));
             if (BufPtr == NULL) break;
-            if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(ADCS_REPORT_TLM_MID), sizeof(ADCS_ReportTlm_t) != CFE_SUCCESS)) {
+            if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(ADCS_REPORT_TLM_MID), sizeof(ADCS_ReportTlm_t)) != CFE_SUCCESS) {
                 CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
                 break;
             }
@@ -765,10 +774,6 @@ void ADCS_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
             ADCS_SendBcnCmd((const ADCS_SendBcnCmd_t *)SBBufPtr);
             break;
 
-        case ADCS_LOOP_MID:
-            ADCS_Loop();
-            break;
-
         default:
             CFE_EVS_SendEvent(ADCS_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                               "ADCS: invalid command packet,MID = 0x%x", (unsigned int)CFE_SB_MsgIdToValue(MsgId));
@@ -777,7 +782,7 @@ void ADCS_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
              /* RPT */
             ADCS_ReportTlm_t *BufPtr = (ADCS_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(ADCS_ReportTlm_t));
             if (BufPtr == NULL) break;
-            if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(ADCS_REPORT_TLM_MID), sizeof(ADCS_ReportTlm_t) != CFE_SUCCESS)) {
+            if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(ADCS_REPORT_TLM_MID), sizeof(ADCS_ReportTlm_t)) != CFE_SUCCESS) {
                 CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
                 break;
             }

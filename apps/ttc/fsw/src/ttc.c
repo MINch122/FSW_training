@@ -133,6 +133,8 @@ CFE_Status_t TTC_Init(void)
          */
         CFE_MSG_Init(CFE_MSG_PTR(TTC_AppData.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(TTC_HK_TLM_MID),
                      sizeof(TTC_AppData.HkTlm));
+        CFE_MSG_Init(CFE_MSG_PTR(TTC_AppData.Report.TelemetryHeader), CFE_SB_ValueToMsgId(TTC_REPORT_TLM_MID),
+                     sizeof(TTC_AppData.Report));
 
         /*
          ** Create Software Bus message pipe.

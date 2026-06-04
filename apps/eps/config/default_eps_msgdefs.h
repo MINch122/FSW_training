@@ -32,6 +32,15 @@
 
 #define EPS_PACK    __attribute__((packed))
 #define EPS_BCN_ACU_COUNT 2
+#define EPS_BCN_NODE_COUNT 5
+#define EPS_BCN_NODE_PMU_INDEX 0u
+#define EPS_BCN_NODE_PDU_INDEX 1u
+#define EPS_BCN_NODE_ACU1_INDEX 2u
+#define EPS_BCN_NODE_ACU2_INDEX 3u
+#define EPS_BCN_NODE_BP8_INDEX 4u
+#define EPS_BCN_NODE_MASK(index) ((uint8)(1u << (index)))
+#define EPS_BCN_INVALID_FILL 0x00u
+#define EPS_PDU_BCN_USED_CH_COUNT 12u
 #define EPS_RPARAM_DATA_MAX_LEN 128
 /* Matches libgscsp RPARAM store/slot fields: 25 chars plus NUL. */
 #define EPS_RPARAM_STORE_NAME_LEN 26
@@ -412,7 +421,7 @@ typedef struct EPS_PACK {
  * All structs are packed to ensure wire-format compatibility.
  */
 
-/* PMU Beacon - 43 bytes */
+/* PMU Beacon - 36 bytes */
 typedef struct EPS_PACK {
     uint32 bootcause;          /* PMU addr 0x04 */
     uint16 resetcause;         /* PMU addr 0x08 */
@@ -422,16 +431,21 @@ typedef struct EPS_PACK {
     uint8  batt_mode;          /* PMU addr 0x2E */
     int16  batt_i;             /* PMU addr 0x50 */
     uint16 batt_v;             /* PMU addr 0x52 */
-    uint8  sm_en[8];           /* PMU addr 0x54, bool × 8 */
+    uint8  sm_en_mask;         /* PMU addr 0x54, bit0..7 = submodule enable 0..7 */
     uint16 gnd_wdt_cnt;        /* PMU addr 0x72 */
     uint16 bus_wdt_cnt;        /* PMU addr 0x74 */
     uint32 gnd_wdt_left;       /* PMU addr 0x90 */
     uint32 bus_wdt_left;       /* PMU addr 0x94 */
 } EPS_BcnTlm_PMU_Payload_t;
 
-/* PDU Beacon - 24 bytes */
+/*
+ * PDU Beacon - 36 bytes
+ * Channels are the operational 1-based PDU output numbers:
+ * 8, 10, 12, 14, 15, 18, 19, 20, 21, 22, 23, 24.
+ */
 typedef struct EPS_PACK {
-    uint8  out_en[24];         /* PDU addr 0x70, bool × 24 */
+    int16  out_i[EPS_PDU_BCN_USED_CH_COUNT];   /* PDU output current [mA] for used channels */
+    uint8  out_en[EPS_PDU_BCN_USED_CH_COUNT];  /* PDU output enable status for used channels */
 } EPS_BcnTlm_PDU_Payload_t;
 
 /* ACU Beacon - 25 bytes */
@@ -453,7 +467,7 @@ typedef struct EPS_PACK {
     uint16 heater_i;           /* BP8 addr 0x2A */
 } EPS_BcnTlm_BP8_Payload_t;
 
-/* Full EPS Beacon Payload: PMU(43) + PDU(24) + ACU(25) * 2 + BP8(22) = 139 bytes */
+/* Full EPS Beacon Payload: PMU(36) + PDU(36) + ACU(25) * 2 + BP8(22) = 144 bytes */
 typedef struct EPS_PACK {
     EPS_BcnTlm_PMU_Payload_t  PMU;
     EPS_BcnTlm_PDU_Payload_t  PDU;

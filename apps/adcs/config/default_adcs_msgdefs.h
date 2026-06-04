@@ -50,7 +50,9 @@ typedef struct
     float GYR0CalibratedRateYComponent;
     float GYR0CalibratedRateZComponent; // ID 207, 12bytes
 
-} __attribute__((packed)) ADCS_BcnTlm_Payload_t; /* Total 14 bytes */
+    uint8 CSS[6]; // ID 203
+
+} __attribute__((packed)) ADCS_BcnTlm_Payload_t; /* Total 20 bytes */
 
 typedef struct
 {
@@ -257,6 +259,19 @@ typedef struct
     float TargetLongiTude;
     float TargetAltitude;
 } __attribute__((packed)) ADCS_ReferenceLLHTargetCmd_Payload_t;
+
+typedef struct
+{ // ID 49
+    uint32 GNSSUnixTimeSeconds;
+    uint32 GNSSUnixTimeNanoseconds;
+    int32  PositionX;
+    int32  PositionY;
+    int32  PositionZ;
+    int32  VelocityX;
+    int32  VelocityY;
+    int32  VelocityZ;
+    uint8  SyncTime;
+} __attribute__((packed)) ADCS_CommandedGNSSMeasurementsCmd_Payload_t;
 
 typedef struct
 { // ID 51
@@ -1235,6 +1250,20 @@ typedef struct
 } __attribute__((packed)) ADCS_RawGYRSensorTlm_Paylaod_t;
 
 typedef struct
+{ // ID 205
+    uint32 TimeSeconds;
+    uint32 TimeNanoSeconds;
+    float RWL0MeasuredSpeed;
+    float RWL1MeasuredSpeed;
+    float RWL2MeasuredSpeed;
+    float RWL3MeasuredSpeed;
+    uint8 RWL0ValidFlag:1;
+    uint8 RWL1ValidFlag:1;
+    uint8 RWL2ValidFlag:1;
+    uint8 RWL3ValidFlag:1;
+} __attribute__((packed)) ADCS_RawRWLSensorTlm_Payload_t;
+
+typedef struct
 { // ID 207
     uint32 TimeSeconds;
     uint32 TimeNanoSeconds;
@@ -1495,5 +1524,10 @@ typedef struct
     } Identifier;
     uint8_t EventData[8];
 } __attribute__((packed)) ADCS_Frame_t;
+
+typedef struct
+{
+    uint8 TransportType;
+} __attribute__((packed)) ADCS_InterfaceTransportCmd_Payload_t;
 
 #endif

@@ -5,6 +5,7 @@
  * Astrodynamics & Control Lab. 2025.
  */
 #ifndef _OEM_PORTS_H_
+#define _OEM_PORTS_H_
 
 /**
  * @brief Port identifiers.

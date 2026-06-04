@@ -28,7 +28,11 @@
 
 #include "common_types.h"
 #include "stx_fcncodes.h"
-#include "../device/inc/esup.h"
+
+#ifndef ESUP_MAX_DATA_LENGTH
+#define ESUP_MAX_DATA_LENGTH  1479
+#endif
+
 
 typedef struct {
         uint8_t index;
@@ -258,8 +262,11 @@ typedef struct STX_HkTlm_Payload
 
 typedef struct STX_BCNTlm_Payload
 {
+    STX_GET_ALLPRAM_t ALLPRAM;
+    STX_GET_ModulationInterface_t Modulator;
     uint8 SystemState;  
     uint8 StatusFlags;  
+    float cputemperature;   
 } STX_BCNTlm_Payload_t;
 
 #endif

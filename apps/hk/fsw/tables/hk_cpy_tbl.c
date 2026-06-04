@@ -43,9 +43,6 @@
 #include "rpt_msgids.h"
 #include "rpt_msg.h"
 
-#include "mission_msgids.h"
-#include "mission_msg.h"
-
 #include "ci_lab_msgids.h"
 #include "ci_lab_msg.h"
 
@@ -56,14 +53,11 @@
 /*********************
  * COMS Header 
  ********************/
-#include "stx_msgids.h"
-#include "stx_msg.h"
-
 #include "utrx_msgids.h"
 #include "utrx_msg.h"
 
-#include "uant_app_msgids.h"
-#include "uant_app_msg.h"
+#include "ltrx_msgids.h"
+#include "ltrx_msg.h"
 
 /* End of COMS Header */
 
@@ -72,13 +66,14 @@
  ********************/
 #include "eps_msgids.h"
 #include "eps_msg.h"
+
+#include "gpio_msgids.h"
+#include "gpio_msg.h"
 /* End of EPS Header */
 
 /*********************
  * SP Header
  ********************/
-#include "sp_msgids.h"
-#include "sp_msg.h"
 /* End of SP Header */
 
 /*********************
@@ -95,14 +90,14 @@
 
 /* Beacon Packet */
 #define BCN_OFFSET_0            (CFE_MSG_TLM_HDR_SIZE - sizeof(((CFE_MSG_TelemetryHeader_t *)0)->Spare))
-#define BCN_OFFSET_1            BCN_OFFSET_0 + sizeof(RPT_BcnTlm_Payload_t)       
-#define BCN_OFFSET_2            BCN_OFFSET_1 + sizeof(MISSION_BcnTlm_Payload_t)       
-#define BCN_OFFSET_3            BCN_OFFSET_2 + sizeof(STX_BCNTlm_Payload_t)   // not
-#define BCN_OFFSET_4            BCN_OFFSET_3 + sizeof(UANT_APP_BcnTlm_Payload_t)  // not
-#define BCN_OFFSET_5            BCN_OFFSET_4 + sizeof(UTRX_BcnTlm_Payload_t)
-#define BCN_OFFSET_6            BCN_OFFSET_5 + sizeof(EPS_BcnTlm_Full_Payload_t) 
-#define BCN_OFFSET_7            BCN_OFFSET_6 + sizeof(SP_BcnTlm_Payload_t)     // not
-#define BCN_OFFSET_8            BCN_OFFSET_7 + sizeof(ADCS_BcnTlm_Payload_t)   
+#define BCN_OFFSET_1            (BCN_OFFSET_0 + sizeof(RPT_BcnTlm_Payload_t))
+#define BCN_OFFSET_2            (BCN_OFFSET_1 + sizeof(UTRX_BcnTlm_Payload_t))
+#define BCN_OFFSET_3            (BCN_OFFSET_2 + sizeof(LTRX_BcnTlm_Payload_t))
+#define BCN_OFFSET_4            (BCN_OFFSET_3 + sizeof(EPS_BcnTlm_Full_Payload_t))
+#define BCN_OFFSET_5            (BCN_OFFSET_4 + sizeof(GPIO_BcnTlm_Payload_t))
+#define BCN_OFFSET_6            (BCN_OFFSET_5 + sizeof(ADCS_BcnTlm_Payload_t))
+#define BCN_OFFSET_7            BCN_OFFSET_6
+#define BCN_OFFSET_8            BCN_OFFSET_7
 #define BCN_OFFSET_9            BCN_OFFSET_8
 #define BCN_OFFSET_10           BCN_OFFSET_9
 #define BCN_OFFSET_11           BCN_OFFSET_10
@@ -124,64 +119,60 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
         BCN_OFFSET_0,
         sizeof(RPT_BcnTlm_Payload_t),
     },
-    /*   1 : MISSION     */
-    {
-        CFE_SB_MSGID_WRAP_VALUE(MISSION_BCN_TLM_MID),
-        CFE_MSG_TLM_HDR_SIZE,
-        CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        BCN_OFFSET_1,
-        sizeof(MISSION_BcnTlm_Payload_t),
-    },
-    /*   2 : STX    */
-    {
-        CFE_SB_MSGID_WRAP_VALUE(STX_BCN_TLM_MID),
-        CFE_MSG_TLM_HDR_SIZE,
-        CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        BCN_OFFSET_2,
-        sizeof(STX_BCNTlm_Payload_t),
-    },
-    /*   3 : UANT   */
-    {
-        CFE_SB_MSGID_WRAP_VALUE(UANT_APP_BCN_TLM_MID),
-        CFE_MSG_TLM_HDR_SIZE,
-        CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        BCN_OFFSET_3,
-        sizeof(UANT_APP_BcnTlm_Payload_t),
-    },
-
-    /*   4 : UTRX   */
+    /*   1 : UTRX   */
     {
         CFE_SB_MSGID_WRAP_VALUE(UTRX_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        BCN_OFFSET_4,
+        BCN_OFFSET_1,
         sizeof(UTRX_BcnTlm_Payload_t),
     },
-    /*   5 : EPS    */
+    /*   2 : LTRX   */
+    {
+        CFE_SB_MSGID_WRAP_VALUE(LTRX_BCN_TLM_MID),
+        CFE_MSG_TLM_HDR_SIZE,
+        CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+        BCN_OFFSET_2,
+        sizeof(LTRX_BcnTlm_Payload_t),
+    },
+    /*   3 : EPS    */
     {
         CFE_SB_MSGID_WRAP_VALUE(EPS_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        BCN_OFFSET_5,
-        sizeof(EPS_BcnTlm_Full_Payload_t)
+        BCN_OFFSET_3,
+        sizeof(EPS_BcnTlm_Full_Payload_t),
     },
-    /*   6 : SP     */
+    /*   4 : GPIO   */
     {
-        CFE_SB_MSGID_WRAP_VALUE(SP_BCN_TLM_MID),
+        CFE_SB_MSGID_WRAP_VALUE(GPIO_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        BCN_OFFSET_6,
-        sizeof(SP_BcnTlm_Payload_t),
+        BCN_OFFSET_4,
+        sizeof(GPIO_BcnTlm_Payload_t),
     },
-    /*   7 : ADCS   */
+    /*   5 : ADCS   */
     {
         CFE_SB_MSGID_WRAP_VALUE(ADCS_BCN_TLM_MID),
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
-        BCN_OFFSET_7,
+        BCN_OFFSET_5,
         sizeof(ADCS_BcnTlm_Payload_t),
     },
-
+    {
+        CFE_SB_MSGID_RESERVED,
+        CFE_MSG_TLM_HDR_SIZE,
+        CFE_SB_MSGID_RESERVED,
+        BCN_OFFSET_6,
+        0,
+    },
+    {
+        CFE_SB_MSGID_RESERVED,
+        CFE_MSG_TLM_HDR_SIZE,
+        CFE_SB_MSGID_RESERVED,
+        BCN_OFFSET_7,
+        0,
+    },
     {
         CFE_SB_MSGID_RESERVED,
         CFE_MSG_TLM_HDR_SIZE,
@@ -203,12 +194,11 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
         BCN_OFFSET_10,
         0,
     },
-    /*  15 : PAYUELC  - @deprecated  */
     {
         CFE_SB_MSGID_RESERVED,
         CFE_MSG_TLM_HDR_SIZE,
         CFE_SB_MSGID_RESERVED,
-        0, // Revise to BCN_OFFSET_12
+        BCN_OFFSET_11,
         0,
     },
 /* ---------------------End of Combined Beacon-------------------- */

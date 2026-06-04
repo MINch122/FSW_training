@@ -30,7 +30,6 @@ set(STX_EXTRA_SRC
 add_cfe_app(stx ${STX_DEV_SRC} ${SRC_APP_FILES})
 
 target_include_directories(stx PUBLIC fsw/inc)
-target_include_directories(stx PUBLIC device/inc)
 target_include_directories(stx PUBLIC ../../cfe/modules/srl/config)
 target_include_directories(stx PUBLIC /usr/include)
 # Include the public API from sample_lib to demonstrate how

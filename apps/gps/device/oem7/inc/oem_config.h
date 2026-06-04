@@ -10,43 +10,49 @@
 /**
  * @brief Enables debugging log messages to the standard output.
  */
-#define OEM_DEBUG                           false
+#define OEM_DEBUG                           true
 
 /**
- * @brief Number of the physical ports. Normally 1 to use the COM1 port only.
- *        Sets the limiting index for OEM_InitPhysicalPort().
+ * @brief Number of the physical interfaces. Normally 1 to use the COM1 port
+ *        only. Sets the limiting index for interfaces in the I/O layer.
  */
-#define OEM_PHYSICAL_PORTS                  1
+#define OEM_IO_INTERFACES                      1
 
 /**
- * Three kinds of buffers, each with corresponding size defs are present.
+ * @brief Size, in bytes, of the receive state machine's message buffer.
  *
- * 1) Serial Read Buffer (malloc): OEM_UTILS_READBUF_SIZE
- *      This buffer defined in oem_utils.c serves as an intermediate storage
- *      for incoming serial bytes. The buffer always retrieve a large chunk of
- *      data in order to avoid too many read syscalls during the sync word
- *      search.
- *      No strict size limit, but one or more page sizes is recommended for
- *      an improved performance.
- *
- * 2) Read Task Message Buffer (static): OEM_TASK_MSG_BUF_SIZE
- *      Temporarily stores a message received before passing it to a log
- *      handler. Should be large enough to hold any complete OEM message.
- *
- * 3) Handler Recent Msg Buffer (malloc): OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE
- *      This buffer is attached to each handler and stores the latest log
- *      received. The size macro applies only to variable-lengthed logs and
- *      defines the maximum length a log is truncated by. Header and CRC
- *      exclusive. Should be equal or less than OEM_TASK_MSG_BUF_SIZE.
+ *        Each I/O interface owns one such buffer. As bytes arrive, the task
+ *        layer assembles a single complete message into it (header + body +
+ *        CRC). It must be large enough for the largest OEM7 message the
+ *        driver is expected to receive; a message whose total length exceeds
+ *        this size is rejected with OEM_ERR_TOO_LARGE.
  */
-#define OEM_UTILS_READBUF_SIZE              4096
-#define OEM_TASK_MSG_BUF_SIZE               1024
+#define OEM_TASK_STATE_MACHINE_BUF_SIZE     1024
+
+/**
+ * @brief Size, in bytes, of a log handler's most-recent-message buffer for
+ *        variable-length messages.
+ *
+ *        Every handler stores a copy of the last message it received. A 
+ *        handler for variable-length messages (OEM_LOG_HANDLER_MLEN_VARIABLE)
+ *        allocates a buffer of this size; a message longer than this is
+ *        truncated when stored.
+ *        A fixed-length message handler allocates a buffer of exactly that 
+ *        length and this macro does not apply to it. 
+ */
 #define OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE 1024
 
 /**
- * @brief UART read timeout (ms).
+ * @brief Default size, in bytes, of an I/O interface's read buffer.
+ *
+ *        The read buffer holds raw bytes fetched from the interface before
+ *        the task layer consumes them, batching reads to reduce unnecessarily
+ *        frequent read() syscalls. The read buffer size is chosen by the
+ *        read_buf_size argument of oem_io_init_interface(); passing 0 there
+ *        selects this default. No strict size requirement, but one or more
+ *        pages is recommended.
  */
-#define OEM_SERIAL_READ_TIMEOUT             1000
+#define OEM_IO_DEFAULT_READBUF_SIZE         4096
 
 /**
  * @brief Maximum number of the handler objects.
@@ -54,9 +60,9 @@
 #define OEM_LOG_HANDLER_MAX                 20
 
 /**
- * @brief Handler name field length. //TODO: grow this.
+ * @brief Handler name field length. Null terminator inclusive.
  */
-#define OEM_LOG_HANDLER_NAME_LEN            8
+#define OEM_LOG_HANDLER_NAME_LEN            16
 
 /**
  * @brief Mission-specific Log & Command Message Type.

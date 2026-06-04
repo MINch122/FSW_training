@@ -11,12 +11,11 @@
 #include <time.h>
 #include "stx_eventids.h"
 
-
-//uint16_t modid_forscan = 0x1213;
 extern CFE_SRL_IO_Handle_t *Handle;
 uint32_t open_file_size = 0;
 CFE_SRL_IO_Param_t Params = {0,};
 uint16_t STX_timeout = 30; //[ms]
+uint16_t MODULE_ID = 0x1212;
 
 static uint16_t ESUP_Encoder(uint16_t comm_stt, uint16_t comm, uint16_t type, void * data, uint16_t length, uint16_t padlen, ESUP_Packet_t * packet)
 {   
@@ -178,6 +177,44 @@ int32_t ESUP_Receive(ESUP_Packet_t* packet, uint16_t timeout) {
     return 0;
 }
 
+
+int32_t ESUP_ACK_CMD(uint16_t comm_stt, uint16_t comm, uint16_t type)
+{
+    uint16_t retu_len = 0;
+    int32_t retu_status = 0;
+
+    uint16_t lencal = sizeof(ESUP_Header_t) + 4;
+    int padlen = 16 - lencal % 16;            
+    lencal += padlen;
+
+    char temppacket[lencal];
+    memset(temppacket, 0, sizeof(temppacket));
+    ESUP_Packet_t * packet = (ESUP_Packet_t *)temppacket;
+
+    OS_printf("Write Bytes : %u\n", lencal);
+
+    retu_len = ESUP_Encoder(comm_stt, comm, type, NULL, 0, padlen, packet);
+    
+    if(retu_len <= 0)  // retu16: 생성한 ESUP packet의 전체 길이
+    {
+        OS_printf("ESUP Write Failed!\n");
+        return STX_ESUP_ENCODER_ERR;
+    }
+
+    Params.TxData = packet;
+    Params.TxSize = lencal;
+    retu_status = CFE_SRL_ApiWrite(Handle, &Params);
+    if(retu_status < 0)
+    {
+        OS_printf("SRL_ApiWrite failed \n");
+        OS_printf("RS485 has no reply.\n");
+        OS_printf("%d\n", retu_status); 
+        return STX_ESUP_WRITE_ERR;
+    }
+
+    return retu_status;
+}
+
 int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * txdata, uint16_t txlength, void * rxdata, uint16_t rxlength)
 {   
     uint16_t retu_len = 0;
@@ -263,5 +300,4 @@ int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * txdata, uin
     }
 
     return retu_status;
-
 }

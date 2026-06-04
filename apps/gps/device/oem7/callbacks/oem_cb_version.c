@@ -1,25 +1,24 @@
 #include "msg/logs/oem_msg_version.h"
+#include "oem_utils.h"
 
 #include <stdio.h>
 
-int OEM_Callback_VERSION(void* msg)
+int oem_callback_VERSION_print(void* msg)
 {
     const oem_binary_header_t* hdr;
     const oem_log_version* version;
-    if (!msg) {
-        printf("! NULL VERSION LOG \n!");
-        return -1;
-    }
+    if (!msg)
+        return OEM_ERR_NULL;
+
     hdr = msg;
     version = (const oem_log_version*) (hdr + 1);
     if (hdr->messageID != OEM_ID_LOG_VERSION) {
-        printf("invalid MID for version log: expected %d, got %d\n",
-               OEM_ID_LOG_VERSION,
-               hdr->messageID);
+        oem_debug_error("invalid MID for version log: expected %d, got %d\n",
+                        OEM_ID_LOG_VERSION,
+                        hdr->messageID);
         return OEM_ERR_INVALID;
     }
 
-#if OEM_DEBUG
     printf("OEM VERSION LOG\n");
     for (int i = 0; i < version->numComp; i++) {
         printf("\tComponent %d:\n",        i);
@@ -31,9 +30,6 @@ int OEM_Callback_VERSION(void* msg)
         printf("\t\tcompDate: %.16s\n",    version->comp[i].compDate);
         printf("\t\tcompTime: %.16s\n",    version->comp[i].compTime);
     }
-#else
-    (void) version;
-#endif
 
     return OEM_OK;
 }

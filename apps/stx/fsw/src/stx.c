@@ -140,17 +140,20 @@ CFE_Status_t STX_Init(void)
         /*
          ** Initialize housekeeping packet (clear user data area).
          */
-        CFE_MSG_Init(CFE_MSG_PTR(STX_Data.SetTlm.TelemetryHeader), CFE_SB_ValueToMsgId(STX_SET_TLM_MID),
+        /*CFE_MSG_Init(CFE_MSG_PTR(STX_Data.SetTlm.TelemetryHeader), CFE_SB_ValueToMsgId(STX_SET_TLM_MID),
                      sizeof(STX_Data.SetTlm));
 
         CFE_MSG_Init(CFE_MSG_PTR(STX_Data.GetTlm.TelemetryHeader), CFE_SB_ValueToMsgId(STX_GET_TLM_MID),
-                     sizeof(STX_Data.GetTlm));
+                     sizeof(STX_Data.GetTlm));*/
 
         CFE_MSG_Init(CFE_MSG_PTR(STX_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(STX_HK_TLM_MID),
                      sizeof(STX_Data.HkTlm));
 
         CFE_MSG_Init(CFE_MSG_PTR(STX_Data.BCNTlm.TelemetryHeader), CFE_SB_ValueToMsgId(STX_BCN_TLM_MID),
                      sizeof(STX_Data.BCNTlm));
+        
+        CFE_MSG_Init(CFE_MSG_PTR(STX_Data.RptPkt.TelemetryHeader), CFE_SB_ValueToMsgId(STX_APP_RPT_TLM_MID),
+                     sizeof(STX_Data.RptPkt));
 
         /*
          ** Create Software Bus message pipe.
@@ -207,7 +210,7 @@ CFE_Status_t STX_Init(void)
         /*
         ** Subscribe to ground command packets
         */
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(STX_SEND_SET_MID), STX_Data.CommandPipe);
+        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(STX_CMD_MID), STX_Data.CommandPipe);
         if (status != CFE_SUCCESS)
         {
             CFE_EVS_SendEvent(STX_SUB_ACK_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -220,7 +223,7 @@ CFE_Status_t STX_Init(void)
         /*
         ** Subscribe to ground command packets
         */
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(STX_SEND_GET_MID), STX_Data.CommandPipe);
+        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(STX_CMD_MID), STX_Data.CommandPipe);
         if (status != CFE_SUCCESS)
         {
             CFE_EVS_SendEvent(STX_SUB_TLM_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -237,6 +240,21 @@ CFE_Status_t STX_Init(void)
         CFE_EVS_SendEvent(STX_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "Stx App Initialized.%s",
                           VersionString);
     }
+
+    STX_Set_SYMBOLRAtE_t init_symrate;
+    STX_Set_CENTERFREQ_t init_centfreq;
+    STX_Set_MODCOD_t init_modcod;
+    STX_Set_ROLLOFF_t init_rolloff;
+
+    init_symrate.Payload.data = 0x04;
+    init_centfreq.Payload.data = 2403.5;
+    init_modcod.Payload.data = 1;
+    init_rolloff.Payload.data = 2;
+
+    STX_SET_SYMBOLRATECmd(&init_symrate);
+    STX_Set_CENTERFREQCmd(&init_centfreq);
+    STX_Set_MODCODCmd(&init_modcod);
+    STX_Set_ROLLOFFCmd(&init_rolloff);
 
     return status;
 }

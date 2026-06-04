@@ -34,8 +34,6 @@
 
 CFE_Status_t GPS_SendHkCmd(const GPS_SendHkCmd_t *Msg)
 {
-    GPS_AppData.Counters.GetHkErrCounter++;
-
     /*
     ** Get command execution counters...
     */
@@ -45,8 +43,7 @@ CFE_Status_t GPS_SendHkCmd(const GPS_SendHkCmd_t *Msg)
     /*
     ** Send housekeeping telemetry packet...
     */
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(GPS_AppData.HkTlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(GPS_AppData.HkTlm.TelemetryHeader), true);
+    GPS_SendReport(Msg, &GPS_AppData.HkTlm.Payload, sizeof(GPS_AppData.HkTlm.Payload), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
 
     return CFE_SUCCESS;
@@ -55,14 +52,13 @@ CFE_Status_t GPS_SendHkCmd(const GPS_SendHkCmd_t *Msg)
 
 CFE_Status_t GPS_NoopCmd(const GPS_NoopCmd_t* Msg)
 {
-    GPS_AppData_Counters_t Counters;
-
     GPS_AppData.Counters.CmdCounter++;
-    Counters = GPS_AppData.Counters;
 
     CFE_EVS_SendEvent(GPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "GPS: NOOP command %s",
                       GPS_VERSION);
-    GPS_SendReport(Msg, &Counters, sizeof(Counters), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
+
+    static const char NoopReport[] = "Yosi In Space";
+    GPS_SendReport(Msg, NoopReport, sizeof(NoopReport), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
@@ -73,10 +69,12 @@ CFE_Status_t GPS_ResetCountersCmd(const GPS_ResetCountersCmd_t* Msg)
     GPS_AppData.Counters.CmdCounter = 0;
     GPS_AppData.Counters.ErrCounter = 0;
     GPS_AppData.Counters.GetBcnErrCounter = 0;
-    GPS_AppData.Counters.GetHkErrCounter = 0;
 
     CFE_EVS_SendEvent(GPS_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "GPS: RESET command");
-    GPS_SendReport(Msg, &GPS_AppData.Counters, sizeof(GPS_AppData.Counters), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
+
+    uint32 Counters[3] = {GPS_AppData.Counters.CmdCounter, GPS_AppData.Counters.ErrCounter,
+                          GPS_AppData.Counters.GetBcnErrCounter};
+    GPS_SendReport(Msg, Counters, sizeof(Counters), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
@@ -84,21 +82,22 @@ CFE_Status_t GPS_ResetCountersCmd(const GPS_ResetCountersCmd_t* Msg)
 
 CFE_Status_t GPS_GetCountersCmd(const GPS_GetCountersCmd_t* Msg)
 {
-    GPS_AppData.Counters.CmdCounter++;
+    GPS_AppData.Counters.CmdCounter = 0;
+    GPS_AppData.Counters.ErrCounter = 0;
+    GPS_AppData.Counters.GetBcnErrCounter = 0;
 
-    CFE_EVS_SendEvent(GPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "GPS: COUNTERS report command");
-    GPS_SendReport(Msg, &GPS_AppData.Counters, sizeof(GPS_AppData.Counters), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
+    CFE_EVS_SendEvent(GPS_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "GPS: RESET command");
 
     return CFE_SUCCESS;
 }
 
 CFE_Status_t GPS_GetAppDataCmd(const GPS_GetAppDataCmd_t* Msg)
 {
-    GPS_AppData.Counters.CmdCounter++;
+    GPS_AppData.Counters.CmdCounter = 0;
+    GPS_AppData.Counters.ErrCounter = 0;
+    GPS_AppData.Counters.GetBcnErrCounter = 0;
 
-    CFE_EVS_SendEvent(GPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "GPS: APP DATA report command");
-    GPS_SendReport(Msg, &GPS_AppData.HkTlm.Payload, sizeof(GPS_AppData.HkTlm.Payload),
-                   CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
+    CFE_EVS_SendEvent(GPS_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "GPS: RESET command");
 
     return CFE_SUCCESS;
 }

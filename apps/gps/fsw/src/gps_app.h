@@ -45,7 +45,6 @@
 typedef struct {
     uint32 CmdCounter;
     uint32 ErrCounter;
-    uint32 GetHkErrCounter;
     uint32 GetBcnErrCounter;
 } GPS_AppData_Counters_t;
 

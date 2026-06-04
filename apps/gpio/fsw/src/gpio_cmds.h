@@ -31,6 +31,8 @@
 #include "gpio_msg.h"
 
 CFE_Status_t GPIO_SendHkCmd(const GPIO_SendHkCmd_t *Msg);
+CFE_Status_t GPIO_SendBcnCmd(const GPIO_SendBcnCmd_t *Msg);
+void         GPIO_InitOutputDefaults(void);
 CFE_Status_t GPIO_ResetCountersCmd(const GPIO_ResetCountersCmd_t *Msg);
 CFE_Status_t GPIO_ProcessCmd(const GPIO_ProcessCmd_t *Msg);
 CFE_Status_t GPIO_NoopCmd(const GPIO_NoopCmd_t *Msg);
@@ -42,6 +44,12 @@ CFE_Status_t GPIO_Dep1EnOffCmd(const GPIO_Dep1EnOffCmd_t *Msg);
 CFE_Status_t GPIO_Dep2EnOnCmd(const GPIO_Dep2EnOnCmd_t *Msg);
 CFE_Status_t GPIO_Dep2EnOffCmd(const GPIO_Dep2EnOffCmd_t *Msg);
 CFE_Status_t GPIO_SpInRead5sCmd(const GPIO_SpInRead5sCmd_t *Msg);
+CFE_Status_t GPIO_StxEnOnCmd(const GPIO_StxEnOnCmd_t *Msg);
+CFE_Status_t GPIO_StxEnOffCmd(const GPIO_StxEnOffCmd_t *Msg);
+CFE_Status_t GPIO_AdcsEnOnCmd(const GPIO_AdcsEnOnCmd_t *Msg);
+CFE_Status_t GPIO_AdcsEnOffCmd(const GPIO_AdcsEnOffCmd_t *Msg);
+CFE_Status_t GPIO_AdcsBootOnCmd(const GPIO_AdcsBootOnCmd_t *Msg);
+CFE_Status_t GPIO_AdcsBootOffCmd(const GPIO_AdcsBootOffCmd_t *Msg);
 
 
 #endif /* GPIO_CMDS_H */

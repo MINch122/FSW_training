@@ -49,7 +49,6 @@ typedef struct EPS_PACK {
 
 typedef EPS_NoArgCmd_t  EPS_NoopCmd_t;
 typedef EPS_NoArgCmd_t  EPS_ResetCountersCmd_t;
-typedef EPS_NoArgCmd_t  EPS_ReportAppDataCmd_t;
 
 
 

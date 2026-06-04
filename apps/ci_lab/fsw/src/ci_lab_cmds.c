@@ -138,8 +138,7 @@ CFE_Status_t CI_LAB_CreateChildTaskCmd(const CI_LAB_CreateChildTaskCmd_t *cmd)
 CFE_Status_t CI_LAB_SendHkCmd(const CI_LAB_SendHkCmd_t *cmd)
 {
     CI_LAB_Global.HkTlm.Payload.SocketConnected = CI_LAB_Global.SocketConnected;
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(CI_LAB_Global.HkTlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(CI_LAB_Global.HkTlm.TelemetryHeader), true);
+    CI_LAB_SendCmdReport(cmd, CFE_SUCCESS, &CI_LAB_Global.HkTlm.Payload, sizeof(CI_LAB_Global.HkTlm.Payload));
     return CFE_SUCCESS;
 }
 

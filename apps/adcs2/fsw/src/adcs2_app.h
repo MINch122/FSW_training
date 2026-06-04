@@ -55,8 +55,8 @@ typedef struct
     /*
     ** Housekeeping telemetry packet...
     */
-    // ADCS2_HkTlm_t HkTlm;
-    // ADCS2_BcnTlm_t BcnTlm;
+    ADCS2_HkTlm_t HkTlm;
+    ADCS2_BcnTlm_t BcnTlm;
 
     /*
     ** Run Status variable used in the main processing loop

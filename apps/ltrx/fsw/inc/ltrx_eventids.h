@@ -62,6 +62,10 @@
 #define LTRX_DOWNSTREAM_ENABLE_INF_EID   34  /* Downstream enabled */
 #define LTRX_DOWNSTREAM_DISABLE_INF_EID  35  /* Downstream disabled */
 
+/* Transport wrapper (CSP) errors */
+#define LTRX_TX_ERR_EID            40
+#define LTRX_RX_ERR_EID            41
+
 #define LTRX_TEST_CSP_PING_INF_EID 50
 #define LTRX_TEST_CSP_PING_ERR_EID 51
 

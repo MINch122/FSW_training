@@ -137,14 +137,14 @@ CFE_Status_t ADCS2_AppInit(void)
         /*
          ** Initialize housekeeping packet (clear user data area).
          */
-        // CFE_MSG_Init(CFE_MSG_PTR(ADCS2_AppData.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(ADCS2_HK_TLM_MID),
-        //              sizeof(ADCS2_AppData.HkTlm));
+        CFE_MSG_Init(CFE_MSG_PTR(ADCS2_AppData.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(ADCS2_HK_TLM_MID),
+                     sizeof(ADCS2_AppData.HkTlm));
 
         /*
          ** Initialize beacon packet (clear user data area).
          */
-        // CFE_MSG_Init(CFE_MSG_PTR(ADCS2_AppData.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(ADCS2_BCN_TLM_MID),
-        //              sizeof(ADCS2_AppData.BcnTlm));
+        CFE_MSG_Init(CFE_MSG_PTR(ADCS2_AppData.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(ADCS2_BCN_TLM_MID),
+                     sizeof(ADCS2_AppData.BcnTlm));
 
         /*
          ** Create Software Bus message pipe.
@@ -162,12 +162,12 @@ CFE_Status_t ADCS2_AppInit(void)
         /*
         ** Subscribe to Housekeeping request commands
         */
-        // status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(ADCS2_SEND_HK_MID), ADCS2_AppData.CommandPipe);
-        // if (status != CFE_SUCCESS)
-        // {
-        //     CFE_EVS_SendEvent(ADCS2_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
-        //                       "Adcs App: Error Subscribing to HK request, RC = 0x%08lX", (unsigned long)status);
-        // }
+        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(ADCS2_SEND_HK_MID), ADCS2_AppData.CommandPipe);
+        if (status != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(ADCS2_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "Adcs App: Error Subscribing to HK request, RC = 0x%08lX", (unsigned long)status);
+        }
     }
 
     // USER ADDED

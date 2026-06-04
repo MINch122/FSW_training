@@ -165,8 +165,7 @@ CFE_Status_t TO_LAB_SendDataTypesCmd(const TO_LAB_SendDataTypesCmd_t *data)
 CFE_Status_t TO_LAB_SendHkCmd(const TO_LAB_SendHkCmd_t *data)
 {
 
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(TO_LAB_Global.HkTlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(TO_LAB_Global.HkTlm.TelemetryHeader), true);
+    TO_HandleReport(CFE_SUCCESS, 0, &TO_LAB_Global.HkTlm.Payload, sizeof(TO_LAB_Global.HkTlm.Payload));
 
     return CFE_SUCCESS;
 }

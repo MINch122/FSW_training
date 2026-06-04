@@ -32,13 +32,12 @@
 #ifndef GPS_INTERFACE_CFG_H
 #define GPS_INTERFACE_CFG_H
 
-/**
- * \brief Length of string buffer in the Display Value command
- *
- * The Display Value command offers an example of how to use command
- * parameters of different types.  This macro controls the length
- * of the string parameter.
- */
-#define GPS_STRING_VAL_LEN 10
+
+#define GPS_MISSION_REPORT_DATA_SIZE        256
+
+#define GPS_MISSION_REPORT_RETTYPE_APP      4
+
+#define GPS_MISSION_REPORT_RETTYPE_HW       5
+
 
 #endif

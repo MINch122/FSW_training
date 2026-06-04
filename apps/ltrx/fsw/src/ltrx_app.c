@@ -103,9 +103,10 @@ static int32_t LTRX_TransportWrapper(const void *tx_buf,
 
         if (rc == 0)
         {
-            OS_printf("LTRX_TransportWrapper TX error: node=%u port=%u tx_len=%u rc=%ld\n",
-                      (unsigned)CSP_NODE_LTRX, (unsigned)LTRX_CSP_TX_PORT,
-                      (unsigned)tx_len, (long)rc);
+            CFE_EVS_SendEvent(LTRX_TX_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "LTRX: TX error node=%u port=%u tx_len=%u rc=%ld",
+                              (unsigned)CSP_NODE_LTRX, (unsigned)LTRX_CSP_TX_PORT,
+                              (unsigned)tx_len, (long)rc);
             return -1;
         }
 
@@ -114,8 +115,9 @@ static int32_t LTRX_TransportWrapper(const void *tx_buf,
 
     if (rx_buf == NULL || rx_size == 0 || s_LtrxListenSocket == NULL)
     {
-        OS_printf("LTRX_TransportWrapper RX setup error: rx_buf=%p rx_size=%ld listen_socket=%p\n",
-                  rx_buf, (long)rx_size, s_LtrxListenSocket);
+        CFE_EVS_SendEvent(LTRX_RX_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "LTRX: RX setup error rx_buf=%p rx_size=%ld listen=%p",
+                          rx_buf, (long)rx_size, s_LtrxListenSocket);
         return -1;
     }
 
@@ -125,8 +127,6 @@ static int32_t LTRX_TransportWrapper(const void *tx_buf,
 
     if (conn == NULL)
     {
-        // OS_printf("LTRX_TransportWrapper RX accept error: port=%u timeout_ms=%u\n",
-        //           (unsigned)LTRX_CSP_RX_PORT, (unsigned)timeout_ms);
         return -1;
     }
 
@@ -149,25 +149,21 @@ static int32_t LTRX_TransportWrapper(const void *tx_buf,
 
     if (rc <= 0)
     {
-        OS_printf("LTRX_TransportWrapper RX read error: port=%u timeout_ms=%u rc=%ld\n",
-                  (unsigned)LTRX_CSP_RX_PORT, (unsigned)timeout_ms, (long)rc);
+        CFE_EVS_SendEvent(LTRX_RX_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "LTRX: RX read error port=%u timeout=%u rc=%ld",
+                          (unsigned)LTRX_CSP_RX_PORT, (unsigned)timeout_ms, (long)rc);
         (void)csp_close(conn);
         return -1;
     }
 
     if (csp_conn_dport(conn) != LTRX_CSP_RX_PORT)
     {
-        OS_printf("LTRX_TransportWrapper RX port mismatch: expected=%u actual=%d len=%ld\n",
-                  (unsigned)LTRX_CSP_RX_PORT, csp_conn_dport(conn), (long)rc);
+        CFE_EVS_SendEvent(LTRX_RX_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "LTRX: RX port mismatch expected=%u actual=%d len=%ld",
+                          (unsigned)LTRX_CSP_RX_PORT, csp_conn_dport(conn), (long)rc);
         (void)csp_close(conn);
-        
+        return -1;
     }
-
-    for(int i = 0; i < rc; i++)
-    {
-        OS_printf("%02X ", ((uint8_t *)rx_buf)[i]);
-    }  
-    OS_printf("\n");
 
     (void)csp_close(conn);
 

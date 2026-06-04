@@ -47,7 +47,7 @@ typedef struct {
 #define ESUP_MAX_WRITE_LENGTH  1479
 
 #define ESUP_HEADER     0x50555345  // header
-#define MODULE_ID       0x1213         // module ID
+//#define MODULE_ID       0x1213         // module ID
 
 // Command Status
 #define ESUP_ACK        0x0005
@@ -120,5 +120,6 @@ typedef struct {
 
 int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * data, uint16_t length, void * rxdata, uint16_t rxlength);
 long latch_ms(void);
+int32_t ESUP_ACK_CMD(uint16_t comm_stt, uint16_t comm, uint16_t type);
 
 #endif

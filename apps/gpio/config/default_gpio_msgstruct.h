@@ -35,6 +35,7 @@
 #include "gpio_mission_cfg.h"
 #include "gpio_msgdefs.h"
 #include "cfe_msg_hdr.h"
+#include "rpt_interface_cfg.h"
 
 /*************************************************************************/
 
@@ -99,6 +100,36 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+} GPIO_StxEnOnCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+} GPIO_StxEnOffCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+} GPIO_AdcsEnOnCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+} GPIO_AdcsEnOffCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+} GPIO_AdcsBootOnCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+} GPIO_AdcsBootOffCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
 } GPIO_SpInRead5sCmd_t;
 /*************************************************************************/
 /*
@@ -112,8 +143,25 @@ typedef struct
 
 typedef struct
 {
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+} GPIO_SendBcnCmd_t;
+
+typedef struct
+{
     CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
     GPIO_HkTlm_Payload_t Payload;         /**< \brief Telemetry payload */
 } GPIO_HkTlm_t;
+
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
+    GPIO_BcnTlm_Payload_t Payload;        /**< \brief Telemetry payload */
+} GPIO_BcnTlm_t;
+
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    RPT_Report_t              Report;
+} GPIO_ReportTlm_t;
 
 #endif /* GPIO_MSGSTRUCT_H */

@@ -43,6 +43,25 @@
 #define CSP_PORT_EVENT			((uint8)58)		/**< CSP port used for Events ingestion */
 #define CSP_UNKNOWN_LEN			((int32)-1)		/**< CSP parameter value which is used in `csp_transaction_w_opt` */
 
+#define ADCS_INTERFACE_TRANSPORT_CSP_CAN	((uint8)0u)
+#define ADCS_INTERFACE_TRANSPORT_UART		((uint8)1u)
+#define ADCS_UART_INTERVAL_US				((uint32)1000u)
+#define ADCS_UART_ESCAPE					((uint8)0x1Fu)
+#define ADCS_UART_EOM						((uint8)0xFFu)
+#define ADCS_UART_ESCAPE_OFFSET				((uint32)0u)
+#define ADCS_UART_SOM_OFFSET				((uint32)1u)
+#define ADCS_UART_ID_OFFSET					((uint32)2u)
+#define ADCS_UART_HEADER_SIZE_PLAIN			((uint32)3u)
+#define ADCS_UART_FOOTER_SIZE				((uint32)2u)
+#define ADCS_UART_SOM_NORMAL_PLAIN			((uint8)0x7Fu)
+#define ADCS_UART_SOM_NACK_PLAIN			((uint8)0x0Fu)
+#define ADCS_UART_SOM_ACK_PLAIN				((uint8)0x07u)
+#define ADCS_UART_SOM_NORMAL_PASS			((uint8)0x7Eu)
+#define ADCS_UART_SOM_NACK_PASS				((uint8)0x0Eu)
+#define ADCS_UART_SOM_ACK_PASS				((uint8)0x06u)
+#define ADCS_UART_FLUSH_TIMEOUT_MS			((uint32)0u)
+#define ADCS_UART_RX_NEXT_BYTE_TIMEOUT_MS	((uint32)5u)
+#define ADCS_UART_PROTOCOL_BUFFER_SIZE		((uint32)512u)
 
 /*
 // CubeADCS Log Frame Max Entry Number
@@ -104,6 +123,7 @@ typedef struct CubeADCS_TlmLogFrameStruct_Test {
  * @brief Set Endpoint parameter
  */
 void CUBE_EndpointInit(void);
+int32 ADCS_SetInterfaceTransport(uint8 transport);
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -129,6 +149,7 @@ int32 ADCS_SetControlEstimationMode(const ADCS_ControlEstimationModeCmd_Payload_
 int32 ADCS_SetDisableMagRwlMntMng(const ADCS_DisableMagRwlMntMngCmd_Payload_t *setVal);	// 43
 int32 ADCS_SetReferenceIRCVector(const ADCS_ReferenceIRCVectorCmd_Payload_t *setVal);	// 47
 int32 ADCS_SetReferenceLLHTarget(const ADCS_ReferenceLLHTargetCmd_Payload_t *setVal);	// 48
+int32 ADCS_SetCommandedGNSSMeasurements(const ADCS_CommandedGNSSMeasurementsCmd_Payload_t *setVal); // 49
 int32 ADCS_SetOrbitMode(const ADCS_OrbitModeCmd_Payload_t *setVal);	// 51
 int32 ADCS_SetMagDeploy(const ADCS_MagDeployCmd_Payload_t *setVal);	// 52
 int32 ADCS_SetReferenceRPYValues(const ADCS_ReferenceRPYvaluesCmd_Payload_t *setVal);	// 54
@@ -191,6 +212,7 @@ int32 ADCS_GetEstimationMode(ADCS_EstimationModeTlm_Payload_t *returnVal);	// 19
 int32 ADCS_GetOperationalState(ADCS_OperationalStateTlm_Payload_t *returnVal);	// 200
 int32 ADCS_GetRawCSSSensor(ADCS_RawCSSSensorTlm_Payload_t *returnVal);	// 203
 int32 ADCS_GetRawGYRSensor(ADCS_RawGYRSensorTlm_Paylaod_t *returnVal);	// 204
+int32 ADCS_GetRawRWLSensor(ADCS_RawRWLSensorTlm_Payload_t *returnVal);	// 205
 int32 ADCS_GetCalibratedGYRSensor(ADCS_CalibratedGYRSensorTlm_Payload_t *returnVal);	// 207
 int32 ADCS_GetDataFrame(ADCS_DataFrameTlm_Payload_t *returnVal);	// 219
 int32 ADCS_GetInfoFramInMemory(ADCS_InfoFrameInMemoryTlm_Payload_t *returnVal);	// 220

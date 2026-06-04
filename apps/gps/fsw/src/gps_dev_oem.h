@@ -22,7 +22,7 @@ typedef struct {
     uint16 responseErrorCount;
     uint16 lastResponseEnum;
     uint16 lastResponseMessageId;
-} GRX_DeviceData_Counters_t;
+} GPS_DeviceData_Counters_t;
 
 /**
  * @brief Initializes OEM7 driver. Call this once and once only at the App
@@ -45,7 +45,7 @@ void GPS_Device_ClearCounters(void);
 /**
  * @brief Copies the device log counters.
  */
-void GPS_Device_GetCounters(GRX_DeviceData_Counters_t* hk);
+void GPS_Device_GetCounters(GPS_DeviceData_Counters_t* hk);
 
 /**
  * @brief Loads the dynamically linkable file named @a filename and stores
@@ -61,10 +61,10 @@ void GPS_Device_GetCounters(GRX_DeviceData_Counters_t* hk);
  * @param functionName  Function name.
  * @param[out] pfunc    Pointer to a function pointer for the symbol to be stored.
  * @param options       Options for dlopen().
- * @return  GRX_UTILS_SUCCESS: Success.
- *          GRX_UTILS_ERR_NULL: Null @a functionName.
- *          GRX_UTILS_ERR_MODULE_LOAD: dlopen() failed.
- *          GRX_UTILS_ERR_SYMBOL_LOAD: dlsym() failed.
+ * @return  GPS_UTILS_SUCCESS: Success.
+ *          GPS_UTILS_ERR_NULL: Null @a functionName.
+ *          GPS_UTILS_ERR_MODULE_LOAD: dlopen() failed.
+ *          GPS_UTILS_ERR_SYMBOL_LOAD: dlsym() failed.
  */
 int GPS_Device_LoadFunctionSymbol(const char* filename,
                                   const char* functionName,

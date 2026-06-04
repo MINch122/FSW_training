@@ -41,7 +41,6 @@
 #define LTRX_SESSION_START_DOWNLINK_CC    10  // Start downlink
 #define LTRX_SESSION_ABORT_CC             11  // Abort session
 #define LTRX_SESSION_RESET_STATE_CC       12  // Reset session
-// #define LTRX_SESSION_SET_MODE_CC          13 // Set session mode/options (e.g., retry/timeout)
 
 #define LTRX_QUERY_BEACON_STATUS_CC       30 // Type ID 23
 #define LTRX_QUERY_GNSS_INFO_CC           31 // Type ID 21

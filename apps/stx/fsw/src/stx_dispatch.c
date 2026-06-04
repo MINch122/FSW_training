@@ -84,6 +84,7 @@ void STX_Basic_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
     */
     switch (CommandCode)
     {
+        /********************************************************************************************************************* */
         case STX_NOOP_CC:
             if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_NoopCmd_t)))
             {
@@ -97,22 +98,20 @@ void STX_Basic_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
                 STX_ResetCountersCmd((const STX_ResetCountersCmd_t *)SBBufPtr);
             }
             break;
-            
-        default:
-            CFE_EVS_SendEvent(STX_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
-                              CommandCode);
+
+        case STX_PARAM_INIT_CC :
+            if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_ParamInitCmd_t))){
+                STX_ParamInitCmd((const STX_ParamInitCmd_t *)SBBufPtr);
+            }
             break;
-    }
-}
 
-/* set + file command*/
-void STX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
-    CFE_MSG_FcnCode_t CommandCode = 0;
+        case STX_MODULE_ID_INIT_CC :
+            if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_ModuleIdInitCmd_t))){
+                STX_ModuleIdInitCmd((const STX_ModuleIdInitCmd_t *)SBBufPtr);
+            }
+            break;
 
-    CFE_MSG_GetFcnCode(&SBBufPtr->Msg, &CommandCode);
-
-    switch (CommandCode)
-    {
+        /********************************************************************************************************************** */
         case STX_SET_SYMBOLRATE:
             if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_Set_SYMBOLRAtE_t)))
             {
@@ -201,6 +200,8 @@ void STX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
             }
             break;
 
+        /******************************************************************************************************************************* */
+
         case STX_FILESYS_CC_DIR:
             if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_Set_t)))
             {
@@ -271,6 +272,8 @@ void STX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
                 STX_SENDFILE_WITH_ERROR_Cmd((const STX_SENDFILE_t *)SBBufPtr);
             }
 
+        /**************************************************************************************************** */
+
         case STX_SYSCONF_CC_TRANSMITMODE:
             if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_Set_t)))
             {
@@ -318,29 +321,8 @@ void STX_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
             // }
             break;
 
-        default:
-            CFE_EVS_SendEvent(STX_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
-                              CommandCode);
-            break;
-    }
-    STX_Data.CmdCounter ++;
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(STX_Data.SetTlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(STX_Data.SetTlm.TelemetryHeader), true);
-}
+        /************************************************************************************************************* */
 
-/* get */
-void STX_ProcessRequestedTelemetry(const CFE_SB_Buffer_t *SBBufPtr)
-{
-    CFE_MSG_FcnCode_t CommandCode = 0;
-
-    CFE_MSG_GetFcnCode(&SBBufPtr->Msg, &CommandCode);
-
-    /*
-    ** Process SAMPLE app ground commands
-    */
-
-    switch (CommandCode)
-    {
         case STX_GET_SYMBOL_RATE:
             if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_Get_t))) {
 
@@ -411,17 +393,15 @@ void STX_ProcessRequestedTelemetry(const CFE_SB_Buffer_t *SBBufPtr)
                STX_GET_MODULATOR_DATA_INTERFACECmd();
             }
             break;
-
-        /* default case already found during FC vs length test */
+            
         default:
-            CFE_EVS_SendEvent(STX_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d", CommandCode);
+            CFE_EVS_SendEvent(STX_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
+                              CommandCode);
             break;
-
-        STX_Data.CmdCounter ++;
-        CFE_SB_TimeStampMsg(CFE_MSG_PTR(STX_Data.GetTlm.TelemetryHeader));
-        CFE_SB_TransmitMsg(CFE_MSG_PTR(STX_Data.GetTlm.TelemetryHeader), true);
-
     }
+
+    STX_Data.CmdCounter ++;
+
 }
 
 
@@ -441,12 +421,6 @@ void STX_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
     {
         case STX_CMD_MID:
             STX_Basic_ProcessGroundCommand(SBBufPtr);
-            break;
-        case STX_SEND_SET_MID:
-            STX_ProcessGroundCommand(SBBufPtr);
-            break;
-        case STX_SEND_GET_MID:
-            STX_ProcessRequestedTelemetry(SBBufPtr);
             break;
         case STX_SEND_HK_MID:
             STX_SendHkCmd();

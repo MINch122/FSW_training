@@ -1,0 +1,150 @@
+[32mftp_handler_thread: CSP buffers request received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/upload_single_rdp.bin, size 100, chunk size 185[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/upload_single_udp.bin, size 100, chunk size 185[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/upload_exact_rdp.bin, size 1000, chunk size 200[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/upload_exact_udp.bin, size 1000, chunk size 200[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/upload_partial.bin, size 1023, chunk size 200[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/upload_many_rdp.bin, size 65536, chunk size 185[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/upload_many_udp.bin, size 65536, chunk size 185[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/upload_empty.bin, size 0, chunk size 185[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/upload_repeat.bin, size 800, chunk size 185[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/upload_repeat.bin, size 800, chunk size 185[0m
+[31minit_upload: local target ./ftpn_s/upload_repeat.bin exists but bitmap doesn't[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_download_request: download request received[0m
+[32mftp_handler_download_request: file opened successfully, size 120, chunks 1[0m
+[32mftp_handler_status_reply: status reply received[0m
+[32mftp_handler_status_reply: status: 0/1 chunks complete, 1 entries[0m
+[32mftp_handler_status_reply: entry 0: next 0, count 1[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_download_request: download request received[0m
+[32mftp_handler_download_request: file opened successfully, size 120, chunks 1[0m
+[32mftp_handler_status_reply: status reply received[0m
+[32mftp_handler_status_reply: status: 0/1 chunks complete, 1 entries[0m
+[32mftp_handler_status_reply: entry 0: next 0, count 1[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_download_request: download request received[0m
+[32mftp_handler_download_request: file opened successfully, size 4096, chunks 23[0m
+[32mftp_handler_status_reply: status reply received[0m
+[32mftp_handler_status_reply: status: 0/23 chunks complete, 1 entries[0m
+[32mftp_handler_status_reply: entry 0: next 0, count 23[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_download_request: download request received[0m
+[32mftp_handler_download_request: file opened successfully, size 4096, chunks 23[0m
+[32mftp_handler_status_reply: status reply received[0m
+[32mftp_handler_status_reply: status: 0/23 chunks complete, 1 entries[0m
+[32mftp_handler_status_reply: entry 0: next 0, count 23[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_download_request: download request received[0m
+[32mftp_handler_download_request: file opened successfully, size 65536, chunks 355[0m
+[32mftp_handler_status_reply: status reply received[0m
+[32mftp_handler_status_reply: status: 0/355 chunks complete, 1 entries[0m
+[32mftp_handler_status_reply: entry 0: next 0, count 355[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_download_request: download request received[0m
+[31mftp_handler_download_request: failed to open file ./ftpn_s/definitely_not_there_xyz.bin: No such file or directory[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/crc_up.bin, size 2048, chunk size 185[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_download_request: download request received[0m
+[32mftp_handler_download_request: file opened successfully, size 2048, chunks 12[0m
+[32mftp_handler_status_reply: status reply received[0m
+[32mftp_handler_status_reply: status: 0/12 chunks complete, 1 entries[0m
+[32mftp_handler_status_reply: entry 0: next 0, count 12[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_thread: ping received[0m
+[32mftp_handler_thread: CSP buffers request received[0m
+[32mftp_handler_thread: timeout get request received[0m
+[32mftp_handler_thread: timeout set request received[0m
+[32mftp_handler_thread: timeout get request received[0m
+[32mftp_ext_handler_log_request: log request received[0m
+[32mftp_handler_thread: ping received[0m
+[32mftp_handler_thread: ping received[0m
+[32mftp_handler_download_request: download request received[0m
+[31mftp_handler_download_request: failed to open file ./ftpn_s/nope_log.bin: No such file or directory[0m
+[32mftp_handler_done: done received[0m
+[32mftp_ext_handler_log_request: log request received[0m
+[32mftp_ext_handler_log_request: log request received[0m
+[32mftp_handler_download_request: download request received[0m
+[31mftp_handler_download_request: failed to open file ./ftpn_s/nope_entry.bin: No such file or directory[0m
+[32mftp_handler_done: done received[0m
+[32mftp_ext_handler_log_request: log request received[0m
+[32mftp_ext_shell_cmd: shell command request received: true[0m
+[32mftp_ext_shell_cmd: shell command request received: false[0m
+[32mftp_ext_shell_cmd: shell command request received: /nonexistent/binary_xyz[0m
+sh: 1: /nonexistent/binary_xyz: not found
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/seq_0.bin, size 500, chunk size 185[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/seq_1.bin, size 637, chunk size 185[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/seq_2.bin, size 774, chunk size 185[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_thread: CSP buffers request received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/leakcheck_0.bin, size 2048, chunk size 185[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/leakcheck_1.bin, size 2048, chunk size 185[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_upload_request: upload request received, path ./ftpn_s/leakcheck_2.bin, size 2048, chunk size 185[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_status_request: status request received[0m
+[32mftp_handler_crc_request: CRC request received[0m
+[32mftp_handler_done: done received[0m
+[32mftp_handler_thread: CSP buffers request received[0m
+[32mftp_handler_thread: CSP buffers request received[0m

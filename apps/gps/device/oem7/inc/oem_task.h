@@ -8,44 +8,95 @@
 #define _OEM_TASK_H_
 
 #include "oem_config.h"
-#include "oem_basetype.h"
+#include "oem_types.h"
 
 typedef enum {
-    TASK_MAIN       = 1, /* Returend from OEM_Task_ReadTaskSingleRun. */
-    TASK_RESPONSE   = 2, /* Returend from ProcessMessage (response handler). */
-    TASK_LOG        = 3, /* Returend from _DoLogHandle (log handler). */
-    TASK_CALLBACK   = 4, /* Returend from a log handler callback. */
+    TASK_MAIN       = 1, /* Returned from oem_task_read_single_reply. */
+    TASK_RESPONSE   = 2, /* Returned from process_reply (response handler). */
+    TASK_LOG        = 3, /* Returned from oem_log_do_handle (log handler). */
+    TASK_CALLBACK   = 4, /* Returned from a log handler callback. */
 } oem_task_tasklevel;
  
 typedef struct {
-    oem_enum respId;     /* Response ID, if the message was a Response. */
-    int callbackExecCnt; /* Number of executed log callbacks. */
-    oem_short mid;       /* Message ID. */
-    oem_crc msgCrc;
-    uint8_t taskLevel;   /* Last called handling procedure. See oem_task_tasklevel. */
-    bool isResponse;     /* Was it a Response message? */
-    bool critFailure;    /* Marked true if the handler went broken. */
-    bool crcReadSkipped;
+    /* handling context */
+    uint8_t     task_level;     /* Last called handling procedure. See oem_task_tasklevel. */
+    int         cb_exec_count;  /* Number of executed log callbacks.    */
+
+    /* message info */
+    oem_short   message_id;     /* Message ID.                          */
+    oem_enum    response_id;    /* Response ID, if it was a Response.   */
+    oem_ushort  message_length; /* Body length in bytes.                */
+    oem_crc     crc_received;   /* CRC at the tail of the message.      */
+    oem_crc     crc_calced;     /* CRC calculated from the message.     */
+
+    /* flags */
+    bool        is_response;    /* Was it a Response message?           */
+    bool        crit_failure;   /* Did handler go broken?               */
+    bool        crc_read_skipped;    /* Was the CRC read skipped?       */
 } oem_task_context_t;
 
 /**
- * @brief Process a single receiver message from the serial port.
- *
- * @param physicalPort  Physical port index to read from. Use the designated
- *                      indices from OEM_InitPhysicalPort().
- * @param[out] ctx      Log handling context.
- * @return OEM_OK if successful. An oem_ret error code otherwise. See 
- *         ctx->taskLevel to determine where it returned.
- */
-int OEM_Task_ReadTaskSingleRun(int physicalPort,
-                               oem_task_context_t* ctx);
-
-/**
- * @brief Returns if @a msg has the correct sync word in the first three bytes.
+ * @brief Process a single reply message from the OEM receiver.
  * 
- * @param msg An OEM message (minimum three bytes).
- * @return true if sync matches. false otherwise or @a msg is NULL.
+ * @details
+ *       - Drives the full reply pipeline for a single message: pulls bytes
+ *         from the I/O interface buffer, assembles them into a complete 
+ *         packet via the state machine, then dispatches the packet either as
+ *         a response or through the matching log handler and its registered
+ *         callbacks.
+ *
+ *       - Because the call climbs several layers up, the meaning of a non-OK
+ *         return depends on where it gave up. Inspect @a ctx after the call:
+ *         @c ctx->task_level identifies the layer (TASK_MAIN / TASK_RESPONSE /
+ *         TASK_LOG / TASK_CALLBACK), and the remaining ctx fields carry
+ *         whatever the layer learned before bailing out. Pass NULL for @a ctx
+ *         if you don't need the introspection — an internal scratch context
+ *         is used.
+ *
+ * @param iface_idx  I/O interface index to read from. Use the designated
+ *                   indices from oem_io_init_interface().
+ * @param timeout    Timeout in milliseconds to wait for a complete message.
+ * @param[out] ctx   Log handling context. After the call, this will contain
+ *                   the message info and handling context. Null allowed.
+ *
+ * @return OEM_OK: Successful.
+ *
+ *       - If returned from the task layer (ctx->task_level == TASK_MAIN):
+ *         OEM_ERR_IO_IFACE_INDEX: Invalid @a iface_idx.
+ *         OEM_ERR_IO_IFACE_UNSET: The interface is not initialized.
+ *         OEM_ERR_IO_TIMEOUT: No complete message was read before the timeout.
+ *         OEM_ERR_LOG_HEADER_SIZE: header.headerLength field does not match
+ *                                  the expected size.
+ *         OEM_ERR_LOG_RESP_SIZE: Response message shorter than the minimum
+ *                                (header + responseId).
+ *         OEM_ERR_LOG_TOO_LARGE: Declared message length exceeds
+ *                                OEM_TASK_STATE_MACHINE_BUF_SIZE.
+ *         OEM_ERR_LOG_CRC: CRC mismatch.
+ *         Any other negative code returned by the underlying read callback.
+ * 
+ *       - If returned from the response handler (ctx->task_level == TASK_RESPONSE):
+ *         Currently no error is returned from this layer.
+ * 
+ *       - If returned from the handler layer (ctx->task_level == TASK_LOG):
+ *         OEM_ERR_LOG_STRAY: No handler registered for this log message.
+ *         OEM_ERR_LOG_BODY_SIZE: Message size does not match the handler's expectation.
+ *         OEM_ERR_LOG_MISSING_CRC: CRC was expected but did not arrive within timeout.
+ *         OEM_ERR_NOBUF: Handler's recent message buffer is not set (critical).
+ *         
+ *       - If returned from a log handler callback (ctx->task_level == TASK_CALLBACK):
+ *         OEM_ERR_NOT_FOUND: Callback node exists but the callback is null (critical).
+ *         OEM_ERR_UTILS_LIST_NULL: Callback list is null (critical).
+ *         Any other error code returned by the callback itself.
+ * 
+ *       - Unexpected error codes during normal operation:
+ *         OEM_ERR_NULL: required pointer argument is null.
+ *         OEM_ERR_LOG_SM_STATE: invalid sm->state encountered.
+ *         OEM_ERR_LOG_SM_TARGET: invalid sm->target encountered.
+ *         OEM_ERR_LOG_SM_PREFILL: more bytes fed than expected (fill prep state).
+ *         OEM_ERR_LOG_SM_SIZE_MISMATCH: fed bytes don't match the expected (validation state).
  */
-bool OEM_Task_IsSynced(const void* msg);
+int oem_task_read_single_reply(int iface_idx,
+                               uint16_t timeout,
+                               oem_task_context_t* ctx);
 
 #endif

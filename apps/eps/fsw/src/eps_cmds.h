@@ -47,10 +47,15 @@ CFE_Status_t EPS_ResetCountersCmd(const EPS_ResetCountersCmd_t *Msg);
 /*
  * SendBcn: refreshes EPS beacon data from hardware and transmits the beacon
  * telemetry packet on the software bus. No payload fields.
+ *
+ * Beacon byte meanings:
+ * - PMU.sm_en_mask: bit0..7 = PMU submodule enable status 0..7, 1=enabled.
+ * - PDU.out_i/out_en: channels 8,10,12,14,15,18,19,20,21,22,23,24.
  */
 CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg);
 /*
  * ReportBcn: refreshes beacon data and prints a human-readable beacon report.
+ * Uses the same packed byte meanings documented on EPS_SendBcnCmd.
  */
 CFE_Status_t EPS_ReportBcnCmd(const EPS_ReportBcnCmd_t *Msg);
 

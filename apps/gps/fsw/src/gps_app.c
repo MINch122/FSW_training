@@ -201,16 +201,15 @@ void GPS_SendReport(const void* cmd,
     CFE_MSG_Init(CFE_MSG_PTR(GPS_AppData.Report.TelemetryHeader),
                  CFE_SB_ValueToMsgId(GPS_REPORT_TLM_MID),
                  sizeof(GPS_AppData.Report));
-    GPS_AppData.Report.Payload.MsgID = (uint16_t)CFE_SB_MsgIdToValue(cmdMid);
+    GPS_AppData.Report.Payload.MsgID = CFE_SB_MsgIdToValue(cmdMid);
     GPS_AppData.Report.Payload.CommandCode = cmdCode;
     GPS_AppData.Report.Payload.ReturnType = retType;
     GPS_AppData.Report.Payload.ReturnCode = retCode;
-    GPS_AppData.Report.Payload.ReturnDataSize = dataSize;
+    uint16 CopySize = dataSize > RPT_RET_VALUE_BUF_SIZE ? RPT_RET_VALUE_BUF_SIZE : dataSize;
+    GPS_AppData.Report.Payload.ReturnDataSize = CopySize;
     if (data && dataSize)
         memcpy(GPS_AppData.Report.Payload.ReturnValue,
                data,
-               dataSize > RPT_RET_VALUE_BUF_SIZE 
-                        ? RPT_RET_VALUE_BUF_SIZE
-                        : dataSize);
+               CopySize);
    CFE_SB_TransmitMsg(CFE_MSG_PTR(GPS_AppData.Report.TelemetryHeader), true);
 }

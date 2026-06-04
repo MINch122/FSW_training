@@ -43,8 +43,9 @@ typedef struct {
     /**
      * MISSION Tlm struct
      */
-    MISSION_HkTlm_t HkTlm;
-    MISSION_BcnTlm_t BcnTlm;
+    MISSION_HkTlm_t     HkTlm;
+    MISSION_BcnTlm_t    BcnTlm;
+    MISSION_ReportTlm_t Report;
 
     osal_id_t            LEOPDataHandle;
     osal_id_t            LEOPFileMutex;

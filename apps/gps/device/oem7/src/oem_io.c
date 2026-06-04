@@ -20,254 +20,218 @@ typedef struct {
     size_t head;
     size_t tail;
     size_t count;
+    size_t capacity;
 } oem_readbuf_t;
 
 typedef struct {
     int index;
     oem_io_write_t write;
-    oem_io_read_t read;
-    oem_readbuf_t rbuf;
+    oem_io_read_t  read;
+    oem_readbuf_t  rbuf;
     bool initialized;
-} oem_physical_port_t;
+} oem_io_interface_t;
 
-static oem_physical_port_t ports[OEM_PHYSICAL_PORTS];
 
-static int InitReadBuf(oem_readbuf_t* rbuf)
+static oem_io_interface_t interfaces[OEM_IO_INTERFACES];
+
+static oem_io_interface_t* get_ifc(int iface_idx)
+{
+    if (iface_idx < 0 || iface_idx >= OEM_IO_INTERFACES)
+        return NULL;
+    return &interfaces[iface_idx];
+}
+
+static int init_rbuf(oem_readbuf_t* rbuf, size_t buf_size)
 {
     if (!rbuf)
         return OEM_ERR_NULL;
 
-    rbuf->buffer = malloc(OEM_UTILS_READBUF_SIZE);
+    rbuf->buffer = malloc(buf_size);
     if (rbuf->buffer == NULL)
         return OEM_ERR_NOMEM;
     
     rbuf->head = 0;
     rbuf->tail = 0;
     rbuf->count = 0;
+    rbuf->capacity = buf_size;
 
     return OEM_OK;
 }
-static int BufferFeed(oem_physical_port_t* port,
-                      uint16_t timeout)
-{
-    int ret;
-    size_t unfilled;
 
-    if (!port)
-        return OEM_ERR_NULL;
-    
-    unfilled = OEM_UTILS_READBUF_SIZE - port->rbuf.head;
-    if (unfilled == 0) 
-        return 0;
-
-    ret = port->read(port->index,
-                     port->rbuf.buffer + port->rbuf.head,
-                     unfilled,
-                     timeout);
-
-    if (ret >= 0) {
-        port->rbuf.count += ret;
-        port->rbuf.head += ret;
-    }
-    else {
-        DebugError("Buffer feed error: %d\n", ret);
-        return -1;
-    }
-
-    return ret;
-}
-
-/**
- * Try to dump @a size bytes from the rbuf into @a data.
- * Returns actually dumped bytes. Rewinds the buffer if no data is left
- * after the call.
- */
-static size_t BufferConsume(oem_readbuf_t* rbuf,
-                            void* data,
-                            size_t size)   
-{
-    size_t consumed;
-
-    if (!data || !rbuf)
-        return 0;
-
-    if (rbuf->count == 0)
-        return 0;
-
-    consumed = rbuf->count > size ? size : rbuf->count;
-    memcpy(data, rbuf->buffer + rbuf->tail, consumed);
-    rbuf->count -= consumed;
-
-    /**
-     * Rewind the buffer if there is nothing left.
-     */
-    if (rbuf->count == 0) {
-        rbuf->head = 0;
-        rbuf->tail = 0;
-    }
-    else {
-        rbuf->tail += consumed;
-    }
-
-    return consumed;
-}
-
-int OEM_IO_PortInit(int portIndex,
+static int init_ifc(int iface_idx,
+                    size_t buf_size,
                     oem_io_write_t writeFunc,
                     oem_io_read_t readFunc)
 {
-    int ret;
+    oem_io_interface_t* ifc = get_ifc(iface_idx);
+    if (!ifc)
+        return OEM_ERR_IO_IFACE_INDEX;
 
-    if (portIndex < 0 || portIndex > OEM_PHYSICAL_PORTS)
-        return OEM_ERR_IO_PORT_INDEX; 
     if (!writeFunc || !readFunc)
         return OEM_ERR_NULL;
 
-    if (ports[portIndex].initialized)
+    if (ifc->initialized)
         return OEM_ERR_EXISTS;
 
-    ret = InitReadBuf(&ports[portIndex].rbuf);
+    int ret = init_rbuf(&ifc->rbuf, buf_size);
     if (ret != OEM_OK)
         return ret;
-
-    ports[portIndex].index = portIndex;
-    ports[portIndex].write = writeFunc;
-    ports[portIndex].read = readFunc;
-    ports[portIndex].initialized = true;
+    ifc->index = iface_idx;
+    ifc->write = writeFunc;
+    ifc->read = readFunc;
+    ifc->initialized = true;
 
     return OEM_OK;
 }
 
-int OEM_IO_PortDelete(int portIndex)
+static int delete_ifc(int iface_idx)
 {
-    if (portIndex < 0 || portIndex > OEM_PHYSICAL_PORTS)
-        return OEM_ERR_IO_PORT_INDEX;
-    
-    if (!ports[portIndex].initialized)
+    oem_io_interface_t* ifc = get_ifc(iface_idx);
+    if (!ifc)
+        return OEM_ERR_IO_IFACE_INDEX;
+
+    if (!ifc->initialized)
         return OEM_OK;
 
-    if (ports[portIndex].rbuf.buffer)
-        free(ports[portIndex].rbuf.buffer);
+    if (ifc->rbuf.buffer)
+        free(ifc->rbuf.buffer);
     
-    memset(&ports[portIndex], 0, sizeof(ports[portIndex]));
+    memset(ifc, 0, sizeof(*ifc));
 
     return OEM_OK;
 }
 
-int OEM_IO_PortWrite(int portIndex,
-                     const void* data,
-                     size_t size)
+int oem_io_init_interface(int iface_idx,
+                          size_t read_buf_size,
+                          oem_io_write_t write_callback,
+                          oem_io_read_t read_callback)
 {
-    int ret;
+    return init_ifc(iface_idx,
+                    read_buf_size == 0 ? OEM_IO_DEFAULT_READBUF_SIZE : read_buf_size,
+                    write_callback,
+                    read_callback);
+}
 
-    if (portIndex < 0 || portIndex > OEM_PHYSICAL_PORTS)
-        return OEM_ERR_IO_PORT_INDEX;
+int oem_io_delete_interface(int iface_idx)
+{
+    return delete_ifc(iface_idx);
+}
 
-    if (!ports[portIndex].initialized)
-        return OEM_ERR_IO_PORT_UNSET;
+int oem_io_write(int iface_idx,
+                 const void* data,
+                 size_t size)
+{
+    oem_io_interface_t* ifc = get_ifc(iface_idx);
+    if (!ifc)
+        return OEM_ERR_IO_IFACE_INDEX;
 
-    if (ports[portIndex].write == NULL)
+    if (!ifc->initialized || !ifc->write)
+        return OEM_ERR_IO_IFACE_UNSET;
+
+    if (!data || size == 0)
         return OEM_ERR_NULL;
-    
-    ret = ports[portIndex].write(portIndex, data, size);
 
-    if (ret < 0 || (size_t) ret != size)
-        return OEM_ERR_WRITE;
+    int ret = ifc->write(iface_idx, data, size);
+    if (ret < 0)
+        return ret;
+    if (ret != (int)size)
+        return OEM_ERR_IO_WRITE_PARTIAL;
 
     return OEM_OK;
 }
 
-#define TP_TIMEDIFF(tp1, tp2)   (((tp2).tv_sec - (tp1).tv_sec) * 1000 \
-                                  + ((tp2).tv_nsec - (tp1).tv_nsec) / 1000000)
-
-int OEM_IO_PortRead(int portIndex,
-                    void* data,
-                    size_t size,
-                    uint16_t timeout)
+size_t oem_io_available(int iface_idx)
 {
-    oem_physical_port_t* port;
-    struct timespec tp1, tp2;
-    size_t dumped;
-    size_t remaining;
-    uint16_t waitms;
-    uint32_t elapsed = 0;
-    long longdiff;
-    int ret;
+    oem_io_interface_t* ifc = get_ifc(iface_idx);
+    if (!ifc)
+        return 0;
+
+    if (!ifc->initialized)
+        return 0;
+
+    return ifc->rbuf.count;
+}
+
+int oem_io_peek(int iface_idx,
+                const void** data,
+                size_t* size)
+{
+    oem_io_interface_t* ifc = get_ifc(iface_idx);
+    if (!ifc)
+        return OEM_ERR_IO_IFACE_INDEX;
+    
+    if (!ifc->initialized)
+        return OEM_ERR_IO_IFACE_UNSET;
 
     if (!data)
         return OEM_ERR_NULL;
 
-    if (portIndex < 0 || portIndex > OEM_PHYSICAL_PORTS)
-        return OEM_ERR_IO_PORT_INDEX;
+    *data = ifc->rbuf.buffer + ifc->rbuf.tail;
+    if (size)
+        *size = ifc->rbuf.count;
 
-    if (size > OEM_UTILS_READBUF_SIZE) {
-        DebugError("Request for %d bytes exceeds the buffer size %d\n",
-                   size,
-                   OEM_UTILS_READBUF_SIZE);
+    return OEM_OK;
+}
+
+int oem_io_consume(int iface_idx,
+                   size_t size)
+{
+    oem_io_interface_t* ifc = get_ifc(iface_idx);
+    if (!ifc)
+        return OEM_ERR_IO_IFACE_INDEX;
+
+    if (!ifc->initialized)
+        return OEM_ERR_IO_IFACE_UNSET;
+
+    if (size > ifc->rbuf.count)
         return OEM_ERR_RANGE;
-    }
-    port = &ports[portIndex];
-    if (!port->initialized)
-        return OEM_ERR_IO_PORT_UNSET;
 
-    dumped = BufferConsume(&port->rbuf, data, size);
+    ifc->rbuf.count -= size;
+    ifc->rbuf.tail += size;
 
     /**
-     * The buffer had enough bytes.
+     * Rewind the buffer if there is nothing left.
      */
-    if (dumped == size)
-        return OEM_OK;
-
-    /**
-     * Else, we must fetch new data from the port. Repeat until size bytes are
-     * retreived.
-     */
-    remaining = size - dumped;
-
-    clock_gettime(CLOCK_MONOTONIC, &tp1);
-    waitms = timeout;
-
-    while (port->rbuf.count < remaining) {
-
-        /**
-         * Populate the buffer.
-         */
-        ret = BufferFeed(port, waitms);
-    
-        /**
-         * Timeout reached or read error occurred. Break.
-         */
-        if (ret < 0)
-            break;
-
-        clock_gettime(CLOCK_MONOTONIC, &tp2);
-
-        longdiff = TP_TIMEDIFF(tp1, tp2);
-
-        /**
-         * Clock broken.
-         */
-        if (longdiff < 0)
-            return OEM_ERR_IO_CLOCK;
-
-        /**
-         * Prevent possible (pseudo) infinite loop due to
-         * a poor design of the read function.
-         */
-        if (longdiff < 10)
-            longdiff = 10;
-        
-        waitms = longdiff;
-        elapsed += waitms;
-
-        if (elapsed >= timeout)
-            break;
+    if (ifc->rbuf.count == 0) {
+        ifc->rbuf.head = 0;
+        ifc->rbuf.tail = 0;
     }
 
-    if (port->rbuf.count < remaining) {
-        return ret < 0 ? ret : OEM_ERR_TIMEOUT;
+    return OEM_OK;
+}
+
+int oem_io_fill(int iface_idx,
+                uint16_t timeout)
+{
+    oem_io_interface_t* ifc = get_ifc(iface_idx);
+    if (!ifc)
+        return OEM_ERR_IO_IFACE_INDEX;
+    if (!ifc->initialized || !ifc->read)
+        return OEM_ERR_IO_IFACE_UNSET;
+
+    if (ifc->rbuf.count == ifc->rbuf.capacity)
+        return OEM_ERR_FULL;
+ 
+    if (ifc->rbuf.tail > 0) {
+        /* move the remaining data to the beginning of the buffer */
+        memmove(ifc->rbuf.buffer,
+                ifc->rbuf.buffer + ifc->rbuf.tail,
+                ifc->rbuf.count);
+        ifc->rbuf.head = ifc->rbuf.count;
+        ifc->rbuf.tail = 0;
     }
 
-    BufferConsume(&port->rbuf, (uint8_t*) data + dumped, remaining);
+    size_t unfilled = ifc->rbuf.capacity - ifc->rbuf.head;
+    int ret = ifc->read(iface_idx, ifc->rbuf.buffer + ifc->rbuf.head, unfilled, timeout);
+    if (ret < 0) {
+        if (ret != OEM_ERR_IO_TIMEOUT)
+            oem_debug_error("I/O read error for port %d: %d\n",
+                            iface_idx, ret);
+        return ret;
+    }
+
+    ifc->rbuf.count += ret;
+    ifc->rbuf.head += ret;
+
     return OEM_OK;
 }

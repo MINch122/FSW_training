@@ -33,12 +33,15 @@
 #include "adcs_cube_error_typedefs.h"
 #include "adcs_cube_typedefs.h"
 #include "adcs_msg.h"
+#include "cfe_srl.h"
 
 #include <csp/csp.h>
 
 static Handle handle[TYPEDEF__COMMS_ENDPOINT_MAX];
-// static uint8 cspDataBuffer[COMMS_BUFFER_SIZE];
 static TypeDef_TctlmEndpoint endpoint;
+static uint8 ADCS_InterfaceTransportMode = ADCS_INTERFACE_TRANSPORT_CSP_CAN;
+static CFE_SRL_IO_Handle_t *ADCS_UartHandle = NULL;
+static uint8 ADCS_UartProtocolBuffer[ADCS_UART_PROTOCOL_BUFFER_SIZE];
 
 void CUBE_EndpointInit(void)
 {
@@ -57,6 +60,34 @@ void CUBE_EndpointInit(void)
 
 	/* No need */
 	handle->bufferSize = COMMS_BUFFER_SIZE;
+	ADCS_UartHandle = CFE_SRL_ApiGetHandle(CFE_SRL_UART_HANDLE_INDEXER);
+}
+
+int32 ADCS_SetInterfaceTransport(uint8 transport)
+{
+	if (transport == ADCS_INTERFACE_TRANSPORT_CSP_CAN)
+	{
+		ADCS_InterfaceTransportMode = transport;
+		return CFE_SUCCESS;
+	}
+
+	if (transport == ADCS_INTERFACE_TRANSPORT_UART)
+	{
+		if (ADCS_UartHandle == NULL)
+		{
+			ADCS_UartHandle = CFE_SRL_ApiGetHandle(CFE_SRL_UART_HANDLE_INDEXER);
+		}
+
+		if (ADCS_UartHandle == NULL)
+		{
+			return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+		}
+
+		ADCS_InterfaceTransportMode = transport;
+		return CFE_SUCCESS;
+	}
+
+	return CFE_ES_BAD_ARGUMENT;
 }
 
 
@@ -147,6 +178,162 @@ static ErrorCode nack2ErrorCode(uint8 byte)
 	return result;
 }
 
+static void ADCS_UartRxFlush(void)
+{
+	uint8 byte;
+	CFE_SRL_IO_Param_t Params = {0,};
+
+	if (ADCS_UartHandle == NULL)
+	{
+		return;
+	}
+
+	Params.RxData = &byte;
+	Params.RxSize = sizeof(byte);
+	Params.Timeout = ADCS_UART_FLUSH_TIMEOUT_MS;
+
+	while (CFE_SRL_ApiRead(ADCS_UartHandle, &Params) == CFE_SUCCESS)
+	{
+	}
+}
+
+static ErrorCode ADCS_UartWriteFrame(const TctlmCommsMasterSvc_Endpoint *masterEndpoint, const uint8 *data, uint16 dataLen)
+{
+	CFE_SRL_IO_Param_t Params = {0,};
+	uint32 protocolIdx = ADCS_UART_HEADER_SIZE_PLAIN;
+
+	if ((ADCS_UART_HEADER_SIZE_PLAIN + ADCS_UART_FOOTER_SIZE + ((uint32)dataLen * 2u)) > ADCS_UART_PROTOCOL_BUFFER_SIZE)
+	{
+		return CUBEOBC_ERROR_SIZEH;
+	}
+
+	ADCS_UartProtocolBuffer[ADCS_UART_ESCAPE_OFFSET] = ADCS_UART_ESCAPE;
+	ADCS_UartProtocolBuffer[ADCS_UART_SOM_OFFSET] = masterEndpoint->endpoint.passthrough ? ADCS_UART_SOM_NORMAL_PASS : ADCS_UART_SOM_NORMAL_PLAIN;
+	ADCS_UartProtocolBuffer[ADCS_UART_ID_OFFSET] = masterEndpoint->id;
+
+	for (uint16 i = 0; i < dataLen; ++i)
+	{
+		if (data[i] == ADCS_UART_ESCAPE)
+		{
+			ADCS_UartProtocolBuffer[protocolIdx++] = ADCS_UART_ESCAPE;
+		}
+
+		ADCS_UartProtocolBuffer[protocolIdx++] = data[i];
+	}
+
+	ADCS_UartProtocolBuffer[protocolIdx++] = ADCS_UART_ESCAPE;
+	ADCS_UartProtocolBuffer[protocolIdx++] = ADCS_UART_EOM;
+
+	Params.TxData = ADCS_UartProtocolBuffer;
+	Params.TxSize = protocolIdx;
+
+	return (CFE_SRL_ApiWrite(ADCS_UartHandle, &Params) == CFE_SUCCESS) ? CUBEOBC_ERROR_OK : CUBEOBC_ERROR_WRITE;
+}
+
+static ErrorCode ADCS_UartReadFrame(const TctlmCommsMasterSvc_Endpoint *masterEndpoint, uint8 *data, uint16 *dataLen)
+{
+	bool escaped = false;
+	bool som = false;
+	bool validRxWindow = false;
+	bool nack = false;
+	bool passthrough = false;
+	bool done = false;
+	uint8 tctlmId = 0u;
+	uint16 dataIdx = 0u;
+
+	while (done == false)
+	{
+		uint8 byte = 0u;
+		CFE_SRL_IO_Param_t Params = {0,};
+		int32 Status;
+
+		Params.RxData = &byte;
+		Params.RxSize = sizeof(byte);
+		Params.Timeout = validRxWindow ? ADCS_UART_RX_NEXT_BYTE_TIMEOUT_MS : masterEndpoint->endpoint.timeout;
+
+		Status = CFE_SRL_ApiRead(ADCS_UartHandle, &Params);
+		if (Status != CFE_SUCCESS)
+		{
+			return (Status == CFE_SRL_TIMEOUT) ? CUBEOBC_ERROR_TOUT : CUBEOBC_ERROR_READ;
+		}
+
+		if (escaped == true)
+		{
+			if ((byte == ADCS_UART_SOM_ACK_PLAIN) || (byte == ADCS_UART_SOM_ACK_PASS))
+			{
+				som = true;
+				passthrough = (byte == ADCS_UART_SOM_ACK_PASS);
+			}
+			else if ((byte == ADCS_UART_SOM_NACK_PLAIN) || (byte == ADCS_UART_SOM_NACK_PASS))
+			{
+				som = true;
+				nack = true;
+				passthrough = (byte == ADCS_UART_SOM_NACK_PASS);
+			}
+			else if (byte == ADCS_UART_EOM)
+			{
+				done = true;
+			}
+			else if (byte == ADCS_UART_ESCAPE)
+			{
+				if (validRxWindow == true)
+				{
+					if (dataIdx >= *dataLen)
+					{
+						return CUBEOBC_ERROR_SIZEH;
+					}
+
+					data[dataIdx++] = byte;
+				}
+			}
+
+			escaped = false;
+		}
+		else if (byte == ADCS_UART_ESCAPE)
+		{
+			escaped = true;
+		}
+		else if (som == true)
+		{
+			tctlmId = byte;
+			validRxWindow = true;
+			som = false;
+		}
+		else if (validRxWindow == true)
+		{
+			if (dataIdx >= *dataLen)
+			{
+				return CUBEOBC_ERROR_SIZEH;
+			}
+
+			data[dataIdx++] = byte;
+		}
+	}
+
+	*dataLen = dataIdx;
+
+	if ((validRxWindow == false) || (passthrough != masterEndpoint->endpoint.passthrough))
+	{
+		return CUBEOBC_ERROR_TCTLM_PROTOCOL;
+	}
+
+	if (tctlmId != masterEndpoint->id)
+	{
+		return CUBEOBC_ERROR_TCTLM_ID;
+	}
+
+	if (nack == true)
+	{
+		if (dataIdx == 0u)
+		{
+			return CUBEOBC_ERROR_TCTLM_PROTOCOL;
+		}
+
+		return nack2ErrorCode(data[0]);
+	}
+
+	return CUBEOBC_ERROR_OK;
+}
 
 /**
  * @brief SendReceive Function by CSP
@@ -181,24 +368,57 @@ static ErrorCode cubeObc_sendReceive(TctlmCommsMasterSvc_Endpoint *masterEndpoin
 		dstPort = CSP_PORT_PASSTHROUGH;
 	}
 
+	if (ADCS_InterfaceTransportMode == ADCS_INTERFACE_TRANSPORT_UART)
+	{
+		uint16 rxDataLen = COMMS_BUFFER_SIZE;
+
+		if (ADCS_UartHandle == NULL)
+		{
+			ADCS_UartHandle = CFE_SRL_ApiGetHandle(CFE_SRL_UART_HANDLE_INDEXER);
+		}
+
+		if (ADCS_UartHandle == NULL)
+		{
+			return CUBEOBC_ERROR_READ;
+		}
+
+		ADCS_UartRxFlush();
+
+		result = ADCS_UartWriteFrame(masterEndpoint,
+									 handle[endpoint->type].buffer,
+									 (msgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TC) ? datalen : 0u);
+		if (result != CUBEOBC_ERROR_OK)
+		{
+			return result;
+		}
+
+		if ((msgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TC) && (masterEndpoint->id == ADCS_ID_SET_RESET))
+		{
+			return CUBEOBC_ERROR_OK;
+		}
+
+		result = ADCS_UartReadFrame(masterEndpoint, handle[endpoint->type].buffer, &rxDataLen);
+		if (result != CUBEOBC_ERROR_OK)
+		{
+			return result;
+		}
+
+		if ((msgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TLM) && (rxDataLen != datalen))
+		{
+			return (rxDataLen < datalen) ? CUBEOBC_ERROR_SIZEL : CUBEOBC_ERROR_SIZEH;
+		}
+
+		return CUBEOBC_ERROR_OK;
+	}
+
 	uint8_t txCspDataBuffer[COMMS_BUFFER_SIZE];
 	uint8_t rxCspDataBuffer[COMMS_BUFFER_SIZE];
+	int32 res;
 
-	// Add header data to CSP packet
 	txCspDataBuffer[CSP_MSG_TYPE_IDX] = msgType;
 	txCspDataBuffer[CSP_TCTLM_ID_IDX] = masterEndpoint->id;
-
-	/**
-	 * Copy the data buffer
-	 */
 	memcpy(txCspDataBuffer + CSP_HEADER_SIZE, handle[endpoint->type].buffer, datalen);
-	// OS_printf("TxData: ");
-	// for (uint8_t i=0; i< datalen + CSP_HEADER_SIZE; i++) {
-	// 	OS_printf("0x%02X\t", txCspDataBuffer[i]);
-	// }
-	// OS_printf("\n");
 
-	int32 res;
 	if(msgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TC) {
 		/**
 		 * If the TC is Reset, there is not ack (i.e. No reply)
@@ -208,7 +428,7 @@ static ErrorCode cubeObc_sendReceive(TctlmCommsMasterSvc_Endpoint *masterEndpoin
 										txCspDataBuffer, datalen + CSP_HEADER_SIZE,
 										NULL, 0);
 			if (res == 1) result = CUBEOBC_ERROR_OK;
-			goto cleanup;
+			return result;
 		}
 		else {
 		/**
@@ -262,7 +482,6 @@ static ErrorCode cubeObc_sendReceive(TctlmCommsMasterSvc_Endpoint *masterEndpoin
 		// Extract TCTLM data from CSP response data
 		memcpy(handle[endpoint->type].buffer, &rxCspDataBuffer[CSP_DATA_IDX], datalen);
 	}
-cleanup:
 	return result;
 }
 
@@ -478,6 +697,32 @@ int32 ADCS_SetReferenceLLHTarget(const ADCS_ReferenceLLHTargetCmd_Payload_t *set
 	tx_buffer = cubeObc_connect_buffer(&target);
 
 	bufferSizeUsed = sizeof(ADCS_ReferenceLLHTargetCmd_Payload_t);
+	memcpy(tx_buffer, setVal, bufferSizeUsed);
+
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
+	{
+		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
+		return status;
+	}
+
+	return CFE_SUCCESS;
+}
+
+int32 ADCS_SetCommandedGNSSMeasurements(const ADCS_CommandedGNSSMeasurementsCmd_Payload_t *setVal)
+{	// ID 49
+	int32_t status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8_t *tx_buffer;
+	uint16_t bufferSizeUsed;
+
+	ZERO_VAR(target);
+
+	target.id = ADCS_ID_SET_COMMANDED_GNSS_MEASUREMENTS;
+	memcpy((uint8_t *)&target.endpoint, (uint8_t *)&endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	tx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_CommandedGNSSMeasurementsCmd_Payload_t);
 	memcpy(tx_buffer, setVal, bufferSizeUsed);
 
 	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
@@ -1948,6 +2193,31 @@ int32 ADCS_GetRawGYRSensor(ADCS_RawGYRSensorTlm_Paylaod_t *returnVal)
 	return CFE_SUCCESS;
 }
 
+int32 ADCS_GetRawRWLSensor(ADCS_RawRWLSensorTlm_Payload_t *returnVal)
+{	// ID 205
+	
+    int32 status;
+	TctlmCommsMasterSvc_Endpoint target;
+	uint8 *rx_buffer;
+	uint16 bufferSizeUsed;
+
+	ZERO_VAR(target);
+	
+	target.id = ADCS_ID_GET_RAW_RWL_SENSOR;
+	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+	rx_buffer = cubeObc_connect_buffer(&target);
+
+	bufferSizeUsed = sizeof(ADCS_RawRWLSensorTlm_Payload_t);
+	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
+		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+		return status;
+	}
+	memcpy(returnVal, rx_buffer, bufferSizeUsed);
+
+	return CFE_SUCCESS;
+}
+
 int32 ADCS_GetCalibratedGYRSensor(ADCS_CalibratedGYRSensorTlm_Payload_t *returnVal)
 {	// ID 207
 	
@@ -2241,10 +2511,11 @@ void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSi
 	Report->Report.CommandCode = CC;
 	Report->Report.ReturnType = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_HW;
 	Report->Report.ReturnCode = Status; // `adcs_cube_error_typedefs.h`
-	Report->Report.ReturnDataSize = ReadSize;
+	uint16_t CopySize = (ReadSize > RPT_RET_VALUE_BUF_SIZE) ? RPT_RET_VALUE_BUF_SIZE : ReadSize;
+	Report->Report.ReturnDataSize = CopySize;
 	if (ReadSize && ReadData) {
 		memcpy(Report->Report.ReturnValue, ReadData,
-				(ReadSize > RPT_RET_VALUE_BUF_SIZE) ? RPT_RET_VALUE_BUF_SIZE : ReadSize);
+				CopySize);
 	}
 
 	CFE_SB_TimeStampMsg((CFE_MSG_PTR(Report->TelemetryHeader)));
@@ -2290,7 +2561,6 @@ void ADCS_HandleEvent(const ADCS_EventEntry_t *Event) {
 				OS_printf("0x%02X\t", Event->EventData[i]);
 			}
 			OS_printf("\n");
-			ADCS_AppData.BcnTlm.IsSunlight = Event->EventData[0] ? true : false;
 			break;
 		case 139:
 			

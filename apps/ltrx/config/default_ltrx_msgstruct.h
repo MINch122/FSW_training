@@ -56,7 +56,7 @@ typedef struct
 {
     uint8  CmdCounter;
     uint8  CmdErrCounter;
-    uint8  AppErrCounter;
+    uint8  Spare;
     uint8  Spare8;
 
     LTRX_GNSSInfo_Payload_t     LastGnss;         /* Type 21 */
@@ -74,25 +74,12 @@ typedef struct
     LTRX_HkTlm_Payload_t      Payload;
 } LTRX_HkTlm_t;
 
-/* Report telemetry */
-typedef struct
+/* Beacon telemetry */
+typedef struct LTRX_PACKED
 {
-    uint32 DeviceErrCounter;
-
-    uint8  LastRxType;
-    uint8  LastRxStatus;
-    uint8  SessionState;
-    uint8  Reserved0;
-
-    uint8  HaveMsgStatus;
-    uint8  HaveGnss;
-    uint8  HaveBeaconStatus;
-    uint8  Reserved1;
-
-    LTRX_MessageStatus_Payload_t LastMsgStatus;
-    LTRX_GNSSInfo_Payload_t      LastGnss;
-    LTRX_BeaconStatus_Payload_t  LastBeaconStatus;
-
+    int16 Temperature;
+    uint8 ConnectionQuality;
+    uint16 BatteryCapacity;
 } LTRX_BcnTlm_Payload_t;
 
 typedef struct

@@ -34,6 +34,8 @@ void STX_SendHkCmd(void);
 void STX_SendBCNCmd(void);
 CFE_Status_t STX_ResetCountersCmd(const STX_ResetCountersCmd_t *Msg);
 CFE_Status_t STX_NoopCmd(const STX_NoopCmd_t *Msg);
+CFE_Status_t STX_ParamInitCmd(const STX_ParamInitCmd_t *Msg);
+CFE_Status_t STX_ModuleIdInitCmd(const STX_ModuleIdInitCmd_t *Msg);
 
 /* SET COMMAND */
 void STX_SET_SYMBOLRATECmd(const STX_Set_SYMBOLRAtE_t *Msg);

@@ -31,6 +31,26 @@
 #ifndef GPIO_MISSION_CFG_H
 #define GPIO_MISSION_CFG_H
 
+#define GPIO_OUTPUT_LTRX_EN_BIT 0
+#define GPIO_OUTPUT_DEP1_EN_BIT 1
+#define GPIO_OUTPUT_DEP2_EN_BIT 2
+#define GPIO_OUTPUT_STX_EN_BIT 3
+#define GPIO_OUTPUT_ADCS_EN_BIT 4
+#define GPIO_OUTPUT_ADCS_BOOT_BIT 5
+#define GPIO_OUTPUT_STATE_MASK 0x003F
+#define GPIO_OUTPUT_COMMANDED_SHIFT 8
+#define GPIO_OUTPUT_COMMANDED_MASK 0x3F00
+
+#ifndef DEBUG_GPIO
+#define DEBUG_GPIO false
+#endif
+
+#if DEBUG_GPIO
+#define GPIO_APP_printf(...) OS_printf(__VA_ARGS__)
+#else
+#define GPIO_APP_printf(...) do { } while (0)
+#endif
+
 #include "gpio_interface_cfg.h"
 
 #endif

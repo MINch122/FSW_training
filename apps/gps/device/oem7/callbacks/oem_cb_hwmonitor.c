@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-int OEM_Callback_HWMONITOR(void* msg)
+int oem_callback_HWMONITOR_print(void* msg)
 {
     const oem_binary_header_t* hdr;
     const oem_log_hwmonitor* hwmonitor;
@@ -19,23 +19,15 @@ int OEM_Callback_HWMONITOR(void* msg)
         hdr->messageLength != 
             sizeof(hwmonitor->numMeasurements) 
                 + hwmonitor->numMeasurements*sizeof(*comp))
-        return OEM_ERR_LEN_MSG;
+        return OEM_ERR_LOG_BODY_SIZE;
 
-#if OEM_DEBUG
     printf("HWMONITOR (%d meas):\n", hwmonitor->numMeasurements);
-#endif
     for (oem_ulong i = 0; i < hwmonitor->numMeasurements; ++i) {
         comp = &hwmonitor->comp[i];
-#if OEM_DEBUG
         printf("\tComp #%d:\n", i);
         printf("\t\tReading: %f\n", comp->reading);
         printf("\t\tStatus: %d (0x%X)\n", comp->status, comp->status);
-#endif
     }
-#if OEM_DEBUG
     printf("\n");
-#endif
     return OEM_OK;
-
-
 }

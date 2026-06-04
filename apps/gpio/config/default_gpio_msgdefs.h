@@ -48,4 +48,11 @@ typedef struct GPIO_HkTlm_Payload
     uint8 gpioare[2];
 } GPIO_HkTlm_Payload_t;
 
+typedef struct GPIO_BcnTlm_Payload
+{
+    uint16 GpioState;
+    uint8 isDeployed;
+} __attribute__((packed)) GPIO_BcnTlm_Payload_t;
+
+
 #endif

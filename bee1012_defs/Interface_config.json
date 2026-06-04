@@ -15,7 +15,7 @@
             "ready": true,
             "name": "RS485",
             "DevName": "/dev/ttyS1",
-            
+
             "baudrate": 115200,
             "databits": 8,
             "parity": 0,
@@ -26,7 +26,7 @@
             "ready": true,
             "name": "SPIO",
             "DevName": "/dev/spidev0.0",
-            
+
             "mode": 0,
             "speed": 2000000,
             "bitperword": 8
@@ -61,7 +61,7 @@
             "ready": false,
             "name": "I2C1",
             "DevName": "/dev/i2c-14",
-            
+
             "tenbit": false,
             "pec_en": false,
             "retries": 3
@@ -71,7 +71,7 @@
             "ready": true,
             "name": "I2C2",
             "DevName": "/dev/i2c-2",
-            
+
             "tenbit": false,
             "pec_en": false,
             "retries": 3
@@ -81,7 +81,7 @@
             "ready": true,
             "name": "RS422",
             "DevName": "/dev/ttyS2",
-            
+
             "baudrate": 115200,
             "databits": 8,
             "parity": 0,
@@ -89,18 +89,18 @@
         },
         {
             "type": "uart",
-            "ready": false,
-            "name": "socat",
-            "DevName": "/dev/pts/6",
-            
-            "baudrate": 115200,
+            "ready": true,
+            "name": "UART",
+            "DevName": "/dev/ttyS3",
+
+            "baudrate": 921600,
             "databits": 8,
             "parity": 0,
             "stopbits": 1
         },
         {
-            "type": "gpio", 
-            "ready": true, 
+            "type": "gpio",
+            "ready": true,
             "name":"SP_IN",
             "DevName": "/dev/gpiochip2",
             "line": 4,
@@ -108,8 +108,8 @@
             "direction": "in"
         },
         {
-            "type": "gpio", 
-            "ready": false, 
+            "type": "gpio",
+            "ready": false,
             "name":"gpio2",
             "DevName": "/dev/gpiochip2",
             "line": 3,
@@ -117,8 +117,8 @@
             "direction": "out"
         },
        {
-            "type": "gpio", 
-            "ready": true, 
+            "type": "gpio",
+            "ready": true,
             "name":"LTRX_EN",
             "DevName": "/dev/gpiochip2",
             "line": 5,
@@ -126,8 +126,8 @@
             "direction": "out"
         },
         {
-            "type": "gpio", 
-            "ready": true, 
+            "type": "gpio",
+            "ready": true,
             "name":"DEP1_EN",
             "DevName": "/dev/gpiochip0",
             "line": 29,
@@ -135,11 +135,38 @@
             "direction": "out"
         },
         {
-            "type": "gpio", 
-            "ready": true, 
+            "type": "gpio",
+            "ready": true,
             "name":"DEP2_EN",
             "DevName": "/dev/gpiochip0",
             "line": 28,
+            "default": 0,
+            "direction": "out"
+        },
+        {
+            "type": "gpio",
+            "ready": true,
+            "name":"STX_EN",
+            "DevName": "/dev/gpiochip0",
+            "line": 23,
+            "default": 1,
+            "direction": "out"
+        },
+        {
+            "type": "gpio",
+            "ready": true,
+            "name":"ADCS_EN",
+            "DevName": "/dev/gpiochip0",
+            "line": 24,
+            "default": 1,
+            "direction": "out"
+        },
+        {
+            "type": "gpio",
+            "ready": true,
+            "name":"ADCS_BOOT",
+            "DevName": "/dev/gpiochip0",
+            "line": 26,
             "default": 0,
             "direction": "out"
         }

@@ -10,238 +10,488 @@
 #include "oem_utils.h"
 
 #include <string.h>
+#include <time.h>
 #if OEM_DEBUG
 #include <stdio.h> /* Response print */
 #endif
 
-static union readTaskMsgBuf {
-    uint8_t buf[OEM_TASK_MSG_BUF_SIZE];
-    oem_binary_header_t header;
-} readTaskMsgBuf;
+typedef struct {
+    union {
+        uint8_t bytes[OEM_TASK_STATE_MACHINE_BUF_SIZE];
+        oem_binary_header_t header;
+    } buffer;
+    size_t  need;
+    size_t  have;
+    uint8_t state;
+    uint8_t target;
+} oem_task_state_machine_t;
 
-int _DoLogHandle(void* msg, oem_task_context_t* ctx);
+static oem_task_state_machine_t state_machines[OEM_IO_INTERFACES];
 
-bool OEM_Task_IsSynced(const void* msg)
+/**
+ * @brief Pass a Log Message to the log layer for processing.
+ *        This is intended to be called by the task layer only. Do not call
+ *        this in a user context.
+ */
+int oem_log_do_handle(void* msg, oem_task_context_t* ctx);
+
+static int process_reply(void* message,
+                         oem_task_context_t* ctx)
 {
-    const uint8_t* byte;
-    if ((byte = msg) != NULL      &&
-        *byte++ == OEM_SYNC_BYTE1 &&
-        *byte++ == OEM_SYNC_BYTE2 &&
-        *byte   == OEM_SYNC_BYTE3) {
-        return true;
-    }
-    return false;
-}
-
-static int ProcessMessage(void* message,
-                          oem_task_context_t* ctx)
-{
-    const oem_binary_header_t* header = message;
-    const oem_binary_response* response;
-    oem_crc atSiteCrc;
-    int ret;
+    int ret = OEM_OK;
 
     if (!ctx)
         return OEM_ERR_NULL;
 
-    if ((header->messageType & OEM_MSGTYPE_RESPONSE)
-        != OEM_MSGTYPE_RESPONSE) {
+    if (ctx->is_response == false) {
         /**
          * This is a log message; call the handler.
-         * 
-         * An implementation may launch the handler as a temporary thread if
-         * certain callback sequences are time-consuming. In such scenarios
-         * the single message buffer in this task should be newly allocated or
-         * segmented accordingly. This is not the case for our current mission.
          */
-        return _DoLogHandle(message, ctx);
+        return oem_log_do_handle(message, ctx);
     }
 
     /**
-     * Else, this is a response message.
-     */
-    ctx->isResponse = true;
-    response = message;
-
-    /**
-     * Reject if too short.
-     */
-    if (sizeof(*header) + header->messageLength < sizeof(*response)) {
-        ret = OEM_ERR_LEN_MSG;
-        goto early_return_mproc;
-    }
-
-    /**
-     * Print the ASCII response (debugging only).
+     * Else it's a response.
      */
 #if OEM_DEBUG
-        printf("OEM >> ");
-        const oem_binary_response* r = message;
-        for (unsigned i = 0; i < header->messageLength - sizeof(r->responseId); i++)
-            putc(r->response[i], stdout);
-        printf("\n");
+    printf("OEM >> ");
+    const oem_binary_response* r = message;
+    for (size_t i = 0; i < ctx->message_length - sizeof(r->responseId); i++)
+        putc(r->response[i], stdout);
+    printf("\n");
 #endif
 
-    /**
-     * Store the Response ID first. We might want to know what this is even if
-     * the CRC is garbage anyway.
-     */
-    ctx->respId = response->responseId;
-
-    /**
-     * CRC verification.
-     */
-    atSiteCrc = OEM_CalculateBlockCRC32(message,
-                                        sizeof(*header) 
-                                          + header->messageLength);
-
-    /**
-     * Pass the validation if the CRC was not received at all.
-     * (The response is still worth reading)
-     */
-    if (!ctx->crcReadSkipped && ctx->msgCrc != atSiteCrc) {
-        DebugError("response: crc verification failed for MID %d:"
-                    "expected %08X, got %08X\n",
-                    header->messageID,
-                    atSiteCrc,
-                    ctx->msgCrc);
-        ret = OEM_ERR_CRC;
-        goto early_return_mproc;
-    }
-
-    ret = OEM_OK;
-
-early_return_mproc:
-    ctx->taskLevel = TASK_RESPONSE;
+    ctx->task_level = TASK_RESPONSE;
     return ret;
 }
 
+typedef enum {
+    STATE_SEARCH_AA = 0,
+    STATE_SEARCH_44,
+    STATE_SEARCH_12,
+    STATE_FILL_PREP,
+    STATE_FILL,
+    STATE_FILL_VALIDATE,
+    STATE_MESSAGE_READY,
+} oem_task_state_t;
 
-int OEM_Task_ReadTaskSingleRun(int portIndex,
+typedef enum {
+    TARGET_NONE = 0, /* unused */
+    TARGET_HEADER,
+    TARGET_BODY,
+    TARGET_CRC,
+} oem_task_target_t;
+
+/**
+ * Reset the state machine to the initial state, i.e.,
+ * first sync word search with no data in the buffer.
+ */
+static void sm_reset(oem_task_state_machine_t* sm)
+{
+    if (!sm)
+        return;
+    memset(sm, 0, sizeof(*sm));
+    sm->state = STATE_SEARCH_AA;
+}
+
+/**
+ * State machine core engine. Feeds the state machine until either:
+ * 1) the input data is consumed all,
+ *    where feed task is resumed when new data arrives and called again.
+ * 2) a complete message is ready,
+ *    where the message is to be passed to the handler layer.
+ * 3) or an error is encountered.
+ * 
+ * Returns:
+ * - Normal error codes (what's expected):
+ *   OEM_OK: successful.
+ *   OEM_ERR_LOG_TOO_LARGE: reply size exceeds interface's buffer capacity.
+ *   OEM_ERR_LOG_HEADER_SIZE: reply-encoded header size is not sizeof(oem_binary_header_t).
+ *   OEM_ERR_LOG_RESP_SIZE: response size is too short to be a valid response.
+ *   OEM_ERR_LOG_CRC: CRC mismatch (validation state).
+ *  
+ * - Unlikely error codes (apparent bugs):
+ *   OEM_ERR_NULL: any of the pointers is null.
+ *   OEM_ERR_LOG_SM_STATE: invalid sm->state encountered.
+ *   OEM_ERR_LOG_SM_TARGET: invalid sm->target encountered.
+ *   OEM_ERR_LOG_SM_PREFILL: more bytes fed than expected (fill prep state).
+ *   OEM_ERR_LOG_SM_SIZE_MISMATCH: fed bytes don't match the expected (validation state).
+ */
+static int sm_feed(oem_task_state_machine_t* sm,
+                   const uint8_t* data,
+                   size_t  len,
+                   size_t* consumed,
+                   oem_task_context_t* ctx)
+{
+    int ret = OEM_OK;
+    size_t i = 0;
+    
+    if (!consumed)
+        return OEM_ERR_NULL;
+    
+    if (!sm || !data || !ctx) {
+        *consumed = 0;
+        return OEM_ERR_NULL;
+    }
+
+    while (i < len) {
+        switch (sm->state) {
+        case STATE_SEARCH_AA:
+            /* expect sync 1, proceed to sync 2 search on success */
+            if (data[i++] == OEM_SYNC_BYTE1) {
+                sm->buffer.header.sync[0] = OEM_SYNC_BYTE1;
+                sm->state = STATE_SEARCH_44;
+                sm->have = 1;
+            }
+            break;
+
+        case STATE_SEARCH_44:
+            /* expect sync 2, proceed to sync 3 search on success */
+            if (data[i] == OEM_SYNC_BYTE2) {
+                sm->buffer.header.sync[1] = OEM_SYNC_BYTE2;
+                sm->state = STATE_SEARCH_12;
+                sm->have = 2;
+                i++;
+            }
+            else if (data[i] == OEM_SYNC_BYTE1)
+                i++; /* still sync 1 candidate */
+            else
+                sm_reset(sm); /* no sync */
+            break;
+
+        case STATE_SEARCH_12:
+            /* expect sync 3, proceed to header read on success */
+            if (data[i] == OEM_SYNC_BYTE3) {
+                sm->buffer.header.sync[2] = OEM_SYNC_BYTE3;
+                sm->state = STATE_FILL_PREP;
+                sm->target = TARGET_HEADER;
+                sm->have = 3;
+                i++;
+            }
+            /* else return to sync 1 or 2 search */   
+            else if (data[i] == OEM_SYNC_BYTE1) {
+                sm->state = STATE_SEARCH_44;
+                sm->have = 1;
+                i++;
+            }
+            else {
+                sm_reset(sm);
+            }
+            break;
+
+        case STATE_FILL_PREP:
+        /**
+         * Fill prep state:
+         * - Set the expected/required sizes according to the target.
+         * - Proceed to fill state.
+         */
+            {    
+            size_t expected;
+            switch (sm->target) {
+            case TARGET_HEADER:
+                expected = sizeof(oem_binary_header_t);
+                break;
+            case TARGET_BODY:
+                expected = sizeof(oem_binary_header_t) 
+                           + sm->buffer.header.messageLength;
+                break;
+            case TARGET_CRC:
+                expected = sizeof(oem_binary_header_t) 
+                           + sm->buffer.header.messageLength + sizeof(uint32_t);
+                break;
+            default:
+                oem_debug_error("sm error: invalid target %d\n", sm->target);
+                sm_reset(sm);
+                ret = OEM_ERR_LOG_SM_TARGET;
+                goto sm_feed_end;
+            }
+
+            if (sm->have > expected) {
+                oem_debug_error("sm error: have %d exceeds expected sz %d\n",
+                                sm->have, expected);
+                sm_reset(sm);
+                ret = OEM_ERR_LOG_SM_PREFILL;
+                goto sm_feed_end;
+            }
+
+            if (expected > OEM_TASK_STATE_MACHINE_BUF_SIZE) {
+                oem_debug_error("sm error: expected sz %d exceeds buf sz %d\n",
+                                expected, OEM_TASK_STATE_MACHINE_BUF_SIZE);
+                sm_reset(sm);
+                ret = OEM_ERR_LOG_TOO_LARGE;
+                goto sm_feed_end;
+            }
+
+            /* expect header, proceed to body read on success */
+            sm->need = expected - sm->have;
+            sm->state = STATE_FILL;
+            }
+            break;
+
+        case STATE_FILL:
+            /**
+             * Fill state:
+             * - Fill the buffer until the expected size is met.
+             * - Proceed to validation if the expected size is met.
+             */
+            {
+                size_t to_copy = len - i;
+                if (to_copy > sm->need)
+                    to_copy = sm->need;
+                memcpy(sm->buffer.bytes + sm->have, data + i, to_copy);
+                sm->have += to_copy;
+                sm->need -= to_copy; 
+                i += to_copy;
+            }
+            if (sm->need == 0)
+                sm->state = STATE_FILL_VALIDATE;
+            break;
+
+        case STATE_FILL_VALIDATE:
+        /**
+         * Validate state:
+         * - Validate the filled data according to the target and populate the context.
+         *   1) header:
+         *    - Validate the header size and message length.
+         *    - Populate the context with the message ID, message length, and response bit.
+         *   2) body:
+         *    - Validate the fed bytes against the expected size.
+         *    - If response, validate against the minimum response size.
+         *    - Populate the context with the response ID if it's a response message.
+         *    - Nothing is done for log messages.
+         *   3) CRC:
+         *    - Calculate the CRC, validate against the received one.
+         *    - Validation skipped if the CRC was not read.
+         *    - Populate the context with the calculated and received CRC values.
+         */
+            switch (sm->target) {
+            case TARGET_HEADER:
+                if (sm->buffer.header.headerLength != sizeof(oem_binary_header_t)) {
+                    oem_debug_error("invalid header size: got %d (0x%x)\n",
+                                    sm->buffer.header.headerLength,
+                                    sm->buffer.header.headerLength);
+                    sm_reset(sm);
+                    ret = OEM_ERR_LOG_HEADER_SIZE;
+                    goto sm_feed_end;
+                }
+
+                if (sm->have != sizeof(oem_binary_header_t)) {
+                    oem_debug_error("sm error: have %d does not match header size %d\n",
+                                    sm->have, sizeof(oem_binary_header_t));
+                    sm_reset(sm);
+                    ret = OEM_ERR_LOG_SM_SIZE_MISMATCH;
+                    goto sm_feed_end;
+                }
+                
+                oem_debug_info("New message header retrieved: rx status %08X\n",
+                               sm->buffer.header.receiverStatus);
+
+                ctx->message_id = sm->buffer.header.messageID;
+                ctx->message_length = sm->buffer.header.messageLength;
+                ctx->is_response = (sm->buffer.header.messageType & OEM_MSGTYPE_RESPONSE) 
+                                    == OEM_MSGTYPE_RESPONSE;
+                sm->target = TARGET_BODY;
+                sm->state = STATE_FILL_PREP;
+                break;
+
+            case TARGET_BODY:
+                if (sm->have != sizeof(oem_binary_header_t) + ctx->message_length) {
+                    oem_debug_error("invalid log size: got %d, expected at least %d\n",
+                                sm->have, sizeof(oem_binary_header_t) + ctx->message_length);
+                    sm_reset(sm);
+                    ret = OEM_ERR_LOG_SM_SIZE_MISMATCH;
+                    goto sm_feed_end;
+                }
+
+                if (ctx->is_response) {
+                    if (sm->have < sizeof(oem_binary_response)) {
+                        oem_debug_error("invalid response size: got %d, expected at least %d\n",
+                                    sm->have, sizeof(oem_binary_response));
+                        sm_reset(sm);
+                        ret = OEM_ERR_LOG_RESP_SIZE;
+                        goto sm_feed_end;
+                    }
+                    oem_binary_response* r = (oem_binary_response*) sm->buffer.bytes;
+                    ctx->response_id = r->responseId;
+                }
+
+                sm->target = TARGET_CRC;
+                sm->state = STATE_FILL_PREP;
+                break;
+
+            case TARGET_CRC:
+                if (ctx->crc_read_skipped == false) {
+                    oem_crc crc_calced = oem_crc32(sm->buffer.bytes, sm->have - sizeof(oem_crc));
+                    oem_crc crc_received;
+                    memcpy(&crc_received, sm->buffer.bytes + sm->have - sizeof(oem_crc), sizeof(oem_crc));
+                    ctx->crc_calced = crc_calced;
+                    ctx->crc_received = crc_received;
+                    if (crc_received != crc_calced) {
+                        oem_debug_error("CRC verification failed: expected %08X, got %08X\n",
+                                    crc_calced, crc_received);
+                        sm_reset(sm);
+                        ret = OEM_ERR_LOG_CRC;
+                        goto sm_feed_end;
+                    }
+                }
+                sm->state = STATE_MESSAGE_READY;
+                goto sm_feed_end;
+            
+            default:
+                oem_debug_error("sm error: invalid target %d\n", sm->target);
+                sm_reset(sm);
+                ret = OEM_ERR_LOG_SM_TARGET;
+                goto sm_feed_end;
+            }
+        break;
+
+        default:
+            oem_debug_error("invalid state: %d\n", sm->state);
+            sm_reset(sm);
+            ret = OEM_ERR_LOG_SM_STATE;
+            goto sm_feed_end;
+        }
+    }
+
+sm_feed_end:
+    *consumed = i;
+    return ret;
+}
+
+static long ms_until(const struct timespec* deadline)
+{
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return (deadline->tv_sec - now.tv_sec) * 1000
+           + (deadline->tv_nsec - now.tv_nsec) / 1000000;
+}
+
+int oem_task_read_single_reply(int idx,
+                               uint16_t timeout,
                                oem_task_context_t* ctx)
 {
-    const oem_binary_header_t* header = &readTaskMsgBuf.header;
-    static oem_task_context_t ctxLocal;
-    static uint8_t lastReadToken = 0;
-    size_t bodySize;
+    struct timespec deadline;
+    oem_task_state_machine_t* sm;
+    size_t consumed = 0;
+    oem_task_context_t ctx_local;
+    bool using_local_ctx = false;
     int ret;
 
-    if (portIndex < 0 || portIndex > OEM_PHYSICAL_PORTS)
-        return OEM_ERR_IO_PORT_INDEX;
+    if (idx < 0 || idx >= OEM_IO_INTERFACES) {
+        ret = OEM_ERR_IO_IFACE_INDEX;
+        goto early_return_task;
+    }
 
-    if (!ctx)
-        ctx = &ctxLocal;
+    /* ctx object is necessary for state propagation;
+       use a local one if the user doesn't care for outputs */
+    if (!ctx) {
+        ctx = &ctx_local;
+        using_local_ctx = true;
+    }
 
     memset(ctx, 0, sizeof(*ctx));
 
-    while (1) {
-        /**
-         * Search for the sync, byte-by-byte.
-         * Start from the last fetched token so that we don't end up ignoring
-         * sequences such as AA AA 44 12.
-         */
-        if (lastReadToken != OEM_SYNC_BYTE1) {
-            // if (lastReadToken != OEM_SYNC_BYTE3)
-            OEM_IO_PortRead(portIndex, &lastReadToken, 1, OEM_SERIAL_READ_TIMEOUT);
+    clock_gettime(CLOCK_MONOTONIC, &deadline);
+    deadline.tv_sec += timeout / 1000;
+    deadline.tv_nsec += (timeout % 1000) * 1000000;
+    if (deadline.tv_nsec >= 1000000000) {
+        deadline.tv_sec += 1;
+        deadline.tv_nsec -= 1000000000;
+    }
+
+    sm = &state_machines[idx];
+    sm_reset(sm);
+
+    /* If we have leftover bytes in the interface buffer, feed them first. */
+    size_t available = oem_io_available(idx);     
+    if (available) {
+        const void* d; size_t s;
+        if ((ret = oem_io_peek(idx, &d, &s)) != OEM_OK) {
+            oem_debug_error("Failed to peek I/O buffer for port %d: %d\n", idx, ret);
+            goto early_return_task;
         }
-        else if (
-            OEM_IO_PortRead(portIndex, &lastReadToken, 1, 100) == 0 &&
-            lastReadToken == OEM_SYNC_BYTE2                 &&
-            OEM_IO_PortRead(portIndex, &lastReadToken, 1, 100) == 0 &&
-            lastReadToken == OEM_SYNC_BYTE3)
-                break;
-        // else
-        //     DebugError("\t\t!!!Sync search failed: lt 0x%02X\n", lastReadToken);
-    }
-
-    /**
-     * Sync found! Now read the header first. We are three bytes 
-     * ahead since the sync word is a part of the header as well.
-     */
-    if (OEM_IO_PortRead(portIndex,
-                        readTaskMsgBuf.buf + 3,
-                        sizeof(*header) - 3,
-                        100)
-        != 0) {
-        DebugError("A valid sync was found but could not read the header\n");
-        ret = OEM_ERR_READ_HEADER;
-        goto early_return_task;
-    }
-    /**
-     * Check the header length.
-     */
-    DebugInfo("New message header retrieved: rx status %08X\n", header->receiverStatus);
-    if (header->headerLength != sizeof(*header)) {
-        DebugError("header size screwed\n");
-        ret = OEM_ERR_LEN_HDR;
-        goto early_return_task;
-    }
-
-    /**
-     * We have a full header. Mark the Message ID in the handling context.
-     */
-    ctx->mid = header->messageID;
-
-    /**
-     * Check if the whole message length exceeds the buffer size.
-     * If so, truncate and mark that the CRC verification cannot be done.
-     */
-    if (sizeof(*header) + header->messageLength > OEM_TASK_MSG_BUF_SIZE) {
-        bodySize = OEM_TASK_MSG_BUF_SIZE - sizeof(*header);
-        ctx->crcReadSkipped = true;
-    }
-    else
-        bodySize = header->messageLength;
-
-    /**
-     * Read the message body. Some log bodies do not follow the header
-     * immediately (e.g., LOGLIST). 1 second is a safe measure.
-     */
-    ret = OEM_IO_PortRead(portIndex,
-                          readTaskMsgBuf.buf + sizeof(*header),
-                          bodySize,
-                          1000);
-    if (ret != OEM_OK) {
-        DebugError("message body read error: MID %d (mlen %d). Returned %d\n",
-                    header->messageID,
-                    header->messageLength,
-                    ret);
-        ret = OEM_ERR_READ_BODY;
-        goto early_return_task;
-    }
-
-    /**
-     * Read the trailing CRC.
-     */
-    if (ctx->crcReadSkipped == false) {
-        ret = OEM_IO_PortRead(portIndex,
-                              &ctx->msgCrc,
-                              sizeof(oem_crc),
-                              100);
+        ret = sm_feed(sm, d, s, &consumed, ctx);
         if (ret != OEM_OK) {
-            /**
-             * OEM7s occasionally fail to report the CRC trailer. We don't handle
-             * this as an error, but instead mark this on the context to allow
-             * certain handlers to process the message at the risk of bypassing
-             * the validation. This behavior can be enabled by calling
-             * OEM_Log_DisableCsVerification().
-             */
-            DebugError("CRC read error: MID %d. Returned %d\n",
-                        header->messageID, ret);
-            ctx->msgCrc = 0;
-            ctx->crcReadSkipped = true;
+            oem_debug_error("State machine feed error for port %d: %d\n", idx, ret);
+            goto early_return_task;
+        }
+        oem_io_consume(idx, consumed);
+    }
+    
+    if (sm->state != STATE_MESSAGE_READY) {
+        /**
+         * A complete message has not arrived yet.
+         * Read more from the I/O layer.
+         */
+        while (1) {
+            long remaining_ms = ms_until(&deadline);
+            if (remaining_ms <= 0)
+                break;
+
+            ret = oem_io_fill(idx, remaining_ms);
+            if (ret != OEM_OK && ret != OEM_ERR_FULL) {
+                sm_reset(sm);
+                goto early_return_task;
+            }
+
+            /* feed the state machine with the newly arrived data */
+            available = oem_io_available(idx);
+            if (available == 0)
+                continue; /* no data available, try again */
+
+            const void* d; size_t s;
+            if ((ret = oem_io_peek(idx, &d, &s)) != OEM_OK) {
+                oem_debug_error("Failed to peek I/O buffer for port %d: %d\n", idx, ret);
+                goto early_return_task;
+            }
+
+            ret = sm_feed(sm, d, s, &consumed, ctx);
+            if (ret != OEM_OK)
+                goto early_return_task;
+
+            oem_io_consume(idx, consumed);
+
+            if (sm->state == STATE_MESSAGE_READY)
+                break; /* message ready */
         }
     }
 
-    /**
-     * Prepend the sync bytes and call for the handler.
-     */
-    readTaskMsgBuf.buf[0] = OEM_SYNC_BYTE1;
-    readTaskMsgBuf.buf[1] = OEM_SYNC_BYTE2;
-    readTaskMsgBuf.buf[2] = OEM_SYNC_BYTE3;
-    return ProcessMessage(readTaskMsgBuf.buf, ctx);
+    if (sm->state == STATE_FILL && sm->target == TARGET_CRC) {
+        /**
+         * CRC was expected but not read within timeout.
+         * 
+         * OEM7s occasionally fail to report the CRC trailer. Instead of
+         * discarding the message, we mark this on the context to allow
+         * certain handlers to process it at the risk of bypassing the
+         * validation. This behavior can be enabled by calling
+         * oem_log_ignore_missing_crc().
+         */
+        ctx->crc_read_skipped = true;
+        sm->state = STATE_MESSAGE_READY;
+
+        oem_debug_warning("CRC read skipped for port %d: MID %d\n",
+                          idx, ctx->message_id);
+
+        if (using_local_ctx == false) {
+            /* Populate the context with the CRC info for reference, if care. */
+            ctx->crc_calced = oem_crc32(sm->buffer.bytes,
+                                        sizeof(oem_binary_header_t) + ctx->message_length);
+            ctx->crc_received = 0; /* sentinel */
+        }
+    }
+
+    if (sm->state == STATE_MESSAGE_READY) {
+        /* A new message is ready to be processed. */
+        ret = process_reply(sm->buffer.bytes, ctx);
+        sm_reset(sm);
+        return ret;
+    }
+
+    /* If neither a new frame nor CRC read fail, it's timeout. */
+    sm_reset(sm);
+    ret = OEM_ERR_IO_TIMEOUT;
 
 early_return_task:
-    ctx->taskLevel = TASK_MAIN;
+    ctx->task_level = TASK_MAIN;
     return ret;
 }

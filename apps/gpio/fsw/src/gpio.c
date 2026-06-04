@@ -143,6 +143,9 @@ CFE_Status_t GPIO_Init(void)
          */
         CFE_MSG_Init(CFE_MSG_PTR(GPIO_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(GPIO_HK_TLM_MID),
                      sizeof(GPIO_Data.HkTlm));
+        CFE_MSG_Init(CFE_MSG_PTR(GPIO_Data.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(GPIO_BCN_TLM_MID),
+                     sizeof(GPIO_Data.BcnTlm));
+        GPIO_InitOutputDefaults();
 
         /*
          ** Create Software Bus message pipe.
@@ -165,6 +168,16 @@ CFE_Status_t GPIO_Init(void)
         {
             CFE_EVS_SendEvent(GPIO_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
                               "Gpio: Error Subscribing to HK request, RC = 0x%08lX", (unsigned long)status);
+        }
+    }
+
+    if (status == CFE_SUCCESS)
+    {
+        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(GPIO_SEND_BCN_MID), GPIO_Data.CommandPipe);
+        if (status != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(GPIO_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "Gpio: Error Subscribing to BCN request, RC = 0x%08lX", (unsigned long)status);
         }
     }
 

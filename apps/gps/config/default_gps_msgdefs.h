@@ -31,8 +31,6 @@
 
 #define PACKED __attribute__((packed))
 
-#define GRX_CMD_OEM_HANDLER_NAME_LEN 16
-
 /**
  * Handler-MsgId-only payload template.
  */
@@ -45,7 +43,7 @@ typedef struct NATURALLY_ALIGNED {
 ** OEM receiver command types.
 */
 typedef struct PACKED {
-    int portIndex;
+    int interfaceIndex;
 
     uint16 msgId;
     uint8  type;
@@ -55,75 +53,75 @@ typedef struct PACKED {
     uint32 hold;
     double period;
     double offset;
-} GPS_OEMCmd_LogCmd_Payload_t;
+} GPS_OEM_Cmd_Log_Payload_t;
 
 typedef struct NATURALLY_ALIGNED {
-    int portIndex;
+    int interfaceIndex;
 
     uint16 msgId;
     uint8  padding[2];
     uint32 port;
-} GPS_OEMCmd_LogOnceCmd_Payload_t;
+} GPS_OEM_Cmd_LogOnce_Payload_t;
 
 typedef struct PACKED {
-    int portIndex;
+    int interfaceIndex;
 
     uint16 msgId;
     uint32 port;
     double period;
     double offset;
-} GPS_OEMCmd_LogOnTimeCmd_Payload_t;
+} GPS_OEM_Cmd_LogOnTime_Payload_t;
 
 typedef struct NATURALLY_ALIGNED {
-    int portIndex;
+    int interfaceIndex;
 
     uint16 msgId;
     uint8  padding[2];
     uint32 port;
-} GPS_OEMCmd_LogOnChangedCmd_Payload_t;
+} GPS_OEM_Cmd_LogOnChanged_Payload_t;
 
 typedef struct NATURALLY_ALIGNED {
-    int portIndex;
+    int interfaceIndex;
 
     uint16 msgId;
     uint8  padding[2];
     uint32 port;
-} GPS_OEMCmd_LogOnNewCmd_Payload_t;
+} GPS_OEM_Cmd_LogOnNew_Payload_t;
 
 typedef struct NATURALLY_ALIGNED {
-    int portIndex;
+    int interfaceIndex;
 
     uint16 msgId;
     uint8  type;
     uint8  padding;
     uint32 port;
-} GPS_OEMCmd_UnlogCmd_Payload_t;
+} GPS_OEM_Cmd_Unlog_Payload_t;
 
 typedef struct PACKED {
-    int portIndex;
+    int interfaceIndex;
 
     uint32 port;
     bool held;
-} GPS_OEMCmd_UnlogAllCmd_Payload_t;
+} GPS_OEM_Cmd_UnlogAll_Payload_t;
 
 typedef struct NATURALLY_ALIGNED {
-    int portIndex;
+    int interfaceIndex;
 
     uint32 constellation;
     float cutoff;
-} GPS_OEMCmd_ElevationCutoffCmd_Payload_t;
+} GPS_OEM_Cmd_ElevationCutoff_Payload_t;
 
 typedef struct NATURALLY_ALIGNED {
-    int portIndex;
+    int interfaceIndex;
 
     uint32 port;
     uint32 rxType;
     uint32 txType;
     uint32 responses;
-} GPS_OEMCmd_InterfaceModeCmd_Payload_t;
+} GPS_OEM_Cmd_InterfaceMode_Payload_t;
 
 typedef struct NATURALLY_ALIGNED {
-    int portIndex;
+    int interfaceIndex;
 
     uint32 port;
     uint32 baud;
@@ -132,15 +130,15 @@ typedef struct NATURALLY_ALIGNED {
     uint32 stopbits;
     uint32 handshake;
     uint32 _break;
-} GPS_OEMCmd_SerialConfigCmd_Payload_t;
+} GPS_OEM_Cmd_SerialConfig_Payload_t;
 
 typedef struct NATURALLY_ALIGNED {
-    int portIndex;
+    int interfaceIndex;
 
     uint16 msgId;
     uint16 bodylength;
     uint8 body[256];
-} GPS_OEMCmd_PublishCmd_Payload_t;
+} GPS_OEM_Cmd_Publish_Payload_t;
 
 
 /*
@@ -150,41 +148,50 @@ typedef struct NATURALLY_ALIGNED {
     char name[16];
     uint16 msgId;
     uint16 msgLength;
-} GPS_OEMLog_HandlerRegisterCmd_Payload_t;
+} GPS_OEM_Log_HandlerRegister_Payload_t;
 
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_HandlerUnregisterCmd_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_HandlerUnregister_Payload_t;
 
 typedef struct NATURALLY_ALIGNED {
     uint16 msgId;
     int32  options;
     char   libpath[64];
     char   funcName[32];
-} GPS_OEMLog_AddCallbackCmd_Payload_t;
+} GPS_OEM_Log_AddCallback_Payload_t;
 
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_ClearCallbackCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_GetHandlerHkCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_GetMsgStatCmd_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_ClearCallbacks_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_GetHandlerHk_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_GetStat_Payload_t;
 
 typedef struct NATURALLY_ALIGNED {
     uint16 msgId;
     uint8_t status;
     bool override;
-} GPS_OEMLog_SetHandlerStatusCmd_Payload_t;
+} GPS_OEM_Log_HandlerSetStatus_Payload_t;
 
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_HandlerActivateCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_HandlerDeactivateCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_HandlerGoDormantCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_GetHandlerStatusCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_HandlerWakeupCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_HandlerActivateAllCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_HandlerDeactivateAllCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_HandlerSetBrokenCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_GetHandlerMsgLengthCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_GetHandlerNameCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_ResetHandlerCountersCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_DumpRecentMsgCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_IgnoreChecksumCmd_Payload_t;
-typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_DoNotIgnoreChecksumCmd_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_HandlerActivate_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_HandlerDeactivate_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_HandlerGoDormant_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_HandlerGetStatus_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_HandlerWakeup_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_HandlerActivateAll_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_HandlerDeactivateAll_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_HandlerMarkBroken_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_GetMessageLength_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_GetHandlerName_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_ResetStat_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_RejectMissingCrc_Payload_t;
+typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_IgnoreMissingCrc_Payload_t;
+
+/**
+ * oem_log_get_recent_message() takes an offset, allowing a large message to be
+ * retrieved in windows across multiple commands.
+ */
+typedef struct NATURALLY_ALIGNED {
+    uint16 msgId;
+    uint16 padding;
+    uint32 offset;
+} GPS_OEM_Log_GetRecentMessage_Payload_t;
 
 /**
  * These two commands temper with the global handler lock from OUTSIDE the
@@ -193,11 +200,11 @@ typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEMLog_DoNotIgnoreChecksumCmd_Payl
  */
 typedef struct NATURALLY_ALIGNED {
     uint32  Magic; //  C01DCAFE
-} GPS_OEMLog_LockHandlersCmd_Payload_t;
+} GPS_OEM_Log_LockHandlers_Payload_t;
 
 typedef struct NATURALLY_ALIGNED {
     uint32  Magic; //  A7EDECAF
-} GPS_OEMLog_UnlockHandlersCmd_Payload_t;
+} GPS_OEM_Log_UnlockHandlers_Payload_t;
 
 
 /*************************************************************************/

@@ -197,19 +197,6 @@ CFE_Status_t ADCS_AppInit(void)
         }
     }
 
-    if (status == CFE_SUCCESS)
-    {
-        /*
-        ** Subscribe to LOOP by SCH
-        */
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(ADCS_LOOP_MID), ADCS_AppData.CommandPipe);
-        if (status != CFE_SUCCESS)
-        {
-            CFE_EVS_SendEvent(ADCS_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "Adcs App: Error Subscribing to Commands, RC = 0x%08lX", (unsigned long)status);
-        }
-    }
-
     if (status == CFE_SUCCESS) {
         // CAN Endpoint init
         CUBE_EndpointInit();

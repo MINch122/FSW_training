@@ -23,6 +23,6 @@
 #ifndef DEFAULT_GPS_PERFIDS_H
 #define DEFAULT_GPS_PERFIDS_H
 
-#define GPS_PERF_ID 96
+#define GPS_PERF_ID 91
 
 #endif

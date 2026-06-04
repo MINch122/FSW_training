@@ -33,4 +33,14 @@
 
 #include "stx_interface_cfg.h"
 
+#ifndef DEBUG_STX
+#define DEBUG_STX false
+#endif
+
+#if DEBUG_STX
+#define STX_APP_printf(...) OS_printf(__VA_ARGS__)
+#else
+#define STX_APP_printf(...) do { } while (0)
+#endif
+
 #endif

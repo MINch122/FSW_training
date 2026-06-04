@@ -67,16 +67,6 @@
             "option": "CSP_O_NONE"
         },
         {
-            "name": "PAYUEL_OBC",
-            "node": 11,
-            "interface": "CAN",
-            "via": null,
-
-            "priority": 2,
-            "timeout": 1,
-            "option": "CSP_O_NONE"
-        },
-        {
             "name": "UTRX",
             "node": 5,
             "interface": "CAN",
@@ -139,16 +129,6 @@
         {
             "name": "PAY_EXP",
             "node": 11,
-            "interface": "CAN",
-            "via": null,
-
-            "priority": 2,
-            "timeout": 1,
-            "option": "CSP_O_CRC32"
-        },
-        {
-            "name": "TEST",
-            "node": 9,
             "interface": "CAN",
             "via": null,
 

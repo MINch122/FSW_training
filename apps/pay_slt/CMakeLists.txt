@@ -1,14 +1,26 @@
-project(CFE_PAY_SLT C)
+project(CFE_SLT_IFB C)
 
 set(APP_SRC_FILES
-  fsw/src/pay_slt_app.c
-  fsw/src/pay_slt_cmds.c
-  fsw/src/pay_slt_dispatch.c
-  device/src/pay_slt.c
+  fsw/src/SLT_IFB_app.c
+  fsw/src/SLT_IFB_cmds.c
+  fsw/src/SLT_IFB_utils.c
+  device/src/SLT_IFB.c
 )
+
+if (CFE_EDS_ENABLED_BUILD)
+  list(APPEND APP_SRC_FILES
+    fsw/src/SLT_IFB_eds_dispatch.c
+  )
+else()
+  list(APPEND APP_SRC_FILES
+    fsw/src/SLT_IFB_dispatch.c
+  )
+endif()
 
 # Create the app module
 add_cfe_app(pay_slt ${APP_SRC_FILES})
+
+set_target_properties(pay_slt PROPERTIES OUTPUT_NAME "SLT_IFB")
 
 target_include_directories(pay_slt PUBLIC 
 fsw/inc 

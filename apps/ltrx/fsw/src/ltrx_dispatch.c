@@ -145,7 +145,8 @@ void LTRX_DispatchCommand(const CFE_SB_Buffer_t *SBBufPtr)
         
         case LTRX_SEND_STATUS_CC:
             if (!LTRX_VerifyCmdLength(SBBufPtr, ExpectedNoArgsSize, CC)) return;
-            (void)LTRX_SendStatusCmd(SBBufPtr);
+            status = LTRX_SendStatusCmd(SBBufPtr);
+            LTRX_CountCmdResult(status);
             break;
 
         /* ---- Session triggers (dispatch counts result) ---- */

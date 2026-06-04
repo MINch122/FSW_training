@@ -23,6 +23,6 @@
 #ifndef STX_PERFIDS_H
 #define STX_PERFIDS_H
 
-#define STX_PERF_ID 94
+#define STX_PERF_ID 91
 
 #endif

@@ -55,7 +55,22 @@ typedef struct
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS2_InterfaceTransportCmd_Payload_t Payload;
+} ADCS2_InterfaceTransportCmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS2_ResetCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+} ADCS2_SendHkCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+} ADCS2_SendBcnCmd_t;
 
 /********************************************************
  * 
@@ -77,6 +92,11 @@ typedef struct { // ID 42
     ADCS2_ControlEstimationMode_Cmn_Payload_t Payload;
 } ADCS2_ControlEstimationModeCmd_t;
 
+typedef struct { // ID 51
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS2_OrbitMode_Cmn_Payload_t Payload;
+} ADCS2_OrbitModeCmd_t;
+
 typedef struct { // ID 56
     CFE_MSG_CommandHeader_t CommandHeader;
     ADCS2_PowerState_Cmn_Payload_t Payload;
@@ -86,6 +106,21 @@ typedef struct { // ID 65
     CFE_MSG_CommandHeader_t CommandHeader;
     ADCS2_MountingConfig_Cmn_Payload_t Payload;
 } ADCS2_MountingConfigCmd_t;
+
+typedef struct { // ID 67
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS2_EstimatorConfig_Cmn_Payload_t Payload;
+} ADCS2_EstimatorConfigCmd_t;
+
+typedef struct { // ID 68
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS2_SatOrbitParamConfig_Cmn_Payload_t Payload;
+} ADCS2_SatOrbitParamConfigCmd_t;
+
+typedef struct { // ID 76
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS2_OpenLoopCmdHxyzRWCmd_Payload_t Payload;
+} ADCS2_OpenLoopCmdHxyzRWCmd_t;
 
 /********************************************************
  * 
@@ -113,9 +148,25 @@ typedef struct{ // ID 193
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS2_GetMountingConfigCmd_t;
 
+typedef struct{ // ID 195
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS2_GetEstimatorConfigCmd_t;
+
+typedef struct{ // ID 196
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS2_GetSatOrbitParamConfigCmd_t;
+
 typedef struct{ // ID 204
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS2_GetRawGYRSensorCmd_t;
+
+typedef struct{ // ID 205
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS2_GetRawRWLSensorCmd_t;
+
+typedef struct{ // ID 210
+    CFE_MSG_CommandHeader_t CommandHeader;
+} ADCS2_GetMainEstimatorTlmCmd_t;
 
 
 
@@ -183,19 +234,18 @@ typedef struct{ // COMM 10
  * 
  ********************************************************/
 /* Beacon SB MSG */
-// typedef struct
-// {
-//     CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
-//     ADCS2_BcnTlm_Payload_t Payload;         /**< \brief Telemetry payload */
-//     bool IsSunlight;
-// } ADCS2_BcnTlm_t;
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
+    ADCS2_BcnTlm_Payload_t Payload;         /**< \brief Telemetry payload */
+} ADCS2_BcnTlm_t;
 
 /* Housekeeping SB MSG */
-// typedef struct
-// {
-//     CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
-//     ADCS2_HkTlm_Payload_t Payload;         /**< \brief Telemetry payload */
-// } ADCS2_HkTlm_t;
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
+    ADCS2_HkTlm_Payload_t Payload;         /**< \brief Telemetry payload */
+} ADCS2_HkTlm_t;
 
 /* Report SB MSG */
 typedef struct {

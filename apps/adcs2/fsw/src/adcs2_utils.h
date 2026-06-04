@@ -43,6 +43,25 @@
 #define CSP_PORT_EVENT			((uint8)58)		/**< CSP port used for Events ingestion */
 #define CSP_UNKNOWN_LEN			((int32)-1)		/**< CSP parameter value which is used in `csp_transaction_w_opt` */
 
+#define ADCS2_INTERFACE_TRANSPORT_CSP_CAN	((uint8)0u)
+#define ADCS2_INTERFACE_TRANSPORT_UART		((uint8)1u)
+#define ADCS2_UART_INTERVAL_US				((uint32)1000u)
+#define ADCS2_UART_ESCAPE					((uint8)0x1Fu)
+#define ADCS2_UART_EOM						((uint8)0xFFu)
+#define ADCS2_UART_ESCAPE_OFFSET			((uint32)0u)
+#define ADCS2_UART_SOM_OFFSET				((uint32)1u)
+#define ADCS2_UART_ID_OFFSET				((uint32)2u)
+#define ADCS2_UART_HEADER_SIZE_PLAIN		((uint32)3u)
+#define ADCS2_UART_FOOTER_SIZE				((uint32)2u)
+#define ADCS2_UART_SOM_NORMAL_PLAIN			((uint8)0x7Fu)
+#define ADCS2_UART_SOM_NACK_PLAIN			((uint8)0x0Fu)
+#define ADCS2_UART_SOM_ACK_PLAIN			((uint8)0x07u)
+#define ADCS2_UART_SOM_NORMAL_PASS			((uint8)0x7Eu)
+#define ADCS2_UART_SOM_NACK_PASS			((uint8)0x0Eu)
+#define ADCS2_UART_SOM_ACK_PASS				((uint8)0x06u)
+#define ADCS2_UART_FLUSH_TIMEOUT_MS			((uint32)0u)
+#define ADCS2_UART_RX_NEXT_BYTE_TIMEOUT_MS	((uint32)5u)
+#define ADCS2_UART_PROTOCOL_BUFFER_SIZE		((uint32)512u)
 
 /*
 // CubeADCS Log Frame Max Entry Number
@@ -85,7 +104,11 @@ typedef enum V1TctlmCanTransport_TypeEnum {
  * @brief Set Endpoint parameter
  */
 void CUBE_EndpointInit(void);
+int32 ADCS2_SetInterfaceTransport(uint8 transport);
 
+
+int32 ADCS2_SetCommand_Common(uint16 cmdId, const void *setVal, uint16 size);
+int32 ADCS2_GetTelemetry_Common(uint16 tlmId, void *returnVal, uint16 bufferSize);
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                     	 < Telecommand(TC) Functions >                 	     */
@@ -106,8 +129,13 @@ int32 ADCS2_Reset(void);
 int32 ADCS2_SetCurrentUnixTime(const ADCS2_CurrentUnixTimeCmd_Payload_t *setVal);					// 2			X	X	X
 int32 ADCS2_SetPersistConfig(void);																	// 7			O	O	O
 int32 ADCS2_SetControlEstimationMode(const ADCS2_ControlEstimationMode_Cmn_Payload_t *setVal);		// 42			O	O	O
+int32 ADCS2_SetOrbitMode(const ADCS2_OrbitMode_Cmn_Payload_t *setVal);								// 51
+int32 ADCS_SetReferenceRPYValues(const ADCS2_ReferenceRPYvaluesCmd_Payload_t *setVal);				// 54
 int32 ADCS2_SetPowerState(const ADCS2_PowerState_Cmn_Payload_t *setVal);							// 56			O	O	O
 int32 ADCS2_SetMountingConfig(const ADCS2_MountingConfig_Cmn_Payload_t *setVal);					// 65
+int32 ADCS2_SetEstimatorConfig(const ADCS2_EstimatorConfig_Cmn_Payload_t *setVal);					// 67
+int32 ADCS2_SetSatOrbitParamConfig(const ADCS2_SatOrbitParamConfig_Cmn_Payload_t *setVal);			// 68
+int32 ADCS2_SetOpenLoopCmdHxyzRW(const ADCS2_OpenLoopCmdHxyzRWCmd_Payload_t *setVal);				// 76
 
 /********************************************************
  * 
@@ -117,16 +145,26 @@ int32 ADCS2_SetMountingConfig(const ADCS2_MountingConfig_Cmn_Payload_t *setVal);
 //																									// ID	USE		1	2	3	4	5	6	7	8	9	10
 int32 ADCS2_GetCurrentUnixTime(ADCS2_CurrentUnixTimeTlm_Payload_t *returnVal);						// 133			O	O	O
 int32 ADCS2_GetControlEstimationMode(ADCS2_ControlEstimationMode_Cmn_Payload_t *returnVal);			// 150			O	O	O
+int32 ADCS2_GetRawCubeSenseSun(ADCS2_RawCubeSenseSunTlm_Payload_t *returnVal);						// 170
 int32 ADCS2_GetControllerTlm(ADCS2_ControllerTlm_Payload_t *returnVal);								// 172			X	O	X
 int32 ADCS2_GetBackupEstTlm(ADCS2_Estimator_Cmn_Payload_t *returnVal);								// 173			O	X	X
+int32 ADCS2_GetModelsTlm(ADCS2_ModelsTlm_Payload_t *returnVal);										// 174
+int32 ADCS2_GetCalibratedHSSSensor(ADCS2_CalibratedHSSSensorTlm_Payload_t *returnVal);				// 176
 int32 ADCS2_GetCalibratedMAGSensor(ADCS2_CalibratedMAGSensorTlm_Payload_t *returnVal);				// 177			X	X	O
+int32 ADCS2_GetCalibratedFSSSensor(ADCS2_CalibratedFSSSensorTlm_Payload_t *returnVal);				// 178
+int32 ADCS2_GetRawCubeSenseEarth(ADCS2_RawCubeSenseEarthTlm_Payload_t *returnVal);					// 179
 int32 ADCS2_GetRawMAGSensor(ADCS2_RawMAGSensorTlm_Paylaod_t *returnVal);							// 180			O	O	X
 int32 ADCS2_GetPowerState(ADCS2_PowerState_Cmn_Payload_t *returnVal);								// 183			O	O	O
 int32 ADCS2_GetControlMode(ADCS2_ControlModeTlm_Payload_t *returnVal);								// 185			X	X	X
 int32 ADCS2_GetMountingConfig(ADCS2_MountingConfig_Cmn_Payload_t *returnVal);						// 193			O	O	O
-int32 ADCS2_GetRawCSSSensor(ADCS2_RawCSSSensorTlm_Payload_t *returnVal);							// 203			X	O	X
-int32 ADCS2_GetRawGYRSensor(ADCS2_RawGYRSensorTlm_Paylaod_t *returnVal);							// 204			O	O	X
+int32 ADCS2_GetEstimatorConfig(ADCS2_EstimatorConfig_Cmn_Payload_t *returnVal);						// 195
+int32 ADCS2_GetSatOrbitParamConfig(ADCS2_SatOrbitParamConfig_Cmn_Payload_t *returnVal);				// 196
+int32 ADCS2_GetRawCSSSensor(ADCS2_RawCSSSensorTlm_Payload_t *returnVal);							// 203			X	O	X	O
+int32 ADCS2_GetRawGYRSensor(ADCS2_RawGYRSensorTlm_Payload_t *returnVal);							// 204			O	O	X
+int32 ADCS2_GetRawRWLSensor(ADCS2_RawRWLSensorTlm_Payload_t *returnVal);							// 205
+int32 ADCS2_GetCalibratedCSSSensor(ADCS2_CalibratedCSSSensorTlm_Payload_t *returnVal);				// 206			X	X	X	O
 int32 ADCS2_GetCalibratedGYRSensor(ADCS2_CalibratedGYRSensorTlm_Payload_t *returnVal);				// 207			X	X	X
+int32 ADCS2_GetCalibratedRWLSensor(ADCS2_CalibratedRWLSensorTlm_Payload_t *returnVal);				// 209
 int32 ADCS2_GetMainEstTlm(ADCS2_Estimator_Cmn_Payload_t *returnVal);								// 210			O	O	O
 
 /**

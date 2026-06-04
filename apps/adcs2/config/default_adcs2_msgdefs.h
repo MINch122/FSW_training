@@ -34,94 +34,87 @@
 /*                   << ADCS BCN, HK, AOD Structures >>                      */
 /*                                                                           */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-// typedef struct
-// {
-//     /** Combined Power State
-//      *  | 7 |  6 |  5 |  4 |  3 |  2 |  1 |  0 |
-//      *  +--------------------------------------+
-//      *  |Rsv|RWL0|RWL1|RWL2|MAG0|GYRO|FSS0|HSS0|
-//      *  +--------------------------------------+
-//      */
-//     uint8 PowerState; // ID 183
+typedef struct
+{
+    /** Combined Power State
+     *  | 7 |  6 |  5 |  4 |  3 |  2 |  1 |  0 |
+     *  +--------------------------------------+
+     *  |Rsv|RWL0|RWL1|RWL2|MAG0|GYRO|FSS0|HSS0|
+     *  +--------------------------------------+
+     */
+    uint8 PowerState; // ID 183
 
-//     uint8 ControlMode; // ID 185
+    uint8 ControlMode; // ID 185
 
-//     float GYR0CalibratedRateXComponent;
-//     float GYR0CalibratedRateYComponent;
-//     float GYR0CalibratedRateZComponent; // ID 207, 12bytes
+    float GYR0CalibratedRateXComponent;
+    float GYR0CalibratedRateYComponent;
+    float GYR0CalibratedRateZComponent; // ID 207, 12bytes
 
-// } __attribute__((packed)) ADCS2_BcnTlm_Payload_t; /* Total 14 bytes */
+    uint8 CSS[6]; // ID 203
 
-// typedef struct
-// {
-//     uint16 MAG0MCUCurrent; // 2 bytes, ID 167
+} __attribute__((packed)) ADCS2_BcnTlm_Payload_t; /* Total 20 bytes */
 
-//     int16  FSS0MCUTemperature;
-//     uint16 FSS0MCUCurrent;
-//     uint16 FSS0MCUVoltage;
-//     uint8  FSS0CAMSRAMOvercurrent; // combined, 7 bytes, ID 168
+typedef struct
+{
+    uint32 CurrentUnixseconds;
+    uint32 CurrentUnixNanoseconds;
 
-//     float MTQ1PositiveCurrentAverage;
-//     float MTQ1NegativeCurrentAverage;
-//     float MTQ2PositiveCurrentAverage;
-//     float MTQ2NegativeCurrentAverage;
-//     float MTQ3PositiveCurrentAverage;
-//     float MTQ3NegativeCurrentAverage;
-//     uint8 MTQPolarity; // MTQ 1,2,3 (combined), 25 bytes, ID 169
+    uint8 ControlMode;
+    uint8 MainEstimatorMode;
+    uint8 BackupEstimatorMode;
+    uint16 ControlTimeout;
 
-//     int16  HSS0MCUTemperature;
-//     uint16 HSS0MCUCurrent;
-//     uint16 HSS0MCUVoltage; // 6 bytes, ID 217
+    uint8 PowerState;
 
-//     int16  RWL0MCUTemperature;
-//     uint16 RWL0MCUCurrent;
-//     uint16 RWL0BatteryVoltage;
-//     uint16 RWL0BatteryCurrent;
-//     int16  RWL1MCUTemperature;
-//     uint16 RWL1MCUCurrent;
-//     uint16 RWL1BatteryVoltage;
-//     uint16 RWL1BatteryCurrent;
-//     int16  RWL2MCUTemperature;
-//     uint16 RWL2MCUCurrent;
-//     uint16 RWL2BatteryVoltage;
-//     uint16 RWL2BatteryCurrent; // 24 bytes, ID 218
+    int16 MAG0RawVecX;
+    int16 MAG0RawVecY;
+    int16 MAG0RawVecZ;
+    uint8 MAG0ValidFlag:1;
 
-//     int16 MTQ0OpenLoopOnTimeCommand;
-//     int16 MTQ1OpenLoopOnTimeCommand;
-//     int16 MTQ2OpenLoopOnTimeCommand; // 6bytes, ID 182
+    uint8 CSS0;
+    uint8 CSS1;
+    uint8 CSS2;
+    uint8 CSS3;
+    uint8 CSS4;
+    uint8 CSS5;
+    uint8 CSSValidFlag:1;
 
-//     uint8 FSS0CaptureResult;
-//     uint8 FSS0DetectionResult; // 2bytes, ID 170
+    float GYR0RawRateX;
+    float GYR0RawRateY;
+    float GYR0RawRateZ;
+    uint8 GYR0ValidFlag:1;
 
-//     uint8 HSS0CaptureResult;
-//     uint8 HSS0DetectionResult; // 2bytes, ID 179
+    float RWL0MeasSpeed;
+    float RWL1MeasSpeed;
+    float RWL2MeasSpeed;
+    float RWL3MeasSpeed;
 
-//     uint32 bytesReceived; // 4bytes, ID 158
+    int16 CSSCalUnitVecX;
+    int16 CSSCalUnitVecY;
+    int16 CSSCalUnitVecZ;
+    uint8 CalCSSValidFlag:1;
 
-//     float  mtq0Mmax;  /**< MTQ0 maximum dipole moment  (measurment unit is [A.m^2] */
-//     float  mtq1Mmax;  /**< MTQ1 maximum dipole moment  (measurment unit is [A.m^2] */
-//     float  mtq2Mmax;  /**< MTQ2 maximum dipole moment  (measurment unit is [A.m^2] */
-//     uint16 onTimeMax; /**< Maximum magnetorquer on-time  (measurment unit is [ms]) */
-//     float  mtqFfac;
-//         /**< LPF factor for magnetorquer commands. Set to zero for no filtering  (valid range is between 0  and 1 ) */ // 18 bytes, ID 198
+    float GYR0CalibratedRateX;
+    float GYR0CalibratedRateY;
+    float GYR0CalibratedRateZ;
+    uint8 CalGYR0ValidFlag:1;
 
-//     uint8 css0Raw;
-//     uint8 css1Raw;
-//     uint8 css2Raw;
-//     uint8 css3Raw;
-//     uint8 css4Raw;
-//     uint8 css5Raw;
-//     uint8 css6Raw;
-//     uint8 css7Raw;
-//     uint8 css8Raw;
-//     uint8 css9Raw;
-//     uint8  rawCssIsValid:1; // 11bytes, ID 203
+    int16 MainEstRoll;
+    int16 MainEstPitch;
+    int16 MainEstYaw;
+    int16 MainEstIRCBodyRateX;
+    int16 MainEstIRCBodyRateY;
+    int16 MainEstIRCBodyRateZ;
+    uint8 MainActiveEstMode;
 
-//     int16 cssCalVecX;
-//     int16 cssCalVecY;
-//     int16 cssCalVecZ;
-//     uint8  calCssIsValid:1; // 7 bytes, ID 206
-// } ADCS2_HkTlm_Payload_t;  // 107 Bytes
+    int16 BackupEstRoll;
+    int16 BackupEstPitch;
+    int16 BackupEstYaw;
+    uint8 BackupActiveEstMode;
+
+    uint16 ControllerTimeout;
+    uint8 ActiveContMode;
+} __attribute__((packed)) ADCS2_HkTlm_Payload_t;
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -140,6 +133,20 @@ typedef struct
     uint32 CurrentUnixNanoseconds; // Current Unix time ns. (Unit of measure is [ns])
 } __attribute__((packed)) ADCS2_CurrentUnixTimeCmd_Payload_t;
 
+typedef struct
+{ // ID 54
+    float Roll;
+    float Pitch;
+    float Yaw;
+} __attribute__((packed)) ADCS2_ReferenceRPYvaluesCmd_Payload_t;
+
+typedef struct
+{ // ID 76
+    float cmdHx;
+    float cmdHy;
+    float cmdHz;
+} __attribute__((packed)) ADCS2_OpenLoopCmdHxyzRWCmd_Payload_t;
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                      ADCS Get Cmd Payload Structures                      */
@@ -156,6 +163,32 @@ typedef struct
     uint32 CurrentUnixseconds;     // Current Unix time s. (Unit of measure is [s])
     uint32 CurrentUnixNanoseconds; // Current Unix time ns. (Unit of measure is [ns])
 } __attribute__((packed)) ADCS2_CurrentUnixTimeTlm_Payload_t;
+
+typedef struct
+{ // ID 170
+    uint32 TimeSecond;
+    uint32 TimeNanoSecond;
+    int16  FSS0AlphaAngle;
+    int16  FSS0BetaAngle;
+    uint8  FSS0CaptureResult;
+    uint8  FSS0DetectionResult;
+    int16  FSS1AlphaAngle;
+    int16  FSS1BetaAngle;
+    uint8  FSS1CaptureResult;
+    uint8  FSS1DetectionResult;
+    int16  FSS2AlphaAngle;
+    int16  FSS2BetaAngle;
+    uint8  FSS2CaptureResult;
+    uint8  FSS2DetectionResult;
+    int16  FSS3AlphaAngle;
+    int16  FSS3BetaAngle;
+    uint8  FSS3CaptureResult;
+    uint8  FSS3DetectionResult;
+    uint8  ValidResult0:1; // FSS0
+    uint8  ValidResult1:1; // FSS1
+    uint8  ValidResult2:1; // FSS2
+    uint8  ValidResult3:1; // FSS3
+} __attribute__((packed)) ADCS2_RawCubeSenseSunTlm_Payload_t;
 
 typedef struct
 { // ID 172
@@ -208,9 +241,66 @@ typedef struct
 	uint8	RWL1ActiveFlag:1;
 	uint8	RWL2ActiveFlag:1;
 	uint8	RWL3ActiveFlag:1;
+    uint8   FmcStage;
 
 } __attribute__((packed)) ADCS2_ControllerTlm_Payload_t;
 
+typedef struct
+{ // ID 174
+    uint32	TimeSeconds;
+	uint32	TimeNanoSeconds;
+	int32	posXeci;
+	int32	posYeci;
+	int32	posZeci;
+	int16	velXeci;
+	int16	velYeci;
+	int16	velZeci;
+	int16	LatGeoD;
+	int16	LatGeoC;
+	int16	Lon;
+	uint32	Alt;
+	int32	posXeciTarg;
+	int32	posYeciTarg;
+	int32	posZeciTarg;
+	int16	MagORCX;
+	int16	MagORCY;
+	int16	MagORCZ;
+	int16	SunORCX;
+	int16	SunORCY;
+	int16	SunORCZ;
+	int16	SunBetaAng;
+	int16	HorzAngXoYo;
+	int16	HorzAngEastXo;
+	int16	HorzAngEastYi;
+	int32	GndTargORCX;
+	int32	GndTargORCY;
+	int32	GndTargORCZ;
+	uint16	ASGP4BatchCnt;
+	uint16	ASGP4PosDelta;
+	uint8	ActiveOrbitMode:2;
+	uint8	ASGP4PosErr:1;
+	uint8	flagEclipse:1;
+	uint8	SrcOrb:2;
+
+} __attribute__((packed)) ADCS2_ModelsTlm_Payload_t;
+
+typedef struct
+{ // ID 176
+    uint32	TimeSeconds;
+    uint32	TimeNanoSeconds;
+
+    int16	HSS0CalVecX;
+    int16	HSS0CalVecY;
+    int16	HSS0CalVecZ;
+
+    int16	HSS1CalVecX;
+    int16	HSS1CalVecY;
+    int16	HSS1CalVecZ;
+
+	uint8	HSS0ValidFlag:1;
+	uint8	HSS1ValidFlag:1;
+
+} __attribute__((packed)) ADCS2_CalibratedHSSSensorTlm_Payload_t;
 
 typedef struct
 { // ID 177
@@ -231,6 +321,54 @@ typedef struct
 	uint8	MAG1BestFlag:1;
 
 } __attribute__((packed)) ADCS2_CalibratedMAGSensorTlm_Payload_t;
+
+typedef struct
+{ // ID 178
+    uint32	TimeSeconds;
+    uint32	TimeNanoSeconds;
+
+    int16	FSS0CalVecX;
+    int16	FSS0CalVecY;
+    int16	FSS0CalVecZ;
+
+    int16	FSS1CalVecX;
+    int16	FSS1CalVecY;
+    int16	FSS1CalVecZ;
+
+    int16	FSS2CalVecX;
+    int16	FSS2CalVecY;
+    int16	FSS2CalVecZ;
+
+    int16	FSS3CalVecX;
+    int16	FSS3CalVecY;
+    int16	FSS3CalVecZ;
+
+	uint8	FSS0ValidFlag:1;
+	uint8	FSS1ValidFlag:1;
+	uint8	FSS2ValidFlag:1;
+	uint8	FSS3ValidFlag:1;
+	uint8	FSS0BestFlag:1;
+	uint8	FSS1BestFlag:1;
+	uint8	FSS2BestFlag:1;
+	uint8	FSS3BestFlag:1;
+
+} __attribute__((packed)) ADCS2_CalibratedFSSSensorTlm_Payload_t;
+
+typedef struct
+{ // ID 179
+    uint32 TimeSecond;
+    uint32 TimeNanoSecond;
+    int16  HSS0RawElevationAngle;
+    int16  HSS0RawRotationAngle;
+    uint8  HSS0CaptureResult;
+    uint8  HSS0DetectionResult;
+    int16  HSS1RawElevationAngle;
+    int16  HSS1RawRotationAngle;
+    uint8  HSS1CaptureResult;
+    uint8  HSS1DetectionResult;
+    uint8  HSS0ValidFlag:1; // HSS0
+    uint8  HSS1ValidFlag:1; // HSS1
+} __attribute__((packed)) ADCS2_RawCubeSenseEarthTlm_Payload_t;
 
 typedef struct
 { // ID 180
@@ -281,7 +419,31 @@ typedef struct
     float GYR1RawRateZ;
     uint8 GYR0ValidFlag:1;
     uint8 GYR1ValidFlag:1;
-} __attribute__((packed)) ADCS2_RawGYRSensorTlm_Paylaod_t;
+} __attribute__((packed)) ADCS2_RawGYRSensorTlm_Payload_t;
+
+typedef struct
+{ // ID 205
+    uint32 TimeSeconds;
+    uint32 TimeNanoSeconds;
+    float RWL0MeasSpeed;
+    float RWL1MeasSpeed;
+    float RWL2MeasSpeed;
+    float RWL3MeasSpeed;
+    uint8 RWL0ValidFlag:1;
+    uint8 RWL1ValidFlag:1;
+    uint8 RWL2ValidFlag:1;
+    uint8 RWL3ValidFlag:1;
+} __attribute__((packed)) ADCS2_RawRWLSensorTlm_Payload_t;
+
+typedef struct
+{ // ID 206
+    uint32 TimeSeconds;
+    uint32 TimeNanoSeconds;
+    int16 CSSCalUnitVecX;
+    int16 CSSCalUnitVecY;
+    int16 CSSCalUnitVecZ;
+    uint8 CSSValidFlag:1;
+} __attribute__((packed)) ADCS2_CalibratedCSSSensorTlm_Payload_t;
 
 typedef struct
 { // ID 207
@@ -305,6 +467,19 @@ typedef struct
     uint8   EXTGYR1ValidFlag:1;
 } __attribute__((packed)) ADCS2_CalibratedGYRSensorTlm_Payload_t;
 
+typedef struct
+{ // ID 209
+    uint32	TimeSeconds;
+    uint32	TimeNanoSeconds;
+    float	WhlSBCTrqX;
+    float	WhlSBCTrqY;
+    float	WhlSBCTrqZ;
+    float	WhlSBCMomX;
+    float	WhlSBCMomY;
+    float	WhlSBCMomZ;
+    uint8   RWLValidFlag:1;
+} __attribute__((packed)) ADCS2_CalibratedRWLSensorTlm_Payload_t;
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                ADCS Set/Get Cmd Common Payload Structures                 */
@@ -323,6 +498,11 @@ typedef struct
     uint8  BackupEstimatorMode;
     uint16 ControlTimeout;
 } __attribute__((packed)) ADCS2_ControlEstimationMode_Cmn_Payload_t;
+
+typedef struct
+{ // ID 51 & 162
+    uint8 OrbitMode;
+} __attribute__((packed)) ADCS2_OrbitMode_Cmn_Payload_t;
 
 typedef struct
 { // ID 56 & 183
@@ -435,6 +615,41 @@ typedef struct
 } __attribute__((packed)) ADCS2_MountingConfig_Cmn_Payload_t;
 
 typedef struct
+{ // ID 67 & 195
+    uint8 DefaultMainEstimatorMode;
+    uint8 DefaultBackupEstimatorMode;
+    float MAGMeasurementNoise;
+    float CSSMeasurementNoise;
+    float FSSMeasurementNoise;
+    float HSSMeasurementNoise;
+    float STRMeasurementNoise;
+    float MMTRKFSystemNoise;
+    float EKFSystemNoise;
+    float NutationEpsilonCorrection;
+    float NutationPsiCorrection;
+
+    uint8 UseFSSinEKF : 1;
+    uint8 UseCSSinEKF : 1;
+    uint8 UseHSSinEKF : 1;
+    uint8 UseSTRinEKF : 1;
+    uint8 TriadVector1 : 4;
+    uint8 TriadVector2 : 4;
+
+} __attribute__((packed)) ADCS2_EstimatorConfig_Cmn_Payload_t;
+
+typedef struct
+{ // ID 68 & 196
+    double Epoch;
+    double Inclination;
+    double RAAN;
+    double Eccentricity;
+    double AOP;
+    double MeanAnomaly;
+    double MeanMotion;
+    double B_StarDrag;
+} __attribute__((packed)) ADCS2_SatOrbitParamConfig_Cmn_Payload_t;
+
+typedef struct
 { // ID 173 & 210
     uint32 TimeSecond;
     uint32 TimeNanoSecond;
@@ -542,7 +757,7 @@ typedef struct
     ADCS2_Estimator_Cmn_Payload_t	BackupEst;
 	
 	// ID 204
-	ADCS2_RawGYRSensorTlm_Paylaod_t	GYR0;
+	ADCS2_RawGYRSensorTlm_Payload_t	GYR0;
 	
 	// ID 180
     ADCS2_RawMAGSensorTlm_Paylaod_t MAG0;
@@ -615,7 +830,7 @@ typedef struct
     ADCS2_Estimator_Cmn_Payload_t	MainEst;
 		
 	// ID 204
-	ADCS2_RawGYRSensorTlm_Paylaod_t	GYR0;
+	ADCS2_RawGYRSensorTlm_Payload_t	GYR0;
 	
 	// ID 180
     ADCS2_RawMAGSensorTlm_Paylaod_t MAG0;
@@ -668,6 +883,126 @@ typedef struct
 } __attribute__((packed)) ADCS2_COMM_03_FULL_Payload_t; /* Total 85.25 bytes */
 
 
+typedef struct
+{	// COMM 04 - Compact
+
+	// Simple Header
+	uint16	sync_word;
+
+	// ID 210
+    ADCS2_Estimator_Cmn_Payload_t	MainEst;
+
+	// ID 203
+    ADCS2_RawCSSSensorTlm_Payload_t	RawCSS;
+
+	// ID 206
+	ADCS2_CalibratedCSSSensorTlm_Payload_t CalCSS;
+
+	// ID 174
+	ADCS2_ModelsTlm_Payload_t	Models;
+
+} __attribute__((packed)) ADCS2_COMM_04_COMP_Payload_t; /* Total 190 bytes */
+
+typedef struct
+{	// COMM 04 - Full
+
+	// Simple Header
+	uint16	sync_word;
+
+	// ID 210
+    ADCS2_Estimator_Cmn_Payload_t	MainEst;
+	
+	// ID 173
+    ADCS2_Estimator_Cmn_Payload_t	BackupEst;
+
+	// ID 203
+    ADCS2_RawCSSSensorTlm_Payload_t	RawCSS;
+
+	// ID 206
+	ADCS2_CalibratedCSSSensorTlm_Payload_t CalCSS;
+
+	// ID 174
+	ADCS2_ModelsTlm_Payload_t	Models;
+
+} __attribute__((packed)) ADCS2_COMM_04_FULL_Payload_t;
+
+typedef struct
+{	// COMM 05
+
+	// Simple Header
+	uint16	sync_word;
+
+	// ID 210
+    ADCS2_Estimator_Cmn_Payload_t	MainEst;
+
+	// ID 203
+    ADCS2_RawCSSSensorTlm_Payload_t	RawCSS;
+
+	// ID 206
+	ADCS2_CalibratedCSSSensorTlm_Payload_t CalCSS;
+
+	// ID 170
+	ADCS2_RawCubeSenseSunTlm_Payload_t	RawFSS;
+
+	// ID 178
+	ADCS2_CalibratedFSSSensorTlm_Payload_t	CalFSS;
+
+} __attribute__((packed)) ADCS2_COMM_05_Payload_t; /* Total 190 bytes */
+
+typedef struct
+{	// COMM 06
+
+	// Simple Header
+	uint16	sync_word;
+
+	// ID 210
+    ADCS2_Estimator_Cmn_Payload_t	MainEst;
+
+	// ID 205
+    ADCS2_RawRWLSensorTlm_Payload_t	RawRWL;
+
+	// ID 209
+	ADCS2_CalibratedRWLSensorTlm_Payload_t CalRWL;
+
+} __attribute__((packed)) ADCS2_COMM_06_Payload_t; /* Total ?? bytes */
+
+typedef struct
+{	// COMM 07
+
+	// Simple Header
+	uint16	sync_word;
+
+	// ID 210
+    ADCS2_Estimator_Cmn_Payload_t	MainEst;
+
+	// ID 205
+    ADCS2_RawRWLSensorTlm_Payload_t	RawRWL;
+
+	// ID 209
+	ADCS2_CalibratedRWLSensorTlm_Payload_t CalRWL;
+
+	// ID 178
+	ADCS2_CalibratedFSSSensorTlm_Payload_t	CalFSS;
+
+} __attribute__((packed)) ADCS2_COMM_07_Payload_t; /* Total ?? bytes */
+
+typedef struct
+{	// COMM 08
+
+	// Simple Header
+	uint16	sync_word;
+
+	// ID 210
+    ADCS2_Estimator_Cmn_Payload_t	MainEst;
+
+	// ID 179
+    ADCS2_RawCubeSenseEarthTlm_Payload_t	RawHSS;
+
+	// ID 176
+	ADCS2_CalibratedHSSSensorTlm_Payload_t	CalHSS;
+
+
+} __attribute__((packed)) ADCS2_COMM_08_Payload_t; /* Total ?? bytes */
 
 /*************************************
  * CubeADCS Event Entry
@@ -704,5 +1039,10 @@ typedef struct
 //     } Identifier;
 //     uint8_t EventData[8];
 // } __attribute__((packed)) ADCS2_Frame_t;
+
+typedef struct
+{
+    uint8 TransportType;
+} __attribute__((packed)) ADCS2_InterfaceTransportCmd_Payload_t;
 
 #endif

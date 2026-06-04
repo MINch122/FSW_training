@@ -10,11 +10,19 @@
 #include "oem_config.h"
 #include "msg/oem_msg_common.h"
 
+
+/**
+ * Pass this to oem_log_handler_register() if the expected log length is
+ * variable, e.g., it has per-satellite components.
+ */
+#define OEM_LOG_HANDLER_MLEN_VARIABLE   0
+
+
 /**
  * @brief Log handling callback function type.
  * 
  * @details A log callback takes a full LOG message (including the header) and
- *          must return a oem_ret error code or a user-defined return value.
+ *          must return a oem_ret_t error code or a user-defined return value.
  * 
  *          If a callback returns any other values than OEM_OK, the handling
  *          process will return immediately and any remaining callbacks
@@ -35,37 +43,31 @@ typedef struct oem_log_handler_s oem_log_handler_t;
  * @brief Log handler message statistics.
  */
 typedef struct {
-    uint32_t    logCount;
-    uint32_t    logErrCount;
-    uint8_t     errorCause; /* Last reported error code (oem_ret). */
-} oem_log_handler_stat_t;
+    uint32_t    log_count;
+    uint32_t    log_err_count;
+    uint32_t    recent_msg_timestamp;
+    int         error_cause; /* Last reported error code (oem_ret_t). */
+} oem_log_stat_t;
 
 /**
  * @brief Log handler housekeeping.
  */
 typedef struct {
-    oem_ushort  messageId;
-    oem_ushort  messageLength;
-    uint32_t    recentMsgTimeStamp;
-    int         attachedCallbacks;
-    uint32_t    logCount;
-    uint32_t    logErrCount;
-    uint8_t     errorCause;
+    oem_ushort  message_id;
+    oem_ushort  message_length;
+    uint32_t    recent_msg_timestamp;
+    int         callbacks;
+    uint32_t    log_count;
+    uint32_t    log_err_count;
+    int         error_cause; /* Last reported error code (oem_ret_t). */
     uint8_t     status;
-    bool        ignoreChecksum;
+    bool        ignore_checksum;
     char        name[OEM_LOG_HANDLER_NAME_LEN];
 } oem_log_handler_hk_t;
 
 
 /**
- * Pass this to OEM_Log_RegisterHandler() if the expected log length is
- * variable, e.g., it has per-satellite components.
- */
-#define OEM_LOG_HANDLER_MLEN_VARIABLE   0
-
-
-/**
- * @brief Log handler status. See OEM_Log_SetHandlerStatus() and similar methods.
+ * @brief Log handler status. See oem_log_handler_set_status() and similar methods.
  */
 typedef enum __attribute__((packed)) {
     /**
@@ -101,103 +103,194 @@ typedef enum __attribute__((packed)) {
 
 
 /**
- * @brief   Initialize the handler mutex.
+ * @brief Initialize the log layer.
  * 
- * @details Handler mutex prevents race conditions when handler objects or
- *          their attributes are retrieved or altered. Log handling itself
- *          does not lock the mutex.
- * 
- *          Lock/unlock return values are not checked internally; i.e., handler 
- *          methods will still operate even if the mutex initialization failes 
- *          or gets skipped. It is still recommended to properly call this 
- *          method at the Application initialization step.
+ * @details
+ *      - This function must be called before any other log handler functions.
+ *      - This function initializes the internal mutex for handler operations.
+ *      - Successful mutex lock is not checked internally. The log layer will
+ *            still run regardless of the mutex status.
  *   
  * @return  OEM_OK: Successful.
  *          OEM_ERR_MUTEX_INIT: pthread mutex init failed.
  */
-int OEM_Log_HandlerInit(void);
+int oem_log_init(void);
+
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  Log handler registration
+ * ════════════════════════════════════════════════════════════════════════ */
+
 
 /**
  * @brief Register a new empty handler for a Log Message. 
+ *
  *        The new handler has an INACTIVE status and no callbacks, meaning only
- *        statistics are updated as messages arrive. For actual processing the
- *        user must attach callbacks and then manually activate the handler by
+ *        counters are updated as messages arrive. For actual processing the
+ *        user must attach callbacks and manually activate the handler by
  *        ground commands.
  * 
  * @details
- *        1) The name string has a length limit of OEM_LOG_HANDLER_NAME_LEN.
- *        2) Incoming messages will be truncated by a size limit of 
- *           OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE.
- *        3) Maximum number of handlers is defined by OEM_LOG_HANDLER_MAX.
+ *        - Maximum number of handlers is defined by OEM_LOG_HANDLER_MAX.
+ *        - Only one handler can be registered per a Message ID.
+ *        - @a mlen is checked against the actual message length in the
+ *              header. The handler will reject messages with incorrect
+ *              lengths. For variable-length messages, set @a mlen to 
+ *              OEM_LOG_HANDLER_MLEN_VARIABLE, whose maximum length is
+ *              defined by OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE. If the message
+ *              length is greater than this maximum, it will be truncated.
  * 
- * @param name Handler name.
- * @param mid Message ID.
- * @param mlen Message length. Header inclusive, CRC exclusive. Set this 0 if
- *             the message has variable-lengths. 
+ * @param name Handler name, shorter than OEM_LOG_HANDLER_NAME_LEN.
+ * @param mid  Log Message ID for this handler.
+ * @param mlen Message length. Header inclusive, CRC exclusive. Set this to
+ *             OEM_LOG_HANDLER_MLEN_VARIABLE if the length is variable.
  * @return OEM_OK: Successful.
  *         OEM_ERR_EXISTS: This @a mid has already been registered.
  *         OEM_ERR_FULL: Handler slot is full.
  *         OEM_ERR_NOMEM: Could not allocate the message buffer (malloc).
  */
-int OEM_Log_RegisterHandler(const char* name,
-                            oem_ushort mid,
-                            oem_ushort mlen);
+int oem_log_handler_register(const char* name,
+                             oem_ushort mid,
+                             oem_ushort mlen);
 
 /**
- * @brief Unregister an existing handler to free a handler slot.
+ * @brief Unregister an existing handler to free the handler slot.
  * 
  * @param mid Message ID to unregister.
  * @return OEM_OK: Successful. 
- *         OEM_ERR_NOTFOUND: There is no handler for @a mid.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
  */
-int OEM_Log_UnregisterHandler(oem_ushort mid);
+int oem_log_handler_unregister(oem_ushort mid);
+
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  Log handler status management.
+ *  
+ *  - A handler can have one of the 4 statuses: ACTIVE, INACTIVE, DORMANT,
+ *      and BROKEN.
+ *  1) ACTIVE is a normal status. The handler will, upon receiving a message:
+ *      - Validate the message
+ *      - Update the log statistics (e.g., log count, error count, etc.)
+ *      - Execute the attached callbacks.
+ *  2) INACTIVE is a passive status. The handler will, upon receiving a message:
+ *      - Validate the message
+ *      - Update the log statistics and return.
+ *  3) DORMANT handlers completely ignore incoming messages (nothing happens).
+ *  4) BROKEN handlers also ignore incoming messages, but they are intended to
+ *      indicate an anomaly during processing, typically set by a callback.
+ * 
+ *  - Status transition rules:
+ *  1) ACTIVE status can enter INACTIVE or DORMANT status.
+ *  2) INACTIVE status can enter ACTIVE or DORMANT status.
+ *  3) DORMANT status can only enter to INACTIVE status, by calling
+ *       oem_log_handler_wakeup().
+ *  4) BROKEN status can only be set by calling oem_log_handler_mark_broken(),
+ *       and can only be escaped by calling oem_log_handler_set_status() with
+ *       @a override set to true.
+ * 
+ * ════════════════════════════════════════════════════════════════════════ */
 
 /**
- * @brief Add a message processing callback to a handler. Callbacks are
- *        sequentially executed as a message arrives, in the order of
- *        addtion. The handler must be active for the callbacks to run.
+ * @brief Activate a handler from the INACTIVE status.
  * 
  * @details
- *        Callbacks are added as a linked-list node. If a callback returns
- *        any other values than OEM_OK, the rest of the callbacks won't be
- *        called.
- *        Handler mutex is not locked at the moment of callback execution.
+ *      - Handlers with ACTIVE status will execute the attached callbacks as
+ *          messages arrive.
+ *      - Only handlers with INACTIVE status can be activated. To change the
+ *          status from DORMANT to ACTIVE, call oem_log_handler_wakeup() first.
  * 
- * @param mid Message ID of the handler to add the callback to.
- * @param callback A callback function. See oem_log_callback_t.
- * @return OEM_OK: Successful.
- *         OEM_ERR_NOTFOUND: There is no handler for @a mid.
- *         OEM_ERR_LIST: Callback list-put failed.
+ * @param mid Message ID of the handler.
+ * @return See oem_log_set_handler_status().
  */
-int OEM_Log_AddCallback(oem_ushort mid,
-                        oem_log_callback_t callback);
+int oem_log_handler_activate(oem_ushort mid);
 
-int OEM_Log_ClearCallbacks(oem_ushort mid);
+/**
+ * @brief Deactivate a handler from the ACTIVE status.
+ * 
+ * @details
+ *     - Handlers with INACTIVE status will not execute the attached callbacks,
+ *         but the log stats will still be updated as messages arrive.
+ * 
+ * @param mid Message ID of the handler.
+ * @return See oem_log_set_handler_status().
+ */
+int oem_log_handler_deactivate(oem_ushort mid);
+
+/**
+ * @brief Make a handler dormant from the ACTIVE/INACTIVE status.
+ * 
+ * @details
+ *    - Handlers with DORMANT status will completely ignore incoming messages,
+ *        as if they were not received, i.e., the log stats are not updated.
+ *    - DORMANT status is designed for a handler to be temporarily disabled
+ *        without losing the handler settings (e.g., attached callbacks). To 
+ *        wake up a dormant handler, call oem_log_handler_wakeup().
+ * 
+ * @param mid Message ID of the handler.
+ * @return See oem_log_set_handler_status().
+ */
+int oem_log_handler_go_dormant(oem_ushort mid);
+
+/**
+ * @brief Wake up a handler from its DORMANT status and turn it INACTIVE.
+ * 
+ * @param mid Message ID of the handler.
+ * @return See oem_log_set_handler_status().
+ */
+int oem_log_handler_wakeup(oem_ushort mid);
+
+/**
+ * @brief Activate all INACTIVE handlers.
+ * 
+ * @return OEM_OK (never fails).
+ */
+int oem_log_handler_activate_all(void);
+
+/**
+ * @brief Deactivate all ACTIVE handlers.
+ * 
+ * @return OEM_OK (never fails).
+ */
+int oem_log_handler_deactivate_all(void);
+
+/**
+ * @brief Mark a handler as broken.
+ * 
+ * @details
+ *     - Handlers with BROKEN status completely ignore incoming messages, and
+ *         the log stats are not updated. The behavior is identical to DORMANT.
+ *     - BROKEN status is designed to be set by a driver command or a handler
+ *         to inform ground operators of an anomaly in log handling. Call this
+ *         in the callback context.
+ *     - The only way to escape this is by calling oem_log_handler_set_status()
+ *         with @a override set to true.
+ * 
+ * @param mid Message ID of the handler.
+ * @return See oem_log_set_handler_status().
+ */
+int oem_log_handler_mark_broken(oem_ushort mid);
 
 /**
  * @brief Set a handler running status. See oem_log_handler_status_t for details.
  * 
  * @details
- *        1) An active/inactive handler can only transition to active/inactive
- *           or dormant.
- *        2) A dormant handler can only be "awaken" to inactive by calling
- *           OEM_Log_HandlerWakeup().
- *        3) No status can go broken unless by OEM_Log_HandlerSetBroken().
- *        4) Setting @a override to true ignores all the limits above. This is
- *           the only way for a handler to escape from HANDLER_BROKEN, and must
- *           be carefully applied by ground operators.
+ *     - Using this function is not recommended for normal status transitions.
+ *         Instead, use the specific transition functions like
+ *         oem_log_handler_activate(), oem_log_handler_deactivate().
+ *     - Setting @a override to true allows any status transition, intended as
+ *         a plumbing command for ground operators.
  * 
  * @param mid Message ID of the handler.
  * @param status Destination status.
  * @param override: Force the status transition (not recommended).
  * @return OEM_OK: Successful.
- *         OEM_ERR_NOTFOUND: There is no handler for @a mid.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
  *         OEM_ERR_RANGE: No such @a status is defined.
  *         OEM_ERR_INVALID: Invalid transition (only when @a override is false).
  */
-int OEM_Log_SetHandlerStatus(oem_ushort mid,
-                             uint8_t status,
-                             bool override);
+int oem_log_handler_set_status(oem_ushort mid,
+                               uint8_t status,
+                               bool override);
 
 /**
  * @brief Get the running status from a handler.
@@ -205,77 +298,46 @@ int OEM_Log_SetHandlerStatus(oem_ushort mid,
  * @param mid Message ID of the handler.
  * @param[out] status Current handler status.
  * @return OEM_OK: Successful.
- *         OEM_ERR_NOTFOUND: There is no handler for @a mid.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
  *         OEM_ERR_NULL: @a status is null.
  */
-int OEM_Log_GetHandlerStatus(oem_ushort mid,
-                             uint8_t* status);
+int oem_log_handler_get_status(oem_ushort mid,
+                               uint8_t* status);
+
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  Log Message processing
+ * ════════════════════════════════════════════════════════════════════════ */
+
 
 /**
- * @brief Activate a handler from the inactive status.
+ * @brief Add a message processing callback to a handler. Callbacks are
+ *        sequentially executed as a message arrives, in the order of
+ *        addtion. The handler must be ACTIVE for the callbacks to run.
+ * 
+ * @details
+ *        - Callbacks are added as a linked-list node.
+ *        - If a callback returns any other values than OEM_OK, the rest of
+ *            the callbacks won't be called.
+ *        - Handler mutex is not locked at the moment of callback execution.
  * 
  * @param mid Message ID of the handler.
- * @return See OEM_Log_SetHandlerStatus().
- */
-int OEM_Log_HandlerActivate(oem_ushort mid);
-
-/**
- * @brief Dectivate a handler from the active status.
- * 
- * @param mid Message ID of the handler.
- * @return See OEM_Log_SetHandlerStatus().
- */
-int OEM_Log_HandlerDeacivate(oem_ushort mid);
-
-/**
- * @brief Make a handler dormant from the active/inactive status.
- * 
- * @param mid Message ID of the handler.
- * @return See OEM_Log_SetHandlerStatus().
- */
-int OEM_Log_HandlerGoDormant(oem_ushort mid);
-
-/**
- * @brief Wake up a handler from its dormant status and turn it inactive.
- * 
- * @param mid Message ID of the handler.
- * @return See OEM_Log_SetHandlerStatus().
- */
-int OEM_Log_HandlerWakeup(oem_ushort mid);
-
-/**
- * @brief Activate all deactive handlers.
- * 
- * @return OEM_OK (never fails).
- */
-int OEM_Log_HandlerActivateAll(void);
-
-/**
- * @brief Dectivate all active handlers.
- * 
- * @return OEM_OK (never fails).
- */
-int OEM_Log_HandlerDeactivateAll(void);
-
-/**
- * @brief Mark a handler as broken.
- * 
- * @param mid Message ID of the handler.
- * @return See OEM_Log_SetHandlerStatus().
- */
-int OEM_Log_HandlerSetBroken(oem_ushort mid);
-
-/**
- * @brief Retrieve the registered message length from a handler. The length
- *        should be header inclusive, CRC exclusive.
- * 
- * @param mid Message ID of the handler.
- * @param[out] mlen Registered message length. 0 if variable-lengthed.
+ * @param callback A callback function. See oem_log_callback_t.
  * @return OEM_OK: Successful.
- *         OEM_ERR_NOTFOUND: There is no handler for @a mid.
- *         OEM_ERR_NULL: @a mlen is null.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
+ *         OEM_ERR_LOG_LIST: Callback list-put failed.
  */
-int OEM_Log_GetMessageLength(oem_ushort mid, oem_ushort* mlen);
+int oem_log_add_callback(oem_ushort mid,
+                         oem_log_callback_t callback);
+
+/**
+ * @brief Clear all callbacks attached to a handler.
+ * 
+ * @param mid Message ID of the handler.
+ * @return OEM_OK: Successful.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
+ */
+int oem_log_clear_callbacks(oem_ushort mid);
 
 /**
  * @brief Retrieve message statistics.
@@ -283,10 +345,63 @@ int OEM_Log_GetMessageLength(oem_ushort mid, oem_ushort* mlen);
  * @param mid Message ID of the handler.
  * @param[out] stat Message counters.
  * @return OEM_OK: Successful.
- *         OEM_ERR_NOTFOUND: There is no handler for @a mid.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
  *         OEM_ERR_NULL: @a stat is null.
  */
-int OEM_Log_GetMessageStatistics(oem_ushort mid, oem_log_handler_stat_t* stat);
+int oem_log_get_stat(oem_ushort mid, oem_log_stat_t* stat);
+
+/**
+ * @brief Reset message statistics to zeros.
+ * 
+ * @param mid Message ID of the handler.
+ * @return OEM_OK: Successful.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
+ */
+int oem_log_reset_stat(oem_ushort mid);
+
+/**
+ * @brief Retrieve the handler housekeeping bundle.
+ * 
+ * @param mid Message ID of the handler.
+ * @param[out] hk Handler housekeeping.
+ * @return OEM_OK: Successful.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
+ *         OEM_ERR_NULL: @a hk is null.
+ */
+int oem_log_get_handler_hk(oem_ushort mid,
+                           oem_log_handler_hk_t* hk);
+
+/**
+ * @brief Copy the latest received message from a handler to @a buffer.
+ *        If @a limit is smaller than the actual message length, the copy
+ *        will be truncated accordingly.
+ * 
+ * @param mid         Message ID of the handler.
+ * @param[out] buffer Buffer to copy the recent message.
+ * @param offset      Offset in the message to start copying.
+ * @param limit       Available size @a buffer.
+ * @param[out] copied Actually copied bytes. NULL allowed.     
+ * @return OEM_OK: Successful.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
+ *         OEM_ERR_EMPTY: There is no recent message.
+ *         OEM_ERR_NULL: @a buffer is null.
+ */
+int oem_log_get_recent_message(oem_ushort mid,
+                                void*   buffer,
+                                size_t  offset,
+                                size_t  limit,
+                                size_t* copied);
+
+/**
+ * @brief Get the registered message length for a handler.
+ * 
+ * @param mid Message ID of the handler.
+ * @param[out] mlen Registered message length. 0 if variable-lengthed.
+ * @return OEM_OK: Successful.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
+ *         OEM_ERR_NULL: @a mlen is null.
+ */
+int oem_log_get_message_length(oem_ushort mid, oem_ushort* mlen);
 
 /**
  * @brief Retrieve handler name.
@@ -295,74 +410,36 @@ int OEM_Log_GetMessageStatistics(oem_ushort mid, oem_log_handler_stat_t* stat);
  * @param[out] name Handler name buffer, at least a size of
  *                  OEM_LOG_HANDLER_NAME_LEN.
  * @return OEM_OK: Successful.
- *         OEM_ERR_NOTFOUND: There is no handler for @a mid.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
  *         OEM_ERR_NULL: @a name is null.
  */
-int OEM_Log_GetHandlerName(oem_ushort mid, char* name);
+int oem_log_get_handler_name(oem_ushort mid, char* name);
 
 /**
- * @brief Reset message statistics.
+ * @brief Ignore future CRC read failures for a log.
+ * 
+ * @details
+ *    - Some logs may have missing CRC trailers due to poor interface conditions.
+ *        This function allows the handler to ignore CRC read failures and process
+ *        the messages as usual.
+ *    - CRC mismatch will still be rejected as a CRC error. This function only
+ *        affects CRC read failures.
  * 
  * @param mid Message ID of the handler.
  * @return OEM_OK: Successful.
- *         OEM_ERR_NOTFOUND: There is no handler for @a mid.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
  */
-int OEM_Log_ResetHandlerCounters(oem_ushort mid);
+int oem_log_ignore_missing_crc(oem_ushort mid);
 
 /**
- * @brief Retrieve a handler housekeeping bundle.
- * 
- * @param mid Message ID of the handler.
- * @param[out] hk Handler housekeeping.
- * @return OEM_OK: Successful.
- *         OEM_ERR_NOTFOUND: There is no handler for @a mid.
- *         OEM_ERR_NULL: @a hk is null.
- */
-int OEM_Log_GethandlerHousekeeping(oem_ushort mid,
-                                   oem_log_handler_hk_t* hk);
-
-/**
- * @brief Copy the latest received message from a handler to @a buffer.
- *        If @a bufsize is smaller than the actual message length, the copy
- *        will be truncated accordingly.
- * 
- * @param mid Message ID of the handler.
- * @param[out] buffer Buffer to copy the recent message. @nonnull.
- * @param bufsize Size of @a buffer.
- * @param[out] copiedSize Actually copied bytes. NULL allowed.     
- * @return OEM_OK: Successful.
- *         OEM_ERR_NOTFOUND: There is no handler for @a mid.
- *         OEM_ERR_EMPTY: There is no recent message (the message buffer does
- *                        does not hold a valid sync bytes).
- *         OEM_ERR_NULL: @a buffer is null.
- */
-int OEM_Log_DumpRecentMessage(oem_ushort mid,
-                              void* buffer,
-                              size_t bufsize,
-                              size_t* copiedSize);
-
-/**
- * @brief Enable the CRC verification.
- *        After the call, the handler calculates the message CRC and reject
- *        processing if the trailing CRC is absent or does not match the
- *        expected value.
+ * @brief Respect CRC read failures, and reject them as errors.
  * 
  * @param mid Message ID of the handler.
  * @return OEM_OK: Successful.
- *         OEM_ERR_NOTFOUND: There is no handler for @a mid.
+ *         OEM_ERR_NOT_FOUND: There is no handler for @a mid.
  */
-int OEM_Log_EnableCsVerification(oem_ushort mid);
+int oem_log_reject_missing_crc(oem_ushort mid);
 
-/**
- * @brief Disable the CRC verification.
- *        After the call, the handler simply ignores the trailing CRC
- *        regardless of whether it was read.
- * 
- * @param mid Message ID of the handler.
- * @return OEM_OK: Successful.
- *         OEM_ERR_NOTFOUND: There is no handler for @a mid.
- */
-int OEM_Log_DisableCsVerification(oem_ushort mid);
 
 /**
  * @brief Lock the handler access mutex. The mutex is locked/unlocked
@@ -371,7 +448,7 @@ int OEM_Log_DisableCsVerification(oem_ushort mid);
  * 
  * @return Depends on the implementation. See OEM_MutexLock().
  */
-// int OEM_Log_LockHandlers(void);
+// int oem_log_lock_handlers(void);
 
 /**
  * @brief Unlock the handler access mutex. The mutex is locked/unlocked
@@ -380,6 +457,7 @@ int OEM_Log_DisableCsVerification(oem_ushort mid);
  * 
  * @return Depends on the implementation. See OEM_MutexLock().
  */
-// int OEM_Log_UnlockHandlers(void);
+// int oem_log_unlock_handlers(void);
+
 
 #endif

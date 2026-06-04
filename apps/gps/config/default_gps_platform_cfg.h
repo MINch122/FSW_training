@@ -41,7 +41,7 @@
 
 #define GPS_DEVICE_TASK_STACK_SIZE          1024
 
-#define GPS_DEVICE_TASK_PRIORITY            50
+#define GPS_DEVICE_TASK_PRIORITY            10
 
 
 #endif

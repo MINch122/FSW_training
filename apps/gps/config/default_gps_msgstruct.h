@@ -35,7 +35,6 @@
 #include "default_gps_mission_cfg.h"
 #include "default_gps_msgdefs.h"
 #include "cfe_msg_hdr.h"
-
 #include "rpt_interface_cfg.h"
 
 /*************************************************************************/
@@ -59,71 +58,60 @@ typedef GPS_NoArgCmd_t  GPS_SendHkCmd_t;
 */
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    int portIndex;
-    GPS_OEMCmd_LogCmd_Payload_t Payload;
-} GPS_OEMCmd_LogCmd_t;
+    GPS_OEM_Cmd_Log_Payload_t Payload;
+} GPS_OEM_Cmd_Log_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    int portIndex;
-    GPS_OEMCmd_LogOnceCmd_Payload_t Payload;
-} GPS_OEMCmd_LogOnceCmd_t;
+    GPS_OEM_Cmd_LogOnce_Payload_t Payload;
+} GPS_OEM_Cmd_LogOnce_t;
 
-#define a sizeof(GPS_OEMCmd_LogCmd_t)
-
-typedef struct {
-    CFE_MSG_CommandHeader_t CommandHeader;
-    int portIndex;
-    GPS_OEMCmd_LogOnTimeCmd_Payload_t Payload;
-} GPS_OEMCmd_LogOnTimeCmd_t;
+#define a sizeof(GPS_OEM_Cmd_Log_t)
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    int portIndex;
-    GPS_OEMCmd_LogOnChangedCmd_Payload_t Payload;
-} GPS_OEMCmd_LogOnChangedCmd_t;
+    GPS_OEM_Cmd_LogOnTime_Payload_t Payload;
+} GPS_OEM_Cmd_LogOnTime_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    int portIndex;
-    GPS_OEMCmd_LogOnNewCmd_Payload_t Payload;
-} GPS_OEMCmd_LogOnNewCmd_t;
+    GPS_OEM_Cmd_LogOnChanged_Payload_t Payload;
+} GPS_OEM_Cmd_LogOnChanged_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    int portIndex;
-    GPS_OEMCmd_UnlogCmd_Payload_t Payload;
-} GPS_OEMCmd_UnlogCmd_t;
+    GPS_OEM_Cmd_LogOnNew_Payload_t Payload;
+} GPS_OEM_Cmd_LogOnNew_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    int portIndex;
-    GPS_OEMCmd_UnlogAllCmd_Payload_t Payload;
-} GPS_OEMCmd_UnlogAllCmd_t;
+    GPS_OEM_Cmd_Unlog_Payload_t Payload;
+} GPS_OEM_Cmd_Unlog_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    int portIndex;
-    GPS_OEMCmd_ElevationCutoffCmd_Payload_t Payload;
-} GPS_OEMCmd_ElevationCutoffCmd_t;
+    GPS_OEM_Cmd_UnlogAll_Payload_t Payload;
+} GPS_OEM_Cmd_UnlogAll_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    int portIndex;
-    GPS_OEMCmd_InterfaceModeCmd_Payload_t Payload;
-} GPS_OEMCmd_InterfaceModeCmd_t;
+    GPS_OEM_Cmd_ElevationCutoff_Payload_t Payload;
+} GPS_OEM_Cmd_ElevationCutoff_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    int portIndex;
-    GPS_OEMCmd_SerialConfigCmd_Payload_t Payload;
-} GPS_OEMCmd_SerialConfigCmd_t;
+    GPS_OEM_Cmd_InterfaceMode_Payload_t Payload;
+} GPS_OEM_Cmd_InterfaceMode_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    int portIndex;
-    GPS_OEMCmd_PublishCmd_Payload_t Payload;
-} GPS_OEMCmd_PublishCmd_t;
+    GPS_OEM_Cmd_SerialConfig_Payload_t Payload;
+} GPS_OEM_Cmd_SerialConfig_t;
+
+typedef struct {
+    CFE_MSG_CommandHeader_t CommandHeader;
+    GPS_OEM_Cmd_Publish_Payload_t Payload;
+} GPS_OEM_Cmd_Publish_t;
 
 /*
 ** OEM log handler command types.
@@ -131,73 +119,73 @@ typedef struct {
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_HandlerRegisterCmd_Payload_t Payload;
-} GPS_OEMLog_HandlerRegisterCmd_t;
+    GPS_OEM_Log_HandlerRegister_Payload_t Payload;
+} GPS_OEM_Log_HandlerRegister_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_HandlerUnregisterCmd_Payload_t Payload;
-} GPS_OEMLog_HandlerUnregisterCmd_t;
+    GPS_OEM_Log_HandlerUnregister_Payload_t Payload;
+} GPS_OEM_Log_HandlerUnregister_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_AddCallbackCmd_Payload_t Payload;
-} GPS_OEMLog_AddCallbackCmd_t;
+    GPS_OEM_Log_AddCallback_Payload_t Payload;
+} GPS_OEM_Log_AddCallback_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_ClearCallbackCmd_Payload_t Payload;
-} GPS_OEMLog_ClearCallbackCmd_t;
+    GPS_OEM_Log_ClearCallbacks_Payload_t Payload;
+} GPS_OEM_Log_ClearCallbacks_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_GetHandlerHkCmd_Payload_t Payload;
-} GPS_OEMLog_GetHandlerHkCmd_t;
+    GPS_OEM_Log_GetHandlerHk_Payload_t Payload;
+} GPS_OEM_Log_GetHandlerHk_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_GetMsgStatCmd_Payload_t Payload;
-} GPS_OEMLog_GetMsgStatCmd_t;
+    GPS_OEM_Log_GetStat_Payload_t Payload;
+} GPS_OEM_Log_GetStat_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_SetHandlerStatusCmd_Payload_t Payload;
-} GPS_OEMLog_SetHandlerStatusCmd_t;
+    GPS_OEM_Log_HandlerSetStatus_Payload_t Payload;
+} GPS_OEM_Log_HandlerSetStatus_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_GetHandlerStatusCmd_Payload_t Payload;
-} GPS_OEMLog_GetHandlerStatusCmd_t;
+    GPS_OEM_Log_HandlerGetStatus_Payload_t Payload;
+} GPS_OEM_Log_HandlerGetStatus_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_HandlerActivateCmd_Payload_t Payload;
-} GPS_OEMLog_HandlerActivateCmd_t;
+    GPS_OEM_Log_HandlerActivate_Payload_t Payload;
+} GPS_OEM_Log_HandlerActivate_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_HandlerDeactivateCmd_Payload_t Payload;
-} GPS_OEMLog_HandlerDeactivateCmd_t;
+    GPS_OEM_Log_HandlerDeactivate_Payload_t Payload;
+} GPS_OEM_Log_HandlerDeactivate_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_HandlerGoDormantCmd_Payload_t Payload;
-} GPS_OEMLog_HandlerGoDormantCmd_t;
+    GPS_OEM_Log_HandlerGoDormant_Payload_t Payload;
+} GPS_OEM_Log_HandlerGoDormant_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_HandlerWakeupCmd_Payload_t Payload;
-} GPS_OEMLog_HandlerWakeupCmd_t;
+    GPS_OEM_Log_HandlerWakeup_Payload_t Payload;
+} GPS_OEM_Log_HandlerWakeup_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_HandlerActivateAllCmd_Payload_t Payload;
-} GPS_OEMLog_HandlerActivateAllCmd_t;
+    GPS_OEM_Log_HandlerActivateAll_Payload_t Payload;
+} GPS_OEM_Log_HandlerActivateAll_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_HandlerDeactivateAllCmd_Payload_t Payload;
-} GPS_OEMLog_HandlerDeactivateAllCmd_t;
+    GPS_OEM_Log_HandlerDeactivateAll_Payload_t Payload;
+} GPS_OEM_Log_HandlerDeactivateAll_t;
 
 /*
 ** Miscellaneous log handler command types.
@@ -206,51 +194,51 @@ typedef struct {
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_HandlerSetBrokenCmd_Payload_t Payload;
-} GPS_OEMLog_HandlerSetBrokenCmd_t;
+    GPS_OEM_Log_HandlerMarkBroken_Payload_t Payload;
+} GPS_OEM_Log_HandlerMarkBroken_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_GetHandlerMsgLengthCmd_Payload_t Payload;
-} GPS_OEMLog_GetHandlerMsgLengthCmd_t;
+    GPS_OEM_Log_GetMessageLength_Payload_t Payload;
+} GPS_OEM_Log_GetMessageLength_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_GetHandlerNameCmd_Payload_t Payload;
-} GPS_OEMLog_GetHandlerNameCmd_t;
+    GPS_OEM_Log_GetHandlerName_Payload_t Payload;
+} GPS_OEM_Log_GetHandlerName_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_ResetHandlerCountersCmd_Payload_t Payload;
-} GPS_OEMLog_ResetHandlerCountersCmd_t;
+    GPS_OEM_Log_ResetStat_Payload_t Payload;
+} GPS_OEM_Log_ResetStat_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_DumpRecentMsgCmd_Payload_t Payload;
-} GPS_OEMLog_DumpRecentMsgCmd_t;
+    GPS_OEM_Log_GetRecentMessage_Payload_t Payload;
+} GPS_OEM_Log_GetRecentMessage_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_IgnoreChecksumCmd_Payload_t Payload;
-} GPS_OEMLog_IgnoreChecksumCmd_t;
+    GPS_OEM_Log_RejectMissingCrc_Payload_t Payload;
+} GPS_OEM_Log_RejectMissingCrc_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_DoNotIgnoreChecksumCmd_Payload_t Payload;
-} GPS_OEMLog_DonotIgnoreChecksumCmd_t;
+    GPS_OEM_Log_IgnoreMissingCrc_Payload_t Payload;
+} GPS_OEM_Log_IgnoreMissingCrc_t;
 
 /*
 ** "dangerous" driver command types.
 */
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_LockHandlersCmd_Payload_t Payload;
-} GPS_OEMLog_LockHandlersCmd_t;
+    GPS_OEM_Log_LockHandlers_Payload_t Payload;
+} GPS_OEM_Log_LockHandlers_t;
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-    GPS_OEMLog_UnlockHandlersCmd_Payload_t Payload;
-} GPS_OEMLog_UnlockHandlersCmd_t;
+    GPS_OEM_Log_UnlockHandlers_Payload_t Payload;
+} GPS_OEM_Log_UnlockHandlers_t;
 
 
 /*************************************************************************/

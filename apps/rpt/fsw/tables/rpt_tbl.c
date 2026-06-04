@@ -11,14 +11,18 @@
 #include "adcs_msgids.h"
 #include "adcs2_msgids.h"
 #include "eps_msgids.h"
+#include "gpio_msgids.h"
+#include "SLT_IFB_msgids.h"
+#include "paybee_kisscam_msgids.h"
 
 #include "mission_msgids.h"
 #include "gps_msgids.h"
-#include "sp_msgids.h"
+#include "meow_msgids.h"
 #include "stx_msgids.h"
+#include "ttc_msgids.h"
 
-#include "uant_app_msgids.h"
 #include "utrx_msgids.h"
+#include "ltrx_msgids.h"
 
 
 RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
@@ -44,7 +48,7 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
 
     /* Entry 4 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(SP_REPORT_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(GPIO_RPT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
     
     /* Entry 5 */
@@ -59,7 +63,7 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
 
     /* Entry 7 */
     {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(UANT_APP_RPT_TLM_MID),
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(MEOW_REPORT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 8 */
@@ -68,23 +72,23 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
         .Entry.IsCritical = RPT_NOT_CRITICAL},
         
     /* Entry 9 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(LTRX_RPT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 10 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(TTC_REPORT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
     
     /* Entry 11 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(MISSION_REPORT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 12 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(SLT_IFB_RPT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 13 */
@@ -98,8 +102,8 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
         .Entry.IsCritical = RPT_NOT_CRITICAL},
         
     /* Entry 15 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(paybee_kisscam_REPORT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 16 */

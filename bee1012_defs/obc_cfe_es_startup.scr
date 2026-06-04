@@ -1,13 +1,11 @@
 CFE_LIB, cfe_assert,  CFE_Assert_LibInit, ASSERT_LIB,    0,   0,     0x0, 0;
-CFE_LIB, ftp_lib,     IO_FTP_LibInit,     FTP_LIB,       0,   0,     0x0, 0;
+CFE_APP, ftp_lib_new, ftp_server_start, FTP_NEW,      4,   16384, 0x0, 0;
 CFE_APP, eps,         EPS_Main,           EPS,           5,   16384, 0x0, 0;
 CFE_APP, mission,     MISSION_Main,       MISSION,       6,   8192,  0x0, 0;
 CFE_APP, rpt,         RPT_Main,           RPT,          10,   16384, 0x0, 0;
 CFE_APP, ci_lab,      CI_LAB_AppMain,     CI_LAB_APP,   11,   16384, 0x0, 0;
 CFE_APP, to_lab,      TO_LAB_AppMain,     TO_LAB_APP,   12,   16384, 0x0, 0;
 CFE_APP, sch_lab,     SCH_LAB_AppMain,    SCH_LAB_APP,  13,   16384, 0x0, 0;
-CFE_APP, sp,          SP_AppMain,         SP_APP,       20,   4096,  0x0, 0;
-CFE_APP, uant_app,    UANT_APP_Main,      UANT,         31,   16384, 0x0, 0;
 CFE_APP, adcs,        ADCS_AppMain,       ADCS,         36,   16384, 0x0, 0;
 CFE_APP, hk,          HK_AppMain,         HK,           40,   16384, 0x0, 0;
 CFE_APP, ds,          DS_AppMain,         DS,           44,   16384, 0x0, 0;
@@ -18,9 +16,10 @@ CFE_APP, stx,         STX_Main,           STX,          60,   16384, 0x0, 0;
 CFE_APP, gps,         GPS_AppMain,        GPS,          65,   16384, 0x0, 0;
 CFE_APP, meow,        MEOW_Main,          MEOW,         70,   16384, 0x0, 0;
 CFE_APP, ltrx,        LTRX_AppMain,       LTRX,         75,   16384, 0x0, 0;
-CFE_APP, pay_slt,     PAY_SLT_Main,       PAY_SLT,      80,   16384, 0x0, 0;
+CFE_APP, SLT_IFB,     SLT_IFB_Main,       SLT_IFB,      80,   16384, 0x0, 0;
 CFE_APP, gpio,        GPIO_Main,          GPIO,         85,   16384, 0x0, 0;
-CFE_APP, adcs2,       ADCS2_AppMain,      ADCS2,        38,   16384, 0x0, 0;
+CFE_APP, paybee_kisscam, paybee_kisscam_Main, PAY_KISSCAM, 90,   16384, 0x0, 0;
+!CFE_APP, adcs2,       ADCS2_AppMain,      ADCS2,        38,   16384, 0x0, 0;
 !CFE_APP, sample_app,  SAMPLE_APP_Main,    SAMPLE_APP,   70,   16384, 0x0, 0;
 !
 ! Startup script fields:

@@ -4,7 +4,7 @@
 #include "oem_utils.h"
 #include "oem_cb.h"
 
-#include "arch/oem_arch.h"
+#include "io_drivers/oem_io_serial_linux.h"
 
 #include <dlfcn.h>
 
@@ -20,24 +20,24 @@ static const GPS_Device_HandlerEntry_t defaultHandlers[] =
     {.name = "VERSION",
      .msgId = OEM_ID_LOG_VERSION,
      .msgLen = OEM_LOG_HANDLER_MLEN_VARIABLE,
-     .callback = OEM_Callback_VERSION
+     .callback = oem_callback_VERSION_print
     },
 
     {.name = "BESTXYZ",
      .msgId = OEM_ID_LOG_BESTXYZ,
      .msgLen = OEM_LOG_HANDLER_MLEN_VARIABLE,
-     .callback = OEM_Callback_BESTXYZ_Bin
+     .callback = oem_callback_BESTXYZ_binfile
     }
 };
 
 typedef struct {
     CFE_ES_TaskId_t taskId;
-    GRX_DeviceData_Counters_t counters;
-} GRX_DeviceData_t;
+    GPS_DeviceData_Counters_t counters;
+} GPS_DeviceData_t;
 
-static GRX_DeviceData_t DeviceData;
+static GPS_DeviceData_t DeviceData;
 
-void GPS_Device_GetCounters(GRX_DeviceData_Counters_t* hk)
+void GPS_Device_GetCounters(GPS_DeviceData_Counters_t* hk)
 {
     if (hk)
         memcpy(hk, &DeviceData.counters, sizeof(*hk));
@@ -65,9 +65,9 @@ void GPS_Device_Task(void)
                       "OEM driver task initialized.");
 
     while (1) {
-        ret = OEM_Task_ReadTaskSingleRun(GPS_PORT_INDEX_COM1, &ctx);
+        ret = oem_task_read_single_reply(GPS_PORT_INDEX_COM1, 1000, &ctx);
 
-        switch (ctx.taskLevel) {
+        switch (ctx.task_level) {
         case TASK_MAIN:
             /**
              * Returning from the main level indicates a read error.
@@ -77,23 +77,23 @@ void GPS_Device_Task(void)
 
         case TASK_RESPONSE:
             DeviceData.counters.responseCount++;
-            DeviceData.counters.lastResponseMessageId = ctx.mid;
-            DeviceData.counters.lastResponseEnum = ctx.respId;
+            DeviceData.counters.lastResponseMessageId = ctx.message_id;
+            DeviceData.counters.lastResponseEnum = ctx.response_id;
             if (ret != OEM_OK) {
                 DeviceData.counters.responseErrorCount++;
-                DebugWarning("Errornous response received: ret %d, RID %d\n",
-                             ctx.mid,
-                             ctx.respId);
+                oem_debug_warning("Erroneous response received: ret %d, RID %d\n",
+                                  ctx.message_id,
+                                  ctx.response_id);
             }
             break;
 
         case TASK_LOG:
-            if (ret == OEM_ERR_NOTFOUND) {
+            if (ret == OEM_ERR_NOT_FOUND) {
                 /**
                  * We don't know what this log is.
                  */
-                DebugWarning("Stray log found: MID %d\n",
-                             ctx.mid);
+                oem_debug_warning("Stray log found: MID %d\n",
+                                  ctx.message_id);
                 DeviceData.counters.strayLogCount++;
             }
             if (ret == OEM_ERR_NOBUF) {
@@ -101,39 +101,39 @@ void GPS_Device_Task(void)
                  * This is the only case where the handler goes broken.
                  */
                 DeviceData.counters.handlerCritErrCount++;
-                DebugError("No handler buffer for MID %d: handler marked broken.\n",
-                           ctx.mid);
+                oem_debug_error("No handler buffer for MID %d: handler marked broken.\n",
+                                ctx.message_id);
                 
             }
             break;
 
         case TASK_CALLBACK:
-            if (ret == OEM_ERR_NOTFOUND) {
+            if (ret == OEM_ERR_NOT_FOUND) {
                 /**
                  * This is the only case where the handler goes broken.
                  */
                 DeviceData.counters.handlerCritErrCount++;
-                DebugError("Null callback for MID %d: handler marked broken.\n",
-                           ctx.mid);
+                oem_debug_error("Null callback for MID %d: handler marked broken.\n",
+                                ctx.message_id);
             }
             else if (ret != OEM_OK) {
                 DeviceData.counters.callbackErrCount++;
-                DebugWarning("Callback for MID %d returned with %d.\n",
-                             ctx.mid, ret);
+                oem_debug_warning("Callback for MID %d returned with %d.\n",
+                             ctx.message_id, ret);
             }
             break;
 
         default:
-            DebugError("invalid tasklv %d from mid %d (isrsp: %d).\n",
-                       ctx.taskLevel,
-                       ctx.mid,
-                       ctx.isResponse);
+            oem_debug_error("invalid tasklv %d from mid %d (isrsp: %d).\n",
+                            ctx.task_level,
+                            ctx.message_id,
+                            ctx.is_response);
             break;
         }
     }
 
     /* Should never reach here. */
-    DebugError("Unexpected driver task termination.\n");
+    oem_debug_error("Unexpected driver task termination.\n");
 }
 
 int GPS_Device_Init(void)
@@ -148,16 +148,16 @@ int GPS_Device_Init(void)
     /**
      * Log handler mutex init.
      */
-    OEM_Log_HandlerInit();
+    oem_log_init();
 
-    status = OEM_IO_SerialInit();
-    if (status != OEM_OK) {
+    status = oem_io_driver_serial_init(GPS_PORT_INDEX_COM1,
+                                      "/dev/ttyS4",
+                                      115200);
 
-    }
-
-    status = OEM_IO_PortInit(GPS_PORT_INDEX_COM1,
-                             OEM_IO_WriteCallback,
-                             OEM_IO_ReadCallback);
+    status = oem_io_init_interface(GPS_PORT_INDEX_COM1,
+                             0,
+                             oem_io_driver_serial_write,
+                             oem_io_driver_serial_read);
     if (status != OEM_OK) {
         CFE_EVS_SendEvent(GPS_DEV_HANDLER_INIT_ERR_EID,
                           CFE_EVS_EventType_ERROR,
@@ -165,16 +165,16 @@ int GPS_Device_Init(void)
         return status;
     }
 
-    OEM_Cmd_UNLOGALL(GPS_PORT_INDEX_COM1, OEM_PORT_ALL_PORTS, true);
+    oem_cmd_UNLOGALL(GPS_PORT_INDEX_COM1, OEM_PORT_ALL_PORTS, true);
     OS_TaskDelay(500);
-    OEM_Cmd_UNLOGALL(GPS_PORT_INDEX_COM1, OEM_PORT_THIS, true);
+    oem_cmd_UNLOGALL(GPS_PORT_INDEX_COM1, OEM_PORT_THIS, true);
 
     /**
      * Register default log handlers.
      */
     for (int i = 0; i < sizeof(defaultHandlers)/sizeof(defaultHandlers[0]); ++i) {
         const GPS_Device_HandlerEntry_t* entry = &defaultHandlers[i];
-        status = OEM_Log_RegisterHandler(entry->name, entry->msgId, entry->msgLen);
+        status = oem_log_handler_register(entry->name, entry->msgId, entry->msgLen);
         if (status != OEM_OK) {
             CFE_EVS_SendEvent(GPS_DEV_HANDLER_INIT_ERR_EID,
                               CFE_EVS_EventType_ERROR,
@@ -182,7 +182,7 @@ int GPS_Device_Init(void)
             return status;
         }
         if (entry->callback) {
-            status = OEM_Log_AddCallback(entry->msgId, entry->callback);
+            status = oem_log_add_callback(entry->msgId, entry->callback);
             if (status != OEM_OK) {
                 CFE_EVS_SendEvent(GPS_DEV_HANDLER_INIT_ERR_EID,
                                 CFE_EVS_EventType_ERROR,
@@ -190,7 +190,7 @@ int GPS_Device_Init(void)
                 return status;
             }
         }
-        OEM_Log_HandlerActivate(entry->msgId);
+        oem_log_handler_activate(entry->msgId);
     }
 
     /**

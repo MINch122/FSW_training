@@ -12,38 +12,38 @@
 
 
 /**
- * @brief Assembles an OEM Command packet and sends it. he binary header and
- *        the CRC are automatically appended. Uses OEM_IO_PortWrite() to send.
+ * @brief Assemble an OEM Command packet and send it. The binary header and
+ *        the CRC are automatically appended. Uses oem_io_write() to send.
  * 
- * @param portIndex  I/O port descriptor specified by OEM_IO_PortInit().
- * @param msgId      Command Message ID.
+ * @param iface_idx  I/O interface to send the command over.
+ * @param msg_id      Command Message ID.
  * @param body       Message body (header and CRC not inclusive).
- * @param bodyLength Size of @a body.
+ * @param body_size Size of @a body.
  * @return OEM_OK:          Success.
  *         OEM_ERR_NOMEM:   Message buffer allocation failed.
  *         Otherwise the return value of the write callback attached to the
  *         I/O port.
  */
-int OEM_AssemblePublishCmd(int portIndex,
-                           oem_ushort msgId,
-                           oem_ushort bodyLength,
-                           const void* body);
+int oem_cmd_publish(int iface_idx,
+                    oem_ushort  msg_id,
+                    oem_ushort  body_size,
+                    const void* body);
 
 /**
- * @brief Sends the LOG command. See the Reference Manual for details.
+ * @brief Send the LOG command. See the Reference Manual for details.
  * 
- * @param portIndex I/O port descriptor specified by OEM_IO_PortInit().
- * @param msgId     Log Message ID to request.
+ * @param iface_idx I/O interface to send the command over.
+ * @param msg_id    Log Message ID to request.
  * @param port      OEM port to route the Log. See oem_port_t.
  * @param type      Log Message Type. See oem_msgtype_t. 0 recommended.
  * @param trigger   Log generation trigger. See oem_trigger_t.
  * @param period    Log issue interval. Applies only for the ONTIME trigger.
  * @param offset    Log issue offset.
  * @param hold      Boolean. Prevents unlogging if true.
- * @return See OEM_AssemblePublishCmd().
+ * @return See oem_cmd_publish().
  */
-int OEM_Cmd_LOG(int portIndex,
-                oem_ushort msgId,
+int oem_cmd_LOG(int iface_idx,
+                oem_ushort msg_id,
                 oem_enum port,
                 oem_char type,
                 oem_enum trigger,
@@ -52,19 +52,19 @@ int OEM_Cmd_LOG(int portIndex,
                 oem_enum hold);  
 
 /**
- * @brief Sends the LOG command with the ONCE trigger. See OEM_Cmd_LOG().
+ * @brief Send the LOG command with the ONCE trigger. See oem_cmd_LOG().
  * 
  * @NOTE: If the requested log is currently unavailable, the next one will be
  *        output upon generation.
  * 
- * @return See OEM_AssemblePublishCmd().
+ * @return See oem_cmd_publish().
  */
-static inline int OEM_Cmd_LogOnce(int portIndex,
-                                  oem_ushort msgId,
+static inline int oem_cmd_LOG_once(int iface_idx,
+                                  oem_ushort msg_id,
                                   oem_enum port)
 {
-    return OEM_Cmd_LOG(portIndex,
-                       msgId,
+    return oem_cmd_LOG(iface_idx,
+                       msg_id,
                        port,
                        OEM_MSGTYPE_BINARY | OEM_MSGTYPE_ORIGINAL,
                        OEM_TRIGGER_ONCE,
@@ -74,18 +74,18 @@ static inline int OEM_Cmd_LogOnce(int portIndex,
 }
 
 /**
- * @brief Sends the LOG command with the ONTIME trigger. See OEM_Cmd_LOG().
+ * @brief Send the LOG command with the ONTIME trigger. See oem_cmd_LOG().
  * 
- * @return See OEM_AssemblePublishCmd().
+ * @return See oem_cmd_publish().
  */
-static inline int OEM_Cmd_LogOnTime(int portIndex,
-                                    oem_ushort msgId,
+static inline int oem_cmd_LOG_ontime(int iface_idx,
+                                    oem_ushort msg_id,
                                     oem_enum port,
                                     oem_double period,
                                     oem_double offset)
 {
-    return OEM_Cmd_LOG(portIndex,
-                       msgId,
+    return oem_cmd_LOG(iface_idx,
+                       msg_id,
                        port,
                        OEM_MSGTYPE_BINARY | OEM_MSGTYPE_ORIGINAL,
                        OEM_TRIGGER_ONTIME,
@@ -95,35 +95,35 @@ static inline int OEM_Cmd_LogOnTime(int portIndex,
 }
 
 /**
- * @brief Sends the LOG command with the ONTIME trigger. See OEM_Cmd_LOG().
+ * @brief Send the LOG command with the ONCHANGED trigger. See oem_cmd_LOG().
  * 
- * @return See OEM_AssemblePublishCmd().
+ * @return See oem_cmd_publish().
  */
-static inline int OEM_Cmd_LogOnChanged(int portIndex,
-                                       oem_ushort msgId,
+static inline int oem_cmd_LOG_onchanged(int iface_idx,
+                                       oem_ushort msg_id,
                                        oem_enum port)
 {
-    return OEM_Cmd_LOG(portIndex,
-                       msgId,
+    return oem_cmd_LOG(iface_idx,
+                       msg_id,
                        port,
                        OEM_MSGTYPE_BINARY | OEM_MSGTYPE_ORIGINAL,
-                       OEM_TRIGGER_ONCNANGED,
+                       OEM_TRIGGER_ONCHANGED,
                        0,
                        0,
                        0);
 }
 
 /**
- * @brief Sends the LOG command with the ONNEW trigger. See OEM_Cmd_LOG().
+ * @brief Send the LOG command with the ONNEW trigger. See oem_cmd_LOG().
  * 
- * @return See OEM_AssemblePublishCmd().
+ * @return See oem_cmd_publish().
  */
-static inline int OEM_Cmd_LogOnNew(int portIndex,
-                                   oem_ushort msgId,
+static inline int oem_cmd_LOG_onnew(int iface_idx,
+                                   oem_ushort msg_id,
                                    oem_enum port)
 {
-    return OEM_Cmd_LOG(portIndex,
-                       msgId,
+    return oem_cmd_LOG(iface_idx,
+                       msg_id,
                        port,
                        OEM_MSGTYPE_BINARY | OEM_MSGTYPE_ORIGINAL,
                        OEM_TRIGGER_ONNEW,
@@ -133,69 +133,63 @@ static inline int OEM_Cmd_LogOnNew(int portIndex,
 }
 
 /**
- * @brief Sends the UNLOG command. See the Reference Manual for details.
+ * @brief Send the UNLOG command. See the Reference Manual for details.
  * 
- * @param portIndex I/O port descriptor specified by OEM_IO_PortInit().
+ * @param iface_idx I/O interface to send the command over.
  * @param port      OEM port where the Log is being sent on.
- * @param msgId     Log Message ID to unlog.
- * @param msgType   
- * @return See OEM_AssemblePublishCmd(). 
+ * @param msg_id    Log Message ID to unlog.
+ * @param msg_type   
+ * @return See oem_cmd_publish(). 
  */
-int OEM_Cmd_UNLOG(int portIndex,
+int oem_cmd_UNLOG(int iface_idx,
                   oem_enum port,
-                  oem_ushort msgId,
-                  oem_char msgType);
+                  oem_ushort msg_id,
+                  oem_char msg_type);
 
 /**
- * @brief Sends the UNLOGALL command. See the Reference Manual for details.
+ * @brief Send the UNLOGALL command. See the Reference Manual for details.
  * 
- * @return See OEM_AssemblePublishCmd().
+ * @return See oem_cmd_publish().
  */
 
 /**
  * @brief 
  * 
- * @param portIndex 
- * @param port 
- * @param held 
- * @return int 
+ * @param iface_idx  I/O interface to send the command over.
+ * @param port       OEM port where the Log is being sent on.
+ * @param held       
+ * @return See oem_cmd_publish(). 
  */
-int OEM_Cmd_UNLOGALL(int portIndex,
+int oem_cmd_UNLOGALL(int iface_idx,
                      oem_enum port,
                      oem_bool held);
 
 /**
- * @brief Sends the ELEVATIONCUTOFF command. See the Reference Manual for 
+ * @brief Send the ELEVATIONCUTOFF command. See the Reference Manual for 
  *        details.
  * 
- * @return See OEM_AssemblePublishCmd().
+ * @return See oem_cmd_publish().
  */
-int OEM_Cmd_ELEVATIONCUTOFF(int portIndex,
+int oem_cmd_ELEVATIONCUTOFF(int iface_idx,
                             oem_enum constellation,
                             oem_float cutoff);
 
 /**
- * @brief Sends the INTERFACEMODE command. See the Reference Manual for 
+ * @brief Send the INTERFACEMODE command. See the Reference Manual for 
  *        details.
  * 
- * @return See OEM_AssemblePublishCmd().
+ * @return See oem_cmd_publish().
  */
-int OEM_Cmd_INTERFACEMODE(int portIndex,
+int oem_cmd_INTERFACEMODE(int iface_idx,
                           oem_enum port,
-                          oem_enum rxType,
-                          oem_enum txType,
+                          oem_enum rx_type,
+                          oem_enum tx_type,
                           oem_enum responses);
 
 /**
- * @brief Sends the SERIALCONFIG command. See the Reference Manual for details.
- *        
- * @return See OEM_AssemblePublishCmd().
- */
-
-/**
- * @brief 
- * 
- * @param portIndex I/O port descriptor specified by OEM_IO_PortInit().
+ * @brief Send the SERIALCONFIG command. See the Reference Manual for details.
+ *
+ * @param iface_idx  I/O interface to send the command over.
  * @param port      
  * @param baud      
  * @param parity    
@@ -203,9 +197,9 @@ int OEM_Cmd_INTERFACEMODE(int portIndex,
  * @param stopbits  
  * @param handshake 
  * @param _break    
- * @return int 
+ * @return See oem_cmd_publish(). 
  */
-int OEM_Cmd_SERIALCONFIG(int portIndex,
+int oem_cmd_SERIALCONFIG(int iface_idx,
                          oem_enum port,
                          oem_ulong baud,
                          oem_enum parity,

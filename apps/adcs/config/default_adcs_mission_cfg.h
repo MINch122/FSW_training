@@ -33,4 +33,14 @@
 
 #include "adcs_interface_cfg.h"
 
+#ifndef DEBUG_ADCS
+#define DEBUG_ADCS false
+#endif
+
+#if DEBUG_ADCS
+#define ADCS_APP_printf(...) OS_printf(__VA_ARGS__)
+#else
+#define ADCS_APP_printf(...) do { } while (0)
+#endif
+
 #endif

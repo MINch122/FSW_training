@@ -59,14 +59,11 @@
 /*********************
  * COMS Header 
  ********************/
-#include "stx_msgids.h"
-#include "stx_msg.h"
-
 #include "utrx_msgids.h"
 #include "utrx_msg.h"
 
-#include "uant_app_msgids.h"
-#include "uant_app_msg.h"
+#include "ltrx_msgids.h"
+#include "ltrx_msg.h"
 
 /* End of COMS Header */
 
@@ -75,13 +72,14 @@
  ********************/
 #include "eps_msgids.h"
 #include "eps_msg.h"
+
+#include "gpio_msgids.h"
+#include "gpio_msg.h"
 /* End of EPS Header */
 
 /*********************
  * SP Header
  ********************/
-#include "sp_msgids.h"
-#include "sp_msg.h"
 /* End of SP Header */
 
 /*********************
@@ -112,18 +110,13 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
 
         /* Beacon requests for apps copied into HK_COMBINED_PKT1 */
         {CFE_SB_MSGID_WRAP_VALUE(RPT_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(MISSION_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(STX_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(UANT_APP_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(UTRX_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(SP_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(PAYUEL_CAM_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(LGBAT_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(PAYUEL_OBC_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), SCH_LAB_TICK_RATE * 30, 0,
-        //  sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},
+        {CFE_SB_MSGID_WRAP_VALUE(UTRX_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(LTRX_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(EPS_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(GPIO_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), SCH_LAB_TICK_RATE * 30, 0,
+         sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},
 
         // /* Periodic wakeups for apps with internal timed work */
         // {CFE_SB_MSGID_WRAP_VALUE(ADCS_LOOP_MID), SCH_LAB_TICK_RATE, 0},

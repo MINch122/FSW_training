@@ -2,10 +2,11 @@
 #include "msg/logs/oem_msg_bestxyz.h"
 
 #include <stdio.h>
+#include <unistd.h>
 
 static FILE* binfd = NULL;
 
-int OEM_Callback_BESTXYZ_Bin(void* msg)
+int oem_callback_BESTXYZ_binfile(void* msg)
 {
     oem_binary_header_t* hdr;
     oem_log_bestxyz* bestxyz;
@@ -25,17 +26,21 @@ int OEM_Callback_BESTXYZ_Bin(void* msg)
     bestxyz = (oem_log_bestxyz*) (hdr + 1);
 
     if (hdr->messageLength < sizeof(*bestxyz))
-        return OEM_ERR_LEN_MSG;
+        return OEM_ERR_LOG_BODY_SIZE;
 
     if (bestxyz->pSolStatus != OEM_BESTXYZ_SOLSTAT_SOL_COMPUTED ||
         bestxyz->vSolStatus != OEM_BESTXYZ_SOLSTAT_SOL_COMPUTED) {
         fwrite(msg, 1, sizeof(oem_binary_header_t), binfd);
         fwrite(&bestxyz->pSolStatus, 1, sizeof(bestxyz->pSolStatus), binfd);
         fwrite(&bestxyz->vSolStatus, 1, sizeof(bestxyz->vSolStatus), binfd);
+        fflush(binfd);
+        fsync(fileno(binfd));
         return OEM_ERR_NO_SOLUTION;
     }
 
     fwrite(msg, 1, sizeof(oem_binary_header_t) + hdr->messageLength, binfd);
+    fflush(binfd);
+    fsync(fileno(binfd));
 
     return OEM_OK;
 }

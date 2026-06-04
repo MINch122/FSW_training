@@ -422,19 +422,6 @@ gs_error_t EPS_P80_Drv_PMU_GetBcn(uint8_t csp_node, EPS_P80_Drv_PMU_BcnTlm_t *bc
 
     *bcn = next_bcn;
 
-    OS_printf("[EPS] P80 PMU BCN node=%u bootcause=%lu resetcause=%u bootcount=%u\n",
-              csp_node, (unsigned long)bcn->bootcause, bcn->resetcause, bcn->bootcount);
-    OS_printf("[EPS] P80 PMU BCN batt_mode=%u batt_i=%d batt_v=%u temp=%d,%d\n",
-              bcn->batt_mode, bcn->batt_i, bcn->batt_v, bcn->temp[0], bcn->temp[1]);
-    OS_printf("[EPS] P80 PMU BCN out_en=%u,%u,%u,%u,%u,%u sm_en=%u,%u,%u,%u,%u,%u,%u,%u\n",
-              bcn->out_en[0], bcn->out_en[1], bcn->out_en[2],
-              bcn->out_en[3], bcn->out_en[4], bcn->out_en[5],
-              bcn->sm_en[0], bcn->sm_en[1], bcn->sm_en[2], bcn->sm_en[3],
-              bcn->sm_en[4], bcn->sm_en[5], bcn->sm_en[6], bcn->sm_en[7]);
-    OS_printf("[EPS] P80 PMU BCN wdt gnd_cnt=%u bus_cnt=%u gnd_left=%lu bus_left=%lu\n",
-              bcn->gnd_wdt_cnt, bcn->bus_wdt_cnt,
-              (unsigned long)bcn->gnd_wdt_left, (unsigned long)bcn->bus_wdt_left);
-
     return GS_OK;
 }
 
@@ -443,26 +430,18 @@ gs_error_t EPS_P80_Drv_PDU_GetBcn(uint8_t csp_node, EPS_P80_Drv_PDU_BcnTlm_t *bc
     const uint8_t table_id = GS_P80_PDU_TELEMETRY_TABLE_MEM_ID;
     EPS_P80_Drv_PDU_BcnTlm_t next_bcn = {0};
     uint8_t out_en[24] = {0};
+    int16_t out_i[24] = {0};
     gs_error_t err;
 
     if (bcn == NULL)
         return GS_ERROR_ARG;
 
     EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PDU_TELEMETRY_OUT_EN(0), GS_PARAM_BOOL, out_en, 24);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PDU_TELEMETRY_OUT_I(0), GS_PARAM_INT16, out_i, 24);
     memcpy(next_bcn.out_en, out_en, sizeof(next_bcn.out_en));
+    memcpy(next_bcn.out_i, out_i, sizeof(next_bcn.out_i));
 
     *bcn = next_bcn;
-
-    OS_printf("[EPS] P80 PDU BCN node=%u out_en[00..11]=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
-              csp_node,
-              bcn->out_en[0], bcn->out_en[1], bcn->out_en[2], bcn->out_en[3],
-              bcn->out_en[4], bcn->out_en[5], bcn->out_en[6], bcn->out_en[7],
-              bcn->out_en[8], bcn->out_en[9], bcn->out_en[10], bcn->out_en[11]);
-    OS_printf("[EPS] P80 PDU BCN node=%u out_en[12..23]=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
-              csp_node,
-              bcn->out_en[12], bcn->out_en[13], bcn->out_en[14], bcn->out_en[15],
-              bcn->out_en[16], bcn->out_en[17], bcn->out_en[18], bcn->out_en[19],
-              bcn->out_en[20], bcn->out_en[21], bcn->out_en[22], bcn->out_en[23]);
 
     return GS_OK;
 }
@@ -485,16 +464,6 @@ gs_error_t EPS_P80_Drv_ACU_GetBcn(uint8_t csp_node, EPS_P80_Drv_ACU_BcnTlm_t *bc
     memcpy(next_bcn.input_v, input_v, sizeof(next_bcn.input_v));
 
     *bcn = next_bcn;
-
-    OS_printf("[EPS] P80 ACU BCN node=%u input_i=%d,%d,%d,%d,%d,%d\n",
-              csp_node,
-              bcn->input_i[0], bcn->input_i[1], bcn->input_i[2],
-              bcn->input_i[3], bcn->input_i[4], bcn->input_i[5]);
-    OS_printf("[EPS] P80 ACU BCN node=%u input_v=%u,%u,%u,%u,%u,%u mppt_mode=%u\n",
-              csp_node,
-              bcn->input_v[0], bcn->input_v[1], bcn->input_v[2],
-              bcn->input_v[3], bcn->input_v[4], bcn->input_v[5],
-              bcn->mppt_mode);
 
     return GS_OK;
 }

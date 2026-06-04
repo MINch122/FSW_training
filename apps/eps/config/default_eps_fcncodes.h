@@ -44,9 +44,6 @@ typedef enum
     EPS_NOOP_CC              = 0,
     EPS_RESET_COUNTERS_CC    = 1,
 
-    /* Utility helpers are not dispatched command codes. */
-    /* EPS_REPORT_APPDATA_CC    = 2, */ /* EPS_ReportAppDataCmd lives in eps_utils.c */
-
     /* Power Interface Commands */
     EPS_P80_POWER_IF_GET_CC      = 10,
     EPS_P80_POWER_IF_SET_CC      = 11,

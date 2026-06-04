@@ -35,6 +35,7 @@
 #include "ttc_mission_cfg.h"
 #include "ttc_msgdefs.h"
 #include "cfe_msg_hdr.h"
+#include "rpt_interface_cfg.h"
 
 /*************************************************************************/
 
@@ -157,8 +158,14 @@ typedef struct
 
 typedef struct
 {
-    CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
-    TTC_HkTlm_Payload_t Payload;         /**< \brief Telemetry payload */
+    CFE_MSG_TelemetryHeader_t TelemetryHeader; /**< \brief Telemetry header */
+    TTC_HkTlm_Payload_t       Payload;         /**< \brief Telemetry payload */
 } TTC_HkTlm_t;
+
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    RPT_Report_t              Payload;
+} TTC_ReportTlm_t;
 
 #endif /* TTC_MSGSTRUCT_H */

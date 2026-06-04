@@ -50,7 +50,8 @@ typedef struct {
     uint16 CmdCounter;
     uint16 ErrCounter;
 
-    TTC_HkTlm_t HkTlm;
+    TTC_HkTlm_t     HkTlm;
+    TTC_ReportTlm_t Report;
 
     uint32 RunStatus;
 

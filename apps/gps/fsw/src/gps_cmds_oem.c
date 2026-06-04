@@ -38,13 +38,13 @@
 /*
 ** OEM receiver commands.
 */
-void GPS_OEMCmd_LogCmd(const GPS_OEMCmd_LogCmd_t* Msg)
+void GPS_OEM_Cmd_Log(const GPS_OEM_Cmd_Log_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Cmd_LOG(Msg->portIndex,
+    ret = oem_cmd_LOG(Msg->Payload.interfaceIndex,
                       Msg->Payload.msgId,
                       Msg->Payload.port,
                       Msg->Payload.type,
@@ -55,124 +55,124 @@ void GPS_OEMCmd_LogCmd(const GPS_OEMCmd_LogCmd_t* Msg)
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMCmd_LogOnceCmd(const GPS_OEMCmd_LogOnceCmd_t* Msg)
+void GPS_OEM_Cmd_LogOnce(const GPS_OEM_Cmd_LogOnce_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Cmd_LogOnce(Msg->portIndex,
-                          Msg->Payload.msgId,
-                          Msg->Payload.port);
-    if (ret != OEM_OK)
-        GPS_AppData.Counters.ErrCounter++;
-    
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
-}
-
-void GPS_OEMCmd_LogOnTimeCmd(const GPS_OEMCmd_LogOnTimeCmd_t* Msg)
-{
-    int ret;
-
-    GPS_AppData.Counters.CmdCounter++;
-
-    ret = OEM_Cmd_LogOnTime(Msg->portIndex,
-                            Msg->Payload.msgId,
-                            Msg->Payload.port,
-                            Msg->Payload.period,
-                            Msg->Payload.offset);
-    if (ret != OEM_OK)
-        GPS_AppData.Counters.ErrCounter++;
-    
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
-}
-
-void GPS_OEMCmd_LogOnChangedCmd(const GPS_OEMCmd_LogOnChangedCmd_t* Msg)
-{
-    int ret;
-
-    GPS_AppData.Counters.CmdCounter++;
-
-    ret = OEM_Cmd_LogOnChanged(Msg->portIndex,
-                               Msg->Payload.msgId,
-                               Msg->Payload.port);
-    if (ret != OEM_OK)
-        GPS_AppData.Counters.ErrCounter++;
-    
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
-}
-
-void GPS_OEMCmd_LogOnNewCmd(const GPS_OEMCmd_LogOnNewCmd_t* Msg)
-{
-    int ret;
-
-    GPS_AppData.Counters.CmdCounter++;
-
-    ret = OEM_Cmd_LogOnNew(Msg->portIndex,
+    ret = oem_cmd_LOG_once(Msg->Payload.interfaceIndex,
                            Msg->Payload.msgId,
                            Msg->Payload.port);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMCmd_UnlogCmd(const GPS_OEMCmd_UnlogCmd_t* Msg)
+void GPS_OEM_Cmd_LogOnTime(const GPS_OEM_Cmd_LogOnTime_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Cmd_UNLOG(Msg->portIndex,
+    ret = oem_cmd_LOG_ontime(Msg->Payload.interfaceIndex,
+                             Msg->Payload.msgId,
+                             Msg->Payload.port,
+                             Msg->Payload.period,
+                             Msg->Payload.offset);
+    if (ret != OEM_OK)
+        GPS_AppData.Counters.ErrCounter++;
+    
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
+}
+
+void GPS_OEM_Cmd_LogOnChanged(const GPS_OEM_Cmd_LogOnChanged_t* Msg)
+{
+    int ret;
+
+    GPS_AppData.Counters.CmdCounter++;
+
+    ret = oem_cmd_LOG_onchanged(Msg->Payload.interfaceIndex,
+                                Msg->Payload.msgId,
+                                Msg->Payload.port);
+    if (ret != OEM_OK)
+        GPS_AppData.Counters.ErrCounter++;
+    
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
+}
+
+void GPS_OEM_Cmd_LogOnNew(const GPS_OEM_Cmd_LogOnNew_t* Msg)
+{
+    int ret;
+
+    GPS_AppData.Counters.CmdCounter++;
+
+    ret = oem_cmd_LOG_onnew(Msg->Payload.interfaceIndex,
+                            Msg->Payload.msgId,
+                            Msg->Payload.port);
+    if (ret != OEM_OK)
+        GPS_AppData.Counters.ErrCounter++;
+    
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
+}
+
+void GPS_OEM_Cmd_Unlog(const GPS_OEM_Cmd_Unlog_t* Msg)
+{
+    int ret;
+
+    GPS_AppData.Counters.CmdCounter++;
+
+    ret = oem_cmd_UNLOG(Msg->Payload.interfaceIndex,
                         Msg->Payload.port,
                         Msg->Payload.msgId,
                         Msg->Payload.type);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMCmd_UnlogAllCmd(const GPS_OEMCmd_UnlogAllCmd_t* Msg)
+void GPS_OEM_Cmd_UnlogAll(const GPS_OEM_Cmd_UnlogAll_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Cmd_UNLOGALL(Msg->portIndex,
+    ret = oem_cmd_UNLOGALL(Msg->Payload.interfaceIndex,
                            Msg->Payload.port,
                            Msg->Payload.held);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMCmd_ElevationCutoffCmd(const GPS_OEMCmd_ElevationCutoffCmd_t* Msg)
+void GPS_OEM_Cmd_ElevationCutoff(const GPS_OEM_Cmd_ElevationCutoff_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Cmd_ELEVATIONCUTOFF(Msg->portIndex,
+    ret = oem_cmd_ELEVATIONCUTOFF(Msg->Payload.interfaceIndex,
                                   Msg->Payload.constellation,
                                   Msg->Payload.cutoff);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMCmd_InterfaceModeCmd(const GPS_OEMCmd_InterfaceModeCmd_t* Msg)
+void GPS_OEM_Cmd_InterfaceMode(const GPS_OEM_Cmd_InterfaceMode_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Cmd_INTERFACEMODE(Msg->portIndex,
+    ret = oem_cmd_INTERFACEMODE(Msg->Payload.interfaceIndex,
                                 Msg->Payload.port,
                                 Msg->Payload.rxType,
                                 Msg->Payload.txType,
@@ -180,16 +180,16 @@ void GPS_OEMCmd_InterfaceModeCmd(const GPS_OEMCmd_InterfaceModeCmd_t* Msg)
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMCmd_SerialConfigCmd(const GPS_OEMCmd_SerialConfigCmd_t* Msg)
+void GPS_OEM_Cmd_SerialConfig(const GPS_OEM_Cmd_SerialConfig_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Cmd_SERIALCONFIG(Msg->portIndex,
+    ret = oem_cmd_SERIALCONFIG(Msg->Payload.interfaceIndex,
                                Msg->Payload.port,
                                Msg->Payload.baud,
                                Msg->Payload.parity,
@@ -200,10 +200,10 @@ void GPS_OEMCmd_SerialConfigCmd(const GPS_OEMCmd_SerialConfigCmd_t* Msg)
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMCmd_PublishCmd(const GPS_OEMCmd_PublishCmd_t* Msg)
+void GPS_OEM_Cmd_Publish(const GPS_OEM_Cmd_Publish_t* Msg)
 {
     int ret;
 
@@ -215,168 +215,168 @@ void GPS_OEMCmd_PublishCmd(const GPS_OEMCmd_PublishCmd_t* Msg)
                        &Msg->Payload.bodylength,
                        sizeof(Msg->Payload.bodylength),
                        OEM_ERR_RANGE,
-                       RPT_RETTYPE_HW);
+                       GPS_MISSION_REPORT_RETTYPE_HW);
         return;
     }
 
-    ret = OEM_AssemblePublishCmd(Msg->portIndex,
-                                 Msg->Payload.msgId,
-                                 Msg->Payload.bodylength,
-                                 Msg->Payload.body);
+    ret = oem_cmd_publish(Msg->Payload.interfaceIndex,
+                          Msg->Payload.msgId,
+                          Msg->Payload.bodylength,
+                          Msg->Payload.body);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_GetHandlerHkCmd(const GPS_OEMLog_GetHandlerHkCmd_t* Msg)
+void GPS_OEM_Log_GetHandlerHk(const GPS_OEM_Log_GetHandlerHk_t* Msg)
 {
     int ret;
     oem_log_handler_hk_t hk;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_GethandlerHousekeeping(Msg->Payload.msgId,
-                                         &hk);
+    ret = oem_log_get_handler_hk(Msg->Payload.msgId,
+                                 &hk);
     if (ret != OEM_OK) {
         GPS_AppData.Counters.ErrCounter++;
-        GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+        GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
         return;
     }
     
-    GPS_SendReport(Msg, &hk, sizeof(hk), ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, &hk, sizeof(hk), ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_GetMsgStatCmd(const GPS_OEMLog_GetMsgStatCmd_t* Msg)
+void GPS_OEM_Log_GetStat(const GPS_OEM_Log_GetStat_t* Msg)
 {
     int ret;
-    oem_log_handler_stat_t hk;
+    oem_log_stat_t hk;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_GetMessageStatistics(Msg->Payload.msgId,
-                                       &hk);
+    ret = oem_log_get_stat(Msg->Payload.msgId,
+                           &hk);
     if (ret != OEM_OK) {
         GPS_AppData.Counters.ErrCounter++;
-        GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+        GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
         return;
     }
     
-    GPS_SendReport(Msg, &hk, sizeof(hk), ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, &hk, sizeof(hk), ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_SetHandlerStatusCmd(const GPS_OEMLog_SetHandlerStatusCmd_t* Msg)
+void GPS_OEM_Log_HandlerSetStatus(const GPS_OEM_Log_HandlerSetStatus_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_SetHandlerStatus(Msg->Payload.msgId,
-                                   Msg->Payload.status,
-                                   Msg->Payload.override);
+    ret = oem_log_handler_set_status(Msg->Payload.msgId,
+                                     Msg->Payload.status,
+                                     Msg->Payload.override);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_GetHandlerStatusCmd(const GPS_OEMLog_GetHandlerStatusCmd_t* Msg)
+void GPS_OEM_Log_HandlerGetStatus(const GPS_OEM_Log_HandlerGetStatus_t* Msg)
 {
     int ret;
     uint8_t hk;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_GetHandlerStatus(Msg->Payload.msgId,
-                                   &hk);
+    ret = oem_log_handler_get_status(Msg->Payload.msgId,
+                                     &hk);
     if (ret != OEM_OK) {
         GPS_AppData.Counters.ErrCounter++;
-        GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+        GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
         return;
     }
     
-    GPS_SendReport(Msg, &hk, sizeof(hk), ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, &hk, sizeof(hk), ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_HandlerActivateCmd(const GPS_OEMLog_HandlerActivateCmd_t* Msg)
+void GPS_OEM_Log_HandlerActivate(const GPS_OEM_Log_HandlerActivate_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_HandlerActivate(Msg->Payload.msgId);
+    ret = oem_log_handler_activate(Msg->Payload.msgId);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_HandlerDeactivateCmd(const GPS_OEMLog_HandlerDeactivateCmd_t* Msg)
+void GPS_OEM_Log_HandlerDeactivate(const GPS_OEM_Log_HandlerDeactivate_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_HandlerDeacivate(Msg->Payload.msgId);
+    ret = oem_log_handler_deactivate(Msg->Payload.msgId);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_HandlerGoDormantCmd(const GPS_OEMLog_HandlerGoDormantCmd_t* Msg)
+void GPS_OEM_Log_HandlerGoDormant(const GPS_OEM_Log_HandlerGoDormant_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_HandlerGoDormant(Msg->Payload.msgId);
+    ret = oem_log_handler_go_dormant(Msg->Payload.msgId);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_HandlerWakeupCmd(const GPS_OEMLog_HandlerWakeupCmd_t* Msg)
+void GPS_OEM_Log_HandlerWakeup(const GPS_OEM_Log_HandlerWakeup_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_HandlerWakeup(Msg->Payload.msgId);
+    ret = oem_log_handler_wakeup(Msg->Payload.msgId);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_HandlerActivateAllCmd(const GPS_OEMLog_HandlerActivateAllCmd_t* Msg)
+void GPS_OEM_Log_HandlerActivateAll(const GPS_OEM_Log_HandlerActivateAll_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_HandlerActivateAll();
+    ret = oem_log_handler_activate_all();
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_HandlerDeactivateAllCmd(const GPS_OEMLog_HandlerDeactivateAllCmd_t* Msg)
+void GPS_OEM_Log_HandlerDeactivateAll(const GPS_OEM_Log_HandlerDeactivateAll_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_HandlerDeactivateAll();
+    ret = oem_log_handler_deactivate_all();
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_HandlerRegisterCmd(const GPS_OEMLog_HandlerRegisterCmd_t* Msg)
+void GPS_OEM_Log_HandlerRegister(const GPS_OEM_Log_HandlerRegister_t* Msg)
 {
     int ret;
     char name[OEM_LOG_HANDLER_NAME_LEN];
@@ -386,29 +386,29 @@ void GPS_OEMLog_HandlerRegisterCmd(const GPS_OEMLog_HandlerRegisterCmd_t* Msg)
     memcpy(name, Msg->Payload.name, OEM_LOG_HANDLER_NAME_LEN);
     name[OEM_LOG_HANDLER_NAME_LEN - 1] = '\0';
 
-    ret = OEM_Log_RegisterHandler(name,
-                                  Msg->Payload.msgId,
-                                  Msg->Payload.msgLength);
+    ret = oem_log_handler_register(name,
+                                   Msg->Payload.msgId,
+                                   Msg->Payload.msgLength);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, name, OEM_LOG_HANDLER_NAME_LEN, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, name, OEM_LOG_HANDLER_NAME_LEN, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_HandlerUnregisterCmd(const GPS_OEMLog_HandlerUnregisterCmd_t* Msg)
+void GPS_OEM_Log_HandlerUnregister(const GPS_OEM_Log_HandlerUnregister_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_UnregisterHandler(Msg->Payload.msgId);
+    ret = oem_log_handler_unregister(Msg->Payload.msgId);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_AddCallbackCmd(const GPS_OEMLog_AddCallbackCmd_t* Msg)
+void GPS_OEM_Log_AddCallback(const GPS_OEM_Log_AddCallback_t* Msg)
 {
     int ret;
     char err[64];
@@ -425,60 +425,60 @@ void GPS_OEMLog_AddCallbackCmd(const GPS_OEMLog_AddCallbackCmd_t* Msg)
                                         err);
     if (ret != GPS_DEV_SUCCESS) {
         GPS_AppData.Counters.ErrCounter++;
-        GPS_SendReport(Msg, err, sizeof(err), ret, RPT_RETTYPE_HW);
+        GPS_SendReport(Msg, err, sizeof(err), ret, GPS_MISSION_REPORT_RETTYPE_HW);
         return;
     }
 
-    ret = OEM_Log_AddCallback(Msg->Payload.msgId,
-                              callback);
+    ret = oem_log_add_callback(Msg->Payload.msgId,
+                               callback);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_ClearCallbackCmd(const GPS_OEMLog_ClearCallbackCmd_t* Msg)
+void GPS_OEM_Log_ClearCallbacks(const GPS_OEM_Log_ClearCallbacks_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_ClearCallbacks(Msg->Payload.msgId);
+    ret = oem_log_clear_callbacks(Msg->Payload.msgId);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_HandlerSetBrokenCmd(const GPS_OEMLog_HandlerSetBrokenCmd_t* Msg)
+void GPS_OEM_Log_HandlerMarkBroken(const GPS_OEM_Log_HandlerMarkBroken_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_HandlerSetBroken(Msg->Payload.msgId);
+    ret = oem_log_handler_mark_broken(Msg->Payload.msgId);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_GetHandlerMsgLengthCmd(const GPS_OEMLog_GetHandlerMsgLengthCmd_t* Msg)
+void GPS_OEM_Log_GetMessageLength(const GPS_OEM_Log_GetMessageLength_t* Msg)
 {
     int ret;
     oem_ushort len = 0;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_GetMessageLength(Msg->Payload.msgId,
-                                   &len);
+    ret = oem_log_get_message_length(Msg->Payload.msgId,
+                                     &len);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, &len, sizeof(len), ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, &len, sizeof(len), ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_GetHandlerNameCmd(const GPS_OEMLog_GetHandlerNameCmd_t* Msg)
+void GPS_OEM_Log_GetHandlerName(const GPS_OEM_Log_GetHandlerName_t* Msg)
 {
     int ret;
     char name[OEM_LOG_HANDLER_NAME_LEN];
@@ -488,41 +488,42 @@ void GPS_OEMLog_GetHandlerNameCmd(const GPS_OEMLog_GetHandlerNameCmd_t* Msg)
 
     memset(name, 0, sizeof(name));
 
-    ret = OEM_Log_GetHandlerName(Msg->Payload.msgId,
-                                 name);
+    ret = oem_log_get_handler_name(Msg->Payload.msgId,
+                                   name);
     if (ret != OEM_OK) {
         retSize = 0;
         GPS_AppData.Counters.ErrCounter++;
     }
     
-    GPS_SendReport(Msg, name, retSize, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, name, retSize, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_ResetHandlerCountersCmd(const GPS_OEMLog_ResetHandlerCountersCmd_t* Msg)
+void GPS_OEM_Log_ResetStat(const GPS_OEM_Log_ResetStat_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_ResetHandlerCounters(Msg->Payload.msgId);
+    ret = oem_log_reset_stat(Msg->Payload.msgId);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_DumpRecentMsgCmd(const GPS_OEMLog_DumpRecentMsgCmd_t* Msg)
+void GPS_OEM_Log_GetRecentMessage(const GPS_OEM_Log_GetRecentMessage_t* Msg)
 {
     int ret;
     size_t copied;
-    uint8 buffer[RPT_RET_VALUE_BUF_SIZE];
+    uint8 buffer[GPS_MISSION_REPORT_DATA_SIZE];
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_DumpRecentMessage(Msg->Payload.msgId,
-                                    buffer,
-                                    RPT_RET_VALUE_BUF_SIZE,
-                                    &copied);
+    ret = oem_log_get_recent_message(Msg->Payload.msgId,
+                                     buffer,
+                                     Msg->Payload.offset,
+                                     GPS_MISSION_REPORT_DATA_SIZE,
+                                     &copied);
     if (ret != OEM_OK) {
         copied = 0;
         GPS_AppData.Counters.ErrCounter++;
@@ -530,45 +531,45 @@ void GPS_OEMLog_DumpRecentMsgCmd(const GPS_OEMLog_DumpRecentMsgCmd_t* Msg)
     
     GPS_SendReport(Msg,
                    buffer,
-                   copied > RPT_RET_VALUE_BUF_SIZE
-                          ? RPT_RET_VALUE_BUF_SIZE
+                   copied > GPS_MISSION_REPORT_DATA_SIZE
+                          ? GPS_MISSION_REPORT_DATA_SIZE
                           : copied,
                    ret,
-                   RPT_RETTYPE_HW);
+                   GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_IgnoreChecksumCmd(const GPS_OEMLog_IgnoreChecksumCmd_t* Msg)
+void GPS_OEM_Log_RejectMissingCrc(const GPS_OEM_Log_RejectMissingCrc_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_EnableCsVerification(Msg->Payload.msgId);
+    ret = oem_log_reject_missing_crc(Msg->Payload.msgId);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_DonotIgnoreChecksumCmd(const GPS_OEMLog_DonotIgnoreChecksumCmd_t* Msg)
+void GPS_OEM_Log_IgnoreMissingCrc(const GPS_OEM_Log_IgnoreMissingCrc_t* Msg)
 {
     int ret;
 
     GPS_AppData.Counters.CmdCounter++;
 
-    ret = OEM_Log_DisableCsVerification(Msg->Payload.msgId);
+    ret = oem_log_ignore_missing_crc(Msg->Payload.msgId);
     if (ret != OEM_OK)
         GPS_AppData.Counters.ErrCounter++;
     
-    GPS_SendReport(Msg, NULL, 0, ret, RPT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, ret, GPS_MISSION_REPORT_RETTYPE_HW);
 }
 
-void GPS_OEMLog_LockHandlersCmd(const GPS_OEMLog_LockHandlersCmd_t* Msg)
+void GPS_OEM_Log_LockHandlers(const GPS_OEM_Log_LockHandlers_t* Msg)
 {
     return;
 }
 
-void GPS_OEMLog_UnlockHandlersCmd(const GPS_OEMLog_UnlockHandlersCmd_t* Msg)
+void GPS_OEM_Log_UnlockHandlers(const GPS_OEM_Log_UnlockHandlers_t* Msg)
 {
     return;
 }

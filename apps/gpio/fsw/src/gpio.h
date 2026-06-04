@@ -57,6 +57,9 @@ typedef struct
     ** Housekeeping telemetry packet...
     */
     GPIO_HkTlm_t HkTlm;
+    GPIO_BcnTlm_t BcnTlm;
+    uint16        OutputStateBits;
+    uint16        OutputCommandedBits;
 
     /*
     ** Run Status variable used in the main processing loop

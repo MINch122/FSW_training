@@ -70,6 +70,5 @@ gs_error_t   EPS_RParamSaveToStore(uint8_t cspNode, uint8_t tableId, const char 
                                     const char *slot, uint32_t timeoutMs);
 gs_error_t   EPS_RParamLoadFromStore(uint8_t cspNode, uint8_t tableId, const char *store,
                                       const char *slot, uint32_t timeoutMs);
-CFE_Status_t EPS_ReportAppDataCmd(const EPS_ReportAppDataCmd_t *Msg);
 
 #endif /* EPS_UTILS_H */
