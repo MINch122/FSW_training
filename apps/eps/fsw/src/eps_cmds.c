@@ -124,6 +124,7 @@ static void EPS_SendQueryReport(const void *Msg, uint8_t source, uint8_t dataId,
 
 static void EPS_SendHkQueryReport(const void *Msg, uint8_t cspNode)
 {
+    EPS_APP_printf("EPS: HK query report requested node=%u\n", cspNode);
     switch (cspNode)
     {
         case EPS_P80_PMU_CSP_NODE:

@@ -13,6 +13,31 @@
 #include "eps_msgids.h"
 #include "hk_msgids.h"
 
+static void TO_LAB_PrintOutgoing(const char *Path, const CFE_SB_Buffer_t *SBBufPtr, const void *NetBufPtr, size_t NetBufSize, int32 Status, uint16 Port)
+{
+    CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
+    CFE_MSG_Size_t SourceSize = 0;
+    const uint8 *Bytes = (const uint8 *)NetBufPtr;
+
+    (void)CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
+    (void)CFE_MSG_GetSize(&SBBufPtr->Msg, &SourceSize);
+
+    TO_LAB_APP_printf("TO_LAB %s OUT: mid=0x%04X src_len=%lu net_len=%lu port=%u status=0x%08lX head=",
+                      Path,
+                      (unsigned int)CFE_SB_MsgIdToValue(MsgId),
+                      (unsigned long)SourceSize,
+                      (unsigned long)NetBufSize,
+                      (unsigned int)Port,
+                      (unsigned long)Status);
+
+    for (size_t i = 0; i < NetBufSize && i < 16; i++)
+    {
+        TO_LAB_APP_printf("%02X", (unsigned int)Bytes[i]);
+    }
+
+    TO_LAB_APP_printf("\n");
+}
+
 void TO_LAB_ForwardTelemetryRF(void) {
     CFE_Status_t     Status;
     CFE_SB_Buffer_t *SBBufPtr;
@@ -72,7 +97,8 @@ void TO_LAB_ForwardTelemetryRF(void) {
             }
 
             /* Determine the Emission Mode */
-            Status = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, Port); /* Eliminate `const` attr by (void *) casting */ 
+            Status = CFE_RF_TelemetryEmit((void *)NetBufPtr, NetBufSize, Port); /* Eliminate `const` attr by (void *) casting */
+            TO_LAB_PrintOutgoing("RF", SBBufPtr, NetBufPtr, NetBufSize, Status, Port);
             OS_printf("%s: U Transmission Status : %d\n", __func__, Status);
             if (Status != CFE_SUCCESS) {
                 CFE_EVS_SendErr(TO_LAB_TLMOUTSTOP_ERR_EID, "%s: RF emit error. RC=0x%08X\n", __func__, Status);
@@ -152,6 +178,7 @@ void TO_LAB_ForwardTelemetryUDP(void)
                     if (OsStatus == OS_SUCCESS)
                     {
                         OsStatus = OS_SocketSendTo(TO_LAB_Global.TLMsockid, NetBufPtr, NetBufSize, &d_addr);
+                        TO_LAB_PrintOutgoing("UDP", SBBufPtr, NetBufPtr, NetBufSize, OsStatus, TO_LAB_TLM_PORT);
                     }
                 }
 

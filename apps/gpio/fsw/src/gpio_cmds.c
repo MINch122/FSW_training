@@ -209,6 +209,7 @@ CFE_Status_t GPIO_SendHkCmd(const GPIO_SendHkCmd_t *Msg)
     /*
     ** Send housekeeping telemetry packet...
     */
+    GPIO_APP_printf("GPIO: HK report requested\n");
     GPIO_SendReport(0, CFE_SUCCESS, &GPIO_Data.HkTlm.Payload, sizeof(GPIO_Data.HkTlm.Payload), RPT_RETTYPE_SUCCESS);
 
     /*

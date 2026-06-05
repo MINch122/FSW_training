@@ -93,6 +93,8 @@ CFE_Status_t paybee_kisscam_NoopCmd(const paybee_kisscam_NoopCmd_t *Msg) {
     paybee_kisscam_Data.CmdCounter++;
     static const char NoopReport[] = "Yosi In Space";
 
+    paybee_kisscam_APP_printf("paybee_kisscam: NOOP report requested\n");
+
     paybee_kisscam_HandleSuccess(paybee_kisscam_NOOP_CC, (void *)NoopReport, sizeof(NoopReport));
 
     CFE_EVS_SendEvent(paybee_kisscam_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "paybee_kisscam Noop Command Received");

@@ -93,6 +93,7 @@ static void LTRX_ReportHousekeeping(void)
         memcpy(&Payload.LastBeaconStatus, &LTRX_AppData.LastBeaconStatus, sizeof(Payload.LastBeaconStatus));
     }
 
+    LTRX_APP_printf("LTRX: HK report requested\n");
     LTRX_ReportBegin(0);
     LTRX_ReportSetAppStatus(CFE_SUCCESS);
     CopySize = sizeof(Payload) > RPT_RET_VALUE_BUF_SIZE ? RPT_RET_VALUE_BUF_SIZE : (uint16)sizeof(Payload);

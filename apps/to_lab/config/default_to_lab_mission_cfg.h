@@ -33,4 +33,14 @@
 
 #include "to_lab_interface_cfg.h"
 
+#ifndef DEBUG_TO_LAB
+#define DEBUG_TO_LAB true
+#endif
+
+#if DEBUG_TO_LAB
+#define TO_LAB_APP_printf(...) OS_printf(__VA_ARGS__)
+#else
+#define TO_LAB_APP_printf(...) do { } while (0)
+#endif
+
 #endif

@@ -43,6 +43,7 @@ CFE_Status_t GPS_SendHkCmd(const GPS_SendHkCmd_t *Msg)
     /*
     ** Send housekeeping telemetry packet...
     */
+    GPS_APP_printf("GPS: HK report requested\n");
     GPS_SendReport(Msg, &GPS_AppData.HkTlm.Payload, sizeof(GPS_AppData.HkTlm.Payload), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
 

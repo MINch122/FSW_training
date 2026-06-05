@@ -117,6 +117,7 @@ void STX_SendHkCmd(void)
     /*
     ** Send housekeeping telemetry packet...
     */
+    STX_APP_printf("STX: HK report requested\n");
     STX_rptsend(0, RPT_RETTYPE_SUCCESS, CFE_SUCCESS, sizeof(STX_Data.HkTlm.Payload), &STX_Data.HkTlm.Payload);
 }
 

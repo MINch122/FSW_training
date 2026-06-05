@@ -92,6 +92,7 @@ CFE_Status_t ADCS_SendHkCmd(const ADCS_SendHkCmd_t *Msg)
         ADCS_AppData.HkTlm.Payload.rawCssIsValid = RawCSS.CSSValidFlag;
     }
 
+    ADCS_APP_printf("ADCS: HK report requested\n");
     ADCS_HandleReport(CFE_SUCCESS, 0, &ADCS_AppData.HkTlm.Payload, sizeof(ADCS_AppData.HkTlm.Payload));
 
     return CFE_SUCCESS;

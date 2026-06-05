@@ -214,6 +214,7 @@ void UTRX_ReportHousekeeping(void)
         OS_printf("[UTRX][HK] collected with errors mask=0x%08X\n", (unsigned)errmask);
     }
 
+    UTRX_APP_printf("UTRX: HK report requested\n");
     UTRX_SendCmdReport(0, CFE_SUCCESS, &hk, sizeof(hk), RPT_RETTYPE_SUCCESS);
 
     OS_printf("[UTRX][HK] temp=%d, rssi=%d, rferr=%d, act=%u, boot_cnt=%u, cause=0x%08X, "

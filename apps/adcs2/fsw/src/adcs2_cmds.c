@@ -146,6 +146,7 @@ CFE_Status_t ADCS2_SendHkCmd(const ADCS2_SendHkCmd_t *Msg)
         ADCS2_AppData.HkTlm.Payload.ActiveContMode = Controller.ActiveContMode;
     }
 
+    ADCS2_APP_printf("ADCS2: HK report requested\n");
     ADCS2_HandleReport(CFE_SUCCESS, 0, &ADCS2_AppData.HkTlm.Payload, sizeof(ADCS2_AppData.HkTlm.Payload));
 
     return CFE_SUCCESS;

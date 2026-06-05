@@ -83,6 +83,7 @@ CFE_Status_t SLT_IFB_SendHkCmd(const SLT_IFB_SendHkCmd_t *Msg)
     /*
     ** Send housekeeping telemetry packet...
     */
+    SLT_IFB_APP_printf("SLT_IFB: HK report requested\n");
     SLT_IFB_rptsend(SLT_IFB_CMD_MID, 0, RPT_RETTYPE_SUCCESS, CFE_SUCCESS, sizeof(SLT_IFB_Data.HkTlm.Payload), (uint8 *)&SLT_IFB_Data.HkTlm.Payload);
 
     /*

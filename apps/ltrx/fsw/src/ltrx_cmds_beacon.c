@@ -9,11 +9,11 @@
 #include <string.h>
 
 #ifndef LTRX_DOWNLINK_MAX_LEN
-#define LTRX_DOWNLINK_MAX_LEN 2048
+#define LTRX_DOWNLINK_MAX_LEN 180
 #endif
 
 #ifndef LTRX_UPLINK_MAX_LEN
-#define LTRX_UPLINK_MAX_LEN 2048
+#define LTRX_UPLINK_MAX_LEN 180
 #endif
 
 #ifndef LTRX_UPLINK_PART_REQ_LEN
@@ -41,6 +41,7 @@ static bool s_DownstreamEnabled = true;
 void LTRX_Downstream_SetEnabled(bool enabled)
 {
     s_DownstreamEnabled = enabled;
+    LTRX_APP_printf("LTRX: downstream %s\n", enabled ? "enabled" : "disabled");
 }
 
 bool LTRX_Downstream_IsEnabled(void)
@@ -68,6 +69,7 @@ int32_t LTRX_Downlink_SetMessage(uint32_t MessageID,
     s_DownMsgId  = MessageID;
     s_DownMsgCrc = LTRX_CalculateCRC32(s_DownBuf, s_DownLen);
     s_DownReady  = true;
+    LTRX_APP_printf("LTRX: downlink staged id=%u len=%u crc=0x%08X\n", (unsigned)s_DownMsgId, (unsigned)s_DownLen, (unsigned)s_DownMsgCrc);
 
     return LTRX_SUCCESS;
 }
@@ -313,7 +315,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
     }
 
     const uint8_t type_id = hdr.TypeID;
-    OS_printf("LTRX_BcnProcessOneRx: from=%u to=%u type=%u payload_len=%u actual_len=%u\n",
+    LTRX_APP_printf("LTRX_BcnProcessOneRx: from=%u to=%u type=%u payload_len=%u actual_len=%u\n",
               (unsigned)hdr.FromID,
               (unsigned)hdr.ToID,
               (unsigned)type_id,
@@ -326,7 +328,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         case LTRX_BEACON_CMD_REQUEST_MSG_TX: /* 3 */
         {
-            OS_printf("LTRX case Type3 REQUEST_MSG_TX\n");
+            LTRX_APP_printf("LTRX case Type3 REQUEST_MSG_TX\n");
 
             if (s_DownReady)
             {
@@ -349,7 +351,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         case LTRX_BEACON_CMD_REQUEST_MSG_PART: /* 7 */
         {
-            OS_printf("LTRX case Type7 REQUEST_MSG_PART\n");
+            LTRX_APP_printf("LTRX case Type7 REQUEST_MSG_PART\n");
             /* ICD: MessageID(4) + PartStart(2) + PartLen(2) = 8 bytes */
             if (actual_len < 8)
             {
@@ -389,7 +391,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         case LTRX_BEACON_CMD_CONFIRM_PART_RX: /* 10 */
         {
-            OS_printf("LTRX case Type10 CONFIRM_PART_RX\n");
+            LTRX_APP_printf("LTRX case Type10 CONFIRM_PART_RX\n");
             /* ICD: MessageID(4)+Start(2)+Len(2)+Status(1)=9, +ErrorDescription(25)=34 */
             if (actual_len < 34)
             {
@@ -422,7 +424,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         case LTRX_BEACON_CMD_CONFIRM_MSG_RX: /* 11 */
         {
-            OS_printf("LTRX case Type11 CONFIRM_MSG_RX\n");
+            LTRX_APP_printf("LTRX case Type11 CONFIRM_MSG_RX\n");
             if (actual_len < 5)
             {
                 CFE_EVS_SendEvent(LTRX_BCN_RX_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -438,7 +440,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         case LTRX_BEACON_CMD_MSG_STATUS_UPDATE: /* 13 */
         {
-            OS_printf("LTRX case Type13 MSG_STATUS_UPDATE\n");
+            LTRX_APP_printf("LTRX case Type13 MSG_STATUS_UPDATE\n");
             /* ICD: MessageID(4) + CurrentNode(1) + UpdateTimestamp(8) + ErrorCode(1) + ErrorDescription(25) = 39 */
             if (actual_len < 39)
             {
@@ -466,7 +468,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         case LTRX_BEACON_CMD_PREV_CMD_ACK: /* 15 */
         {
-            OS_printf("LTRX case Type15 PREV_CMD_ACK\n");
+            LTRX_APP_printf("LTRX case Type15 PREV_CMD_ACK\n");
             if (actual_len < 35)
             {
                 CFE_EVS_SendEvent(LTRX_BCN_RX_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -515,7 +517,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         case LTRX_BEACON_CMD_OFFER_RECEIVE_MSG: /* 6 */
         {
-            OS_printf("LTRX case Type6 OFFER_RECEIVE_MSG\n");
+            LTRX_APP_printf("LTRX case Type6 OFFER_RECEIVE_MSG\n");
             /* ICD: MessageID(4) + MessageLength(2) + MessageCRC(4) = 10 bytes */
             if (actual_len < 10)
             {
@@ -561,7 +563,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         case LTRX_BEACON_CMD_SEND_MSG_HEADER: /* 5 */
         {
-            OS_printf("LTRX case Type5 SEND_MSG_HEADER\n");
+            LTRX_APP_printf("LTRX case Type5 SEND_MSG_HEADER\n");
             if (actual_len < 10)
             {
                 LTRX_SessionOnIcdRx(type_id, 30);
@@ -613,7 +615,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         case LTRX_BEACON_CMD_SEND_MSG_PART: /* 9 */
         {
-            OS_printf("LTRX case Type9 SEND_MSG_PART\n");
+            LTRX_APP_printf("LTRX case Type9 SEND_MSG_PART\n");
             /* ICD: MessageID(4)+Start(2)+Len(2)+PartCRC(4)+Bytes(N) */
             if (actual_len < 12)
             {
@@ -713,7 +715,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         case LTRX_BEACON_CMD_GNSS_INFO: /* 21 */
         {
-            OS_printf("LTRX case Type21 GNSS_INFO\n");
+            LTRX_APP_printf("LTRX case Type21 GNSS_INFO\n");
             /* ICD payload: UTCTime(4) Lat(4) Lon(4) Alt(4) Fix(1) NumSat(1) = 18 */
             if (actual_len < 18)
             {
@@ -737,7 +739,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         case LTRX_BEACON_CMD_BEACON_STATUS: /* 23 */
         {
-            OS_printf("LTRX case Type23 BEACON_STATUS\n");
+            LTRX_APP_printf("LTRX case Type23 BEACON_STATUS\n");
             /* ICD payload size: 52 bytes */
             if (actual_len < 52)
             {
@@ -770,7 +772,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         case LTRX_BEACON_CMD_BEACON_STATUS_FULL: /* 24 */
         {
-            OS_printf("LTRX case Type24 BEACON_STATUS_FULL\n");
+            LTRX_APP_printf("LTRX case Type24 BEACON_STATUS_FULL\n");
             if (actual_len < 70)
             {
                 CFE_EVS_SendEvent(LTRX_BCN_RX_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -807,7 +809,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
             LTRX_AppData.HaveBeaconStatusFull = true;
             memcpy(&LTRX_AppData.LastBeaconStatusFull, payload, 70);
 
-            OS_printf("LTRX Type24 GNSS: utc=%u lat=%ld lon=%ld alt=%u fix=%u sats=%u\n",
+            LTRX_APP_printf("LTRX Type24 GNSS: utc=%u lat=%ld lon=%ld alt=%u fix=%u sats=%u\n",
                       (unsigned)LTRX_AppData.LastGnss.UTCTimeMs,
                       (long)LTRX_AppData.LastGnss.Latitude,
                       (long)LTRX_AppData.LastGnss.Longitude,
@@ -815,7 +817,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
                       (unsigned)LTRX_AppData.LastGnss.FixQuality,
                       (unsigned)LTRX_AppData.LastGnss.NumSatellites);
 
-            OS_printf("LTRX Type24 STATUS: ver=%u temp=%d ang=(%ld,%ld,%ld) acc=(%ld,%ld,%ld) cq=%u charging=%u batt=%u\n",
+            LTRX_APP_printf("LTRX Type24 STATUS: ver=%u temp=%d ang=(%ld,%ld,%ld) acc=(%ld,%ld,%ld) cq=%u charging=%u batt=%u\n",
                       (unsigned)LTRX_AppData.LastBeaconStatus.Version,
                       (int)LTRX_AppData.LastBeaconStatus.Temperature,
                       (long)LTRX_AppData.LastBeaconStatus.AngularVelocityX,
@@ -834,7 +836,7 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
 
         default:
         {
-            OS_printf("LTRX case UNKNOWN type=%u actual_len=%u\n",
+            LTRX_APP_printf("LTRX case UNKNOWN type=%u actual_len=%u\n",
                       (unsigned)type_id, (unsigned)actual_len);
             /* Type15 ACK for unknown type id*/
             SendErrorAckForRx(&hdr, LTRX_ACK_STATUS_PARSE_FAILED, "unknown type id");
@@ -852,6 +854,7 @@ void LTRX_OnBusBeaconReceived(const CFE_SB_Buffer_t *SBBufPtr)
 
     if (!s_DownstreamEnabled)
     {
+        LTRX_APP_printf("LTRX: bus beacon ignored, downstream disabled\n");
         return;
     }
 
@@ -878,6 +881,7 @@ void LTRX_OnBusBeaconReceived(const CFE_SB_Buffer_t *SBBufPtr)
     }
     s_LastMsgId = msg_id;
 
+    LTRX_APP_printf("LTRX: bus beacon received, stage msg_id=%u len=%u\n", (unsigned)msg_id, (unsigned)payload_len);
     LTRX_Downlink_SetMessage(msg_id, payload, payload_len);
 }
  
@@ -889,6 +893,7 @@ void LTRX_Uplink_ForwardToSB(void)
     {
         return;
     }
+    LTRX_APP_printf("LTRX: complete uplink pending SB forward\n");
  
     uint32_t msg_id = 0;
     uint8_t  buf[LTRX_UPLINK_MAX_LEN];

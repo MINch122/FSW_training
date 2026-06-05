@@ -43,6 +43,7 @@ CFE_Status_t MEOW_SendHkCmd(const MEOW_SendHkCmd_t* msg)
 {
     MEOW_AppData.HkTlm.Payload.cmd_counter = MEOW_AppData.CmdCounter;
     MEOW_AppData.HkTlm.Payload.err_counter = MEOW_AppData.ErrCounter;
+    MEOW_APP_printf("MEOW: HK report requested\n");
     MEOW_SendReport(msg, &MEOW_AppData.HkTlm.Payload, sizeof(MEOW_AppData.HkTlm.Payload), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
     return CFE_SUCCESS;
 }

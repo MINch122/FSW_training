@@ -3,8 +3,12 @@
 
 #include "ltrx_interface_cfg.h"
 
+#ifndef LTRX_DEBUG
+#define LTRX_DEBUG false
+#endif
+
 #ifndef DEBUG_LTRX
-#define DEBUG_LTRX false
+#define DEBUG_LTRX LTRX_DEBUG
 #endif
 
 #if DEBUG_LTRX
