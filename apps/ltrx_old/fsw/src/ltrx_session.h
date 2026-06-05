@@ -9,7 +9,6 @@
 /* Session state used by session.c */
 void LTRX_SessionOnIcdRx(uint8 type_id, uint8 status);
 void LTRX_SessionOnIcdRxEx(uint8 type_id, uint8 status, uint32 msg_id);
-void LTRX_SessionSetDownlinkMsgId(uint32 msg_id);
 
 typedef enum
 {

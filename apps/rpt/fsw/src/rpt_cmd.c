@@ -81,6 +81,22 @@ CFE_Status_t RPT_ClearQueueCmd(const RPT_ClearQueueCmd_t *Msg) {
 /* RPT Update Operation Data                                                  */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+CFE_Status_t RPT_GetOpsDataCmd(const RPT_GetOpsDataCmd_t *Msg) {
+    RPT_Data.CmdCounter ++;
+
+    RPT_OpsTlm_t Tlm;
+    CFE_MSG_Init(CFE_MSG_PTR(Tlm.TelemetryHeader), CFE_SB_ValueToMsgId(RPT_OPS_TLM_MID), sizeof(Tlm));
+    
+    OS_MutSemTake(RPT_Data.OpsMutexID);
+    Tlm.Payload = RPT_Data.OpsData;
+    OS_MutSemGive(RPT_Data.OpsMutexID);
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(Tlm.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(Tlm.TelemetryHeader), true);
+
+    return CFE_SUCCESS;
+}
+
 void RPT_UpdateOperationData(void) {
 
     CFE_TIME_SysTime_t Time = CFE_TIME_GetTime();

@@ -17,7 +17,6 @@
 #include "ltrx_cmds.h"
 #include "ltrx_cmds_beacon.h"
 #include "ltrx_msgids.h"
-#include "ltrx_fcncodes.h"
 #include "ltrx_eventids.h"
 #include "ltrx_msg.h"
 #include "ltrx_session.h"
@@ -36,7 +35,6 @@ static void LTRX_ReportBegin(uint8 cc)
                        CFE_SB_ValueToMsgId(LTRX_RPT_TLM_MID),
                        sizeof(LTRX_AppData.RptPkt));
 
-    LTRX_AppData.RptPkt.Report.MsgID          = LTRX_CMD_MID;
     LTRX_AppData.RptPkt.Report.CommandCode    = cc;
     LTRX_AppData.RptPkt.Report.ReturnDataSize = 0;
 }
@@ -72,34 +70,57 @@ static uint8 LTRX_SatU32ToU8(uint32 v)
 
 static void LTRX_ReportHousekeeping(void)
 {
-    LTRX_HkTlm_Payload_t Payload;
-    uint16 CopySize;
+    LTRX_HkTlm_t *BufPtr = (LTRX_HkTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(LTRX_HkTlm_t));
+    if (BufPtr == NULL)
+    {
+        CFE_EVS_SendEvent(LTRX_ALLOC_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "LTRX: HK alloc failed");
+        return;
+    }
 
-    memset(&Payload, 0, sizeof(Payload));
+    if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
+                     CFE_SB_ValueToMsgId(LTRX_HK_TLM_MID),
+                     sizeof(LTRX_HkTlm_t)) != CFE_SUCCESS)
+    {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        CFE_EVS_SendEvent(LTRX_ALLOC_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "LTRX: HK CFE_MSG_Init failed");
+        return;
+    }
 
-    Payload.CmdCounter    = LTRX_SatU32ToU8(LTRX_AppData.CmdCounter);
-    Payload.CmdErrCounter = LTRX_SatU32ToU8(LTRX_AppData.AppErrCounter);
-    Payload.HaveGnss = LTRX_AppData.HaveGnss ? 1 : 0;
-    Payload.HaveBeaconStatus = LTRX_AppData.HaveBeaconStatus ? 1 : 0;
-    Payload.DownstreamEnabled = LTRX_Downstream_IsEnabled() ? 1 : 0;
+    memset(&BufPtr->Payload, 0, sizeof(BufPtr->Payload));
+
+    BufPtr->Payload.CmdCounter    = LTRX_SatU32ToU8(LTRX_AppData.CmdCounter);
+    BufPtr->Payload.CmdErrCounter = LTRX_SatU32ToU8(LTRX_AppData.AppErrCounter);
+    BufPtr->Payload.AppErrCounter = LTRX_SatU32ToU8(LTRX_AppData.AppErrCounter);
+
+    BufPtr->Payload.HaveGnss         = LTRX_AppData.HaveGnss ? 1 : 0;
+    BufPtr->Payload.HaveBeaconStatus = LTRX_AppData.HaveBeaconStatus ? 1 : 0;
+    BufPtr->Payload.DownstreamEnabled = LTRX_Downstream_IsEnabled() ? 1 : 0;
 
     if (LTRX_AppData.HaveGnss)
     {
-        memcpy(&Payload.LastGnss, &LTRX_AppData.LastGnss, sizeof(Payload.LastGnss));
+        memcpy(&BufPtr->Payload.LastGnss,
+               &LTRX_AppData.LastGnss,
+               sizeof(BufPtr->Payload.LastGnss));
     }
 
     if (LTRX_AppData.HaveBeaconStatus)
     {
-        memcpy(&Payload.LastBeaconStatus, &LTRX_AppData.LastBeaconStatus, sizeof(Payload.LastBeaconStatus));
+        memcpy(&BufPtr->Payload.LastBeaconStatus,
+               &LTRX_AppData.LastBeaconStatus,
+               sizeof(BufPtr->Payload.LastBeaconStatus));
     }
 
-    LTRX_APP_printf("LTRX: HK report requested\n");
-    LTRX_ReportBegin(0);
-    LTRX_ReportSetAppStatus(CFE_SUCCESS);
-    CopySize = sizeof(Payload) > RPT_RET_VALUE_BUF_SIZE ? RPT_RET_VALUE_BUF_SIZE : (uint16)sizeof(Payload);
-    LTRX_AppData.RptPkt.Report.ReturnDataSize = CopySize;
-    memcpy(LTRX_AppData.RptPkt.Report.ReturnValue, &Payload, CopySize);
-    LTRX_ReportEnd();
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+
+    if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS)
+    {
+        CFE_EVS_SendEvent(LTRX_HK_TX_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "LTRX: HK transmit failed");
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
 }
 
 /* BCN/Status telemetry sender */
@@ -125,11 +146,33 @@ void LTRX_SendBcnTlm(void)
 
     memset(&BufPtr->Payload, 0, sizeof(BufPtr->Payload));
 
+    BufPtr->Payload.DeviceErrCounter = LTRX_AppData.DeviceErrCounter;
+
+    BufPtr->Payload.LastRxType   = LTRX_AppData.LastRxType;
+    BufPtr->Payload.LastRxStatus = LTRX_AppData.LastRxStatus;
+    BufPtr->Payload.SessionState = (uint8)LTRX_SessionGetState();
+
+    BufPtr->Payload.HaveMsgStatus    = LTRX_AppData.HaveMsgStatus ? 1 : 0;
+    BufPtr->Payload.HaveGnss         = LTRX_AppData.HaveGnss ? 1 : 0;
+    BufPtr->Payload.HaveBeaconStatus = LTRX_AppData.HaveBeaconStatus ? 1 : 0;
+
+    if (LTRX_AppData.HaveMsgStatus)
+    {
+        memcpy(&BufPtr->Payload.LastMsgStatus,
+               &LTRX_AppData.LastMsgStatus,
+               sizeof(BufPtr->Payload.LastMsgStatus));
+    }
+    if (LTRX_AppData.HaveGnss)
+    {
+        memcpy(&BufPtr->Payload.LastGnss,
+               &LTRX_AppData.LastGnss,
+               sizeof(BufPtr->Payload.LastGnss));
+    }
     if (LTRX_AppData.HaveBeaconStatus)
     {
-        BufPtr->Payload.Temperature       = LTRX_AppData.LastBeaconStatus.Temperature;
-        BufPtr->Payload.ConnectionQuality = LTRX_AppData.LastBeaconStatus.ConnectionQuality;
-        BufPtr->Payload.BatteryCapacity   = LTRX_AppData.LastBeaconStatus.BatteryCapacity;
+        memcpy(&BufPtr->Payload.LastBeaconStatus,
+               &LTRX_AppData.LastBeaconStatus,
+               sizeof(BufPtr->Payload.LastBeaconStatus));
     }
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
@@ -179,13 +222,6 @@ CFE_Status_t LTRX_NoopCmd(const LTRX_NoopCmd_t *Msg)
                       (unsigned)LTRX_AppData.AppErrCounter,
                       (unsigned)LTRX_AppData.DeviceErrCounter);
 
-    static const char NoopReport[] = "Yosi In Space";
-    LTRX_ReportBegin(LTRX_NOOP_CC);
-    LTRX_ReportSetAppStatus(CFE_SUCCESS);
-    LTRX_AppData.RptPkt.Report.ReturnDataSize = sizeof(NoopReport);
-    memcpy(LTRX_AppData.RptPkt.Report.ReturnValue, NoopReport, sizeof(NoopReport));
-    LTRX_ReportEnd();
-
     return CFE_SUCCESS;
 }
 
@@ -231,7 +267,7 @@ CFE_Status_t LTRX_SessionStartDownlinkCmd(const LTRX_SessionStartDownlinkCmd_t *
 {
     (void)Msg;
 
-    if (!LTRX_Downlink_IsReady() && !LTRX_Downlink_HasPending())
+    if (!LTRX_Downlink_IsReady())
     {
         CFE_EVS_SendEvent(LTRX_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "LTRX: SESSION_START_DOWNLINK rejected - no message prepared");

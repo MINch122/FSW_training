@@ -31,7 +31,6 @@ int32_t LTRX_Downlink_SetMessage(uint32_t message_id,
 void    LTRX_Downlink_ClearMessage(void);
 
 bool     LTRX_Downlink_IsReady(void);
-bool     LTRX_Downlink_HasPending(void);
 uint32_t LTRX_Downlink_GetMessageId(void);
 uint16_t LTRX_Downlink_GetLength(void);
 
