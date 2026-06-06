@@ -1,6 +1,0 @@
-#ifndef LTRX_INTERNAL_CFG_H
-#define LTRX_INTERNAL_CFG_H
-
-#define LTRX_PIPE_DEPTH 32
-
-#endif
