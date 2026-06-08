@@ -1,0 +1,383 @@
+사진 파일명: 스크린샷 2026-06-06 15-48-50.png
+log:
+EVS Port1 2025-342-16:20:15.92287 CFE_RF_CommandIngestInit: CFE RF Init Successfully done.
+EVS Port1 2025-342-16:20:15.92312 35/2/CI_LAB_APP 3: CI Lab Initialized.CI Lab App Development Build b
+2025-342-16:20:15.92960 CFE_ES_ParseFileEntry: Loading file: /cf/fm.so, APP: FM
+SCH Lab Initialized.SCH Lab Development Build equuleus-rc1+dev29 (Codename Equuleus), Last Official R
+EVS Port1 2025-342-16:20:15.90264 35/2/CFE_TIME 12: Set Time -- secs = 1002375, usecs = 902146, ssecsF
+2025-342-16:20:15.94892 CFE_ES_ParseFileEntry: Loading file: /cf/ttc.so, APP: TTC
+2025-342-16:20:15.96783 CFE_ES_ParseFileEntry: Loading file: /cf/utrx.so, APP: UTRX
+2025-342-16:20:15.98745 CFE_ES_ParseFileEntry: Loading file: /cf/stx.so, APP: STX
+2025-342-16:20:16.00497 CFE_ES_ParseFileEntry: Loading file: /cf/gps.so, APP: GPS
+EVS Port1 2025-342-16:20:16.02249 35/2/HK 1: HK Initialized. Version 2.5.99.0
+TO_LAB_init: TO child Created Status: 0x00000000
+2025-342-16:20:16.03440 CFE_ES_ParseFileEntry: Loading file: /cf/meow.so, APP: MEOW
+EVS Port1 2025-342-16:20:16.04139 35/2/TTC 1: Ttc Initialized.Ttc Development Build v7.0.0+dev0 (Code)
+EVS Port1 2025-342-16:20:16.05572 35/2/DS 10: Destination file table verify results: good entries = 88
+EVS Port1 2025-342-16:20:16.07043 35/2/UTRX 1: UTRX App Successfully Initialized.
+EVS Port1 2025-342-16:20:16.08901 35/2/ADCS 1: ADCS App Succesfully Initialized
+2025-342-16:20:16.09792 CFE_ES_ParseFileEntry: Loading file: /cf/ltrx.so, APP: LTRX
+EVS Port1 2025-342-16:20:16.10308 35/2/DS 12: Filter table verify results: good entries = 1, bad = 0,5
+EVS Port1 2025-342-16:20:16.10621 35/2/FM 97: Free Space Table verify results: good entries = 3, bad 5
+EVS Port1 2025-342-16:20:16.11453 35/2/DS 1: Application initialized, version 2.6.99.0, data at 0xb5f4
+Segmentation fault
+#
+
+사진 파일명: 스크린샷 2026-06-06 15-49-01.png
+log:
+~ etc linuxrc opt run tmp
+# cd root/BEE_0606
+# ./core-obc
+CFE_PSP: Default Reset SubType = 1
+CFE_PSP: Default CPU ID = 2
+CFE_PSP: Default Spacecraft ID = 35
+CFE_PSP: Default CPU Name: obc
+OS_Posix_GetSchedulerParams():203:Policy 1: available, min-max: 1-99
+OS_Posix_GetSchedulerParams():203:Policy 2: available, min-max: 1-99
+OS_Posix_TaskAPI_Impl_Init():389:Selected policy 2 for RT tasks, root task = 99
+CFE_PSP: initializing module 'soft_timebase' with ID 0110ff00
+CFE_PSP: Instantiated software timebase 'cFS-Master' running at 10000 usec
+CFE_PSP: initializing module 'timebase_posix_clock' with ID 0110ff01
+CFE_PSP: Using POSIX monotonic clock as CFE timebase
+CFE_PSP: initializing module 'eeprom_mmap_file' with ID 0110ff02
+CFE_PSP: Using MMAP simulated EEPROM implementation
+CFE_PSP: initializing module 'ram_notimpl' with ID 0110ff03
+CFE_PSP: Physical RAM access not implemented
+CFE_PSP: initializing module 'port_notimpl' with ID 0110ff04
+CFE_PSP: I/O Port access not implemented
+CFE_PSP: initializing module 'iodriver' with ID 0110ff05
+CFE_PSP: initializing module 'linux_sysmon' with ID 0110ff06
+CFE_PSP: initializing module 'linux_serial' with ID 0110ff07
+CFE_PSP: EEPROM Range (2) created: Start Address = B6BDF000, Size = 00080000 Status = 0
+CFE_PSP: Starting the cFE with a POWER ON reset.
+CFE_PSP: Clearing out CFE CDS Shared memory segment.
+CFE_PSP: Clearing out CFE Reset Shared memory segment.
+CFE_PSP: Clearing out CFE User Reserved Shared memory segment.
+2025-331-01:54:44.01222 CFE_ES_SetupResetVariables: POWER ON RESET due to Power Cycle (Power Cycle).
+2025-331-01:54:44.01996 CFE_ES_Main: CFE_ES_Main in EARLY_INIT state
+CFE_PSP: CFE_PSP_AttachExceptions called
+
+사진 파일명: 스크린샷 2026-06-06 15-49-03.png
+log:
+[upper lines clipped]
+[44.070312] at91_can f8004000.can can0: writing AT91_BR: 0x00060564
+vName=/dev/spidev0.0
+2025-342-15:57:20.05130 CFE_SRL_EarlyInit: CAN0 Initialized. FD=7 || DevName=can0
+2025-342-15:57:20.05194 CFE_SRL_EarlyInit: I2C2 Initialized. FD=8 || DevName=/dev/i2c-2
+2025-342-15:57:20.07109 CFE_SRL_EarlyInit: RS422 Initialized. FD=9 || DevName=/dev/ttyS2
+2025-342-15:57:20.09053 CFE_SRL_EarlyInit: UART Initialized. FD=10 || DevName=/dev/ttyS3
+2025-342-15:57:20.14764 CFE_SRL_EarlyInit: CSP Successfully Initialized.
+EVS Port1 2025-342-15:57:20.21441 35/2/CFE_EVS 1: cFE EVS Initialized: cFE Development Build equuleus
+2025-342-15:57:20.31399 CFE_SB_AppInit: Registered 4 events for filtering
+EVS Port1 2025-342-15:57:20.31491 35/2/CFE_SB 1: cFE SB Initialized: cFE Development Build equuleus-r
+EVS Port1 2025-342-15:57:20.31536 35/2/CFE_SB 14: No subscribers for MsgId 0x804,sender CFE_SB
+EVS Port1 2025-342-15:57:20.51741 35/2/CFE_ES 1: cFE ES Initialized: cFE Development Build equuleus-r
+EVS Port1 2025-342-15:57:20.51789 35/2/CFE_SB 14: No subscribers for MsgId 0x804,sender CFE_ES
+EVS Port1 2025-342-15:57:20.51847 35/2/CFE_ES 2: cFS Versions: cfe equuleus-rc1+dev239, osal equuleus6
+EVS Port1 2025-342-15:57:20.51893 35/2/CFE_SB 14: No subscribers for MsgId 0x804,sender CFE_ES
+EVS Port1 2025-342-15:57:20.51940 35/2/CFE_ES 91: Version Info: Mission BASE5TH, version git:065c987-y
+EVS Port1 2025-342-15:57:20.51992 35/2/CFE_SB 14: No subscribers for MsgId 0x804,sender CFE_ES
+EVS Port1 2025-342-15:57:20.52040 35/2/CFE_ES 91: Version Info: Module CORE_API, version git:065c987-y
+EVS Port1 2025-342-15:57:20.52087 35/2/CFE_ES 91: Version Info: Module ES, version git:065c987-dirty
+EVS Port1 2025-342-15:57:20.52134 35/2/CFE_ES 91: Version Info: Module EVS, version git:065c987-dirty
+EVS Port1 2025-342-15:57:20.52182 35/2/CFE_ES 91: Version Info: Module FS, version git:065c987-dirty
+EVS Port1 2025-342-15:57:20.52229 35/2/CFE_ES 91: Version Info: Module SB, version git:065c987-dirty
+EVS Port1 2025-342-15:57:20.52276 35/2/CFE_ES 91: Version Info: Module TBL, version git:065c987-dirty
+EVS Port1 2025-342-15:57:20.52323 35/2/CFE_ES 91: Version Info: Module TIME, version git:065c987-dirty
+EVS Port1 2025-342-15:57:20.52395 35/2/CFE_ES 91: Version Info: Module OSAL, version git:065c987-dirty
+EVS Port1 2025-342-15:57:20.52444 35/2/CFE_ES 91: Version Info: Module PSP, version git:065c987-dirty
+EVS Port1 2025-342-15:57:20.52493 35/2/CFE_ES 91: Version Info: Module MSG, version git:065c987-dirty
+EVS Port1 2025-342-15:57:20.52539 35/2/CFE_ES 91: Version Info: Module SBR, version git:065c987-dirty
+EVS Port1 2025-342-15:57:20.52586 35/2/CFE_ES 91: Version Info: Module RESOURCEID, version git:065c987-dirty
+EVS Port1 2025-342-15:57:20.52633 35/2/CFE_ES 91: Version Info: Module CONFIG, version git:065c987-dirty
+EVS Port1 2025-342-15:57:20.52680 35/2/CFE_ES 91: Version Info: Module SRL, version git:065c987-dirty
+
+사진 파일명: 스크린샷 2026-06-06 15-49-05.png
+log:
+2025-342-15:57:21.06427 CI_LAB listening on UDP port: 1235
+2025-342-15:57:21.07267 CFE_ES_ParseFileEntry: Loading file: /cf/hk.so, APP: HK
+2025-342-15:57:21.09209 CFE_ES_ParseFileEntry: Loading file: /cf/ds.so, APP: DS
+EVS Port1 2025-342-15:57:21.09269 35/2/CFE_SB 7: Duplicate Subscription,MsgId 0x867 on RPT_RPT_PIPE pT
+EVS Port1 2025-342-15:57:21.09457 35/2/CFE_SB 7: Duplicate Subscription,MsgId 0x885 on RPT_RPT_PIPE pT
+RPT Ops FD: 393220
+EVS Port1 2025-342-15:57:21.10583 35/2/RPT 20: Operation Data CRC matched.
+2025-342-15:57:21.10644 RPT_OpsDataInit: Boot count : 4
+2025-342-15:57:21.10663 RPT_OpsDataInit: Reset Type: 2 || Reset SubType: 1
+2025-342-15:57:21.10681 RPT_OpsDataInit: Reset Cause : 0x21
+RPT Critical FD: 393222
+EVS Port1 2025-342-16:20:15.90995 35/2/RPT 20: Critical Q CRC well matched.
+EVS Port1 2025-342-16:20:15.91044 35/2/RPT 1: RPT Initialization success.
+EVS Port1 2025-342-16:20:15.92166 35/2/TO_LAB_APP 1: TO Lab Initialized.TO Lab Development Build equu.
+2025-342-16:20:15.92287 CFE_RF_CommandIngestInit: CFE RF Init Successfully done.
+EVS Port1 2025-342-16:20:15.92312 35/2/CI_LAB_APP 3: CI Lab Initialized.CI Lab App Development Build b
+2025-342-16:20:15.92960 CFE_ES_ParseFileEntry: Loading file: /cf/fm.so, APP: FM
+SCH Lab Initialized.SCH Lab Development Build equuleus-rc1+dev29 (Codename Equuleus), Last Official R
+EVS Port1 2025-342-16:20:15.90264 35/2/CFE_TIME 12: Set Time -- secs = 1002375, usecs = 902146, ssecsF
+2025-342-16:20:15.94892 CFE_ES_ParseFileEntry: Loading file: /cf/ttc.so, APP: TTC
+2025-342-16:20:15.96783 CFE_ES_ParseFileEntry: Loading file: /cf/utrx.so, APP: UTRX
+2025-342-16:20:15.98745 CFE_ES_ParseFileEntry: Loading file: /cf/stx.so, APP: STX
+2025-342-16:20:16.00497 CFE_ES_ParseFileEntry: Loading file: /cf/gps.so, APP: GPS
+EVS Port1 2025-342-16:20:16.02249 35/2/HK 1: HK Initialized. Version 2.5.99.0
+TO_LAB_init: TO child Created Status: 0x00000000
+2025-342-16:20:16.03440 CFE_ES_ParseFileEntry: Loading file: /cf/meow.so, APP: MEOW
+EVS Port1 2025-342-16:20:16.04139 35/2/TTC 1: Ttc Initialized.Ttc Development Build v7.0.0+dev0 (Code)
+EVS Port1 2025-342-16:20:16.05572 35/2/DS 10: Destination file table verify results: good entries = 88
+EVS Port1 2025-342-16:20:16.07043 35/2/UTRX 1: UTRX App Successfully Initialized.
+
+사진 파일명: 스크린샷 2026-06-06 15-49-06.png
+log:
+2025-342-16:20:15.92287 CFE_RF_CommandIngestInit: CFE RF Init Successfully done.
+EVS Port1 2025-342-16:20:15.92312 35/2/CI_LAB_APP 3: CI Lab Initialized.CI Lab App Development Build b
+2025-342-16:20:15.92960 CFE_ES_ParseFileEntry: Loading file: /cf/fm.so, APP: FM
+SCH Lab Initialized.SCH Lab Development Build equuleus-rc1+dev29 (Codename Equuleus), Last Official R
+EVS Port1 2025-342-16:20:15.90264 35/2/CFE_TIME 12: Set Time -- secs = 1002375, usecs = 902146, ssecsF
+2025-342-16:20:15.94892 CFE_ES_ParseFileEntry: Loading file: /cf/ttc.so, APP: TTC
+2025-342-16:20:15.96783 CFE_ES_ParseFileEntry: Loading file: /cf/utrx.so, APP: UTRX
+2025-342-16:20:15.98745 CFE_ES_ParseFileEntry: Loading file: /cf/stx.so, APP: STX
+2025-342-16:20:16.00497 CFE_ES_ParseFileEntry: Loading file: /cf/gps.so, APP: GPS
+EVS Port1 2025-342-16:20:16.02249 35/2/HK 1: HK Initialized. Version 2.5.99.0
+TO_LAB_init: TO child Created Status: 0x00000000
+2025-342-16:20:16.03440 CFE_ES_ParseFileEntry: Loading file: /cf/meow.so, APP: MEOW
+EVS Port1 2025-342-16:20:16.04139 35/2/TTC 1: Ttc Initialized.Ttc Development Build v7.0.0+dev0 (Code)
+EVS Port1 2025-342-16:20:16.05572 35/2/DS 10: Destination file table verify results: good entries = 88
+EVS Port1 2025-342-16:20:16.07043 35/2/UTRX 1: UTRX App Successfully Initialized.
+EVS Port1 2025-342-16:20:16.08901 35/2/ADCS 1: ADCS App Succesfully Initialized
+2025-342-16:20:16.09792 CFE_ES_ParseFileEntry: Loading file: /cf/ltrx.so, APP: LTRX
+EVS Port1 2025-342-16:20:16.10308 35/2/DS 12: Filter table verify results: good entries = 1, bad = 0,5
+EVS Port1 2025-342-16:20:16.10621 35/2/FM 97: Free Space Table verify results: good entries = 3, bad 5
+EVS Port1 2025-342-16:20:16.11453 35/2/DS 1: Application initialized, version 2.6.99.0, data at 0xb5f4
+Segmentation fault
+#
+
+사진 파일명: 스크린샷 2026-06-06 15-51-38.png
+log:
+EVS Port1 2025-342-15:57:21.09274 35/2/CFE_SB 7: Duplicate Subscription,MsgId 0x867 on RPT_RPT_PIPE pipe,app RPT
+EVS Port1 2025-342-15:57:21.09466 35/2/CFE_SB 7: Duplicate Subscription,MsgId 0x885 on RPT_RPT_PIPE pipe,app RPT
+2025-342-15:57:21.10489 CFE_ES_ParseFileEntry: Loading file: /cf/fm.so, APP: FM
+RPT Ops FD: 393220
+EVS Port1 2025-342-15:57:21.11152 35/2/RPT 20: Operation Data CRC matched.
+2025-342-15:57:21.11212 RPT_OpsDataInit: Boot count : 6
+2025-342-15:57:21.11231 RPT_OpsDataInit: Reset Type: 2 || Reset SubType: 1
+2025-342-15:57:21.11248 RPT_OpsDataInit: Reset Cause : 0x21
+RPT Critical FD: 393222
+EVS Port1 2025-342-16:22:35.90322 35/2/RPT 20: Critical Q CRC well matched.
+EVS Port1 2025-342-16:22:35.96373 35/2/RPT 1: RPT Initialization success.
+EVS Port1 2025-342-16:22:35.91502 35/2/TO_LAB_APP 1: TO Lab Initialized.TO Lab Development Build equuleus-rc1+dev62 (Codename Equuleus), Las.
+EVS Port1 2025-342-16:22:35.89726 35/2/CFE_TIME 12: Set Time -- secs = 1002515, usecs = 896786, ssecs = 0xE593C46E
+SCH Lab Initialized.SCH Lab Development Build equuleus-rc1+dev29 (Codename Equuleus), Last Official Release: SCH Lab v2.3.0)
+2025-342-16:22:35.93201 CFE_ES_ParseFileEntry: Loading file: /cf/ttc.so, APP: TTC
+2025-342-16:22:35.95020 CFE_ES_ParseFileEntry: Loading file: /cf/utrx.so, APP: UTRX
+2025-342-16:22:35.96600 CFE_RF_CommandIngestInit: CFE RF Init Successfully done.
+EVS Port1 2025-342-16:22:35.96636 35/2/CI_LAB_APP 3: CI Lab Initialized.CI Lab App Development Build equuleus-rc1+dev61 (Codename Equuleus),b
+TO_LAB_init: TO child Created Status: 0x00000000
+2025-342-16:22:35.97551 CFE_ES_ParseFileEntry: Loading file: /cf/stx.so, APP: STX
+EVS Port1 2025-342-16:22:35.97694 35/2/ADCS 1: ADCS App Succesfully Initialized
+EVS Port1 2025-342-16:22:35.98831 35/2/HK 1: HK Initialized. Version 2.5.99.0
+2025-342-16:22:36.00048 CFE_ES_ParseFileEntry: Loading file: /cf/gps.so, APP: GPS
+EVS Port1 2025-342-16:22:36.01576 35/2/TTC 1: Ttc Initialized.Ttc Development Build v7.0.0+dev0 (Codename Draco), Last Official Release: Ttc)
+EVS Port1 2025-342-16:22:36.03146 35/2/DS 10: Destination file table verify results: good entries = 8, bad = 0, unused = 8
+2025-342-16:22:36.03993 CFE_ES_ParseFileEntry: Loading file: /cf/meow.so, APP: MEOW
+TO_LAB_ForwardTelemetryRF: TO child start.
+EVS Port1 2025-342-16:22:36.05143 35/2/FM 97: Free Space Table verify results: good entries = 3, bad = 0, unused = 5
+Segmentation fault
+
+사진 파일명: 스크린샷 2026-06-06 16-04-25.png
+log:
+EVS Port1 2025-342-15:57:21.06106 35/2/ADCS 1: ADCS App Succesfully Initialized
+EVS Port1 2025-342-15:57:21.06484 35/2/HK 1: HK Initialized. Version 2.5.99.0
+EVS Port1 2025-342-15:57:21.06788 35/2/DS 10: Destination file table verify results: good entries = 8, bad = 0, unused = 8
+EVS Port1 2025-342-15:57:21.07104 35/2/DS 12: Filter table verify results: good entries = 1, bad = 0, unused = 255
+EVS Port1 2025-342-15:57:21.07341 35/2/DS 1: Application initialized, version 2.6.99.0, data at 0xb5f0c254
+EVS Port1 2025-342-15:57:21.07577 35/2/FM 97: Free Space Table verify results: good entries = 3, bad = 0, unused = 5
+EVS Port1 2025-342-15:57:21.07786 35/2/FM 1: Initialization complete: version 2.6.99.0
+EVS Port1 2025-342-15:57:21.08023 35/2/TTC 1: Ttc Initialized.Ttc Development Build v7.0.0+dev0 (Codename Draco), Last Official Release: Ttc)
+EVS Port1 2025-342-15:57:21.08372 35/2/UTRX 1: UTRX App Successfully Initialized.
+EVS Port1 2025-342-15:57:21.08653 35/2/CFE_SB 7: Duplicate Subscription,MsgId 0x1854 on STX_CMD_PIPE pipe,app STX
+EVS Port1 2025-342-15:57:21.08738 35/2/CFE_SB 7: Duplicate Subscription,MsgId 0x1854 on STX_CMD_PIPE pipe,app STX
+EVS Port1 2025-342-15:57:21.08810 35/2/STX 1: Stx App Initialized.Stx App Development Build equuleus-rc1+dev50 (Codename Equuleus), Last Off$
+Write data Bytes: 1
+Write Bytes : 32
+Read Bytes : 32
+Write Success.
+EVS Port1 2025-342-16:29:46.81895 35/2/CFE_TIME 12: Set Time -- secs = 1002946, usecs = 818817, ssecs = 0xD19DFDAD
+EVS Port1 2025-342-16:29:46.82078 35/2/GPS 1: GPS Initialized.GPS Development Build equuleus-rc1+dev50 (Codename Equuleus), Last Official Re)
+EVS Port1 2025-342-16:29:46.84254 35/2/MEOW 1: MEOW Initialized.Meow Development Build equuleus-rc1+dev50 (Codename Equuleus), Last Official)
+EVS Port1 2025-342-16:29:46.84458 35/2/LTRX 1: LTRX App Successfully Initialized.
+2025-342-16:29:46.84596 LTRX_CFE_ListenInit: LTRX listen ready on CSP port 10
+EVS Port1 2025-342-16:29:46.84848 35/2/GPIO 1: Gpio Initialized.Gpio Development Build equuleus-rc1+dev50 (Codename Equuleus), Last Official)
+1
+1-1
+EVS Port1 2025-342-16:29:46.85031 35/2/PAY_KISSCAM 1: paybee_kisscam_Init: paybee_kisscam Initialized
+2025-342-16:29:46.85109 CFE_ES_ExitApp: Application PAY_KISSCAM called CFE_ES_ExitApp
+TO_LAB_ForwardTelemetryRF: TO child start.
+2025-342-16:29:46.88402 CFE_SRL_ReadUART: Operation not succeed. PSP RC = -458743
+ESUP receive fail
+RS485 has no reply.
+-1073676285
+EVS Port1 2025-342-16:29:46.88432 35/2/STX 20: STX : CC=10 failed (arg=4), Status=-103
+
+사진 파일명: 스크린샷 2026-06-06 16-04-27.png
+log:
+Write data Bytes: 4
+Write Bytes : 32
+Read Bytes : 32
+Write Success.
+Report Q Head: 1 || Count:1
+2025-342-16:29:46.89212 RPT_Enqueue: Report Enqueued. MID: 0x1854 || CC: 10
+EVS Port1 2025-342-16:29:46.90827 35/2/FM 89: Child Task initialization complete
+2025-342-16:29:46.95433 CFE_SRL_ReadUART: Operation not succeed. PSP RC = -458743
+ESUP receive fail
+RS485 has no reply.
+-1073676285
+EVS Port1 2025-342-16:29:46.95463 35/2/STX 22: STX : CC=12 failed (arg=2403), Status=-103
+Write data Bytes: 1
+Write Bytes : 32
+Read Bytes : 32
+Write Success.
+Report Q Head: 2 || Count:2
+2025-342-16:29:46.96242 RPT_Enqueue: Report Enqueued. MID: 0x1854 || CC: 12
+2025-342-16:29:47.02466 CFE_SRL_ReadUART: Operation not succeed. PSP RC = -458743
+ESUP receive fail
+RS485 has no reply.
+-1073676285
+EVS Port1 2025-342-16:29:47.02496 35/2/STX 23: STX : CC=13 failed (arg=1), Status=-103
+Write data Bytes: 1
+Write Bytes : 32
+Read Bytes : 32
+Write Success.
+Report Q Head: 3 || Count:3
+2025-342-16:29:47.03284 RPT_Enqueue: Report Enqueued. MID: 0x1854 || CC: 13
+2025-342-16:29:47.09496 CFE_SRL_ReadUART: Operation not succeed. PSP RC = -458743
+ESUP receive fail
+
+사진 파일명: 스크린샷 2026-06-06 16-04-29.png
+log:
+2025-342-16:29:47.03284 RPT_Enqueue: Report Enqueued. MID: 0x1854 || CC: 13
+2025-342-16:29:47.09496 CFE_SRL_ReadUART: Operation not succeed. PSP RC = -458743
+ESUP receive fail
+RS485 has no reply.
+-1073676285
+EVS Port1 2025-342-16:29:47.09526 35/2/STX 24: STX : CC=14 failed (arg=2), Status=-103
+Report Q Head: 4 || Count:4
+2025-342-16:29:47.10304 RPT_Enqueue: Report Enqueued. MID: 0x1854 || CC: 14
+EVS Port1 2025-342-16:29:47.22990 35/2/CFE_ES 14: Exit Application PAY_KISSCAM Completed.
+EVS Port1 2025-342-16:29:47.79968 35/2/GPS 20: OEM driver task initialized.
+2025-342-16:29:47.79792 CFE_ES_Main: Startup Sync failed - Applications may not have all initialized
+2025-342-16:29:47.79809 CFE_ES_Main: CFE_ES_Main entering APPS_INIT state
+EVS Port1 2025-342-16:29:47.73080 35/2/CFE_TIME 21: Stop FLYWHEEL
+2025-342-16:29:48.68203 CFE_ES_Main: Startup Sync failed - Applications may not have all started
+2025-342-16:29:48.68219 CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state
+...Requested MID: 0x00081A
+Header: MID 0x081A || Length 0x00C1
+seq cnt : 1
+.........Requested MID: 0x00081A
+Header: MID 0x081A || Length 0x00C1
+seq cnt : 2
+.........Requested MID: 0x00081A
+Header: MID 0x081A || Length 0x00C1
+seq cnt : 3
+.........Requested MID: 0x00081A
+Header: MID 0x081A || Length 0x00C1
+seq cnt : 4
+.........Requested MID: 0x00081A
+Header: MID 0x081A || Length 0x00C1
+seq cnt : 5
+
+사진 파일명: 스크린샷 2026-06-06 16-27-17.png
+log:
+EVS Port1 2025-342-15:57:21.04823 35/2/RPT 20: Operation Data CRC matched.
+2025-342-15:57:21.04866 RPT_OpsDataInit: Boot count : 2
+2025-342-15:57:21.04879 RPT_OpsDataInit: Reset Type: 1 || Reset SubType: 1
+2025-342-15:57:21.04892 RPT_OpsDataInit: Reset Cause : 0x11
+RPT Critical FD: 393221
+EVS Port1 2025-342-15:57:21.05296 35/2/RPT 20: Critical Q CRC well matched.
+EVS Port1 2025-342-15:57:21.05369 35/2/RPT 1: RPT Initialization success.
+EVS Port1 2025-342-15:57:21.05828 35/2/TO_LAB_APP 1: TO Lab Initialized.TO Lab Development Build equuleus-rc1+dev62 (Codename Equuleus), Las.
+TO_LAB_init: TO child Created Status: 0x00000000
+2025-342-15:57:21.06218 CI_LAB Listening on UDP port: 1235
+2025-342-15:57:21.06330 CFE_RF_CommandIngestInit: CFE RF Init Successfully done.
+EVS Port1 2025-342-15:57:21.06364 35/2/CI_LAB_APP 3: CI Lab Initialized.CI Lab App Development Build equuleus-rc1+dev61 (Codename Equuleus),b
+SCH Lab Initialized.SCH Lab Development Build equuleus-rc1+dev29 (Codename Equuleus), Last Official Release: SCH Lab v2.3.0)
+EVS Port1 2025-342-15:57:21.07014 35/2/ADCS 1: ADCS App Succesfully Initialized
+EVS Port1 2025-342-15:57:21.07563 35/2/HK 1: HK Initialized. Version 2.5.99.0
+EVS Port1 2025-342-15:57:21.08056 35/2/DS 10: Destination file table verify results: good entries = 8, bad = 0, unused = 8
+EVS Port1 2025-342-15:57:21.08428 35/2/DS 12: Filter table verify results: good entries = 1, bad = 0, unused = 255
+EVS Port1 2025-342-15:57:21.08734 35/2/DS 1: Application initialized, version 2.6.99.0, data at 0xb5f0c254
+EVS Port1 2025-342-15:57:21.09069 35/2/FM 97: Free Space Table verify results: good entries = 3, bad = 0, unused = 5
+EVS Port1 2025-342-15:57:21.09449 35/2/FM 1: Initialization complete: version 2.6.99.0
+EVS Port1 2025-342-15:57:21.09696 35/2/TTC 1: Ttc Initialized.Ttc Development Build v7.0.0+dev0 (Codename Draco), Last Official Release: Ttc)
+EVS Port1 2025-342-15:57:21.10113 35/2/UTRX 1: UTRX App Successfully Initialized.
+EVS Port1 2025-342-15:57:21.10340 35/2/CFE_SB 7: Duplicate Subscription,MsgId 0x1854 on STX_CMD_PIPE pipe,app STX
+EVS Port1 2025-342-15:57:21.10427 35/2/CFE_SB 7: Duplicate Subscription,MsgId 0x1854 on STX_CMD_PIPE pipe,app STX
+EVS Port1 2025-342-15:57:21.10502 35/2/STX 1: Stx App Initialized.Stx App Development Build equuleus-rc1+dev50 (Codename Equuleus), Last Off$
+Write data Bytes: 1
+Write Bytes : 32
+Read Bytes : 32
+Write Success.Segmentation fault
+#
+
+사진 파일명: 스크린샷 2026-06-06 16-27-42.png
+log:
+2025-342-15:57:21.04085 RPT_OpsDataInit: Reset Type: 2 || Reset SubType: 1
+2025-342-15:57:21.04104 RPT_OpsDataInit: Reset Cause : 0x21
+RPT Critical FD: 393220
+EVS Port1 2025-342-15:57:21.04531 35/2/RPT 20: Critical Q CRC well matched.
+EVS Port1 2025-342-15:57:21.04602 35/2/RPT 1: RPT Initialization success.
+EVS Port1 2025-342-15:57:21.05061 35/2/TO_LAB_APP 1: TO Lab Initialized.TO Lab Development Build equuleus-rc1+dev62 (Codename Equuleus), Las.
+TO_LAB_init: TO child Created Status: 0x00000000
+2025-342-15:57:21.05460 CI_LAB Listening on UDP port: 1235
+2025-342-15:57:21.05572 CFE_RF_CommandIngestInit: CFE RF Init Successfully done.
+EVS Port1 2025-342-15:57:21.05607 35/2/CI_LAB_APP 3: CI Lab Initialized.CI Lab App Development Build equuleus-rc1+dev61 (Codename Equuleus),b
+SCH Lab Initialized.SCH Lab Development Build equuleus-rc1+dev29 (Codename Equuleus), Last Official Release: SCH Lab v2.3.0)
+EVS Port1 2025-342-15:57:21.06259 35/2/ADCS 1: ADCS App Succesfully Initialized
+EVS Port1 2025-342-15:57:21.06845 35/2/HK 1: HK Initialized. Version 2.5.99.0
+EVS Port1 2025-342-15:57:21.07267 35/2/DS 10: Destination file table verify results: good entries = 8, bad = 0, unused = 8
+EVS Port1 2025-342-15:57:21.07669 35/2/DS 12: Filter table verify results: good entries = 1, bad = 0, unused = 255
+EVS Port1 2025-342-15:57:21.08030 35/2/DS 1: Application initialized, version 2.6.99.0, data at 0xb5f0c254
+EVS Port1 2025-342-15:57:21.08467 35/2/FM 97: Free Space Table verify results: good entries = 3, bad = 0, unused = 5
+EVS Port1 2025-342-15:57:21.08605 35/2/FM 1: Initialization complete: version 2.6.99.0
+EVS Port1 2025-342-15:57:21.08775 35/2/TTC 1: Ttc Initialized.Ttc Development Build v7.0.0+dev0 (Codename Draco), Last Official Release: Ttc)
+EVS Port1 2025-342-15:57:21.09089 35/2/UTRX 1: UTRX App Successfully Initialized.
+EVS Port1 2025-342-15:57:21.09315 35/2/CFE_SB 7: Duplicate Subscription,MsgId 0x1854 on STX_CMD_PIPE pipe,app STX
+EVS Port1 2025-342-15:57:21.09403 35/2/CFE_SB 7: Duplicate Subscription,MsgId 0x1854 on STX_CMD_PIPE pipe,app STX
+EVS Port1 2025-342-15:57:21.09478 35/2/STX 1: Stx App Initialized.Stx App Development Build equuleus-rc1+dev50 (Codename Equuleus), Last Off$
+Write data Bytes: 1
+Write Bytes : 32
+Read Bytes : 32
+Write Success.
+EVS Port1 2025-342-16:05:02.02291 35/2/CFE_TIME 12: Set Time -- secs = 1001462, usecs = 22779, ssecs = 0x5D4D835
+Segmentation fault
+#
+
+사진 파일명: 스크린샷 2026-06-06 16-27-59.png
+log:
+2025-342-16:05:02.23524 RPT_Enqueue: Report Enqueued. MID: 0x1854 || CC: 13
+2025-342-16:05:02.29719 CFE_SRL_ReadUART: Operation not succeed. PSP RC = -458743
+ESUP receive fail
+RS485 has no reply.
+-1073676285
+EVS Port1 2025-342-16:05:02.29750 35/2/STX 24: STX : CC=14 failed (arg=2), Status=-103
+Report Q Head: 4 || Count:4
+2025-342-16:05:02.30555 RPT_Enqueue: Report Enqueued. MID: 0x1854 || CC: 14
+EVS Port1 2025-342-16:05:02.42472 35/2/CFE_ES 14: Exit Application PAY_KISSCAM Completed.
+EVS Port1 2025-342-16:05:02.60206 35/2/GPS 20: OEM driver task initialized.
+2025-342-16:05:02.99245 CFE_ES_Main: Startup Sync failed - Applications may not have all initialized
+2025-342-16:05:02.99262 CFE_ES_Main: CFE_ES_Main entering APPS_INIT state
+EVS Port1 2025-342-16:05:02.92570 35/2/CFE_TIME 21: Stop FLYWHEEL
+2025-342-16:05:03.87686 CFE_ES_Main: Startup Sync failed - Applications may not have all started
+2025-342-16:05:03.87703 CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state
+...Requested MID: 0x00081A
+Header: MID 0x081A || Length 0x00C1
+seq cnt : 1
+.........Requested MID: 0x00081A
+Header: MID 0x081A || Length 0x00C1
+seq cnt : 2
+.........Requested MID: 0x00081A
+Header: MID 0x081A || Length 0x00C1
+seq cnt : 3
+.........Requested MID: 0x00081A
+Header: MID 0x081A || Length 0x00C1
+seq cnt : 4
+.........Requested MID: 0x00081A
+Header: MID 0x081A || Length 0x00C1
+seq cnt : 5

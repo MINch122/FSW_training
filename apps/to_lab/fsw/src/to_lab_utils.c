@@ -166,7 +166,8 @@ static void TO_LAB_PrintHkCombinedPkt1Hardcoded(const CFE_SB_Buffer_t *SBBufPtr,
     TO_LAB_PrintHardcodedBcnField("EPS.BP8.current", Bytes, SourceSize, BCN_EPS_OFFSET + 138, 4);
     TO_LAB_PrintHardcodedBcnField("EPS.BP8.heater_i", Bytes, SourceSize, BCN_EPS_OFFSET + 142, 2);
 
-    TO_LAB_PrintHardcodedBcnField("GPIO.GpioState", Bytes, SourceSize, BCN_GPIO_OFFSET + 0, 2);
+    TO_LAB_PrintHardcodedBcnField("GPIO.GpioState", Bytes, SourceSize, BCN_GPIO_OFFSET + 0, 1);
+    TO_LAB_PrintHardcodedBcnField("GPIO.Padding", Bytes, SourceSize, BCN_GPIO_OFFSET + 1, 1);
     TO_LAB_PrintHardcodedBcnField("GPIO.isDeployed", Bytes, SourceSize, BCN_GPIO_OFFSET + 2, 1);
 
     TO_LAB_PrintHardcodedBcnField("ADCS.PowerState", Bytes, SourceSize, BCN_ADCS_OFFSET + 0, 1);

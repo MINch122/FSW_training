@@ -28,6 +28,7 @@
 
 #include "common_types.h"  
 #include <stdint.h>
+#include "ltrx_conf.h"
 
 /* ICD Type IDs */
 #define LTRX_BEACON_CMD_REQUEST_MSG_TX      3
@@ -122,9 +123,6 @@ typedef struct LTRX_PACKED
     /* bytes follow */
 } LTRX_MessagePartHeader_t;
 
-#ifndef LTRX_MAX_MESSAGE_PART_SIZE
-#define LTRX_MAX_MESSAGE_PART_SIZE 256
-#endif
 
 /* Type 10: Confirm Message Part receipt payload (OBC -> Beacon)
  * ICD says 25 bytes ASCII */

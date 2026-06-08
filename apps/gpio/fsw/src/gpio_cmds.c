@@ -224,9 +224,8 @@ CFE_Status_t GPIO_SendBcnCmd(const GPIO_SendBcnCmd_t *Msg)
 {
     bool IsDeployed = false;
 
-    GPIO_Data.BcnTlm.Payload.GpioState =
-        (uint16)((GPIO_Data.OutputStateBits & GPIO_OUTPUT_STATE_MASK) |
-                 ((GPIO_Data.OutputCommandedBits & GPIO_OUTPUT_STATE_MASK) << GPIO_OUTPUT_COMMANDED_SHIFT));
+    GPIO_Data.BcnTlm.Payload.GpioState = (uint8)(GPIO_Data.OutputStateBits & GPIO_BCN_OUTPUT_STATE_MASK);
+    GPIO_Data.BcnTlm.Payload.Padding = 0;
     GPIO_Data.BcnTlm.Payload.isDeployed = 0;
 
     if (GPIO_ReadInputFor1Second("SP_IN", CFE_SRL_SP_IN_GPIO_INDEXER, &IsDeployed, false) == CFE_SUCCESS)

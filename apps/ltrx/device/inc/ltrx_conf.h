@@ -39,7 +39,8 @@
 
 // Message size limits (this value is not written in ICD)
 #define LTRX_MAX_TOTAL_MESSAGE_SIZE  65536
-#define LTRX_RECOMMENDED_PART_SIZE   256
+#define LTRX_MAX_MESSAGE_PART_SIZE   180
+#define LTRX_RECOMMENDED_PART_SIZE   LTRX_MAX_MESSAGE_PART_SIZE
 
 
 // Retry and concurrency limits (this value is not written in ICD) 

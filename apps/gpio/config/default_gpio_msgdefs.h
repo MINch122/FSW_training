@@ -50,7 +50,8 @@ typedef struct GPIO_HkTlm_Payload
 
 typedef struct GPIO_BcnTlm_Payload
 {
-    uint16 GpioState;
+    uint8 GpioState;
+    uint8 Padding;
     uint8 isDeployed;
 } __attribute__((packed)) GPIO_BcnTlm_Payload_t;
 

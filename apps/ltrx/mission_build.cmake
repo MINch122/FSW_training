@@ -10,6 +10,7 @@
 
 # The list of header files that control the LTRX configuration
 set(LTRX_MISSION_CONFIG_FILE_LIST
+  ltrx_conf.h
   ltrx_fcncodes.h
   ltrx_interface_cfg.h
   ltrx_mission_cfg.h
@@ -19,6 +20,8 @@ set(LTRX_MISSION_CONFIG_FILE_LIST
   ltrx_msgstruct.h
   ltrx_topicids.h
 )
+
+set(LTRX_CFGFILE_SRC_ltrx_conf "${CMAKE_CURRENT_LIST_DIR}/device/inc/ltrx_conf.h")
 
 # Create wrappers around the all the config header files
 # This makes them individually overridable by the missions, without modifying

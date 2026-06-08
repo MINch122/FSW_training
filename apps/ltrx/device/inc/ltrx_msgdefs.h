@@ -4,6 +4,7 @@
 #define LTRX_MSGDEFS_H
 
 #include <stdint.h>
+#include "ltrx_conf.h"
 #include <stddef.h>
 
 // Packed struct attribute for GCC/Clang
@@ -45,10 +46,6 @@
 #define LTRX_MSG_ERR_ACCESS_DENIED   20
 #define LTRX_MSG_ERR_DATA_CORRUPTION 30
 
-// Max part data bytes (this value is not written in ICD)
-#ifndef LTRX_MAX_MESSAGE_PART_SIZE
-#define LTRX_MAX_MESSAGE_PART_SIZE 256
-#endif
 
 // ErrorDescription field size shared across Type 10, 13, 15
 #define LTRX_ERROR_DESC_SIZE 25
