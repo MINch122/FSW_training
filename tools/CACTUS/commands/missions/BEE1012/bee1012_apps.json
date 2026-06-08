@@ -4534,6 +4534,48 @@
     ]
   },
   {
+    "app": "FTP_CLIENT",
+    "description": "CSP FTP client and CSP buffer monitor",
+    "commands": [
+      {
+        "name": "Noop",
+        "mid": "0x18A0",
+        "fc": 0,
+        "params": []
+      },
+      {
+        "name": "Upload",
+        "mid": "0x18A0",
+        "fc": 1,
+        "description": "Upload a local file to a remote CSP FTP server.",
+        "params": [
+          {"name": "Host", "type": "uint8", "default": "1"},
+          {"name": "Port", "type": "uint8", "default": "9"},
+          {"name": "Reserved", "type": "uint16", "hidden": true, "default": "0"},
+          {"name": "Timeout", "type": "uint32", "default": "1000"},
+          {"name": "ChunkSize", "type": "uint32", "default": "185"},
+          {"name": "LocalUrl", "type": "string", "length": 50, "default": "/cf/cspbuf.txt"},
+          {"name": "RemoteUrl", "type": "string", "length": 50, "default": "/cspbuf.txt"}
+        ]
+      },
+      {
+        "name": "Download",
+        "mid": "0x18A0",
+        "fc": 2,
+        "description": "Download a remote file from a CSP FTP server.",
+        "params": [
+          {"name": "Host", "type": "uint8", "default": "1"},
+          {"name": "Port", "type": "uint8", "default": "9"},
+          {"name": "Reserved", "type": "uint16", "hidden": true, "default": "0"},
+          {"name": "Timeout", "type": "uint32", "default": "1000"},
+          {"name": "ChunkSize", "type": "uint32", "default": "185"},
+          {"name": "LocalUrl", "type": "string", "length": 50, "default": "/cf/download.bin"},
+          {"name": "RemoteUrl", "type": "string", "length": 50, "default": "/remote.bin"}
+        ]
+      }
+    ]
+  },
+  {
     "app": "RPT",
     "description": "Report queue service",
     "commands": [
@@ -5961,6 +6003,19 @@
         "mid": "0x1892",
         "fc": 9,
         "params": []
+      },
+      {
+        "name": "DEP Burn 90s",
+        "mid": "0x1892",
+        "fc": 17,
+        "description": "Channel 1 burns DEP1_EN for 90 seconds; channel 2 burns DEP2_EN for 90 seconds",
+        "params": [
+          {
+            "name": "Channel",
+            "type": "uint8",
+            "default": "1"
+          }
+        ]
       },
       {
         "name": "SP IN Read 5s",

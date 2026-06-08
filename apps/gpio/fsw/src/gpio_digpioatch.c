@@ -152,6 +152,13 @@ void GPIO_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case GPIO_DEP1_DEP2_EN_90S_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_Dep1Dep2En90sCmd_t)))
+            {
+                GPIO_Dep1Dep2En90sCmd((const GPIO_Dep1Dep2En90sCmd_t *)SBBufPtr);
+            }
+            break;
+
         case GPIO_STX_EN_ON_CC:
             if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_StxEnOnCmd_t)))
             {

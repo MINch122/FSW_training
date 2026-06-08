@@ -30,7 +30,7 @@
 /**
  * CubeADCS CSP configuration
  */
-#define CAN_ADDR_CC				((uint8)4u)		/**< CSP Node address of CubeADCS */
+#define CAN_ADDR_CC				((uint8)6u)		/**< CSP Node address of CubeADCS */
 #define CSP_SRC_PORT			((uint8)11u)	/**< Source port used for CSP comms with CubeProduct */
 
 #define CSP_HEADER_SIZE			((uint32)2u)	/**< Size of CubeSpace header within CSP packet */
@@ -40,7 +40,7 @@
 
 #define CSP_PORT_TCTLM			((uint8)8u)		/**< CSP port used for TCTLM */
 #define CSP_PORT_PASSTHROUGH	((uint8)48u)	/**< CSP port used for passthrough TCTLM */
-#define CSP_PORT_EVENT			((uint8)58)		/**< CSP port used for Events ingestion */
+#define CSP_PORT_EVENT          ((uint8)31u)		/**< CSP port used for Events ingestion */
 #define CSP_UNKNOWN_LEN			((int32)-1)		/**< CSP parameter value which is used in `csp_transaction_w_opt` */
 
 #define ADCS_INTERFACE_TRANSPORT_CSP_CAN	((uint8)0u)

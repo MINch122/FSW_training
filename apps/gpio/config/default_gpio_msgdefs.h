@@ -41,11 +41,16 @@ typedef struct GPIO_DigpiolayParam_Payload
 ** Type definition (Sample App housekeeping)
 */
 
+typedef struct GPIO_DepBurn90s_Payload
+{
+    uint8 Channel;
+} GPIO_DepBurn90s_Payload_t;
+
 typedef struct GPIO_HkTlm_Payload
 {
     uint8 CommandErrorCounter;
     uint8 CommandCounter;
-    uint8 gpioare[2];
+    uint8 GpioState[6];
 } GPIO_HkTlm_Payload_t;
 
 typedef struct GPIO_BcnTlm_Payload

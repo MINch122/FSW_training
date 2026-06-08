@@ -1,0 +1,9 @@
+#ifndef FTP_CLIENT_FCNCODES_H
+#define FTP_CLIENT_FCNCODES_H
+
+
+#define FTP_CLIENT_NOOP_CC     0
+#define FTP_CLIENT_UPLOAD_CC   1
+#define FTP_CLIENT_DOWNLOAD_CC 2
+
+#endif

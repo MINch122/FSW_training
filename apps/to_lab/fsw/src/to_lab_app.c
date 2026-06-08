@@ -64,6 +64,8 @@ void TO_LAB_AppMain(void)
         RunStatus = CFE_ES_RunStatus_APP_ERROR;
     }
 
+    OS_TaskDelay(5000); /* Allow time for startup perf log to be read before sending events */
+
     /*
     ** TO RunLoop
     */

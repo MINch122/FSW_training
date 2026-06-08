@@ -12,11 +12,14 @@
 #include "rpt_msgids.h"
 #include "eps_msgids.h"
 #include "hk_msgids.h"
+#include "fm_msgids.h"
+#include "cfe_evs_msgids.h"
 
 #include <string.h>
 
 static const uint8 TO_LAB_HK_COMBINED_PKT1_RF_PREFIX[] = "BEE1012";
 #define TO_LAB_HK_COMBINED_PKT1_RF_PREFIX_SIZE (sizeof(TO_LAB_HK_COMBINED_PKT1_RF_PREFIX) - 1)
+#define TO_LAB_RF_MAX_AVAILABLE_BYTES 250
 
 static void TO_LAB_PrintOutgoing(const char *Path, const CFE_SB_Buffer_t *SBBufPtr, const void *NetBufPtr, size_t NetBufSize, int32 Status, uint16 Port)
 {
@@ -226,7 +229,7 @@ void TO_LAB_ForwardTelemetryRF(void) {
     CFE_SB_Buffer_t *SBBufPtr;
     const void      *NetBufPtr;
     size_t           NetBufSize;
-    uint8            HkCombinedPkt1RfBuf[CFE_MISSION_SB_MAX_SB_MSG_SIZE + TO_LAB_HK_COMBINED_PKT1_RF_PREFIX_SIZE];
+    uint8            HkCombinedPkt1RfBuf[TO_LAB_RF_MAX_AVAILABLE_BYTES];
     uint32_t         BCN_PktCount = 0;
     uint8_t         beacon_delay_pattern[] = {2,5,10,20};   // BEE  
     CFE_SB_MsgId_t   MsgId = CFE_SB_INVALID_MSG_ID;
@@ -262,6 +265,18 @@ void TO_LAB_ForwardTelemetryRF(void) {
                 case (CFE_SB_MsgId_Atom_t)EPS_REPORT_MID:
                     Port = CFE_RF_DPORT_RPT;
                     break;
+                case (CFE_SB_MsgId_Atom_t)CFE_EVS_HK_TLM_MID:
+                case (CFE_SB_MsgId_Atom_t)CFE_EVS_LONG_EVENT_MSG_MID:
+                case (CFE_SB_MsgId_Atom_t)CFE_EVS_SHORT_EVENT_MSG_MID:
+                    Port = CFE_RF_DPORT_EVS;
+                    break;
+                case (CFE_SB_MsgId_Atom_t)FM_HK_TLM_MID:
+                case (CFE_SB_MsgId_Atom_t)FM_FILE_INFO_TLM_MID:
+                case (CFE_SB_MsgId_Atom_t)FM_DIR_LIST_TLM_MID:
+                case (CFE_SB_MsgId_Atom_t)FM_OPEN_FILES_TLM_MID:
+                case (CFE_SB_MsgId_Atom_t)FM_FREE_SPACE_TLM_MID:
+                    Port = CFE_RF_DPORT_FM;
+                    break;
                 case (CFE_SB_MsgId_Atom_t)HK_COMBINED_PKT1_MID:
                     Port = CFE_RF_DPORT_BCN;
                     BeaconSlot = BCN_PktCount % 20;
@@ -278,9 +293,10 @@ void TO_LAB_ForwardTelemetryRF(void) {
                     if ((NetBufSize + TO_LAB_HK_COMBINED_PKT1_RF_PREFIX_SIZE) > sizeof(HkCombinedPkt1RfBuf))
                     {
                         CFE_EVS_SendErr(TO_LAB_TLMOUTSTOP_ERR_EID,
-                                        "%s: HK combined RF packet too large. size=%lu prefix=%lu\n",
+                                        "%s: HK combined RF packet too large. size=%lu prefix=%lu max=%lu\n",
                                         __func__, (unsigned long)NetBufSize,
-                                        (unsigned long)TO_LAB_HK_COMBINED_PKT1_RF_PREFIX_SIZE);
+                                        (unsigned long)TO_LAB_HK_COMBINED_PKT1_RF_PREFIX_SIZE,
+                                        (unsigned long)sizeof(HkCombinedPkt1RfBuf));
                         continue;
                     }
                     memcpy(HkCombinedPkt1RfBuf, TO_LAB_HK_COMBINED_PKT1_RF_PREFIX,

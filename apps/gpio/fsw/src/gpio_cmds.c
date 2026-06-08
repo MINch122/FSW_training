@@ -119,11 +119,35 @@ static CFE_Status_t GPIO_SetOutput(const char *Name, CFE_SRL_GPIO_Indexer_t Inde
 
 void GPIO_InitOutputDefaults(void)
 {
-    CFE_SRL_GPIO_Handle_t *StxEn  = CFE_SRL_ApiGetGpioHandle(CFE_SRL_STX_EN_GPIO_INDEXER);
-    CFE_SRL_GPIO_Handle_t *AdcsEn = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_EN_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *LtrxEn   = CFE_SRL_ApiGetGpioHandle(CFE_SRL_LTRX_EN_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *Dep1En   = CFE_SRL_ApiGetGpioHandle(CFE_SRL_DEP1_EN_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *Dep2En   = CFE_SRL_ApiGetGpioHandle(CFE_SRL_DEP2_EN_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *StxEn    = CFE_SRL_ApiGetGpioHandle(CFE_SRL_STX_EN_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *AdcsEn   = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_EN_GPIO_INDEXER);
+    CFE_SRL_GPIO_Handle_t *AdcsBoot = CFE_SRL_ApiGetGpioHandle(CFE_SRL_ADCS_BOOT_GPIO_INDEXER);
 
     GPIO_Data.OutputStateBits = (uint16)((1u << GPIO_OUTPUT_STX_EN_BIT) | (1u << GPIO_OUTPUT_ADCS_EN_BIT));
     GPIO_Data.OutputCommandedBits = 0;
+    if (LtrxEn != NULL && CFE_SRL_ApiGpioSet(LtrxEn, false) != CFE_SUCCESS)
+    {
+        GPIO_Data.ErrCounter++;
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set LTRX_EN default OFF");
+    }
+    if (Dep1En != NULL && CFE_SRL_ApiGpioSet(Dep1En, false) != CFE_SUCCESS)
+    {
+        GPIO_Data.ErrCounter++;
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set DEP1_EN default OFF");
+    }
+    if (Dep2En != NULL && CFE_SRL_ApiGpioSet(Dep2En, false) != CFE_SUCCESS)
+    {
+        GPIO_Data.ErrCounter++;
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set DEP2_EN default OFF");
+    }
+    if (AdcsBoot != NULL && CFE_SRL_ApiGpioSet(AdcsBoot, false) != CFE_SUCCESS)
+    {
+        GPIO_Data.ErrCounter++;
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set ADCS_BOOT default OFF");
+    }
     if (StxEn != NULL && CFE_SRL_ApiGpioSet(StxEn, true) != CFE_SUCCESS)
     {
         GPIO_Data.ErrCounter++;
@@ -205,6 +229,13 @@ CFE_Status_t GPIO_SendHkCmd(const GPIO_SendHkCmd_t *Msg)
     */
     GPIO_Data.HkTlm.Payload.CommandErrorCounter = GPIO_Data.ErrCounter;
     GPIO_Data.HkTlm.Payload.CommandCounter      = GPIO_Data.CmdCounter;
+
+    GPIO_Data.HkTlm.Payload.GpioState[0] = (uint8)((GPIO_Data.OutputStateBits >> GPIO_OUTPUT_LTRX_EN_BIT) & 1u);
+    GPIO_Data.HkTlm.Payload.GpioState[1] = (uint8)((GPIO_Data.OutputStateBits >> GPIO_OUTPUT_DEP1_EN_BIT) & 1u);
+    GPIO_Data.HkTlm.Payload.GpioState[2] = (uint8)((GPIO_Data.OutputStateBits >> GPIO_OUTPUT_DEP2_EN_BIT) & 1u);
+    GPIO_Data.HkTlm.Payload.GpioState[3] = (uint8)((GPIO_Data.OutputStateBits >> GPIO_OUTPUT_STX_EN_BIT) & 1u);
+    GPIO_Data.HkTlm.Payload.GpioState[4] = (uint8)((GPIO_Data.OutputStateBits >> GPIO_OUTPUT_ADCS_EN_BIT) & 1u);
+    GPIO_Data.HkTlm.Payload.GpioState[5] = (uint8)((GPIO_Data.OutputStateBits >> GPIO_OUTPUT_ADCS_BOOT_BIT) & 1u);
 
     /*
     ** Send housekeeping telemetry packet...
@@ -348,6 +379,63 @@ CFE_Status_t GPIO_Dep2EnOffCmd(const GPIO_Dep2EnOffCmd_t *Msg)
     CFE_Status_t Status = GPIO_SetOutput("DEP2_EN", CFE_SRL_DEP2_EN_GPIO_INDEXER, GPIO_OUTPUT_DEP2_EN_BIT, false);
     GPIO_SendReport(GPIO_DEP2_EN_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
+}
+
+CFE_Status_t GPIO_Dep1Dep2En90sCmd(const GPIO_Dep1Dep2En90sCmd_t *Msg)
+{
+    int32                     Statuses[2];
+    int32                     FinalStatus;
+    const char               *Name;
+    CFE_SRL_GPIO_Indexer_t    Index;
+    uint8                     StateBit;
+    uint8                     Channel = Msg->Payload.Channel;
+
+    if (Channel == 1)
+    {
+        Name     = "DEP1_EN";
+        Index    = CFE_SRL_DEP1_EN_GPIO_INDEXER;
+        StateBit = GPIO_OUTPUT_DEP1_EN_BIT;
+    }
+    else if (Channel == 2)
+    {
+        Name     = "DEP2_EN";
+        Index    = CFE_SRL_DEP2_EN_GPIO_INDEXER;
+        StateBit = GPIO_OUTPUT_DEP2_EN_BIT;
+    }
+    else
+    {
+        GPIO_Data.ErrCounter++;
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "GPIO: invalid DEP burn channel %u, expected 1 or 2", (unsigned int)Channel);
+        FinalStatus = CFE_STATUS_BAD_COMMAND_CODE;
+        GPIO_SendReport(GPIO_DEP1_DEP2_EN_90S_CC, FinalStatus, &Channel, sizeof(Channel),
+                        GPIO_StatusToReportType(FinalStatus));
+        return FinalStatus;
+    }
+
+    CFE_EVS_SendEvent(GPIO_VALUE_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "GPIO: %s burn ON for 90s sequence started", Name);
+
+    Statuses[0] = GPIO_SetOutput(Name, Index, StateBit, true);
+    FinalStatus = Statuses[0];
+
+    if (Statuses[0] == CFE_SUCCESS)
+    {
+        OS_TaskDelay(90000);
+    }
+
+    Statuses[1] = GPIO_SetOutput(Name, Index, StateBit, false);
+    if (Statuses[1] != CFE_SUCCESS && FinalStatus == CFE_SUCCESS)
+    {
+        FinalStatus = Statuses[1];
+    }
+
+    CFE_EVS_SendEvent(GPIO_VALUE_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "GPIO: %s burn 90s sequence finished", Name);
+    GPIO_SendReport(GPIO_DEP1_DEP2_EN_90S_CC, FinalStatus, Statuses, sizeof(Statuses),
+                    GPIO_StatusToReportType(FinalStatus));
+
+    return FinalStatus;
 }
 
 CFE_Status_t GPIO_StxEnOnCmd(const GPIO_StxEnOnCmd_t *Msg)

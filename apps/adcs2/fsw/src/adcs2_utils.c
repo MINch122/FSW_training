@@ -848,7 +848,7 @@ void ADCS2_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadS
 
 // 	Status = csp_bind(Sock, CSP_PORT_EVENT);
 // 	if (Status != CSP_ERR_NONE) {
-// 		CFE_ES_WriteToSysLog("%s: csp_bind failed at Port: %d RC=%d\n", __func__, 58, Status);
+// 		CFE_ES_WriteToSysLog("%s: csp_bind failed at Port: %d RC=%d\n", __func__, CSP_PORT_EVENT, Status);
 // 		return;
 // 	}
 

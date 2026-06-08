@@ -56,8 +56,6 @@
 /* #include "mm_msgids.h"  */
 /* #include "sch_msgids.h" */
 #include "hk_msgids.h"
-#include "rpt_msgids.h"
-
 /*
 ** Note: It is suggested that missions pre-define their file table
 **       index numbers in a public header file to be included by
@@ -69,21 +67,6 @@
 // #define FILE_ALL_EVENTS 0
 
 #define FILE_ALL_APP_BCN_PKTS 0
-#define FILE_RPT_REPORT_PKTS  1
-#define FILE_RPT_CRITICAL_PKTS 2
-
-#define FILE_ALL_APP_TLM_PKTS 2
-
-#define FILE_ALL_HW_TLM_PKTS 3
-
-#define FILE_CFE_APP_HK_PKTS  4
-#define FILE_CFE_APP_TLM_PKTS 5
-
-/**
- * PAYUZUC IMG's `file_tbl.c` index number
- */
-#define FILE_PAYUZUC_IMG_PKTS 6
-#define FILE_PAYUZUC_THUMBNAIL_PKTS 7
 /*
 ** Sample packet filter table data
 */
@@ -124,31 +107,31 @@ DS_FilterTable_t DS_FilterTable = {
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_BY_COUNT, 1, 2, 0},
-       {FILE_CFE_APP_HK_PKTS, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
      /* Packet Index 004 */
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_BY_COUNT, 1, 2, 1},
-       {FILE_CFE_APP_HK_PKTS, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
      /* Packet Index 005 */
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {FILE_ALL_APP_TLM_PKTS, DS_BY_COUNT, 1, 2, 0},
-       {FILE_CFE_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
      /* Packet Index 006 */
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
@@ -156,56 +139,56 @@ DS_FilterTable_t DS_FilterTable = {
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {FILE_ALL_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
-       {FILE_CFE_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
      /* Packet Index 008 */
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {FILE_ALL_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
-       {FILE_CFE_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
      /* Packet Index 009 */
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {FILE_ALL_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
-       {FILE_CFE_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
      /* Packet Index 010 */
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {FILE_ALL_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
-       {FILE_CFE_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
      /* Packet Index 011 */
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {FILE_ALL_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
-       {FILE_CFE_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
      /* Packet Index 012 */
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {FILE_ALL_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
-       {FILE_CFE_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
      /* Packet Index 013 */
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_BY_COUNT, 1, 1, 0},
-       {FILE_ALL_APP_TLM_PKTS, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
 
@@ -217,7 +200,7 @@ DS_FilterTable_t DS_FilterTable = {
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {FILE_PAYUZUC_IMG_PKTS, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
@@ -228,7 +211,7 @@ DS_FilterTable_t DS_FilterTable = {
      {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {FILE_PAYUZUC_THUMBNAIL_PKTS, DS_BY_COUNT, 1, 1, 0},
+       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},

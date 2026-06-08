@@ -100,6 +100,12 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+    GPIO_DepBurn90s_Payload_t Payload;
+} GPIO_Dep1Dep2En90sCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
 } GPIO_StxEnOnCmd_t;
 
 typedef struct

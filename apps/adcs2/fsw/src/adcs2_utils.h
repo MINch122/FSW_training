@@ -40,7 +40,7 @@
 
 #define CSP_PORT_TCTLM			((uint8)8u)		/**< CSP port used for TCTLM */
 #define CSP_PORT_PASSTHROUGH	((uint8)48u)	/**< CSP port used for passthrough TCTLM */
-#define CSP_PORT_EVENT			((uint8)58)		/**< CSP port used for Events ingestion */
+#define CSP_PORT_EVENT          ((uint8)31u)		/**< CSP port used for Events ingestion */
 #define CSP_UNKNOWN_LEN			((int32)-1)		/**< CSP parameter value which is used in `csp_transaction_w_opt` */
 
 #define ADCS2_INTERFACE_TRANSPORT_CSP_CAN	((uint8)0u)

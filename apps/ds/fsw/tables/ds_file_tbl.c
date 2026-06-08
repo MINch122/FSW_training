@@ -58,12 +58,6 @@
 // #define FILE_ALL_EVENTS 0
 
 #define FILE_ALL_APP_BCN_PKTS  0
-#define FILE_ALL_APP_TLM_PKTS 2
-
-#define FILE_ALL_HW_TLM_PKTS 3
-
-#define FILE_CFE_APP_HK_PKTS  4
-#define FILE_CFE_APP_TLM_PKTS 5
 
 /*
 ** Sample Destination File Table Data
@@ -72,7 +66,7 @@ DS_DestFileTable_t DS_DestFileTable = {
     /* .Descriptor = */ "Sample File Table Data",
     /* .File       = */
     {
-        /* File Index 00 -- event packets only */
+        /* File Index 00 -- combined beacon packets */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
             /* .Pathname      = */ "/cf/sdcard/beacon",
@@ -85,100 +79,96 @@ DS_DestFileTable_t DS_DestFileTable = {
             /* .MaxFileAge    = */ (60 * 60* 8),   /* 1 hour */
             /* .SequenceCount = */ 1000,
         },
-        /* File Index 01 -- application housekeeping packets */
+        /* File Index 01 */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ "/cf/sdcard/report",
-            /* .Basename      = */ "report",
-            /* .Extension     = */ ".dat",
+            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Basename      = */ DS_EMPTY_STRING,
+            /* .Extension     = */ DS_EMPTY_STRING,
 
-            /* .FileNameType  = */ DS_BY_COUNT,
-            /* .EnableState   = */ DS_ENABLED,
-            /* .MaxFileSize   = */ (540 * 50), /* 50 report packets */
-            /* .MaxFileAge    = */ (60 * 60 * 2),     /* 2 hours */
-            /* .SequenceCount = */ 1000,
+            /* .FileNameType  = */ DS_UNUSED,
+            /* .EnableState   = */ DS_UNUSED,
+            /* .MaxFileSize   = */ DS_UNUSED,
+            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .SequenceCount = */ DS_UNUSED,
         },
-        /* File Index 02 -- application telemetry packets */
+        /* File Index 02 */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ "/cf/sdcard/critical",
-            /* .Basename      = */ "critical",
-            /* .Extension     = */ ".dat",
+            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Basename      = */ DS_EMPTY_STRING,
+            /* .Extension     = */ DS_EMPTY_STRING,
 
-            /* .FileNameType  = */ DS_BY_COUNT,
-            /* .EnableState   = */ DS_ENABLED,
-            /* .MaxFileSize   = */ (540 * 50), /* 1 G-byte */
-            /* .MaxFileAge    = */ (60 * 60 * 2),            /* 2 hours */
-            /* .SequenceCount = */ 1000,
+            /* .FileNameType  = */ DS_UNUSED,
+            /* .EnableState   = */ DS_UNUSED,
+            /* .MaxFileSize   = */ DS_UNUSED,
+            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .SequenceCount = */ DS_UNUSED,
         },
-        /* File Index 03 -- hardware telemetry packets */
+        /* File Index 03 */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ "set_by_cmd_b4_enable",
-            /* .Basename      = */ "hw",
-            /* .Extension     = */ "tlm",
+            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Basename      = */ DS_EMPTY_STRING,
+            /* .Extension     = */ DS_EMPTY_STRING,
 
-            /* .FileNameType  = */ DS_BY_COUNT,
-            /* .EnableState   = */ DS_DISABLED,
-            /* .MaxFileSize   = */ (1024 * 1024 * 2), /* 2 M-bytes */
-            /* .MaxFileAge    = */ (60 * 60 * 2),     /* 2 hours */
-            /* .SequenceCount = */ 3000,
+            /* .FileNameType  = */ DS_UNUSED,
+            /* .EnableState   = */ DS_UNUSED,
+            /* .MaxFileSize   = */ DS_UNUSED,
+            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .SequenceCount = */ DS_UNUSED,
         },
-        /* File Index 04 -- cFE housekeeping packets */
+        /* File Index 04 */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ "set_by_cmd_b4_enable",
-            /* .Basename      = */ "cfe",
-            /* .Extension     = */ "hk",
+            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Basename      = */ DS_EMPTY_STRING,
+            /* .Extension     = */ DS_EMPTY_STRING,
 
-            /* .FileNameType  = */ DS_BY_COUNT,
-            /* .EnableState   = */ DS_DISABLED,
-            /* .MaxFileSize   = */ (1024 * 1024 * 2), /* 2 M-bytes */
-            /* .MaxFileAge    = */ (60 * 60 * 2),     /* 2 hours */
-            /* .SequenceCount = */ 4000,
+            /* .FileNameType  = */ DS_UNUSED,
+            /* .EnableState   = */ DS_UNUSED,
+            /* .MaxFileSize   = */ DS_UNUSED,
+            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .SequenceCount = */ DS_UNUSED,
         },
-        /* File Index 05 -- cFE telemetry packets */
+        /* File Index 05 */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ "set_by_cmd_b4_enable",
-            /* .Basename      = */ "cfe",
-            /* .Extension     = */ "tlm",
+            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Basename      = */ DS_EMPTY_STRING,
+            /* .Extension     = */ DS_EMPTY_STRING,
 
-            /* .FileNameType  = */ DS_BY_COUNT,
-            /* .EnableState   = */ DS_DISABLED,
-            /* .MaxFileSize   = */ (1024 * 1024 * 2), /* 2 M-bytes */
-            /* .MaxFileAge    = */ (60 * 60 * 2),     /* 2 hours */
-            /* .SequenceCount = */ 5000,
+            /* .FileNameType  = */ DS_UNUSED,
+            /* .EnableState   = */ DS_UNUSED,
+            /* .MaxFileSize   = */ DS_UNUSED,
+            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .SequenceCount = */ DS_UNUSED,
         },
-
-        /*******************************************
-         * PAYUZUC IMG Data - Including Tlm Header
-         *******************************************/
-        /* File Index 06 - `FILE_PAYUZUC_IMG_PKTS` */
+        /* File Index 06 */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ "/cf/kiss",
-            /* .Basename      = */ "KissCAM",
-            /* .Extension     = */ "img",
+            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Basename      = */ DS_EMPTY_STRING,
+            /* .Extension     = */ DS_EMPTY_STRING,
 
-            /* .FileNameType  = */ DS_BY_COUNT,
-            /* .EnableState   = */ DS_DISABLED,
-            /* .MaxFileSize   = */ ((5+2+640+1 + 12) * 480 * 4), /* `+12` for CCSDS tlm hdr */
-            /* .MaxFileAge    = */ (60 * 10),     /* 10 minutes */
-            /* .SequenceCount = */ 488, // M P C 23
+            /* .FileNameType  = */ DS_UNUSED,
+            /* .EnableState   = */ DS_UNUSED,
+            /* .MaxFileSize   = */ DS_UNUSED,
+            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .SequenceCount = */ DS_UNUSED,
         },
-        /* File Index 07 - `FILE_PAYUZUC_THUMBNAIL_PKTS` */
+        /* File Index 07 */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ "/cf/kiss_thumb",
-            /* .Basename      = */ "KissCAM",
-            /* .Extension     = */ "img",
+            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Basename      = */ DS_EMPTY_STRING,
+            /* .Extension     = */ DS_EMPTY_STRING,
 
-            /* .FileNameType  = */ DS_BY_COUNT,
-            /* .EnableState   = */ DS_DISABLED,
-            /* .MaxFileSize   = */ ((5+2+80+1 + 12) * 60 * 4), /* `+12` for CCSDS tlm hdr */
-            /* .MaxFileAge    = */ (60 * 5),    /* 5 minutes */
-            /* .SequenceCount = */ 250, // M H S 7
+            /* .FileNameType  = */ DS_UNUSED,
+            /* .EnableState   = */ DS_UNUSED,
+            /* .MaxFileSize   = */ DS_UNUSED,
+            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .SequenceCount = */ DS_UNUSED,
         },
         /* File Index 08 */
         {

@@ -43,8 +43,9 @@ typedef enum {
 typedef enum {
     
     CFE_RF_DPORT_RPT = 15,
+    CFE_RF_DPORT_EVS = 16,
     CFE_RF_DPORT_BCN = 17,
-
+    CFE_RF_DPORT_FM  = 18,
 } CFE_RF_Downlink_Port_t;
 
 

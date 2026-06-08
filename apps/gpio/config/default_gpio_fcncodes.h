@@ -52,6 +52,7 @@
 #define GPIO_ADCS_EN_OFF_CC    14
 #define GPIO_ADCS_BOOT_ON_CC   15
 #define GPIO_ADCS_BOOT_OFF_CC  16
+#define GPIO_DEP1_DEP2_EN_90S_CC 17
 
 
 #endif

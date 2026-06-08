@@ -9,9 +9,9 @@
         "conn_max": 10,
         "conn_queue_length": 10,
         "fifo_length": 25,
-        "port_max_bind": 58,
+        "port_max_bind": 32,
         "rdp_max_window": 20,
-        "buffers": 10,
+        "buffers": 64,
         "buffer_data_size": 512,
         "conn_dfl_so": "CSP_O_NONE"
     },

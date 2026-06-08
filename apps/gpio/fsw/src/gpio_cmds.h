@@ -43,6 +43,7 @@ CFE_Status_t GPIO_Dep1EnOnCmd(const GPIO_Dep1EnOnCmd_t *Msg);
 CFE_Status_t GPIO_Dep1EnOffCmd(const GPIO_Dep1EnOffCmd_t *Msg);
 CFE_Status_t GPIO_Dep2EnOnCmd(const GPIO_Dep2EnOnCmd_t *Msg);
 CFE_Status_t GPIO_Dep2EnOffCmd(const GPIO_Dep2EnOffCmd_t *Msg);
+CFE_Status_t GPIO_Dep1Dep2En90sCmd(const GPIO_Dep1Dep2En90sCmd_t *Msg);
 CFE_Status_t GPIO_SpInRead5sCmd(const GPIO_SpInRead5sCmd_t *Msg);
 CFE_Status_t GPIO_StxEnOnCmd(const GPIO_StxEnOnCmd_t *Msg);
 CFE_Status_t GPIO_StxEnOffCmd(const GPIO_StxEnOffCmd_t *Msg);

@@ -1,0 +1,6 @@
+#ifndef FTP_CLIENT_PERFIDS_H
+#define FTP_CLIENT_PERFIDS_H
+
+#define FTP_CLIENT_PERF_ID 627
+
+#endif
