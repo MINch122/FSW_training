@@ -9,6 +9,10 @@
 #include "ltrx_conf.h"
 #include "ltrx_msgdefs.h"
 
+#if __has_include("ltrx_mission_cfg.h")
+#include "ltrx_mission_cfg.h"
+#endif
+
 
 // Return codes - range -1..-6
 typedef enum {
@@ -22,11 +26,15 @@ typedef enum {
 } LTRX_ReturnCode_t;
 
 
-// Logging abstraction - replace with OS_printf or CFE_EVS_SendEvent for cFS integration
-  #ifndef LTRX_LOG
-  #include "osapi.h"
-  #define LTRX_LOG(...) OS_printf(__VA_ARGS__)
-  #endif
+// Logging abstraction - follows LTRX_APP_printf in cFS builds.
+#ifndef LTRX_LOG
+#ifdef LTRX_APP_printf
+#define LTRX_LOG(...) LTRX_APP_printf(__VA_ARGS__)
+#else
+#include "osapi.h"
+#define LTRX_LOG(...) OS_printf(__VA_ARGS__)
+#endif
+#endif
 
 
 // Serial interface wrapper - returns bytes received >=0 when success, <0 when error

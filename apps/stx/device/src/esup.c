@@ -15,7 +15,7 @@ extern CFE_SRL_IO_Handle_t *Handle;
 uint32_t open_file_size = 0;
 CFE_SRL_IO_Param_t Params = {0,};
 uint16_t STX_timeout = 30; //[ms]
-uint16_t MODULE_ID = 0x1212;
+uint16_t MODULE_ID = 0x1220;
 
 static uint16_t ESUP_Encoder(uint16_t comm_stt, uint16_t comm, uint16_t type, void * data, uint16_t length, uint16_t padlen, ESUP_Packet_t * packet)
 {   

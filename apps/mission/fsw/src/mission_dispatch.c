@@ -47,10 +47,18 @@ static void MISSION_ProcessUtrxHkTlm(const CFE_SB_Buffer_t *SBBufPtr)
 
     if (!MISSION_Data.LEOPUtrxRxBytesInitialized)
     {
+        if (RxBytes == 0)
+        {
+            MISSION_APP_printf("MISSION LEOP: ignoring initial UTRX RxBytes=0\n");
+            MISSION_LEOP_Unlock();
+            return;
+        }
+
         MISSION_Data.LEOPUtrxInitRxBytes = RxBytes;
         MISSION_Data.LEOPUtrxRxData = RxBytes;
         MISSION_Data.LEOPUtrxRxBytesInitialized = true;
         MISSION_Data.LEOPUtrxRxBytesIncreased = false;
+        MISSION_APP_printf("MISSION LEOP: initial UTRX RxBytes=%lu\n", (unsigned long)RxBytes);
         MISSION_LEOP_Unlock();
         return;
     }
@@ -59,6 +67,9 @@ static void MISSION_ProcessUtrxHkTlm(const CFE_SB_Buffer_t *SBBufPtr)
     {
         MISSION_Data.LEOPUtrxRxData = RxBytes;
         MISSION_Data.LEOPUtrxRxBytesIncreased = (RxBytes > MISSION_Data.LEOPUtrxInitRxBytes);
+        MISSION_APP_printf("MISSION LEOP: UTRX RxBytes updated current=%lu initial=%lu increased=%u\n",
+                           (unsigned long)RxBytes, (unsigned long)MISSION_Data.LEOPUtrxInitRxBytes,
+                           (unsigned int)MISSION_Data.LEOPUtrxRxBytesIncreased);
     }
 
     MISSION_LEOP_Unlock();

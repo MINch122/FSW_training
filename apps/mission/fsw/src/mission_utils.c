@@ -177,6 +177,7 @@ static CFE_Status_t MISSION_LEOP_LoadState(void)
     if (OsStatus != (int32)sizeof(FileData))
     {
         MISSION_LEOP_SetDefaults();
+        MISSION_APP_printf("MISSION LEOP: state file missing, short, or invalid; defaults applied\n");
         return MISSION_LEOP_SaveState();
     }
 
@@ -185,10 +186,14 @@ static CFE_Status_t MISSION_LEOP_LoadState(void)
         FileData.CRC != ExpectedCRC)
     {
         MISSION_LEOP_SetDefaults();
+        MISSION_APP_printf("MISSION LEOP: state file missing, short, or invalid; defaults applied\n");
         return MISSION_LEOP_SaveState();
     }
 
     MISSION_LEOP_CopyFileToRuntime(&FileData);
+    MISSION_APP_printf("MISSION LEOP: state loaded state=%u wait_complete=%u to_enabled=%u gpio_issued=%u\n",
+                       (unsigned int)MISSION_Data.LEOPState, (unsigned int)MISSION_Data.LEOPWaitComplete,
+                       (unsigned int)MISSION_Data.LEOPToEnabled, (unsigned int)MISSION_Data.LEOPGpioDeployIssued);
 
     return CFE_SUCCESS;
 }
@@ -262,16 +267,20 @@ static CFE_Status_t MISSION_LEOP_EnableTo(void)
 
     MISSION_Data.LEOPUartDeployTryCount++;
     (void)MISSION_LEOP_SaveState();
+    MISSION_APP_printf("MISSION LEOP: TO enable transmit try=%u\n",
+                       (unsigned int)MISSION_Data.LEOPUartDeployTryCount);
 
     Status = CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
     if (Status != CFE_SUCCESS)
     {
         MISSION_Data.ErrCounter++;
+        MISSION_APP_printf("MISSION LEOP: TO enable failed status=0x%08lX\n", (unsigned long)Status);
         return Status;
     }
 
     MISSION_Data.LEOPToEnabled = true;
     MISSION_Data.LEOPState = MISSION_LEOP_STATE_TO_ENABLED;
+    MISSION_APP_printf("MISSION LEOP: TO enabled\n");
 
     return Status;
 }
@@ -392,6 +401,18 @@ void MISSION_LEOP_Process(void)
 
         if (MISSION_Data.LEOPState == MISSION_LEOP_STATE_COMPLETE)
         {
+            MISSION_APP_printf("MISSION LEOP: complete state loaded, re-enabling TO before exit\n");
+            Status = MISSION_LEOP_EnableTo();
+            if (Status != CFE_SUCCESS)
+            {
+                (void)MISSION_LEOP_SaveState();
+                MISSION_LEOP_RetryDelay();
+                continue;
+            }
+
+            MISSION_Data.LEOPState = MISSION_LEOP_STATE_COMPLETE;
+            (void)MISSION_LEOP_SaveState();
+            MISSION_APP_printf("MISSION LEOP: complete state preserved after TO enable\n");
             return;
         }
 
@@ -401,6 +422,7 @@ void MISSION_LEOP_Process(void)
             {
                 MISSION_Data.LEOPStartTime = CFE_TIME_GetTime();
                 MISSION_Data.LEOPProcessStarted = true;
+                MISSION_APP_printf("MISSION LEOP: wait timer started\n");
             }
 
             MISSION_LEOP_UpdateWaitStatus();
@@ -412,9 +434,12 @@ void MISSION_LEOP_Process(void)
 
         MISSION_Data.LEOPState = MISSION_LEOP_STATE_WAIT_COMPLETE;
         (void)MISSION_LEOP_SaveState();
+        MISSION_APP_printf("MISSION LEOP: wait phase complete, checking UTRX RxBytes\n");
 
         if (!MISSION_LEOP_UtrxRxBytesIncreased() && Burn_try_count <= MISSION_LEOP_MAX_GPIO_BURN_TRY_COUNT)
         {
+            MISSION_APP_printf("MISSION LEOP: UTRX RxBytes not increased, issuing GPIO burn attempt=%ld\n",
+                               (long)(Burn_try_count + 1));
             Status = MISSION_LEOP_GpioHigh();
             Burn_try_count++;
             if (Status != CFE_SUCCESS)
@@ -437,12 +462,13 @@ void MISSION_LEOP_Process(void)
 
             (void)MISSION_LEOP_SaveState();
         
-            OS_TaskDelay(3*90*60*1000);
+            OS_TaskDelay(15*60*1000);
             continue;
         }
 
         MISSION_Data.LEOPState = MISSION_LEOP_STATE_COMPLETE;
         (void)MISSION_LEOP_SaveState();
+        MISSION_APP_printf("MISSION LEOP: sequence complete\n");
         return;
     }
 }
