@@ -1,3 +1,0 @@
-file(REMOVE_RECURSE
-  "libMIMAN_IMGUI.a"
-)

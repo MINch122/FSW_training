@@ -1,3 +1,0 @@
-/home/jdm/MIMAN_GS/lib/imgui/CMakeFiles/rebuild_cache.dir
-/home/jdm/MIMAN_GS/lib/imgui/CMakeFiles/edit_cache.dir
-/home/jdm/MIMAN_GS/lib/imgui/CMakeFiles/imgui.dir
