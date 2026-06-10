@@ -18,6 +18,10 @@
 #define EPS_P80_DRV_PACK __attribute__((packed))
 #endif
 
+#define EPS_P80_DRV_PDU_BCN_USED_CH_COUNT 12u
+#define EPS_P80_DRV_PDU_BCN_USED_CH_LIST \
+    {8u, 10u, 12u, 14u, 15u, 16u, 18u, 19u, 20u, 21u, 22u, 23u}
+
 /**
  * PMU Housekeeping data structure (driver-level, no cFE dependency)
  */
@@ -92,7 +96,7 @@ typedef struct EPS_P80_DRV_PACK {
     uint8_t  batt_mode;
     int16_t  batt_i;
     uint16_t batt_v;
-    uint8_t  sm_en[8];
+    uint8_t  sm_en_mask; /* bit0..7 = submodule enable 0..7 */
     uint16_t gnd_wdt_cnt;
     uint16_t bus_wdt_cnt;
     uint32_t gnd_wdt_left;
@@ -100,8 +104,8 @@ typedef struct EPS_P80_DRV_PACK {
 } EPS_P80_Drv_PMU_BcnTlm_t;
 
 typedef struct EPS_P80_DRV_PACK {
-    uint8_t out_en[24];
-    int16_t out_i[24];
+    uint8_t out_en[EPS_P80_DRV_PDU_BCN_USED_CH_COUNT];
+    int16_t out_i[EPS_P80_DRV_PDU_BCN_USED_CH_COUNT];
 } EPS_P80_Drv_PDU_BcnTlm_t;
 
 typedef struct EPS_P80_DRV_PACK {

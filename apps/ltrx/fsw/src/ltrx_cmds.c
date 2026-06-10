@@ -141,6 +141,9 @@ void LTRX_SendBcnTlm(void)
         CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
         return;
     }
+
+    memset(&LTRX_AppData.LastBeaconStatus, 0, sizeof(LTRX_AppData.LastBeaconStatus));
+    LTRX_AppData.HaveBeaconStatus = false;
 }
 
 /* Public handlers */

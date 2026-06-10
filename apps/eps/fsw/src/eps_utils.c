@@ -60,19 +60,9 @@ static double EPS_MilliAmpToAmp(uint16_t current_ma)
     return (double)current_ma / 1000.0;
 }
 
-static uint8 EPS_PackBoolArray8(const uint8_t Values[8])
+static double EPS_SocRatioToPercent(float soc)
 {
-    uint8 Mask = 0;
-
-    for (uint8 Index = 0; Index < 8; Index++)
-    {
-        if (Values[Index] != 0)
-        {
-            Mask |= (uint8)(1u << Index);
-        }
-    }
-
-    return Mask;
+    return (double)soc * 100.0;
 }
 
 static void EPS_FillBcnNodeInvalid(EPS_BcnTlm_Full_Payload_t *Bcn, uint8 NodeIndex)
@@ -128,29 +118,29 @@ static uint8 EPS_MarkBcnNodeFailure(EPS_BcnTlm_Full_Payload_t *Bcn, uint8 NodeIn
 
 void EPS_PrintP80PowerIfStatus(const char *title, const power_if_ch_status_t *status)
 {
-    OS_printf("%s\n", title);
-    OS_printf("  ch_idx:     %u\n", status->ch_idx);
-    OS_printf("  name:       %.8s\n", status->name);
-    OS_printf("  mode:       %u\n", status->mode);
-    OS_printf("  on_cnt:     %u\n", status->on_cnt);
-    OS_printf("  off_cnt:    %u\n", status->off_cnt);
-    OS_printf("  cur_lu_lim: %u\n", status->cur_lu_lim);
-    OS_printf("  cur_lim:    %u\n", status->cur_lim);
-    OS_printf("  voltage:    %u mV\n", status->voltage);
-    OS_printf("  current:    %d mA\n", status->current);
-    OS_printf("  latchup:    %u\n", status->latchup);
+    EPS_APP_printf("%s\n", title);
+    EPS_APP_printf("  ch_idx:     %u\n", status->ch_idx);
+    EPS_APP_printf("  name:       %.8s\n", status->name);
+    EPS_APP_printf("  mode:       %u\n", status->mode);
+    EPS_APP_printf("  on_cnt:     %u\n", status->on_cnt);
+    EPS_APP_printf("  off_cnt:    %u\n", status->off_cnt);
+    EPS_APP_printf("  cur_lu_lim: %u\n", status->cur_lu_lim);
+    EPS_APP_printf("  cur_lim:    %u\n", status->cur_lim);
+    EPS_APP_printf("  voltage:    %u mV\n", status->voltage);
+    EPS_APP_printf("  current:    %d mA\n", status->current);
+    EPS_APP_printf("  latchup:    %u\n", status->latchup);
 }
 
 void EPS_PrintP80PowerIfList(const power_if_cmd_list_response_t *list)
 {
-    OS_printf("EPS Power_If_List Response:\n");
-    OS_printf("  cmd:    %u\n", list->cmd);
-    OS_printf("  status: %u\n", list->status);
-    OS_printf("  count:  %u\n", list->count);
-    OS_printf("  %-6s %-8s %s\n", "ch_idx", "mode", "name");
+    EPS_APP_printf("EPS Power_If_List Response:\n");
+    EPS_APP_printf("  cmd:    %u\n", list->cmd);
+    EPS_APP_printf("  status: %u\n", list->status);
+    EPS_APP_printf("  count:  %u\n", list->count);
+    EPS_APP_printf("  %-6s %-8s %s\n", "ch_idx", "mode", "name");
     for (uint8_t i = 0; i < list->count && i < (sizeof(list->list) / sizeof(list->list[0])); i++)
     {
-        OS_printf("  %-6u %-8u %.8s\n",
+        EPS_APP_printf("  %-6u %-8u %.8s\n",
                   list->list[i].ch_idx,
                   list->list[i].mode,
                   list->list[i].name);
@@ -159,116 +149,116 @@ void EPS_PrintP80PowerIfList(const power_if_cmd_list_response_t *list)
 
 void EPS_PrintP80PmuHk(const EPS_P80_PMU_HkTlm_Payload_t *hk)
 {
-    OS_printf("\n================[p80 PMU HK]===================\n");
-    OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
+    EPS_APP_printf("\n================[p80 PMU HK]===================\n");
+    EPS_APP_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
               hk->uptime, hk->bootcount, hk->bootcause, hk->resetcause);
-    OS_printf("[OUTPUT] IDX | EN | Curr(mA)\n");
+    EPS_APP_printf("[OUTPUT] IDX | EN | Curr(mA)\n");
     for (int i = 0; i < 6; i++)
-        OS_printf("         %3d | %2s | %8d\n", i, hk->out_en[i] ? "ON" : "OFF", hk->out_i[i]);
-    OS_printf("[BATT]   Volt: %u mV | Curr: %d mA | Mode: %u\n", hk->batt_v, hk->batt_i, hk->batt_mode);
-    OS_printf("[PMU]    VBAT: %u mV | VCC: %u mV\n", hk->vbat_v, hk->vcc_v);
-    OS_printf("[TEMP]   T0: %d | T1: %d (deci-degC)\n", hk->temp[0], hk->temp[1]);
-    OS_printf("[SUBMOD] Enable: ");
-    for (int i = 0; i < 8; i++) OS_printf("%d ", hk->sm_en[i]);
-    OS_printf("\n");
-    OS_printf("[WDT]    GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n",
+        EPS_APP_printf("         %3d | %2s | %8d\n", i, hk->out_en[i] ? "ON" : "OFF", hk->out_i[i]);
+    EPS_APP_printf("[BATT]   Volt: %u mV | Curr: %d mA | Mode: %u\n", hk->batt_v, hk->batt_i, hk->batt_mode);
+    EPS_APP_printf("[PMU]    VBAT: %u mV | VCC: %u mV\n", hk->vbat_v, hk->vcc_v);
+    EPS_APP_printf("[TEMP]   T0: %d | T1: %d (deci-degC)\n", hk->temp[0], hk->temp[1]);
+    EPS_APP_printf("[SUBMOD] Enable: ");
+    for (int i = 0; i < 8; i++) EPS_APP_printf("%d ", hk->sm_en[i]);
+    EPS_APP_printf("\n");
+    EPS_APP_printf("[WDT]    GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n",
               hk->gnd_wdt_cnt, hk->gnd_wdt_left, hk->bus_wdt_cnt, hk->bus_wdt_left);
-    OS_printf("=======================================================\n");
+    EPS_APP_printf("=======================================================\n");
 }
 
 void EPS_PrintP80PduHk(const EPS_P80_PDU_HkTlm_Payload_t *hk)
 {
-    OS_printf("\n================[p80 PDU HK]===================\n");
-    OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
+    EPS_APP_printf("\n================[p80 PDU HK]===================\n");
+    EPS_APP_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
               hk->uptime, hk->bootcount, hk->bootcause, hk->resetcause);
-    OS_printf("[PDU]    VCC: %u mV (%u mA) | VBAT: %u mV\n", hk->vcc_v, hk->vcc_i, hk->vbat_v);
-    OS_printf("[OUTPUT] IDX | EN | Curr(mA)\n");
+    EPS_APP_printf("[PDU]    VCC: %u mV (%u mA) | VBAT: %u mV\n", hk->vcc_v, hk->vcc_i, hk->vbat_v);
+    EPS_APP_printf("[OUTPUT] IDX | EN | Curr(mA)\n");
     for (int i = 0; i < 24; i++)
-        OS_printf("         %3d | %2s | %8d\n", i, hk->out_en[i] ? "ON" : "OFF", hk->out_i[i]);
-    OS_printf("[TEMP]   %d (deci-degC) | BattMode: %u\n", hk->temp, hk->batt_mode);
-    OS_printf("[WDT]    GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n",
+        EPS_APP_printf("         %3d | %2s | %8d\n", i, hk->out_en[i] ? "ON" : "OFF", hk->out_i[i]);
+    EPS_APP_printf("[TEMP]   %d (deci-degC) | BattMode: %u\n", hk->temp, hk->batt_mode);
+    EPS_APP_printf("[WDT]    GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n",
               hk->gnd_wdt_cnt, hk->gnd_wdt_left, hk->bus_wdt_cnt, hk->bus_wdt_left);
-    OS_printf("=======================================================\n");
+    EPS_APP_printf("=======================================================\n");
 }
 
 void EPS_PrintP80AcuHk(uint8_t cspNode, const EPS_P80_ACU_HkTlm_Payload_t *hk)
 {
-    OS_printf("\n================[%s (node %u) HK]===================\n",
+    EPS_APP_printf("\n================[%s (node %u) HK]===================\n",
               EPS_GetCspNodeDeviceName(cspNode), cspNode);
-    OS_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
+    EPS_APP_printf("[SYSTEM] Uptime: %u s | BootCount: %u | Cause(Boot/Reset): %u / %u\n",
               hk->uptime, hk->bootcount, hk->bootcause, hk->resetcause);
-    OS_printf("[INPUT]  IDX | Volt(mV) | Curr(mA)\n");
+    EPS_APP_printf("[INPUT]  IDX | Volt(mV) | Curr(mA)\n");
     for (int i = 0; i < 6; i++)
-        OS_printf("         %3d | %8u | %8d\n", i, hk->input_v[i], hk->input_i[i]);
-    OS_printf("[ACU]    VCC: %u mV | VBAT: %u mV\n", hk->vcc_v, hk->vbat_v);
-    OS_printf("[TEMP]   T0: %d | T1: %d | T2: %d (deci-degC)\n", hk->temp[0], hk->temp[1], hk->temp[2]);
-    OS_printf("[MPPT]   Mode: %u\n", hk->mppt_mode);
-    OS_printf("[WDT]    GND: %u (Left: %u s)\n", hk->gnd_wdt_cnt, hk->gnd_wdt_left);
-    OS_printf("=======================================================\n");
+        EPS_APP_printf("         %3d | %8u | %8d\n", i, hk->input_v[i], hk->input_i[i]);
+    EPS_APP_printf("[ACU]    VCC: %u mV | VBAT: %u mV\n", hk->vcc_v, hk->vbat_v);
+    EPS_APP_printf("[TEMP]   T0: %d | T1: %d | T2: %d (deci-degC)\n", hk->temp[0], hk->temp[1], hk->temp[2]);
+    EPS_APP_printf("[MPPT]   Mode: %u\n", hk->mppt_mode);
+    EPS_APP_printf("[WDT]    GND: %u (Left: %u s)\n", hk->gnd_wdt_cnt, hk->gnd_wdt_left);
+    EPS_APP_printf("=======================================================\n");
 }
 
 void EPS_PrintBcnReport(const EPS_BcnTlm_Full_Payload_t *bcn)
 {
     static const uint8_t PduBcnChannels[EPS_PDU_BCN_USED_CH_COUNT] =
-        {8, 10, 12, 14, 15, 18, 19, 20, 21, 22, 23, 24};
+        EPS_PDU_BCN_USED_CH_LIST;
 
-    OS_printf("\n================[EPS BCN Report]===================\n");
-    OS_printf("[PMU] BootCause: %u | ResetCause: %u | BootCount: %u\n",
+    EPS_APP_printf("\n================[EPS BCN Report]===================\n");
+    EPS_APP_printf("[PMU] BootCause: %u | ResetCause: %u | BootCount: %u\n",
               bcn->PMU.bootcause, bcn->PMU.resetcause, bcn->PMU.bootcount);
-    OS_printf("[PMU] BattV: %u mV | BattI: %d mA | Mode: %u\n",
+    EPS_APP_printf("[PMU] BattV: %u mV | BattI: %d mA | Mode: %u\n",
               bcn->PMU.batt_v, bcn->PMU.batt_i, bcn->PMU.batt_mode);
-    OS_printf("[PMU] Temp: %d / %d (ddegC)\n", bcn->PMU.temp[0], bcn->PMU.temp[1]);
-    OS_printf("[PMU] OutEn: ");
-    for (int i = 0; i < 6; i++) OS_printf("%u ", bcn->PMU.out_en[i]);
-    OS_printf("\n");
-    OS_printf("[PMU] SmEnMask: 0x%02X (bit0..7=submodule enable 0..7, 1=enabled)\n",
+    EPS_APP_printf("[PMU] Temp: %d / %d (ddegC)\n", bcn->PMU.temp[0], bcn->PMU.temp[1]);
+    EPS_APP_printf("[PMU] OutEn: ");
+    for (int i = 0; i < 6; i++) EPS_APP_printf("%u ", bcn->PMU.out_en[i]);
+    EPS_APP_printf("\n");
+    EPS_APP_printf("[PMU] SmEnMask: 0x%02X (bit0..7=submodule enable 0..7, 1=enabled)\n",
               bcn->PMU.sm_en_mask);
-    OS_printf("[PMU] WDT GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n",
+    EPS_APP_printf("[PMU] WDT GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n",
               bcn->PMU.gnd_wdt_cnt, bcn->PMU.gnd_wdt_left,
               bcn->PMU.bus_wdt_cnt, bcn->PMU.bus_wdt_left);
-    OS_printf("[PDU] Used channel OutI(mA)/OutEn: ");
+    EPS_APP_printf("[PDU] Used channel OutI(mA)/OutEn: ");
     for (size_t i = 0; i < EPS_PDU_BCN_USED_CH_COUNT; i++)
-        OS_printf("ch%u=%d/%u ", (unsigned int)PduBcnChannels[i],
+        EPS_APP_printf("ch%02u=%d/%u ", (unsigned int)PduBcnChannels[i],
                   (int)bcn->PDU.out_i[i], (unsigned int)bcn->PDU.out_en[i]);
-    OS_printf("\n");
+    EPS_APP_printf("\n");
     static const uint8_t AcuNodes[EPS_BCN_ACU_COUNT] = {EPS_P80_ACU1_CSP_NODE, EPS_P80_ACU2_CSP_NODE};
     for (int acu = 0; acu < EPS_BCN_ACU_COUNT; acu++)
     {
         const char *device = EPS_GetCspNodeDeviceName(AcuNodes[acu]);
-        OS_printf("[%s node %u] InputI(mA): ", device, (unsigned int)AcuNodes[acu]);
-        for (int i = 0; i < 6; i++) OS_printf("%d ", bcn->ACU[acu].input_i[i]);
-        OS_printf("\n");
-        OS_printf("[%s node %u] InputV(mV): ", device, (unsigned int)AcuNodes[acu]);
-        for (int i = 0; i < 6; i++) OS_printf("%u ", bcn->ACU[acu].input_v[i]);
-        OS_printf("\n");
-        OS_printf("[%s node %u] MPPT Mode: %u\n", device, (unsigned int)AcuNodes[acu], bcn->ACU[acu].mppt_mode);
+        EPS_APP_printf("[%s node %u] InputI(mA): ", device, (unsigned int)AcuNodes[acu]);
+        for (int i = 0; i < 6; i++) EPS_APP_printf("%d ", bcn->ACU[acu].input_i[i]);
+        EPS_APP_printf("\n");
+        EPS_APP_printf("[%s node %u] InputV(mV): ", device, (unsigned int)AcuNodes[acu]);
+        for (int i = 0; i < 6; i++) EPS_APP_printf("%u ", bcn->ACU[acu].input_v[i]);
+        EPS_APP_printf("\n");
+        EPS_APP_printf("[%s node %u] MPPT Mode: %u\n", device, (unsigned int)AcuNodes[acu], bcn->ACU[acu].mppt_mode);
     }
-    OS_printf("[BP8] BootCount: %u | BootCause: %u | ResetCause: %u\n",
+    EPS_APP_printf("[BP8] BootCount: %u | BootCause: %u | ResetCause: %u\n",
               bcn->BP8.bootcount, bcn->BP8.bootcause, bcn->BP8.resetcause);
-    OS_printf("[BP8] SOC: %.2f | Vbat: %u mV | Current: %.3f A | HeaterI: %u mA\n",
-              (double)bcn->BP8.soc, bcn->BP8.vbat,
+    EPS_APP_printf("[BP8] SOC: %.1f %% | Vbat: %u mV | Current: %.3f A | HeaterI: %u mA\n",
+              EPS_SocRatioToPercent(bcn->BP8.soc), bcn->BP8.vbat,
               (double)bcn->BP8.current, bcn->BP8.heater_i);
-    OS_printf("[BP8] BatAvrTemp: %.1f degC\n", (double)bcn->BP8.bat_avr_temp);
-    OS_printf("=======================================================\n");
+    EPS_APP_printf("[BP8] BatAvrTemp: %.1f degC\n", (double)bcn->BP8.bat_avr_temp);
+    EPS_APP_printf("=======================================================\n");
 }
 
 void EPS_PrintBP8Hk(const EPS_BP8_HkTlm_Payload_t *hk)
 {
-    OS_printf("\n================[EPS BP8 HK]===================\n");
-    OS_printf("[BP8] Uptime: %u s | BootCount: %u | BootCause: %u | ResetCause: %u\n",
+    EPS_APP_printf("\n================[EPS BP8 HK]===================\n");
+    EPS_APP_printf("[BP8] Uptime: %u s | BootCount: %u | BootCause: %u | ResetCause: %u\n",
               hk->Uptime, hk->BootCount, hk->BootCause, hk->ResetCause);
-    OS_printf("[BP8] Vbat: %u mV | SOC: %.2f | Current: %.3f A\n",
-              hk->Vbat, (double)hk->Soc, (double)hk->Current);
-    OS_printf("[BP8] InCurrent: %.3f A | OutCurrent: %.3f A | HeaterI: %u mA\n",
+    EPS_APP_printf("[BP8] Vbat: %u mV | SOC: %.1f %% | Current: %.3f A\n",
+              hk->Vbat, EPS_SocRatioToPercent(hk->Soc), (double)hk->Current);
+    EPS_APP_printf("[BP8] InCurrent: %.3f A | OutCurrent: %.3f A | HeaterI: %u mA\n",
               EPS_MilliAmpToAmp(hk->InCurrent), EPS_MilliAmpToAmp(hk->OutCurrent),
               hk->HeaterCurrent);
-    OS_printf("[BP8] IntTemp: %.1f | BatAvrTemp: %.1f degC\n",
+    EPS_APP_printf("[BP8] IntTemp: %.1f | BatAvrTemp: %.1f degC\n",
               EPS_DeciDegCToDegC(hk->IntTemp), (double)hk->BatAvrTemp);
-    OS_printf("[BP8] BatTemp: %.1f / %.1f / %.1f / %.1f degC\n",
+    EPS_APP_printf("[BP8] BatTemp: %.1f / %.1f / %.1f / %.1f degC\n",
               EPS_DeciDegCToDegC(hk->BatTemp[0]), EPS_DeciDegCToDegC(hk->BatTemp[1]),
               EPS_DeciDegCToDegC(hk->BatTemp[2]), EPS_DeciDegCToDegC(hk->BatTemp[3]));
-    OS_printf("[BP8] OVoltCount: %u | BatFault: %u\n", hk->OVoltCount, hk->BatFault);
-    OS_printf("=================================================\n");
+    EPS_APP_printf("[BP8] OVoltCount: %u | BatFault: %u\n", hk->OVoltCount, hk->BatFault);
+    EPS_APP_printf("=================================================\n");
 }
 
 void EPS_PrintHk(uint8_t cspNode)
@@ -293,13 +283,13 @@ void EPS_PrintHk(uint8_t cspNode)
             const EPS_BP8_HkTlm_Payload_t *hk = &EPS_AppData.BP8_HkTlm.Payload;
             EPS_PrintBP8Hk(hk);
             CFE_EVS_SendEvent(EPS_BP8_HK_INF_EID, CFE_EVS_EventType_INFORMATION,
-                              "EPS: BP8 Telemetry - Vbat=%u mV, SOC=%.2f, Fault=%u",
-                              hk->Vbat, (double)hk->Soc, hk->BatFault);
+                              "EPS: BP8 Telemetry - Vbat=%u mV, SOC=%.1f%%, Fault=%u",
+                              hk->Vbat, EPS_SocRatioToPercent(hk->Soc), hk->BatFault);
             break;
         }
 
         default:
-            OS_printf("[EPS] HK print skipped unknown node=%u\n", cspNode);
+            EPS_APP_printf("[EPS] HK print skipped unknown node=%u\n", cspNode);
             break;
     }
 }
@@ -566,25 +556,25 @@ static void EPS_PrintParamTableRow(const gs_param_table_instance_t *tinst, const
 
     if ((size_t)addr >= tinst->memory_size || value_size > ((size_t)tinst->memory_size - (size_t)addr))
     {
-        OS_printf("  [%3u] %-14.14s <addr out of range>\n", addr, row->name);
+        EPS_APP_printf("  [%3u] %-14.14s <addr out of range>\n", addr, row->name);
         return;
     }
 
-    OS_printf("  [%3u] %-14.14s", addr, row->name);
+    EPS_APP_printf("  [%3u] %-14.14s", addr, row->name);
     for (size_t i = 0; i < elem_count; i++)
     {
         const void *value = (const uint8_t *)tinst->memory + addr + (elem_size * i);
         gs_error_t err = gs_param_to_string(row, value, (i == 0), buf, sizeof(buf), 0, &written);
         if (err != GS_OK)
         {
-            OS_printf(" <decode err[%u]=%d>\n", (unsigned int)i, err);
+            EPS_APP_printf(" <decode err[%u]=%d>\n", (unsigned int)i, err);
             return;
         }
 
-        OS_printf(" %s", buf);
+        EPS_APP_printf(" %s", buf);
     }
 
-    OS_printf("\n");
+    EPS_APP_printf("\n");
 }
 
 void EPS_PrintParamTable(const char *title, uint8 cspNode, uint8 tableId,
@@ -593,31 +583,31 @@ void EPS_PrintParamTable(const char *title, uint8 cspNode, uint8 tableId,
     const char *deviceName = EPS_GetCspNodeDeviceName(cspNode);
     const char *resolvedTableName = tableName ? tableName : EPS_GetRParamTableName(cspNode, tableId);
 
-    OS_printf("\n================[%s]===================\n", title ? title : "EPS Param Table");
-    OS_printf("  Device: %s | Node: %u | Table: %u (%s)\n",
+    EPS_APP_printf("\n================[%s]===================\n", title ? title : "EPS Param Table");
+    EPS_APP_printf("  Device: %s | Node: %u | Table: %u (%s)\n",
               deviceName, cspNode, tableId, resolvedTableName);
 
     if (tinst == NULL)
     {
-        OS_printf("  <no table instance>\n");
-        OS_printf("=======================================================\n");
+        EPS_APP_printf("  <no table instance>\n");
+        EPS_APP_printf("=======================================================\n");
         return;
     }
 
-    OS_printf("  Remote Name: %s | Rows: %u | Size: %u bytes\n",
+    EPS_APP_printf("  Remote Name: %s | Rows: %u | Size: %u bytes\n",
               tinst->name ? tinst->name : "N/A", tinst->row_count, tinst->memory_size);
 
     if (tinst->rows == NULL || tinst->memory == NULL)
     {
-        OS_printf("  <table rows or memory unavailable>\n");
-        OS_printf("=======================================================\n");
+        EPS_APP_printf("  <table rows or memory unavailable>\n");
+        EPS_APP_printf("=======================================================\n");
         return;
     }
 
     for (unsigned int i = 0; i < tinst->row_count; i++)
         EPS_PrintParamTableRow(tinst, &tinst->rows[i]);
 
-    OS_printf("=======================================================\n");
+    EPS_APP_printf("=======================================================\n");
 }
 
 void EPS_PrintRParamFullTable(uint8_t cspNode, uint8_t tableId,
@@ -684,7 +674,7 @@ CFE_Status_t EPS_UpdateBcnTlmFromHw(void)
         bcn->PMU.batt_mode    = pmu_bcn.batt_mode;
         bcn->PMU.batt_i       = pmu_bcn.batt_i;
         bcn->PMU.batt_v       = pmu_bcn.batt_v;
-        bcn->PMU.sm_en_mask   = EPS_PackBoolArray8(pmu_bcn.sm_en);
+        bcn->PMU.sm_en_mask   = pmu_bcn.sm_en_mask;
         bcn->PMU.gnd_wdt_cnt  = pmu_bcn.gnd_wdt_cnt;
         bcn->PMU.bus_wdt_cnt  = pmu_bcn.bus_wdt_cnt;
         bcn->PMU.gnd_wdt_left = pmu_bcn.gnd_wdt_left;
@@ -692,8 +682,6 @@ CFE_Status_t EPS_UpdateBcnTlmFromHw(void)
     }
 
     /* --- PDU Beacon --- */
-    static const uint8_t PduBcnChannels[EPS_PDU_BCN_USED_CH_COUNT] =
-        {8, 10, 12, 14, 15, 18, 19, 20, 21, 22, 23, 24};
     EPS_P80_Drv_PDU_BcnTlm_t pdu_bcn = {0};
     err = EPS_P80_Drv_PDU_GetBcn(EPS_P80_PDU_CSP_NODE, &pdu_bcn, CSP_TIMEOUT(1));
     if (err != GS_OK)
@@ -705,11 +693,8 @@ CFE_Status_t EPS_UpdateBcnTlmFromHw(void)
     {
         for (size_t i = 0; i < EPS_PDU_BCN_USED_CH_COUNT; i++)
         {
-            uint8_t channel = PduBcnChannels[i];
-            uint8_t index = (uint8_t)(channel - 1U);
-
-            bcn->PDU.out_i[i] = pdu_bcn.out_i[index];
-            bcn->PDU.out_en[i] = pdu_bcn.out_en[index];
+            bcn->PDU.out_i[i] = pdu_bcn.out_i[i];
+            bcn->PDU.out_en[i] = pdu_bcn.out_en[i];
         }
     }
 

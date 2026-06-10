@@ -17,19 +17,19 @@
 
 /** Maximum shell command string length including NUL terminator. */
 #define MEOW_MISSION_MAX_CMD_LEN           MEOW_MISSION_CFGVAL(MAX_CMD_LEN)
-#define DEFAULT_MEOW_MISSION_MAX_CMD_LEN   256
+#define DEFAULT_MEOW_MISSION_MAX_CMD_LEN   80
 
 /** Maximum file or directory path length including NUL terminator. */
 #define MEOW_MISSION_MAX_PATH_LEN          MEOW_MISSION_CFGVAL(MAX_PATH_LEN)
-#define DEFAULT_MEOW_MISSION_MAX_PATH_LEN  128
+#define DEFAULT_MEOW_MISSION_MAX_PATH_LEN  80
 
 /** Maximum payload bytes per FILE_WRITE command. */
 #define MEOW_MISSION_MAX_WRITE_LEN         MEOW_MISSION_CFGVAL(MAX_WRITE_LEN)
-#define DEFAULT_MEOW_MISSION_MAX_WRITE_LEN 256
+#define DEFAULT_MEOW_MISSION_MAX_WRITE_LEN 80
 
 /** Maximum bytes returned in a read/tail/checksum telemetry packet. */
 #define MEOW_MISSION_MAX_READ_LEN          MEOW_MISSION_CFGVAL(MAX_READ_LEN)
-#define DEFAULT_MEOW_MISSION_MAX_READ_LEN  256
+#define DEFAULT_MEOW_MISSION_MAX_READ_LEN  80
 
 /** Maximum CSP interface name length including NUL terminator. */
 #define MEOW_MISSION_MAX_IFACE_NAME_LEN          MEOW_MISSION_CFGVAL(MAX_IFACE_NAME_LEN)

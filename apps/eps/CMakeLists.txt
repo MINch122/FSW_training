@@ -60,6 +60,6 @@ endif()
 # Note that this is an app, and therefore does not provide
 # stub functions, as other entities would not typically make
 # direct function calls into this application.
-if (ENABLE_UNIT_TESTS)
+if (ENABLE_UNIT_TESTS AND NOT SCH_LAB_UNIT_TEST_ONLY)
   add_subdirectory(unit-test)
-endif (ENABLE_UNIT_TESTS)
+endif ()

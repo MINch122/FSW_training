@@ -38,6 +38,6 @@
 /* Maximum bytes of command data per plumb-write packet.
  * Sized to keep the full PlumbWrite ground command under 250 bytes:
  *   8 (CFE cmd header) + 8 (EntryId/GroupId/Offset/ChunkSize fields) + 220 = 236 bytes. */
-#define DEFAULT_TTC_PLATFORM_MAX_CHUNK_SIZE 220
+#define DEFAULT_TTC_PLATFORM_MAX_CHUNK_SIZE 128
 
 #endif

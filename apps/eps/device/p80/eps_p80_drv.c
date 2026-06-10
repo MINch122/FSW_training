@@ -40,6 +40,21 @@
 
 #include "common_types.h"
 
+static uint8_t EPS_P80_DrvPackBoolArray8(const uint8_t values[8])
+{
+    uint8_t mask = 0;
+
+    for (uint8_t index = 0; index < 8; index++)
+    {
+        if (values[index] != 0)
+        {
+            mask |= (uint8_t)(1u << index);
+        }
+    }
+
+    return mask;
+}
+
 #define EPS_PARAM_GET_UINT32_FIELD(tinst, addr, dst) \
     do \
     { \
@@ -418,7 +433,7 @@ gs_error_t EPS_P80_Drv_PMU_GetBcn(uint8_t csp_node, EPS_P80_Drv_PMU_BcnTlm_t *bc
     EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PMU_TELEMETRY_SM_EN(0),  GS_PARAM_BOOL,  sm_en,  8);
     memcpy(next_bcn.out_en, out_en, sizeof(next_bcn.out_en));
     memcpy(next_bcn.temp, temp, sizeof(next_bcn.temp));
-    memcpy(next_bcn.sm_en, sm_en, sizeof(next_bcn.sm_en));
+    next_bcn.sm_en_mask = EPS_P80_DrvPackBoolArray8(sm_en);
 
     *bcn = next_bcn;
 
@@ -428,18 +443,28 @@ gs_error_t EPS_P80_Drv_PMU_GetBcn(uint8_t csp_node, EPS_P80_Drv_PMU_BcnTlm_t *bc
 gs_error_t EPS_P80_Drv_PDU_GetBcn(uint8_t csp_node, EPS_P80_Drv_PDU_BcnTlm_t *bcn, uint32_t timeout_ms)
 {
     const uint8_t table_id = GS_P80_PDU_TELEMETRY_TABLE_MEM_ID;
+    static const uint8_t PduBcnChannels[EPS_P80_DRV_PDU_BCN_USED_CH_COUNT] =
+        EPS_P80_DRV_PDU_BCN_USED_CH_LIST;
     EPS_P80_Drv_PDU_BcnTlm_t next_bcn = {0};
-    uint8_t out_en[24] = {0};
-    int16_t out_i[24] = {0};
+    uint8_t out_en[GS_P80_PDU_TELEMETRY_OUT_EN_ARRAY_SIZE] = {0};
+    int16_t out_i[GS_P80_PDU_TELEMETRY_OUT_I_ARRAY_SIZE] = {0};
     gs_error_t err;
 
     if (bcn == NULL)
         return GS_ERROR_ARG;
 
-    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PDU_TELEMETRY_OUT_EN(0), GS_PARAM_BOOL, out_en, 24);
-    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PDU_TELEMETRY_OUT_I(0), GS_PARAM_INT16, out_i, 24);
-    memcpy(next_bcn.out_en, out_en, sizeof(next_bcn.out_en));
-    memcpy(next_bcn.out_i, out_i, sizeof(next_bcn.out_i));
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PDU_TELEMETRY_OUT_EN(0), GS_PARAM_BOOL, out_en,
+                             GS_P80_PDU_TELEMETRY_OUT_EN_ARRAY_SIZE);
+    EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PDU_TELEMETRY_OUT_I(0), GS_PARAM_INT16, out_i,
+                             GS_P80_PDU_TELEMETRY_OUT_I_ARRAY_SIZE);
+
+    for (uint8_t i = 0; i < EPS_P80_DRV_PDU_BCN_USED_CH_COUNT; i++)
+    {
+        uint8_t channel = PduBcnChannels[i];
+
+        next_bcn.out_en[i] = out_en[channel];
+        next_bcn.out_i[i] = out_i[channel];
+    }
 
     *bcn = next_bcn;
 

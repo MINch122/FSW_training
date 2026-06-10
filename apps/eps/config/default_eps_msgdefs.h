@@ -41,6 +41,8 @@
 #define EPS_BCN_NODE_MASK(index) ((uint8)(1u << (index)))
 #define EPS_BCN_INVALID_FILL 0x00u
 #define EPS_PDU_BCN_USED_CH_COUNT 12u
+#define EPS_PDU_BCN_USED_CH_LIST \
+    {8u, 10u, 12u, 14u, 15u, 16u, 18u, 19u, 20u, 21u, 22u, 23u}
 #define EPS_RPARAM_DATA_MAX_LEN 128
 /* Matches libgscsp RPARAM store/slot fields: 25 chars plus NUL. */
 #define EPS_RPARAM_STORE_NAME_LEN 26
@@ -440,8 +442,8 @@ typedef struct EPS_PACK {
 
 /*
  * PDU Beacon - 36 bytes
- * Channels are the operational 1-based PDU output numbers:
- * 8, 10, 12, 14, 15, 18, 19, 20, 21, 22, 23, 24.
+ * Channels are the operational PDU power-if channel numbers:
+ * 8, 10, 12, 14, 15, 16, 18, 19, 20, 21, 22, 23.
  */
 typedef struct EPS_PACK {
     int16  out_i[EPS_PDU_BCN_USED_CH_COUNT];   /* PDU output current [mA] for used channels */

@@ -48,10 +48,10 @@
 #define DEFAULT_TTC_PLATFORM_MAX_COMMAND_ENTRIES 128 /* Maximum number of command entries in the timeline */
 
 #define TTC_PLATFORM_MAX_COMMAND_SIZE   TTC_PLATFORM_CFGVAL(MAX_COMMAND_SIZE)
-#define DEFAULT_TTC_PLATFORM_MAX_COMMAND_SIZE 512 /* Maximum size of a command in bytes */
+#define DEFAULT_TTC_PLATFORM_MAX_COMMAND_SIZE 128 /* Maximum size of a command in bytes */
 
 #define TTC_PLATFORM_MAX_CHUNK_SIZE     TTC_PLATFORM_CFGVAL(MAX_CHUNK_SIZE)
-#define DEFAULT_TTC_PLATFORM_MAX_CHUNK_SIZE 220 /* Maximum bytes per plumb-write chunk */
+#define DEFAULT_TTC_PLATFORM_MAX_CHUNK_SIZE 128 /* Maximum bytes per plumb-write chunk */
 
 
 
