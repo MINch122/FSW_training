@@ -61,14 +61,12 @@ void GPIO_Main(void)
         GPIO_Data.RunStatus = CFE_ES_RunStatus_APP_ERROR;
     }
 
-    OS_printf("1\n");
-
     /*
     ** Gpio Runloop
     */
     while (CFE_ES_RunLoop(&GPIO_Data.RunStatus) == true)
     {
-        OS_printf("1-1\n");
+
         /*
         ** Performance Log Exit Stamp
         */
@@ -76,13 +74,11 @@ void GPIO_Main(void)
 
         /* Pend on receipt of command packet */
         status = CFE_SB_ReceiveBuffer(&SBBufPtr, GPIO_Data.CommandPipe, CFE_SB_PEND_FOREVER);
-        OS_printf("2\n");
         /*
         ** Performance Log Entry Stamp
         */
         CFE_ES_PerfLogEntry(GPIO_PERF_ID);
 
-        OS_printf("hallo\n");
 
         if (status == CFE_SUCCESS)
         {

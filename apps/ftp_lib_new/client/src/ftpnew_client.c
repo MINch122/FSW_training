@@ -9,8 +9,8 @@
  *
  * Endian convention: all multi-byte payload integers cross the wire through
  * csp_hton32 / csp_ntoh32, including the extension requests.
- * The historical blunder for FTP_DATA chunk index is still an exception,
- * which is always LE.
+ * Upload FTP_DATA chunk index keeps the historical little-endian exception;
+ * download FTP_DATA chunk index follows network byte order for legacy GS FTP compatibility.
  */
 #include "ftpnew_client.h"
 #include "ftpnew_types_internal.h"
@@ -398,7 +398,7 @@ static gs_error_t ftpnew_status_reply(ftpnew_state_t* state)
         }
 
         ftp_packet_t* fp = (ftp_packet_t*)&packet->data;
-        fp->data.chunk = csp_letoh32(fp->data.chunk);
+        fp->data.chunk = csp_ntoh32(fp->data.chunk);
 
         /* Server overloads the type byte with an ftp_ret_t error code on a
          * mid-stream read failure. Decode as int8_t to recover the sign. */

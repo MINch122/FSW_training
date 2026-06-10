@@ -460,8 +460,8 @@ static ftp_ret_t ftp_handler_status_reply(csp_packet_t* packet,
             }
 
             rep->type = FTP_DATA;
-            /* Chunk is always LE (original GomSpace code blunder) */
-            rep->data.chunk = csp_htole32(chunk);
+            /* Download data chunk follows the legacy GS FTP client: network byte order. */
+            rep->data.chunk = csp_hton32(chunk);
             packet->length = data_packet_size;
             if (!csp_send(server_state->conn, packet, server_state->timeout)) {
                 ftp_debug_error("error sending data packet\n");
