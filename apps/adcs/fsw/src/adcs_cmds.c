@@ -537,6 +537,29 @@ CFE_Status_t ADCS_SetOpenLoopCmdMTQCmd(const ADCS_OpenLoopCmdMTQCmd_t *msg) {
     return CFE_SUCCESS;
 }
 
+
+CFE_Status_t ADCS_SetOpenLoopCmdRWLCmd(const ADCS_OpenLoopCmdRWLCmd_t *msg) {
+    CFE_Status_t status = ADCS_SetOpenLoopCmdRWL(&msg->Payload);
+    ADCS_HandleReport(status, ADCS_SET_OPENLOOPCMD_RWL_CC, NULL, 0);
+    if (status != CFE_SUCCESS) {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Open Loop Command RWL: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("ADCS cmd Success.");
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_SetOpenLoopCmdHxyzRWCmd(const ADCS_OpenLoopCmdHxyzRWCmd_t *msg) {
+    CFE_Status_t status = ADCS_SetOpenLoopCmdHxyzRW(&msg->Payload);
+    ADCS_HandleReport(status, ADCS_SET_OPENLOOP_CMD_HXYZ_RW_CC, NULL, 0);
+    if (status != CFE_SUCCESS) {
+        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Open Loop Command Hxyz RW: 0x%08lx", (unsigned long)status);
+        return status;
+    }
+    OS_printf("ADCS cmd Success.");
+    return CFE_SUCCESS;
+}
+
 CFE_Status_t ADCS_SetPowerStateCmd(const ADCS_PowerStateCmd_t *msg) {
     // ID 56
     CFE_Status_t               status;
@@ -2554,3 +2577,2593 @@ CFE_Status_t ADCS_SequenceCmd_RPYpointing(const ADCS_SequenceCmdRPYpointingCmd_t
     OS_printf("ADCS cmd Success.");
     return CFE_SUCCESS;
 }
+
+/********************************************************
+ * 
+ * BEE1006 Actual Commissioing Sequence Function
+ * 
+ ********************************************************/
+
+CFE_Status_t ADCS_Comm01Cmd(const ADCS_Comm01Cmd_t *msg) {
+	// COMM 01:	Determine initial angular rates
+	// [Procedure]
+	// 1) Power On ( GYR0, MAG0 )
+	// 2) Set Est. mode ( Main: EstGyro (1) / Backup: EstMagRkf (2) )
+	// 3) Check Status of Sensors
+	// 4) Make "adcs_comm_01.bin" file to log the TLMs
+	// 5) Start to count time ( Waiting time before Logging: 10 sec / Tlm period: 10 sec / Comm. Duration: 300 sec )
+	// 		* Backup Estimation mode - EstMagRkf needs 10 seconds for convergence!
+	// 6) Read Tlm of Estimator & Sensors
+	// 		6-1) Read Tlm of Main / Backup Estimator:
+	// 				Time integer seconds
+	// 				Time nanoseconds
+	// 				Estimated body rate (ORC) X-Y-Z
+	// 				Estimated body rate (IRC) X-Y-Z
+	// 				Active estimator mode
+	// 		6-2) Read Sensor Raw Values - Gyro & Magnetometer
+	// 				Time integer seconds
+	// 				Time nanoseconds
+	// 				GYR0 / MAG0 raw X-Y-Z component
+	// 				GYR0 / MAG0 valid flag
+	// 7) Append the Tlm to the file
+	// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+	// 9) Go back to Step 6 until total time meets 300 sec
+	// ** Status between every step must be reported!!
+
+
+	CFE_Status_t						status;
+	CFE_Status_t						interstatus;
+
+	uint8 cnt_try = 0;
+	uint8 flag_tlmtype = msg->Payload.flag_tlmtype;
+	if ((flag_tlmtype != 0) && (flag_tlmtype != 1))
+	{
+		status = -1;		// Something is wrong!
+		ADCS_HandleReport(status, ADCS_COMM_01_CC, &flag_tlmtype, sizeof(flag_tlmtype));
+		return status;
+	}
+	
+	// 1) Power On ( GYR0, MAG0 )
+	ADCS_Comm_PowerState_Cmn_Payload_t		SetVal_056 = {0,};
+	ADCS_Comm_PowerState_Cmn_Payload_t		RetVal_183 = {0,};
+	SetVal_056.MAG0		= 1;
+	SetVal_056.GYR0		= 1;
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set GYR0 & MAG0 --> ON
+	OS_TaskDelay(10);
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);		// Get GYR0 & MAG0 power state
+	OS_TaskDelay(5000);
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{		
+		if ((interstatus == CFE_SUCCESS) && (RetVal_183.MAG0 == 1) && (RetVal_183.GYR0 == 1)) break;	// Check Power On well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_183.MAG0 != 1) || (RetVal_183.GYR0 != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -1;		// Something is wrong! ::::: Power State
+		ADCS_HandleReport(status, ADCS_COMM_01_CC, &RetVal_183, sizeof(RetVal_183));
+		return status;
+	}
+
+
+	// 3) Check Status of Sensors
+	ADCS_Comm_RawMAGSensorTlm_Paylaod_t	RetVal_180 = {0,};
+	ADCS_Comm_RawGYRSensorTlm_Payload_t	RetVal_204 = {0,};
+
+	OS_TaskDelay(1000);
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1)) break;	// Check Sensors Status Good
+
+		// if not, wait changing status until 3 times
+		OS_TaskDelay(100);
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);
+		cnt_try++;
+	}
+
+	
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	if ((interstatus != CFE_SUCCESS) || (RetVal_180.MAG0ValidFlag != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -3;		// Something is wrong! ::::: Magnetometer Status
+		ADCS_HandleReport(status, ADCS_COMM_01_CC, &RetVal_180, sizeof(RetVal_180));
+		return status;
+	}
+	OS_TaskDelay(10);
+	interstatus = ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	if ((interstatus != CFE_SUCCESS) || (RetVal_204.GYR0ValidFlag != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -4;		// Something is wrong! ::::: Gyro Status
+		ADCS_HandleReport(status, ADCS_COMM_01_CC, &RetVal_204, sizeof(RetVal_204));
+		return status;
+	}
+
+
+	// 2) Set Est. mode ( Main: EstGyro (1) / Backup: EstMagRkf (2) )
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	SetVal_042 = {0,};
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	RetVal_150 = {0,};
+
+	SetVal_042.MainEstimatorMode 	= 1;
+	SetVal_042.BackupEstimatorMode 	= 2;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);	// Set Main & Backup Est mode = 1 & 2
+	OS_TaskDelay(100);
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);	// Get Main & Backup Est mode
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_150.MainEstimatorMode == 1) && (RetVal_150.BackupEstimatorMode == 2)) break;	// Check Mode Change well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != 1) || (RetVal_150.BackupEstimatorMode != 2))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -2;		// Something is wrong! ::::: Estimation Mode
+		ADCS_HandleReport(status, ADCS_COMM_01_CC, &RetVal_150, sizeof(RetVal_150));
+		return status;
+
+	}
+
+	// 4) Make "adcs_comm_01.txt" file to log the TLMs
+	FILE *fp;
+	size_t written;
+	fp = fopen("./cf/adcs_comm_01.bin","wb");
+	if (fp == NULL)
+	{
+		status = -5;		// Something is wrong! ::::: File open error
+		ADCS_HandleReport(status, ADCS_COMM_01_CC, NULL, 0);
+		return status;
+	}
+
+	// 5) Start to count time ( Waiting time before Logging: 10 sec / Tlm period: 10 sec / Comm. Duration: 300 sec )
+	CFE_TIME_SysTime_t		t0_10, t0_300, tnow;
+	t0_10 = CFE_TIME_GetTime();
+
+	uint32 dt = 0;
+	while (dt < 10)
+	{	// Wait until dt > 10 sec
+		OS_TaskDelay(100);
+		tnow = CFE_TIME_GetTime();
+		dt = tnow.Seconds - t0_10.Seconds;
+	}
+
+	// 6) Read Tlm of Estimator & Sensors
+	ADCS_Comm_Estimator_Cmn_Payload_t	RetVal_210 = {0,};
+	ADCS_Comm_Estimator_Cmn_Payload_t	RetVal_173 = {0,};
+
+	ADCS_Comm_COMM_01_COMP_Payload_t	Comm_01_Tlm_Set_Comp = {0,};
+	ADCS_Comm_COMM_01_FULL_Payload_t	Comm_01_Tlm_Set_Full = {0,};
+
+	Comm_01_Tlm_Set_Comp.sync_word 	= 0xADC5;
+	Comm_01_Tlm_Set_Full.sync_word 	= 0xADC5;
+
+	t0_300 = CFE_TIME_GetTime();
+	uint32 dt300 = 0;
+	while (dt300 < 300)
+	{
+		t0_10 = CFE_TIME_GetTime();	// Initialize 10 seconds Counter
+		dt = 0;	// Initialize time gap
+		
+
+		memset(&RetVal_210, 0, sizeof(RetVal_210));
+		memset(&RetVal_173, 0, sizeof(RetVal_173));
+		memset(&RetVal_180, 0, sizeof(RetVal_180));
+		memset(&RetVal_204, 0, sizeof(RetVal_204));
+		
+		// Comm_01_Tlm_Set.sync_word 	= 0xADC5;
+
+		// 		6-1) Read Tlm of Main / Backup Estimator:	
+		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetBackupEstTlm(&RetVal_173);
+		OS_TaskDelay(10);
+
+		// 		6-2) Read Sensor Raw Values - Gyro & Magnetometer	
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetRawGYRSensor(&RetVal_204);
+		OS_TaskDelay(10);
+		
+		// 7) Write the Tlm to the file
+		if (flag_tlmtype == 0)	// Compact telemetry set
+		{			
+			
+			Comm_01_Tlm_Set_Comp.MainEst_TimeSecond		= RetVal_210.TimeSecond;
+			Comm_01_Tlm_Set_Comp.MainEst_TimeNanoSecond	= RetVal_210.TimeNanoSecond;
+			Comm_01_Tlm_Set_Comp.MainEst_EstORCBodyRateX	= RetVal_210.EstORCBodyRateX;
+			Comm_01_Tlm_Set_Comp.MainEst_EstORCBodyRateY	= RetVal_210.EstORCBodyRateY;
+			Comm_01_Tlm_Set_Comp.MainEst_EstORCBodyRateZ	= RetVal_210.EstORCBodyRateZ;
+			Comm_01_Tlm_Set_Comp.MainEst_EstIRCBodyRateX	= RetVal_210.EstIRCBodyRateX;
+			Comm_01_Tlm_Set_Comp.MainEst_EstIRCBodyRateY	= RetVal_210.EstIRCBodyRateY;
+			Comm_01_Tlm_Set_Comp.MainEst_EstIRCBodyRateZ	= RetVal_210.EstIRCBodyRateZ;
+			Comm_01_Tlm_Set_Comp.MainEst_ActiveEstMode	= RetVal_210.ActiveEstMode;
+			
+			Comm_01_Tlm_Set_Comp.BackupEst_TimeSecond		= RetVal_173.TimeSecond;
+			Comm_01_Tlm_Set_Comp.BackupEst_TimeNanoSecond	= RetVal_173.TimeNanoSecond;
+			Comm_01_Tlm_Set_Comp.BackupEst_EstORCBodyRateX	= RetVal_173.EstORCBodyRateX;
+			Comm_01_Tlm_Set_Comp.BackupEst_EstORCBodyRateY	= RetVal_173.EstORCBodyRateY;
+			Comm_01_Tlm_Set_Comp.BackupEst_EstORCBodyRateZ	= RetVal_173.EstORCBodyRateZ;
+			Comm_01_Tlm_Set_Comp.BackupEst_EstIRCBodyRateX	= RetVal_173.EstIRCBodyRateX;
+			Comm_01_Tlm_Set_Comp.BackupEst_EstIRCBodyRateY	= RetVal_173.EstIRCBodyRateY;
+			Comm_01_Tlm_Set_Comp.BackupEst_EstIRCBodyRateZ	= RetVal_173.EstIRCBodyRateZ;
+			Comm_01_Tlm_Set_Comp.BackupEst_ActiveEstMode		= RetVal_173.ActiveEstMode;
+
+			Comm_01_Tlm_Set_Comp.GYR0_TimeSeconds = RetVal_204.TimeSeconds;
+			Comm_01_Tlm_Set_Comp.GYR0_TimeNanoSeconds = RetVal_204.TimeNanoSeconds;
+			Comm_01_Tlm_Set_Comp.GYR0RawRateX = RetVal_204.GYR0RawRateX;
+			Comm_01_Tlm_Set_Comp.GYR0RawRateY = RetVal_204.GYR0RawRateY;
+			Comm_01_Tlm_Set_Comp.GYR0RawRateZ = RetVal_204.GYR0RawRateZ;
+			Comm_01_Tlm_Set_Comp.GYR0ValidFlag = RetVal_204.GYR0ValidFlag;
+			
+			Comm_01_Tlm_Set_Comp.MAG0_TimeSeconds = RetVal_180.TimeSeconds;
+			Comm_01_Tlm_Set_Comp.MAG0_TimeNanoSeconds = RetVal_180.TimeNanoSeconds;
+			Comm_01_Tlm_Set_Comp.MAG0RawVecX = RetVal_180.MAG0RawVecX;
+			Comm_01_Tlm_Set_Comp.MAG0RawVecY = RetVal_180.MAG0RawVecY;
+			Comm_01_Tlm_Set_Comp.MAG0RawVecZ = RetVal_180.MAG0RawVecZ;
+			Comm_01_Tlm_Set_Comp.MAG0ValidFlag = RetVal_180.MAG0ValidFlag;
+
+
+			if ((written = fwrite(&Comm_01_Tlm_Set_Comp, sizeof(Comm_01_Tlm_Set_Comp), 1, fp)) != 1)
+			{
+				status = -6;		// Something is wrong! ::::: File write error
+				ADCS_HandleReport(status, ADCS_COMM_01_CC, NULL, 0);
+				fclose(fp);
+				return status;
+			}
+		}
+		else if (flag_tlmtype == 1) // Full telemetry set
+		{			
+			
+			Comm_01_Tlm_Set_Full.MainEst 	= RetVal_210;
+			Comm_01_Tlm_Set_Full.BackupEst 	= RetVal_173;
+			Comm_01_Tlm_Set_Full.GYR0 		= RetVal_204;
+			Comm_01_Tlm_Set_Full.MAG0 		= RetVal_180;
+
+				if ((written = fwrite(&Comm_01_Tlm_Set_Full, sizeof(Comm_01_Tlm_Set_Full), 1, fp)) != 1)
+			{
+				status = -6;		// Something is wrong! ::::: File write error
+				ADCS_HandleReport(status, ADCS_COMM_01_CC, NULL, 0);
+				fclose(fp);
+				return status;
+			}
+		}
+
+
+		// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+		tnow = CFE_TIME_GetTime();
+		dt300 = tnow.Seconds - t0_300.Seconds;
+		dt = tnow.Seconds - t0_10.Seconds;
+
+		while (dt < 10)
+		{	// Wait until dt > 10 sec
+			OS_TaskDelay(100);
+			tnow = CFE_TIME_GetTime();
+			dt = tnow.Seconds - t0_10.Seconds;
+		}
+		
+	// 9) Go back to Step 6 until total time meets 300 sec
+	}
+	fclose(fp);
+
+	ADCS_HandleReport(CFE_SUCCESS, ADCS_COMM_01_CC, NULL, 0);
+
+	return CFE_SUCCESS;
+}
+
+
+CFE_Status_t ADCS_Comm02Cmd(const ADCS_Comm02Cmd_t *msg) {
+	// COMM 02:	Detumbling
+	// [Procedure]
+	// 1) Power On ( GYR0, MAG0 )
+	// 2) Set Est. mode & Cont. mode ( Main: EstGyro (1) / Backup: EstMagRkf (2) / Control: ConBdot or ConBdot3 / Timeout: 600 s )
+	// 3) Check Status of Sensors
+	// 4) Make "adcs_comm_02.bin" file to log the TLMs
+	// 5) Start to count time ( Waiting time before Logging: 1 sec / Tlm period: 10 sec / Comm. Duration: 600 sec )
+	// 		* Backup Estimation mode is not considered, so the convergence time is not required.
+	// 6) Read Tlm of Estimator & Sensors
+	// 		6-1) Read Tlm of Main Estimator:
+	// 				Time integer seconds
+	// 				Time nanoseconds
+	// 				Estimated body rate (ORC) X-Y-Z
+	// 				Estimated body rate (IRC) X-Y-Z
+	// 				Active estimator mode
+	// 		6-2) Read Sensor Raw Values - Gyro & Magnetometer & CSS
+	// 				Time integer seconds
+	// 				Time nanoseconds
+	// 				GYR0 / MAG0 raw X-Y-Z component
+	// 				GYR0 / MAG0 valid flag
+	//		6-3) Read Tlm of Controller:
+	// 				Time integer seconds
+	// 				Time nanoseconds
+	// 				Control timeout
+	// 				Active control mode
+	// 7) Append the Tlm to the file
+	// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+	// 9) Go back to Step 6 until total time meets 600 sec
+	// ** Status between every step must be reported!!
+
+
+	CFE_Status_t						status;
+	CFE_Status_t						interstatus;
+
+	uint8 cnt_try = 0;
+	uint8 flag_tlmtype = msg->Payload.flag_tlmtype;
+	uint8 flag_contmode = msg->Payload.flag_contmode;
+
+	if ((flag_contmode != 0) && (flag_contmode != 1) && (flag_contmode != 3) && (flag_contmode != 4)) 
+	{
+		status = -2;
+		ADCS_HandleReport(status, ADCS_COMM_02_CC, &flag_contmode, sizeof(flag_contmode));
+		return status;
+	}
+	
+	if ((flag_tlmtype != 0) && (flag_tlmtype != 1))
+	{
+		status = -1;		// Something is wrong!
+		ADCS_HandleReport(status, ADCS_COMM_02_CC, &flag_tlmtype, sizeof(flag_tlmtype));
+		return status;
+	}
+
+	// 1) Power On ( GYR0, MAG0 )
+	ADCS_Comm_PowerState_Cmn_Payload_t		SetVal_056 = {0,};
+	ADCS_Comm_PowerState_Cmn_Payload_t		RetVal_183 = {0,};
+	SetVal_056.MAG0		= 1;
+	SetVal_056.GYR0		= 1;
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set GYR0 & MAG0 --> ON
+	OS_TaskDelay(10);
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);		// Get GYR0 & MAG0 power state
+	OS_TaskDelay(5000);
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{		
+		if ((interstatus == CFE_SUCCESS) && (RetVal_183.MAG0 == 1) && (RetVal_183.GYR0 == 1)) break;	// Check Power On well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_183.MAG0 != 1) || (RetVal_183.GYR0 != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -1;		// Something is wrong! ::::: Power State
+		ADCS_HandleReport(status, ADCS_COMM_02_CC, &RetVal_183, sizeof(RetVal_183));
+		return status;
+	}
+
+
+	// 3) Check Status of Sensors
+	ADCS_Comm_RawMAGSensorTlm_Paylaod_t	RetVal_180 = {0,};
+	ADCS_Comm_RawGYRSensorTlm_Payload_t	RetVal_204 = {0,};
+	OS_TaskDelay(1000);
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1)) break;	// Check Sensors Status Good
+
+		// if not, wait changing status until 3 times
+		OS_TaskDelay(100);
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);
+		cnt_try++;
+	}
+
+	
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	if ((interstatus != CFE_SUCCESS) || (RetVal_180.MAG0ValidFlag != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -3;		// Something is wrong! ::::: Magnetometer Status
+		ADCS_HandleReport(status, ADCS_COMM_02_CC, &RetVal_180, sizeof(RetVal_180));
+		return status;
+	}
+	OS_TaskDelay(10);
+	interstatus = ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	if ((interstatus != CFE_SUCCESS) || (RetVal_204.GYR0ValidFlag != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -4;		// Something is wrong! ::::: Gyro Status
+		ADCS_HandleReport(status, ADCS_COMM_02_CC, &RetVal_204, sizeof(RetVal_204));
+		return status;
+	}
+
+	// 2) Set Est. mode & Cont. mode ( Main: EstGyro (1) / Backup: EstMagRkf (2) / Control: ConBdot or ConBdot3 / Timeout: 600 s )
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	SetVal_042 = {0,};
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	RetVal_150 = {0,};
+
+	SetVal_042.MainEstimatorMode 	= 1;
+	SetVal_042.BackupEstimatorMode 	= 2;
+	SetVal_042.ControlMode 			= flag_contmode;
+	SetVal_042.ControlTimeout		= 600;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);	// Set Main & Backup Est mode = 1 & 2 / Control mode & Time out = 0 or 1 or 3 or 4 & 600 s
+	OS_TaskDelay(100);
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);	// Get Main & Backup Est mode
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_150.MainEstimatorMode == 1) && (RetVal_150.ControlMode == flag_contmode)) break;	// Check Mode Change well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != 1) || (RetVal_150.ControlMode != flag_contmode))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -2;		// Something is wrong! ::::: Estimation Mode
+		ADCS_HandleReport(status, ADCS_COMM_02_CC, &RetVal_150, sizeof(RetVal_150));
+		return status;
+
+	}
+
+
+	// 4) Make "adcs_comm_02.txt" file to log the TLMs
+	FILE *fp;
+	size_t written;
+	fp = fopen("./cf/adcs_comm_02.bin","wb");
+	if (fp == NULL)
+	{
+		status = -5;		// Something is wrong! ::::: File open error
+		ADCS_HandleReport(status, ADCS_COMM_02_CC, NULL, 0);
+		return status;
+	}
+
+	// 5) Start to count time ( Waiting time before Logging: 1 sec / Tlm period: 10 sec / Comm. Duration: 600 sec )
+	CFE_TIME_SysTime_t		t0_10, t0_600, tnow;
+	t0_10 = CFE_TIME_GetTime();
+
+	uint32 dt = 0;
+	while (dt < 1)
+	{	// Wait until dt > 1 sec
+		OS_TaskDelay(100);
+		tnow = CFE_TIME_GetTime();
+		dt = tnow.Seconds - t0_10.Seconds;
+	}
+
+	// 6) Read Tlm of Estimator & Sensors	
+	ADCS_Comm_Estimator_Cmn_Payload_t		RetVal_210 = {0,};
+	ADCS_Comm_RawCSSSensorTlm_Payload_t		RetVal_203 = {0,};
+	ADCS_Comm_ControllerTlm_Payload_t		RetVal_172 = {0,};
+
+	ADCS_Comm_COMM_02_COMP_Payload_t	Comm_02_Tlm_Set_Comp = {0,};
+	ADCS_Comm_COMM_02_FULL_Payload_t	Comm_02_Tlm_Set_Full = {0,};
+
+	Comm_02_Tlm_Set_Comp.sync_word 	= 0xADC5;
+	Comm_02_Tlm_Set_Full.sync_word 	= 0xADC5;
+
+	t0_600 = CFE_TIME_GetTime();
+	uint32 dt600 = 0;
+	while (dt600 < 600)
+	{
+		t0_10 = CFE_TIME_GetTime();	// Initialize 10 seconds Counter
+		dt = 0;	// Initialize time gap
+		
+		memset(&RetVal_210, 0, sizeof(RetVal_210));
+		memset(&RetVal_180, 0, sizeof(RetVal_180));
+		memset(&RetVal_204, 0, sizeof(RetVal_204));
+		memset(&RetVal_203, 0, sizeof(RetVal_203));
+		memset(&RetVal_172, 0, sizeof(RetVal_172));
+		
+
+		// 		6-1) Read Tlm of Main
+		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		OS_TaskDelay(10);
+
+		// 		6-2) Read Sensor Raw Values - Gyro & Magnetometer	
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetRawGYRSensor(&RetVal_204);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetRawCSSSensor(&RetVal_203);
+		OS_TaskDelay(10);
+
+		//		6-3) Read Tlm of Controller
+		interstatus = ADCS_Comm_GetControllerTlm(&RetVal_172);
+		OS_TaskDelay(10);
+		
+		// 7) Write the Tlm to the file
+		if (flag_tlmtype == 0)	// Compact telemetry set
+		{
+			
+			Comm_02_Tlm_Set_Comp.MainEst_TimeSecond		= RetVal_210.TimeSecond;
+			Comm_02_Tlm_Set_Comp.MainEst_TimeNanoSecond	= RetVal_210.TimeNanoSecond;
+			Comm_02_Tlm_Set_Comp.MainEst_EstIRCBodyRateX	= RetVal_210.EstIRCBodyRateX;
+			Comm_02_Tlm_Set_Comp.MainEst_EstIRCBodyRateY	= RetVal_210.EstIRCBodyRateY;
+			Comm_02_Tlm_Set_Comp.MainEst_EstIRCBodyRateZ	= RetVal_210.EstIRCBodyRateZ;
+			Comm_02_Tlm_Set_Comp.MainEst_ActiveEstMode	= RetVal_210.ActiveEstMode;
+			
+			Comm_02_Tlm_Set_Comp.GYR0_TimeSeconds = RetVal_204.TimeSeconds;
+			Comm_02_Tlm_Set_Comp.GYR0_TimeNanoSeconds = RetVal_204.TimeNanoSeconds;
+			Comm_02_Tlm_Set_Comp.GYR0RawRateX = RetVal_204.GYR0RawRateX;
+			Comm_02_Tlm_Set_Comp.GYR0RawRateY = RetVal_204.GYR0RawRateY;
+			Comm_02_Tlm_Set_Comp.GYR0RawRateZ = RetVal_204.GYR0RawRateZ;
+			Comm_02_Tlm_Set_Comp.GYR0ValidFlag = RetVal_204.GYR0ValidFlag;
+			
+			Comm_02_Tlm_Set_Comp.MAG0_TimeSeconds = RetVal_180.TimeSeconds;
+			Comm_02_Tlm_Set_Comp.MAG0_TimeNanoSeconds = RetVal_180.TimeNanoSeconds;
+			Comm_02_Tlm_Set_Comp.MAG0RawVecX = RetVal_180.MAG0RawVecX;
+			Comm_02_Tlm_Set_Comp.MAG0RawVecY = RetVal_180.MAG0RawVecY;
+			Comm_02_Tlm_Set_Comp.MAG0RawVecZ = RetVal_180.MAG0RawVecZ;
+			Comm_02_Tlm_Set_Comp.MAG0ValidFlag = RetVal_180.MAG0ValidFlag;
+
+			Comm_02_Tlm_Set_Comp.CSS_TimeSeconds = RetVal_203.TimeSeconds;
+			Comm_02_Tlm_Set_Comp.CSS_TimeNanoSeconds = RetVal_203.TimeNanoSeconds;
+			Comm_02_Tlm_Set_Comp.CSS0 = RetVal_203.CSS0;
+			Comm_02_Tlm_Set_Comp.CSS1 = RetVal_203.CSS1;
+			Comm_02_Tlm_Set_Comp.CSS2 = RetVal_203.CSS2;
+			Comm_02_Tlm_Set_Comp.CSS3 = RetVal_203.CSS3;
+			Comm_02_Tlm_Set_Comp.CSS4 = RetVal_203.CSS4;
+			Comm_02_Tlm_Set_Comp.CSS5 = RetVal_203.CSS5;
+			Comm_02_Tlm_Set_Comp.CSS6 = RetVal_203.CSS6;
+			Comm_02_Tlm_Set_Comp.CSS7 = RetVal_203.CSS7;
+			Comm_02_Tlm_Set_Comp.CSS8 = RetVal_203.CSS8;
+			Comm_02_Tlm_Set_Comp.CSS9 = RetVal_203.CSS9;
+			Comm_02_Tlm_Set_Comp.CSSValidFlag = RetVal_203.CSSValidFlag;
+
+			Comm_02_Tlm_Set_Comp.Cont_TimeSeconds = RetVal_172.TimeSeconds;
+			Comm_02_Tlm_Set_Comp.Cont_TimeNanoSeconds = RetVal_172.TimeNanoSeconds;
+			Comm_02_Tlm_Set_Comp.ControlTimeout = RetVal_172.ControlTimeout;
+			Comm_02_Tlm_Set_Comp.ActiveContMode = RetVal_172.ActiveContMode;
+
+			if ((written = fwrite(&Comm_02_Tlm_Set_Comp, sizeof(Comm_02_Tlm_Set_Comp), 1, fp)) != 1)
+			{
+				status = -6;		// Something is wrong! ::::: File write error
+				ADCS_HandleReport(status, ADCS_COMM_02_CC, NULL, 0);
+				fclose(fp);
+				return status;
+			}
+		}
+		else if (flag_tlmtype == 1) // Full telemetry set
+		{
+
+			Comm_02_Tlm_Set_Full.MainEst 	= RetVal_210;
+			Comm_02_Tlm_Set_Full.GYR0 		= RetVal_204;
+			Comm_02_Tlm_Set_Full.MAG0 		= RetVal_180;
+			Comm_02_Tlm_Set_Full.CSS 		= RetVal_203;
+			Comm_02_Tlm_Set_Full.Cont 		= RetVal_172;
+
+			if ((written = fwrite(&Comm_02_Tlm_Set_Full, sizeof(Comm_02_Tlm_Set_Full), 1, fp)) != 1)
+			{
+				status = -6;		// Something is wrong! ::::: File write error
+				ADCS_HandleReport(status, ADCS_COMM_02_CC, NULL, 0);
+				fclose(fp);
+				return status;
+			}
+		}
+
+
+		// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+		tnow = CFE_TIME_GetTime();
+		dt600 = tnow.Seconds - t0_600.Seconds;
+		dt = tnow.Seconds - t0_10.Seconds;
+
+		while (dt < 10)
+		{	// Wait until dt > 10 sec
+			OS_TaskDelay(100);
+			tnow = CFE_TIME_GetTime();
+			dt = tnow.Seconds - t0_10.Seconds;
+		}
+		
+	// 9) Go back to Step 6 until total time meets 600 sec
+	}
+	fclose(fp);
+
+	ADCS_HandleReport(CFE_SUCCESS, ADCS_COMM_02_CC, NULL, 0);
+
+	return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_Comm03Cmd(const ADCS_Comm03Cmd_t *msg) {
+	// COMM 03:	Detumbling
+	// [Procedure]
+	// 1) Power On ( GYR0, MAG0 )
+	// 2) Set Est. mode & Cont. mode ( Main: EstGyro (1) / Control: ConBdot3 / Timeout: 6000 s )
+	// 3) Check Status of Sensors
+	// 4) Make "adcs_comm_03.bin" file to log the TLMs
+	// 5) Start to count time ( Waiting time before Logging: 1 sec / Tlm period: 10 sec / Comm. Duration: 6000 sec )
+	// 		* Backup Estimation mode is not considered, so the convergence time is not required.
+	// 6) Read Tlm of Estimator & Sensors
+	// 		6-1) Read Tlm of Main Estimator:
+	// 				Time integer seconds
+	// 				Time nanoseconds
+	// 				Estimated body rate (ORC) X-Y-Z
+	// 				Estimated body rate (IRC) X-Y-Z
+	// 				Active estimator mode
+	// 		6-2) Read Sensor Calibrated Values - Magnetometer
+	// 				Time integer seconds
+	// 				Time nanoseconds
+	// 				MAG0 calibrated X-Y-Z component
+	// 				MAG0 valid flag
+	//		* Only when |w| < 3 deg/s, MAG0 data is valid!!
+	// 7) Append the Tlm to the file
+	// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+	// 9) Go back to Step 6 until total time meets 6000 sec
+	// ** Status between every step must be reported!!
+
+
+	CFE_Status_t						status;
+	CFE_Status_t						interstatus;
+
+	uint8 cnt_try = 0;
+	uint8 flag_tlmtype = msg->Payload.flag_tlmtype;
+	if ((flag_tlmtype != 0) && (flag_tlmtype != 1))
+	{
+		status = -1;		// Something is wrong!
+		ADCS_HandleReport(status, ADCS_COMM_03_CC, &flag_tlmtype, sizeof(flag_tlmtype));
+		return status;
+	}
+	
+	// 1) Power On ( GYR0, MAG0 )
+	ADCS_Comm_PowerState_Cmn_Payload_t		SetVal_056 = {0,};
+	ADCS_Comm_PowerState_Cmn_Payload_t		RetVal_183 = {0,};
+	SetVal_056.MAG0		= 1;
+	SetVal_056.GYR0		= 1;
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set GYR0 & MAG0 --> ON
+	OS_TaskDelay(10);
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);		// Get GYR0 & MAG0 power state
+	OS_TaskDelay(5000);
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{		
+		if ((interstatus == CFE_SUCCESS) && (RetVal_183.MAG0 == 1) && (RetVal_183.GYR0 == 1)) break;	// Check Power On well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_183.MAG0 != 1) || (RetVal_183.GYR0 != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -1;		// Something is wrong! ::::: Power State
+		ADCS_HandleReport(status, ADCS_COMM_03_CC, &RetVal_183, sizeof(RetVal_183));
+		return status;
+	}
+
+
+	// 3) Check Status of Sensors
+	ADCS_Comm_RawMAGSensorTlm_Paylaod_t	RetVal_180 = {0,};
+	ADCS_Comm_RawGYRSensorTlm_Payload_t	RetVal_204 = {0,};
+	OS_TaskDelay(1000);
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1)) break;	// Check Sensors Status Good
+
+		// if not, wait changing status until 3 times
+		OS_TaskDelay(100);
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);
+		cnt_try++;
+	}
+
+	
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	if ((interstatus != CFE_SUCCESS) || (RetVal_180.MAG0ValidFlag != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -3;		// Something is wrong! ::::: Magnetometer Status
+		ADCS_HandleReport(status, ADCS_COMM_03_CC, &RetVal_180, sizeof(RetVal_180));
+		return status;
+	}
+	OS_TaskDelay(10);
+	interstatus = ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	if ((interstatus != CFE_SUCCESS) || (RetVal_204.GYR0ValidFlag != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -4;		// Something is wrong! ::::: Gyro Status
+		ADCS_HandleReport(status, ADCS_COMM_03_CC, &RetVal_204, sizeof(RetVal_204));
+		return status;
+	}
+
+	// 2) Set Est. mode & Cont. mode ( Main: EstGyro (1) / Control: ConBdot3 / Timeout: 6000 s )
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	SetVal_042 = {0,};
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	RetVal_150 = {0,};
+
+	SetVal_042.MainEstimatorMode 	= 1;
+	SetVal_042.BackupEstimatorMode 	= 2;
+	SetVal_042.ControlMode 			= 3;
+	SetVal_042.ControlTimeout		= 6000;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);	// Set Main Est mode = 1 / Control mode & Time out = 3 & 6000 s
+	OS_TaskDelay(100);
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);	// Get Main Est mode
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_150.MainEstimatorMode == 1) && (RetVal_150.ControlMode == 3)) break;	// Check Mode Change well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != 1) || (RetVal_150.ControlMode != 3))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -2;		// Something is wrong! ::::: Estimation Mode
+		ADCS_HandleReport(status, ADCS_COMM_03_CC, &RetVal_150, sizeof(RetVal_150));
+		return status;
+
+	}
+
+
+	// 4) Make "adcs_comm_03.txt" file to log the TLMs
+	FILE *fp;
+	size_t written;
+	fp = fopen("./cf/adcs_comm_03.bin","wb");
+	if (fp == NULL)
+	{
+		status = -5;		// Something is wrong! ::::: File open error
+		ADCS_HandleReport(status, ADCS_COMM_03_CC, NULL, 0);
+		return status;
+	}
+
+	// 5) Start to count time ( Waiting time before Logging: 1 sec / Tlm period: 10 sec / Comm. Duration: 6000 sec )
+	CFE_TIME_SysTime_t		t0_10, t0_600, tnow;
+	t0_10 = CFE_TIME_GetTime();
+
+	uint32 dt = 0;
+	while (dt < 1)
+	{	// Wait until dt > 1 sec
+		OS_TaskDelay(100);
+		tnow = CFE_TIME_GetTime();
+		dt = tnow.Seconds - t0_10.Seconds;
+	}
+
+	// 6) Read Tlm of Estimator & Sensors	
+	ADCS_Comm_Estimator_Cmn_Payload_t		RetVal_210 = {0,};
+	ADCS_Comm_CalibratedMAGSensorTlm_Payload_t		RetVal_177 = {0,};
+
+	ADCS_Comm_COMM_03_COMP_Payload_t	Comm_03_Tlm_Set_Comp = {0,};
+	ADCS_Comm_COMM_03_FULL_Payload_t	Comm_03_Tlm_Set_Full = {0,};
+
+	Comm_03_Tlm_Set_Comp.sync_word 	= 0xADC5;
+	Comm_03_Tlm_Set_Full.sync_word 	= 0xADC5;
+
+	t0_600 = CFE_TIME_GetTime();
+	uint32 dt600 = 0;
+	while (dt600 < 6000)
+	{
+		t0_10 = CFE_TIME_GetTime();	// Initialize 10 seconds Counter
+		dt = 0;	// Initialize time gap		
+
+		memset(&RetVal_210, 0, sizeof(RetVal_210));
+		memset(&RetVal_177, 0, sizeof(RetVal_177));
+		
+
+		// 		6-1) Read Tlm of Main
+		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		OS_TaskDelay(10);
+
+		// 		6-2) Read Sensor Calibrated Values - Magnetometer
+		interstatus = ADCS_Comm_GetCalibratedMAGSensor(&RetVal_177);
+		OS_TaskDelay(10);
+
+		
+		// 7) Write the Tlm to the file
+		if (flag_tlmtype == 0)	// Compact telemetry set
+		{
+			Comm_03_Tlm_Set_Comp.MainEst_TimeSecond		= RetVal_210.TimeSecond;
+			Comm_03_Tlm_Set_Comp.MainEst_TimeNanoSecond	= RetVal_210.TimeNanoSecond;
+			Comm_03_Tlm_Set_Comp.MainEst_EstIRCBodyRateX	= RetVal_210.EstIRCBodyRateX;
+			Comm_03_Tlm_Set_Comp.MainEst_EstIRCBodyRateY	= RetVal_210.EstIRCBodyRateY;
+			Comm_03_Tlm_Set_Comp.MainEst_EstIRCBodyRateZ	= RetVal_210.EstIRCBodyRateZ;
+			Comm_03_Tlm_Set_Comp.MainEst_ActiveEstMode	= RetVal_210.ActiveEstMode;
+						
+			Comm_03_Tlm_Set_Comp.MAG0_TimeSeconds = RetVal_177.TimeSeconds;
+			Comm_03_Tlm_Set_Comp.MAG0_TimeNanoSeconds = RetVal_177.TimeNanoSeconds;
+			Comm_03_Tlm_Set_Comp.MAG0CalVecX = RetVal_177.MAG0CalVecX;
+			Comm_03_Tlm_Set_Comp.MAG0CalVecY = RetVal_177.MAG0CalVecY;
+			Comm_03_Tlm_Set_Comp.MAG0CalVecZ = RetVal_177.MAG0CalVecZ;
+			Comm_03_Tlm_Set_Comp.MAG0ValidFlag = RetVal_177.MAG0ValidFlag;
+
+			if ((written = fwrite(&Comm_03_Tlm_Set_Comp, sizeof(Comm_03_Tlm_Set_Comp), 1, fp)) != 1)
+			{
+				status = -6;		// Something is wrong! ::::: File write error
+				ADCS_HandleReport(status, ADCS_COMM_03_CC, NULL, 0);
+				fclose(fp);
+				return status;
+			}
+
+		}
+		else if (flag_tlmtype == 1) // Full telemetry set
+		{
+			Comm_03_Tlm_Set_Full.MainEst 	= RetVal_210;
+			Comm_03_Tlm_Set_Full.MAG0 		= RetVal_177;
+
+			if ((written = fwrite(&Comm_03_Tlm_Set_Full, sizeof(Comm_03_Tlm_Set_Full), 1, fp)) != 1)
+			{
+				status = -6;		// Something is wrong! ::::: File write error
+				ADCS_HandleReport(status, ADCS_COMM_03_CC, NULL, 0);
+				fclose(fp);
+				return status;
+			}
+		}		
+
+		// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+		tnow = CFE_TIME_GetTime();
+		dt600 = tnow.Seconds - t0_600.Seconds;
+		dt = tnow.Seconds - t0_10.Seconds;
+
+		while (dt < 10)
+		{	// Wait until dt > 10 sec
+			OS_TaskDelay(100);
+			tnow = CFE_TIME_GetTime();
+			dt = tnow.Seconds - t0_10.Seconds;
+		}
+		
+	// 9) Go back to Step 6 until total time meets 6000 sec
+	}
+	fclose(fp);
+
+	ADCS_HandleReport(CFE_SUCCESS, ADCS_COMM_03_CC, NULL, 0);
+
+	return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_Comm04Cmd(const ADCS_Comm04Cmd_t *msg) {
+	// COMM 04:	EKF Commissioning - CSS
+	// [Procedure]
+	// 1) Power On ( GYR0, MAG0 )
+	// 2) Check Status of Sensors
+	// 3) Set Est. mode & Cont. mode ( Main: EstGyroEkf  (6) / Main: EstFullEkf  (5) / Control: ConBdot3 / Timeout: 6000 s )
+	//	  Set Flag of UseEkf: All elements false <-- GS Command (already set-up)
+	// 4) Make "adcs_comm_04.bin" file to log the TLMs
+	// 5) Start to count time ( Waiting time before Logging: 10 sec / Tlm period: 10 sec / Comm. Duration: 6000 sec )
+	// 6) Read Tlm of Estimator & Sensors
+	// 		6-1) Read Tlm of Main Estimator
+	// 		6-2) Read Sensor Raw Values - CSS
+	// 		6-3) Read Sensor Calibrated Values - CSS
+	// 		6-4) Read Models Telemetery Values
+	// 7) Append the Tlm to the file
+	// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+	// 9) Go back to Step 6 until total time meets 300 sec
+	// ** Status between every step must be reported!!
+
+
+	CFE_Status_t						status;
+	CFE_Status_t						interstatus;
+
+	uint8 cnt_try = 0;
+	uint8 flag_tlmtype = msg->Payload.flag_tlmtype;
+	if ((flag_tlmtype != 0) && (flag_tlmtype != 1))
+	{
+		status = -1;		// Something is wrong!
+		ADCS_HandleReport(status, ADCS_COMM_04_CC, &flag_tlmtype, sizeof(flag_tlmtype));
+		return status;
+	}
+	
+	// 1) Power On ( GYR0, MAG0 )
+	ADCS_Comm_PowerState_Cmn_Payload_t		SetVal_056 = {0,};
+	ADCS_Comm_PowerState_Cmn_Payload_t		RetVal_183 = {0,};
+	SetVal_056.MAG0		= 1;
+	SetVal_056.GYR0		= 1;
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set GYR0 & MAG0 --> ON
+	OS_TaskDelay(10);
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);		// Get GYR0 & MAG0 power state
+	OS_TaskDelay(5000);
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{		
+		if ((interstatus == CFE_SUCCESS) && (RetVal_183.MAG0 == 1) && (RetVal_183.GYR0 == 1)) break;	// Check Power On well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_183.MAG0 != 1) || (RetVal_183.GYR0 != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -1;		// Something is wrong! ::::: Power State
+		ADCS_HandleReport(status, ADCS_COMM_04_CC, &RetVal_183, sizeof(RetVal_183));
+		return status;
+	}
+
+
+	// 2) Check Status of Sensors
+	ADCS_Comm_RawMAGSensorTlm_Paylaod_t	RetVal_180 = {0,};
+
+	OS_TaskDelay(2000);
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1)) break;	// Check Sensors Status Good
+
+		// if not, wait changing status until 3 times
+		OS_TaskDelay(100);
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(10);
+		cnt_try++;
+	}
+
+	
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	if ((interstatus != CFE_SUCCESS) || (RetVal_180.MAG0ValidFlag != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -3;		// Something is wrong! ::::: Magnetometer Status
+		ADCS_HandleReport(status, ADCS_COMM_04_CC, &RetVal_180, sizeof(RetVal_180));
+		return status;
+	}
+	OS_TaskDelay(10);
+
+	// 3) Set Est. mode & Cont. mode ( Main: EstGyroEkf  (6) / Main: EstFullEkf  (5) / Control: ConBdot3 / Timeout: 6000 s )
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	SetVal_042 = {0,};
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	RetVal_150 = {0,};
+
+	SetVal_042.MainEstimatorMode 	= 6;
+	SetVal_042.BackupEstimatorMode 	= 5;
+	SetVal_042.ControlMode 			= 3;
+	SetVal_042.ControlTimeout		= 6000;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);	// Set Main Est mode = 6 / Set Backup Est mode = 5 / Control mode & Time out = 3 & 6000 s
+	OS_TaskDelay(100);
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);	// Get Main Est mode
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_150.MainEstimatorMode == 6) && (RetVal_150.ControlMode == 3)) break;	// Check Mode Change well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != 6) || (RetVal_150.ControlMode != 3))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -2;		// Something is wrong! ::::: Estimation Mode
+		ADCS_HandleReport(status, ADCS_COMM_04_CC, &RetVal_150, sizeof(RetVal_150));
+		return status;
+
+	}
+
+	// 4) Make "adcs_comm_04.bin" file to log the TLMs
+	FILE *fp;
+	size_t written;
+	fp = fopen("./cf/adcs_comm_04.bin","wb");
+	if (fp == NULL)
+	{
+		status = -5;		// Something is wrong! ::::: File open error
+		ADCS_HandleReport(status, ADCS_COMM_04_CC, NULL, 0);
+		return status;
+	}
+
+	// 5) Start to count time ( Waiting time before Logging: 10 sec / Tlm period: 10 sec / Comm. Duration: 300 sec )
+	CFE_TIME_SysTime_t		t0_10, t0_300, tnow;
+	t0_10 = CFE_TIME_GetTime();
+
+	uint32 dt = 0;
+	while (dt < 10)
+	{	// Wait until dt > 10 sec
+		OS_TaskDelay(100);
+		tnow = CFE_TIME_GetTime();
+		dt = tnow.Seconds - t0_10.Seconds;
+	}
+
+	// 6) Read Tlm of Estimator & Sensors
+	ADCS_Comm_Estimator_Cmn_Payload_t	RetVal_210 = {0,};
+	ADCS_Comm_Estimator_Cmn_Payload_t	RetVal_173 = {0,};
+
+	ADCS_Comm_RawCSSSensorTlm_Payload_t 	RetVal_203 = {0,};
+	ADCS_Comm_CalibratedCSSSensorTlm_Payload_t 	RetVal_206 = {0,};
+	ADCS_Comm_ModelsTlm_Payload_t 			RetVal_174 = {0,};
+
+	ADCS_Comm_COMM_04_COMP_Payload_t	Comm_04_Tlm_Set_Comp = {0,};
+	ADCS_Comm_COMM_04_FULL_Payload_t	Comm_04_Tlm_Set_Full = {0,};
+
+	Comm_04_Tlm_Set_Comp.sync_word 	= 0xADC5;
+	Comm_04_Tlm_Set_Full.sync_word 	= 0xADC5;
+
+	t0_300 = CFE_TIME_GetTime();
+	uint32 dt300 = 0;
+	while (dt300 < 6000)
+	{
+		t0_10 = CFE_TIME_GetTime();	// Initialize 10 seconds Counter
+		dt = 0;	// Initialize time gap
+		
+
+		memset(&RetVal_210, 0, sizeof(RetVal_210));
+		memset(&RetVal_173, 0, sizeof(RetVal_173));
+		memset(&RetVal_203, 0, sizeof(RetVal_203));
+		memset(&RetVal_206, 0, sizeof(RetVal_206));
+		memset(&RetVal_174, 0, sizeof(RetVal_174));
+		
+		// Comm_04_Tlm_Set.sync_word 	= 0xADC5;
+
+		// 		6-1) Read Tlm of Main / Backup Estimator:	
+		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetBackupEstTlm(&RetVal_173);
+		OS_TaskDelay(10);
+
+		// 		6-2) Read Sensor Raw Values - CSS	
+		interstatus = ADCS_Comm_GetRawCSSSensor(&RetVal_203);
+		OS_TaskDelay(10);
+
+		// 		6-3) Read Sensor Calibrated Values - CSS
+		interstatus = ADCS_Comm_GetCalibratedCSSSensor(&RetVal_206);
+		OS_TaskDelay(10);
+
+		// 		6-4) Read Models Telemetery Values
+		interstatus = ADCS_Comm_GetModelsTlm(&RetVal_174);
+		OS_TaskDelay(10);
+		
+		// 7) Write the Tlm to the file
+		if (flag_tlmtype == 0)	// Compact telemetry set
+		{			
+			
+			Comm_04_Tlm_Set_Comp.MainEst		= RetVal_210;
+			Comm_04_Tlm_Set_Comp.RawCSS			= RetVal_203;
+			Comm_04_Tlm_Set_Comp.CalCSS			= RetVal_206;
+			Comm_04_Tlm_Set_Comp.Models 		= RetVal_174;
+
+			if ((written = fwrite(&Comm_04_Tlm_Set_Comp, sizeof(Comm_04_Tlm_Set_Comp), 1, fp)) != 1)
+			{
+				status = -6;		// Something is wrong! ::::: File write error
+				ADCS_HandleReport(status, ADCS_COMM_04_CC, NULL, 0);
+				fclose(fp);
+				return status;
+			}
+		}
+		else if (flag_tlmtype == 1) // Full telemetry set
+		{			
+			
+			Comm_04_Tlm_Set_Full.MainEst		= RetVal_210;
+			Comm_04_Tlm_Set_Full.BackupEst		= RetVal_173;
+			Comm_04_Tlm_Set_Full.RawCSS			= RetVal_203;
+			Comm_04_Tlm_Set_Full.CalCSS			= RetVal_206;
+			Comm_04_Tlm_Set_Comp.Models 		= RetVal_174;
+
+				if ((written = fwrite(&Comm_04_Tlm_Set_Full, sizeof(Comm_04_Tlm_Set_Full), 1, fp)) != 1)
+			{
+				status = -6;		// Something is wrong! ::::: File write error
+				ADCS_HandleReport(status, ADCS_COMM_04_CC, NULL, 0);
+				fclose(fp);
+				return status;
+			}
+		}
+
+
+		// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+		tnow = CFE_TIME_GetTime();
+		dt300 = tnow.Seconds - t0_300.Seconds;
+		dt = tnow.Seconds - t0_10.Seconds;
+
+		while (dt < 10)
+		{	// Wait until dt > 10 sec
+			OS_TaskDelay(100);
+			tnow = CFE_TIME_GetTime();
+			dt = tnow.Seconds - t0_10.Seconds;
+		}
+		
+	// 9) Go back to Step 6 until total time meets 6000 sec
+	}
+	fclose(fp);
+
+	ADCS_HandleReport(CFE_SUCCESS, ADCS_COMM_04_CC, NULL, 0);
+
+	return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_Comm05Cmd(const ADCS_Comm05Cmd_t *msg) {
+	// COMM 05:	FSS Commissioning
+	// [Procedure]
+	// 1) Power On ( GYR0, MAG0, FSS0 )
+	// 2) Check Status of Sensors
+	// 3) Set Est. mode & Cont. mode ( Main: EstGyroEkf  (6) / Main: EstFullEkf  (5) / Control: ConBdot3 / Timeout: 6000 s )
+	//	  Set Flag of UseEkf: FSS, HSS, STT elements false <-- GS Command (already set-up)
+	// 4) Make "adcs_comm_05.bin" file to log the TLMs
+	// 5) Start to count time ( Waiting time before Logging: 10 sec / Tlm period: 10 sec / Comm. Duration: 6000 sec )
+	// 6) Read Tlm of Estimator & Sensors
+	// 		6-1) Read Tlm of Main Estimator
+	// 		6-2) Read Sensor Raw Values - CSS
+	// 		6-3) Read Sensor Calibrated Values - CSS
+	// 		6-4) Read Sensor Raw Values - FSS
+	// 		6-5) Read Sensor Calibrated Values - FSS
+	// 7) Append the Tlm to the file
+	// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+	// 9) Go back to Step 6 until total time meets 6000 sec
+	// ** Status between every step must be reported!!
+
+
+	CFE_Status_t						status;
+	CFE_Status_t						interstatus;
+
+	uint8 cnt_try = 0;
+	// uint8 flag_tlmtype = msg->Payload.flag_tlmtype;
+	// if ((flag_tlmtype != 0) && (flag_tlmtype != 1))
+	// {
+	// 	status = -1;		// Something is wrong!
+	// 	ADCS_HandleReport(status, ADCS_COMM_05_CC, &flag_tlmtype, sizeof(flag_tlmtype));
+	// 	return status;
+	// }
+	
+	// 1) Power On ( GYR0, MAG0, FSS0 )
+	ADCS_Comm_PowerState_Cmn_Payload_t		SetVal_056 = {0,};
+	ADCS_Comm_PowerState_Cmn_Payload_t		RetVal_183 = {0,};
+	SetVal_056.MAG0		= 1;
+	SetVal_056.GYR0		= 1;
+	SetVal_056.FSS0		= 1;
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set GYR0 & MAG0 & FSS0 --> ON
+	OS_TaskDelay(10);
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);		// Get GYR0 & MAG0 & FSS0 power state
+	OS_TaskDelay(5000);
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{		
+		if ((interstatus == CFE_SUCCESS) && (RetVal_183.MAG0 == 1) && (RetVal_183.GYR0 == 1) && (RetVal_183.FSS0 == 1)) break;	// Check Power On well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_183.MAG0 != 1) || (RetVal_183.GYR0 != 1) || (RetVal_183.FSS0 != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -1;		// Something is wrong! ::::: Power State
+		ADCS_HandleReport(status, ADCS_COMM_05_CC, &RetVal_183, sizeof(RetVal_183));
+		return status;
+	}
+
+
+	// 2) Check Status of Sensors
+	ADCS_Comm_RawMAGSensorTlm_Paylaod_t	RetVal_180 = {0,};
+	ADCS_Comm_RawGYRSensorTlm_Payload_t	RetVal_204 = {0,};
+	// ADCS_Comm_RawCubeSenseSunTlm_Payload_t RetVal_170 = {0,};		// "FSS0 valid" is not identified yet. After idetification, use this status to check the state of FSS0. -> (line 1578, 1584)
+
+	OS_TaskDelay(2000);
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	// OS_TaskDelay(10);
+	// interstatus = interstatus + ADCS_Comm_GetRawCubeSenseSun(&RetVal_170);	// Get Status of FSS
+
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1)) break;	// Check Sensors Status Good
+		// if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1) && (RetVal_170.ValidResult0 == 1)) break;	// Check Sensors Status Good
+
+		// if not, wait changing status until 3 times
+		OS_TaskDelay(100);
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+		cnt_try++;
+	}
+
+	
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	if ((interstatus != CFE_SUCCESS) || (RetVal_180.MAG0ValidFlag != 1) || (RetVal_204.GYR0ValidFlag != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -3;		// Something is wrong! ::::: Magnetometer Status
+		ADCS_HandleReport(status, ADCS_COMM_05_CC, &RetVal_180, sizeof(RetVal_180));
+		return status;
+	}
+	OS_TaskDelay(10);
+
+	// 3) Set Est. mode & Cont. mode ( Main: EstGyroEkf  (6) / Main: EstFullEkf  (5) / Control: ConBdot3 / Timeout: 6000 s )
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	SetVal_042 = {0,};
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	RetVal_150 = {0,};
+
+	SetVal_042.MainEstimatorMode 	= 6;
+	SetVal_042.BackupEstimatorMode 	= 5;
+	SetVal_042.ControlMode 			= 3;
+	SetVal_042.ControlTimeout		= 6000;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);	// Set Main Est mode = 6 / Set Backup Est mode = 5 / Control mode & Time out = 3 & 6000 s
+	OS_TaskDelay(100);
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);	// Get Main Est mode
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_150.MainEstimatorMode == 6) && (RetVal_150.ControlMode == 3)) break;	// Check Mode Change well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != 6) || (RetVal_150.ControlMode != 3))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -2;		// Something is wrong! ::::: Estimation Mode
+		ADCS_HandleReport(status, ADCS_COMM_05_CC, &RetVal_150, sizeof(RetVal_150));
+		return status;
+
+	}
+
+	// 4) Make "adcs_comm_05.bin" file to log the TLMs
+	FILE *fp;
+	size_t written;
+	fp = fopen("./cf/adcs_comm_05.bin","wb");
+	if (fp == NULL)
+	{
+		status = -5;		// Something is wrong! ::::: File open error
+		ADCS_HandleReport(status, ADCS_COMM_05_CC, NULL, 0);
+		return status;
+	}
+
+	// 5) Start to count time ( Waiting time before Logging: 10 sec / Tlm period: 10 sec / Comm. Duration: 300 sec )
+	CFE_TIME_SysTime_t		t0_10, t0_300, tnow;
+	t0_10 = CFE_TIME_GetTime();
+
+	uint32 dt = 0;
+	while (dt < 10)
+	{	// Wait until dt > 10 sec
+		OS_TaskDelay(100);
+		tnow = CFE_TIME_GetTime();
+		dt = tnow.Seconds - t0_10.Seconds;
+	}
+
+	// 6) Read Tlm of Estimator & Sensors
+	ADCS_Comm_Estimator_Cmn_Payload_t	RetVal_210 = {0,};
+
+	ADCS_Comm_RawCSSSensorTlm_Payload_t 	RetVal_203 = {0,};
+	ADCS_Comm_CalibratedCSSSensorTlm_Payload_t 	RetVal_206 = {0,};
+	ADCS_Comm_RawCubeSenseSunTlm_Payload_t 		RetVal_170 = {0,};
+	ADCS_Comm_CalibratedFSSSensorTlm_Payload_t	RetVal_178 = {0,};
+
+	ADCS_Comm_COMM_05_Payload_t	Comm_05_Tlm_Set = {0,};
+
+	Comm_05_Tlm_Set.sync_word 	= 0xADC5;
+
+	t0_300 = CFE_TIME_GetTime();
+	uint32 dt300 = 0;
+	while (dt300 < 6000)
+	{
+		t0_10 = CFE_TIME_GetTime();	// Initialize 10 seconds Counter
+		dt = 0;	// Initialize time gap
+		
+
+		memset(&RetVal_210, 0, sizeof(RetVal_210));
+		memset(&RetVal_203, 0, sizeof(RetVal_203));
+		memset(&RetVal_206, 0, sizeof(RetVal_206));
+		memset(&RetVal_170, 0, sizeof(RetVal_170));
+		memset(&RetVal_178, 0, sizeof(RetVal_178));
+		
+		// Comm_05_Tlm_Set.sync_word 	= 0xADC5;
+
+		// 		6-1) Read Tlm of Main:	
+		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		OS_TaskDelay(20);
+
+		// 		6-2) Read Sensor Raw Values - CSS	
+		interstatus = ADCS_Comm_GetRawCSSSensor(&RetVal_203);
+		OS_TaskDelay(20);
+
+		// 		6-3) Read Sensor Calibrated Values - CSS
+		interstatus = ADCS_Comm_GetCalibratedCSSSensor(&RetVal_206);
+		OS_TaskDelay(20);
+
+		// 		6-4) Read Sensor Raw Values - FSS
+		interstatus = ADCS_Comm_GetRawCubeSenseSun(&RetVal_170);
+		OS_TaskDelay(20);
+
+		// 		6-5) Read Sensor Calibrated Values - FSS
+		interstatus = ADCS_Comm_GetCalibratedFSSSensor(&RetVal_178);
+		OS_TaskDelay(20);
+		
+		// 7) Write the Tlm to the file
+		Comm_05_Tlm_Set.MainEst		= RetVal_210;
+		Comm_05_Tlm_Set.RawCSS		= RetVal_203;
+		Comm_05_Tlm_Set.CalCSS		= RetVal_206;
+		Comm_05_Tlm_Set.RawFSS 		= RetVal_170;
+		Comm_05_Tlm_Set.CalFSS 		= RetVal_178;
+
+		if ((written = fwrite(&Comm_05_Tlm_Set, sizeof(Comm_05_Tlm_Set), 1, fp)) != 1)
+		{
+			status = -6;		// Something is wrong! ::::: File write error
+			ADCS_HandleReport(status, ADCS_COMM_05_CC, NULL, 0);
+			fclose(fp);
+			return status;
+		}
+
+
+		// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+		tnow = CFE_TIME_GetTime();
+		dt300 = tnow.Seconds - t0_300.Seconds;
+		dt = tnow.Seconds - t0_10.Seconds;
+
+		while (dt < 10)
+		{	// Wait until dt > 10 sec
+			OS_TaskDelay(100);
+			tnow = CFE_TIME_GetTime();
+			dt = tnow.Seconds - t0_10.Seconds;
+		}
+		
+	// 9) Go back to Step 6 until total time meets 6000 sec
+	}
+	fclose(fp);
+
+	ADCS_HandleReport(CFE_SUCCESS, ADCS_COMM_05_CC, NULL, 0);
+
+	return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_Comm06Cmd(const ADCS_Comm06Cmd_t *msg) {
+	// COMM 06:	Wheel Commissioning
+	// [Procedure]
+	// 1) Power On ( GYR0, MAG0, FSS0, RWLX )
+	// 2) Check Status of Sensors
+	// 3) Set Est. mode & Cont. mode ( Main: EstGyroEkf  (6) / Main: EstGyro  (1) / Control: ConHxyzRW / Timeout: 120+60 s )
+	//	  Set Flag of UseEkf: HSS, STT elements false <-- GS Command (already set-up)
+	// 4) Make "adcs_comm_06_X.bin" file to log the TLMs
+	// 5) Start to count time ( Waiting time before Logging: 10 sec / Tlm period: 1 sec / Comm. Duration: 120+60+alpha sec )
+	// 6) Read Tlm of Estimator & Sensors
+	// 		6-1) Read Tlm of Main Estimator
+	// 		6-2) Read Sensor Raw Values - RWL
+	// 		6-3) Read Sensor Calibrated Values - RWL
+	// 7) Append the Tlm to the file
+	// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+	// 9) Go back to Step 6 until total time meets 120 sec
+	// ** Status between every step must be reported!!
+
+
+	CFE_Status_t						status;
+	CFE_Status_t						interstatus;
+
+	uint8 cnt_try = 0;	
+	uint8 flag_estmode = msg->Payload.flag_estmode;
+	uint8 flag_contmode = msg->Payload.flag_contmode;
+	// flag_contmode = 
+	// 					0:  Initial pyramid reaction wheel commissioning
+	// 					1:	Three-axis orthogonal wheel commissioning - X-axis
+	// 					2:	Three-axis orthogonal wheel commissioning - Y-axis
+	// 					3:	Three-axis orthogonal wheel commissioning - Z-axis
+	if ((flag_contmode != 0) && (flag_contmode != 1) && (flag_contmode != 2) && (flag_contmode != 3))
+	{
+		status = -7;		// Something is wrong!
+		ADCS_HandleReport(status, ADCS_COMM_06_CC, &flag_contmode, sizeof(flag_contmode));
+		return status;
+	}
+	if ((flag_estmode != 0) && (flag_estmode != 1) && (flag_estmode != 2))
+	{
+		status = -8;		// Something is wrong!
+		ADCS_HandleReport(status, ADCS_COMM_06_CC, &flag_estmode, sizeof(flag_estmode));
+		return status;
+	}
+	
+	// 1) Power On ( GYR0, MAG0, FSS0, RWLX )
+	ADCS_Comm_PowerState_Cmn_Payload_t		SetVal_056 = {0,};
+	ADCS_Comm_PowerState_Cmn_Payload_t		RetVal_183 = {0,};
+	SetVal_056.MAG0		= 1;
+	SetVal_056.GYR0		= 1;
+	SetVal_056.FSS0		= 1;
+	SetVal_056.RWL0		= 1;
+	SetVal_056.RWL1		= 1;
+	SetVal_056.RWL2		= 1;
+	SetVal_056.RWL3		= 1;
+
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set GYR0 & MAG0 & FSS0 & RWLX --> ON
+	OS_TaskDelay(10);
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);		// Get GYR0 & MAG0 & FSS0 & RWLX power state
+	OS_TaskDelay(5000);
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{		
+		if ((interstatus == CFE_SUCCESS) && (RetVal_183.MAG0 == 1) && (RetVal_183.GYR0 == 1) && (RetVal_183.FSS0 == 1) && (RetVal_183.RWL0 == 1) && (RetVal_183.RWL1 == 1) && (RetVal_183.RWL2 == 1) && (RetVal_183.RWL3 == 1)) break;	// Check Power On well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_183.MAG0 != 1) || (RetVal_183.GYR0 != 1) || (RetVal_183.FSS0 != 1) || (RetVal_183.RWL0 != 1) || (RetVal_183.RWL1 != 1) || (RetVal_183.RWL2 != 1) || (RetVal_183.RWL3 != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -1;		// Something is wrong! ::::: Power State
+		ADCS_HandleReport(status, ADCS_COMM_06_CC, &RetVal_183, sizeof(RetVal_183));
+		return status;
+	}
+
+
+	// 2) Check Status of Sensors
+	ADCS_Comm_RawMAGSensorTlm_Paylaod_t	RetVal_180 = {0,};
+	ADCS_Comm_RawGYRSensorTlm_Payload_t	RetVal_204 = {0,};
+	// ADCS_Comm_RawCubeSenseSunTlm_Payload_t RetVal_170 = {0,};		// "FSS0 valid" is not identified yet. After idetification, use this status to check the state of FSS0. -> (line 1578, 1584)
+	ADCS_Comm_RawRWLSensorTlm_Payload_t RetVal_205 = {0,};
+
+	OS_TaskDelay(2000);
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	// OS_TaskDelay(10);
+	// interstatus = interstatus + ADCS_Comm_GetRawCubeSenseSun(&RetVal_170);	// Get Status of FSS
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);	// Get Status of wheels
+	
+
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1) && (RetVal_205.RWL0ValidFlag == 1) && (RetVal_205.RWL1ValidFlag == 1) && (RetVal_205.RWL2ValidFlag == 1) && (RetVal_205.RWL3ValidFlag == 1)) break;	// Check Sensors Status Good
+		// if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1) && (RetVal_170.ValidResult0 == 1)) break;	// Check Sensors Status Good
+
+		// if not, wait changing status until 3 times
+		OS_TaskDelay(100);
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);	// Get Status of wheels
+		cnt_try++;
+	}
+
+	
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);	// Get Status of wheels
+
+	if ((interstatus != CFE_SUCCESS) || (RetVal_180.MAG0ValidFlag != 1) || (RetVal_204.GYR0ValidFlag != 1) || (RetVal_205.RWL0ValidFlag != 1) || (RetVal_205.RWL1ValidFlag != 1) || (RetVal_205.RWL2ValidFlag != 1) || (RetVal_205.RWL3ValidFlag != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -3;		// Something is wrong! ::::: Magnetometer Status
+		ADCS_HandleReport(status, ADCS_COMM_06_CC, &RetVal_180, sizeof(RetVal_180));
+		return status;
+	}
+	OS_TaskDelay(10);
+
+	// 3) Set Est. mode & Cont. mode ( Main: EstGyroEkf  (6) / Main: EstGyro  (1) / Control: ConHxyzRW / Timeout: 120+60 s )
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	SetVal_042 = {0,};
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	RetVal_150 = {0,};
+
+	SetVal_042.MainEstimatorMode 	= 6;
+	SetVal_042.BackupEstimatorMode 	= 1;
+	// SetVal_042.ControlMode 			= 51;
+	// SetVal_042.ControlTimeout		= 120;
+	SetVal_042.ControlMode 			= 3;
+	SetVal_042.ControlTimeout		= 0;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);	// Set Main Est mode = 6 / Set Backup Est mode = 1 / Control mode & Time out = 3 & 0 s
+	OS_TaskDelay(100);
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);	// Get Main Est mode
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_150.MainEstimatorMode == 6) && (RetVal_150.ControlMode == 3)) break;	// Check Mode Change well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != 6) || (RetVal_150.ControlMode != 3))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -2;		// Something is wrong! ::::: Estimation Mode
+		ADCS_HandleReport(status, ADCS_COMM_06_CC, &RetVal_150, sizeof(RetVal_150));
+		return status;
+
+	}
+
+	// 4) Make "adcs_comm_06_X.bin" file to log the TLMs
+	FILE *fp;
+	size_t written;
+
+	if (flag_contmode == 0) {
+		fp = fopen("./cf/adcs_comm_06_0.bin","wb");
+	}
+	else if (flag_contmode == 1) {
+		fp = fopen("./cf/adcs_comm_06_1.bin","wb");
+	}
+	else if (flag_contmode == 2) {
+		fp = fopen("./cf/adcs_comm_06_2.bin","wb");
+	}
+	else if (flag_contmode == 3) {
+		fp = fopen("./cf/adcs_comm_06_3.bin","wb");
+	}
+	else {
+		fp = NULL;
+	}
+
+	if (fp == NULL)
+	{
+		status = -5;		// Something is wrong! ::::: File open error
+		ADCS_HandleReport(status, ADCS_COMM_06_CC, NULL, 0);
+
+		SetVal_042.MainEstimatorMode 	= 6;
+		SetVal_042.BackupEstimatorMode 	= 5;
+		SetVal_042.ControlMode 			= 3;
+		SetVal_042.ControlTimeout		= 0;
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+		SetVal_056.RWL0		= 0;
+		SetVal_056.RWL1		= 0;
+		SetVal_056.RWL2		= 0;
+		SetVal_056.RWL3		= 0;
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+		return status;
+	}
+
+	float cmdH = 0.0;
+	if (flag_estmode == 0) {
+		cmdH = 0.005;
+	}
+	else if (flag_estmode == 1) {
+		cmdH = 0.002;
+	}
+	else if (flag_estmode == 2) {
+		cmdH = 0.001;
+	}
+	else {
+		cmdH = 0.0;
+	}
+
+	// Before 5) Pre-define Hxyz Command values
+	ADCS_Comm_OpenLoopCmdHxyzRWCmd_Payload_t SetVal_076 = {0,};
+	
+	// 5) Start to count time ( Waiting time before Logging: 10 sec / Tlm period: 1 sec / Comm. Duration: 120+60+alpha sec )
+	CFE_TIME_SysTime_t		t0_10, t0_300, tnow;
+	t0_10 = CFE_TIME_GetTime();
+
+	uint32 dt = 0;
+	while (dt < 10)
+	{	// Wait until dt > 10 sec
+		OS_TaskDelay(100);
+		tnow = CFE_TIME_GetTime();
+		dt = tnow.Seconds - t0_10.Seconds;
+	}
+
+	// 6) Read Tlm of Estimator & Sensors
+	ADCS_Comm_Estimator_Cmn_Payload_t	RetVal_210 = {0,};
+	ADCS_Comm_CalibratedRWLSensorTlm_Payload_t 	RetVal_209 = {0,};
+
+	ADCS_Comm_COMM_06_Payload_t	Comm_06_Tlm_Set = {0,};
+
+	Comm_06_Tlm_Set.sync_word 	= 0xADC5;
+
+	t0_300 = CFE_TIME_GetTime();
+	uint32 dt300 = 0;
+	bool phase_rw_51_set = false;
+	bool phase_rw_50_set = false;
+	bool phase_rw_03_set = false;
+	bool phase_vec_0_set = false;
+
+	while (dt300 < 300)
+	{
+		if ((dt300 > 250) && (phase_rw_03_set == false)) {
+			phase_rw_03_set = true;
+			SetVal_042.MainEstimatorMode 	= 6;
+			SetVal_042.BackupEstimatorMode 	= 1;
+			SetVal_042.ControlMode 			= 3;
+			SetVal_042.ControlTimeout		= 0;
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		}
+		else if ((dt300 > 150) && (phase_rw_50_set == false)) {
+			phase_rw_50_set = true;
+			SetVal_042.MainEstimatorMode 	= 6;
+			SetVal_042.BackupEstimatorMode 	= 1;
+			SetVal_042.ControlMode 			= 50;
+			SetVal_042.ControlTimeout		= 80;
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);			
+		}
+		else if (dt300 > 140 && (phase_vec_0_set == false)) {
+			phase_vec_0_set = true;
+			SetVal_076.cmdHx = 0.0;
+			SetVal_076.cmdHy = 0.0;
+			SetVal_076.cmdHz = 0.0;
+			interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+		}
+		else if ((dt300 > 20) && (phase_rw_51_set == false)) {
+			phase_rw_51_set = true;
+			SetVal_042.MainEstimatorMode 	= 6;
+			SetVal_042.BackupEstimatorMode 	= 1;
+			SetVal_042.ControlMode 			= 51;
+			SetVal_042.ControlTimeout		= 120;
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);			
+
+			OS_TaskDelay(100);
+
+				if (flag_contmode == 0) {
+					SetVal_076.cmdHx = 0.0;
+					SetVal_076.cmdHy = 0.0;
+					SetVal_076.cmdHz = 0.0;
+					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+				}
+				else if (flag_contmode == 1) {
+					SetVal_076.cmdHx = cmdH;
+					SetVal_076.cmdHy = 0.0;
+					SetVal_076.cmdHz = 0.0;
+					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+				}
+				else if (flag_contmode == 2) {
+					SetVal_076.cmdHx = 0.0;
+					SetVal_076.cmdHy = cmdH;
+					SetVal_076.cmdHz = 0.0;
+					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);		
+				}
+				else if (flag_contmode == 3) {
+					SetVal_076.cmdHx = 0.0;
+					SetVal_076.cmdHy = 0.0;
+					SetVal_076.cmdHz = cmdH;
+					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);		
+				}
+				else {
+					SetVal_076.cmdHx = 0.0;
+					SetVal_076.cmdHy = 0.0;
+					SetVal_076.cmdHz = 0.0;
+					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);		
+				}
+		}
+
+		t0_10 = CFE_TIME_GetTime();	// Initialize 1 seconds Counter
+		dt = 0;	// Initialize time gap
+		
+
+		memset(&RetVal_210, 0, sizeof(RetVal_210));
+		memset(&RetVal_205, 0, sizeof(RetVal_205));
+		memset(&RetVal_209, 0, sizeof(RetVal_209));
+		
+		// Comm_06_Tlm_Set.sync_word 	= 0xADC5;
+
+		// 		6-1) Read Tlm of Main:	
+		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		OS_TaskDelay(20);
+
+		// 		6-2) Read Sensor Raw Values - RWL	
+		interstatus = ADCS_Comm_GetRawRWLSensor(&RetVal_205);
+		OS_TaskDelay(20);
+
+		// 		6-3) Read Sensor Calibrated Values - RWL
+		interstatus = ADCS_Comm_GetCalibratedRWLSensor(&RetVal_209);
+		OS_TaskDelay(20);
+		
+		// 7) Write the Tlm to the file
+		Comm_06_Tlm_Set.MainEst		= RetVal_210;
+		Comm_06_Tlm_Set.RawRWL		= RetVal_205;
+		Comm_06_Tlm_Set.CalRWL		= RetVal_209;
+
+		if ((written = fwrite(&Comm_06_Tlm_Set, sizeof(Comm_06_Tlm_Set), 1, fp)) != 1)
+		{
+			status = -6;		// Something is wrong! ::::: File write error
+			ADCS_HandleReport(status, ADCS_COMM_06_CC, NULL, 0);
+			fclose(fp);
+
+			SetVal_042.MainEstimatorMode 	= 6;
+			SetVal_042.BackupEstimatorMode 	= 5;
+			SetVal_042.ControlMode 			= 3;
+			SetVal_042.ControlTimeout		= 0;
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+			SetVal_056.RWL0		= 0;
+			SetVal_056.RWL1		= 0;
+			SetVal_056.RWL2		= 0;
+			SetVal_056.RWL3		= 0;
+			interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+			return status;
+		}
+
+
+		// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+		tnow = CFE_TIME_GetTime();
+		dt300 = tnow.Seconds - t0_300.Seconds;
+		dt = tnow.Seconds - t0_10.Seconds;
+
+		while (dt < 1)
+		{	// Wait until dt > 1 sec
+			OS_TaskDelay(50);
+			tnow = CFE_TIME_GetTime();
+			dt = tnow.Seconds - t0_10.Seconds;
+		}
+		
+	// 9) Go back to Step 6 until total time meets 180 sec
+	}
+	fclose(fp);
+
+	SetVal_042.MainEstimatorMode 	= 6;
+	SetVal_042.BackupEstimatorMode 	= 5;
+	SetVal_042.ControlMode 			= 3;
+	SetVal_042.ControlTimeout		= 0;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+	SetVal_056.RWL0		= 0;
+	SetVal_056.RWL1		= 0;
+	SetVal_056.RWL2		= 0;
+	SetVal_056.RWL3		= 0;
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+
+	ADCS_HandleReport(CFE_SUCCESS, ADCS_COMM_06_CC, NULL, 0);
+
+	return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg) {
+	// COMM 07:	Sun Tracking 3-axis Control Commissioning
+	// [Procedure]
+	// 1) Power On ( GYR0, MAG0, FSS0, RWLX )
+	// 2) Check Status of Sensors
+	// 3) Set Est. mode & Cont. mode ( Main: EstGyroEkf  (6) / Main: EstGyro  (5) / Control: ConHxyzRW, ConXYZwheel, ConSunTrack / Timeout: 120+300+500 s )
+	//	  Set Flag of UseEkf: HSS, STT elements false <-- GS Command (already set-up)
+	// 4) Make "adcs_comm_07.bin" file to log the TLMs
+	// 5) Start to count time ( Waiting time before Logging: 2800 sec / Tlm period: 1 sec / Comm. Duration: 720 sec )
+	// 6) Read Tlm of Estimator & Sensors
+	// 		6-1) Read Tlm of Main Estimator
+	// 		6-2) Read Sensor Raw Values - RWL
+	// 		6-3) Read Sensor Calibrated Values - RWL
+	// 		6-3) Read Sensor Calibrated Values - FSS
+	// 7) Append the Tlm to the file
+	// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+	// 9) Go back to Step 6 until total time meets XXXX sec
+	// ** Status between every step must be reported!!
+
+
+	CFE_Status_t						status;
+	CFE_Status_t						interstatus;
+
+	uint8 cnt_try = 0;
+		
+	// 1) Power On ( GYR0, MAG0, FSS0, RWLX )
+	ADCS_Comm_PowerState_Cmn_Payload_t		SetVal_056 = {0,};
+	ADCS_Comm_PowerState_Cmn_Payload_t		RetVal_183 = {0,};
+	SetVal_056.MAG0		= 1;
+	SetVal_056.GYR0		= 1;
+	SetVal_056.FSS0		= 1;
+	SetVal_056.RWL0		= 1;
+	SetVal_056.RWL1		= 1;
+	SetVal_056.RWL2		= 1;
+	SetVal_056.RWL3		= 1;
+
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set GYR0 & MAG0 & FSS0 & RWLX --> ON
+	OS_TaskDelay(10);
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);		// Get GYR0 & MAG0 & FSS0 & RWLX power state
+	OS_TaskDelay(5000);
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{		
+		if ((interstatus == CFE_SUCCESS) && (RetVal_183.MAG0 == 1) && (RetVal_183.GYR0 == 1) && (RetVal_183.FSS0 == 1) && (RetVal_183.RWL0 == 1) && (RetVal_183.RWL1 == 1) && (RetVal_183.RWL2 == 1) && (RetVal_183.RWL3 == 1)) break;	// Check Power On well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_183.MAG0 != 1) || (RetVal_183.GYR0 != 1) || (RetVal_183.FSS0 != 1) || (RetVal_183.RWL0 != 1) || (RetVal_183.RWL1 != 1) || (RetVal_183.RWL2 != 1) || (RetVal_183.RWL3 != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -1;		// Something is wrong! ::::: Power State
+		ADCS_HandleReport(status, ADCS_COMM_07_CC, &RetVal_183, sizeof(RetVal_183));
+		return status;
+	}
+
+
+	// 2) Check Status of Sensors
+	ADCS_Comm_RawMAGSensorTlm_Paylaod_t	RetVal_180 = {0,};
+	ADCS_Comm_RawGYRSensorTlm_Payload_t	RetVal_204 = {0,};
+	// ADCS_Comm_RawCubeSenseSunTlm_Payload_t RetVal_170 = {0,};		// "FSS0 valid" is not identified yet. After idetification, use this status to check the state of FSS0. -> (line 1578, 1584)
+	ADCS_Comm_RawRWLSensorTlm_Payload_t RetVal_205 = {0,};
+
+	OS_TaskDelay(2000);
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	// OS_TaskDelay(10);
+	// interstatus = interstatus + ADCS_Comm_GetRawCubeSenseSun(&RetVal_170);	// Get Status of FSS
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);	// Get Status of wheels
+	
+
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1) && (RetVal_205.RWL0ValidFlag == 1) && (RetVal_205.RWL1ValidFlag == 1) && (RetVal_205.RWL2ValidFlag == 1) && (RetVal_205.RWL3ValidFlag == 1)) break;	// Check Sensors Status Good
+		// if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1) && (RetVal_170.ValidResult0 == 1)) break;	// Check Sensors Status Good
+
+		// if not, wait changing status until 3 times
+		OS_TaskDelay(100);
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);	// Get Status of wheels
+		cnt_try++;
+	}
+
+	
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);	// Get Status of wheels
+
+	if ((interstatus != CFE_SUCCESS) || (RetVal_180.MAG0ValidFlag != 1) || (RetVal_204.GYR0ValidFlag != 1) || (RetVal_205.RWL0ValidFlag != 1) || (RetVal_205.RWL1ValidFlag != 1) || (RetVal_205.RWL2ValidFlag != 1) || (RetVal_205.RWL3ValidFlag != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -3;		// Something is wrong! ::::: Magnetometer Status
+		ADCS_HandleReport(status, ADCS_COMM_07_CC, &RetVal_180, sizeof(RetVal_180));
+		return status;
+	}
+	OS_TaskDelay(10);
+
+	// 3) Set Est. mode & Cont. mode ( Main: EstGyroEkf  (6) / Main: EstGyro  (5) / Control: ConHxyzRW, ConXYZwheel, ConSunTrack / Timeout: 120+300
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	SetVal_042 = {0,};
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	RetVal_150 = {0,};
+
+	SetVal_042.MainEstimatorMode 	= 6;
+	SetVal_042.BackupEstimatorMode 	= 5;
+	// SetVal_042.ControlMode 			= 51;
+	// SetVal_042.ControlTimeout		= 120;
+	SetVal_042.ControlMode 			= 3;
+	SetVal_042.ControlTimeout		= 0;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);	// Set Main Est mode = 6 / Set Backup Est mode = 5 / Control mode & Time out = 3 & 0 s
+	OS_TaskDelay(100);
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);	// Get Main Est mode
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_150.MainEstimatorMode == 6) && (RetVal_150.ControlMode == 3)) break;	// Check Mode Change well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != 6) || (RetVal_150.ControlMode != 3))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -2;		// Something is wrong! ::::: Estimation Mode
+		ADCS_HandleReport(status, ADCS_COMM_07_CC, &RetVal_150, sizeof(RetVal_150));
+		return status;
+
+	}
+
+	// Before 5) Pre-define Hxyz Command values
+	ADCS_Comm_OpenLoopCmdHxyzRWCmd_Payload_t SetVal_076 = {0,};
+	SetVal_076.cmdHx = 0.0;
+	SetVal_076.cmdHy = 0.0;
+	SetVal_076.cmdHz = 0.0;
+	interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+	
+	// 5) Start to count time ( Waiting time before Logging: 2800 sec / Tlm period: 1 sec / Comm. Duration: 720 sec )
+	CFE_TIME_SysTime_t		t0_10, t0_300, tnow;
+	t0_10 = CFE_TIME_GetTime();
+
+	uint32 dt = 0;
+	while (dt < 2800)
+	{	// Wait until dt > 2800 sec
+		OS_TaskDelay(1000);
+		tnow = CFE_TIME_GetTime();
+		dt = tnow.Seconds - t0_10.Seconds;
+	}
+	
+	// 4) Make "adcs_comm_07.bin" file to log the TLMs
+	FILE *fp;
+	size_t written;
+
+	fp = fopen("./cf/adcs_comm_07.bin","wb");
+
+	if (fp == NULL)
+	{
+		status = -5;		// Something is wrong! ::::: File open error
+		ADCS_HandleReport(status, ADCS_COMM_07_CC, NULL, 0);
+
+		SetVal_042.MainEstimatorMode 	= 6;
+		SetVal_042.BackupEstimatorMode 	= 5;
+		SetVal_042.ControlMode 			= 3;
+		SetVal_042.ControlTimeout		= 0;
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+		SetVal_056.RWL0		= 0;
+		SetVal_056.RWL1		= 0;
+		SetVal_056.RWL2		= 0;
+		SetVal_056.RWL3		= 0;
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+		return status;
+	}
+
+	// 6) Read Tlm of Estimator & Sensors
+	ADCS_Comm_ReferenceRPYvaluesCmd_Payload_t SetVal_054 = {0,};
+
+	ADCS_Comm_Estimator_Cmn_Payload_t	RetVal_210 = {0,};
+	ADCS_Comm_CalibratedRWLSensorTlm_Payload_t 	RetVal_209 = {0,};
+	ADCS_Comm_CalibratedFSSSensorTlm_Payload_t	RetVal_178 = {0,};
+
+	ADCS_Comm_COMM_07_Payload_t	Comm_07_Tlm_Set = {0,};
+
+	Comm_07_Tlm_Set.sync_word 	= 0xADC5;
+
+	SetVal_042.MainEstimatorMode 	= 6;
+	SetVal_042.BackupEstimatorMode 	= 5;
+	SetVal_042.ControlMode 			= 51;
+	SetVal_042.ControlTimeout		= 125;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+	t0_300 = CFE_TIME_GetTime();
+	uint32 dt300 = 0;
+	bool phase_sun_12_set = false;
+	bool phase_sun_13_set = false;
+	bool phase_sun_3_set = false;
+	bool phase_sun_50_set = false;
+	while (dt300 < 850)
+	{		
+
+		if ((dt300 > 820) && (phase_sun_3_set == false)) {
+			phase_sun_3_set = true;
+			SetVal_042.MainEstimatorMode 	= 6;
+			SetVal_042.BackupEstimatorMode 	= 5;
+			SetVal_042.ControlMode 			= 3;
+			SetVal_042.ControlTimeout		= 0;
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		}
+		else if ((dt300 > 720) && (phase_sun_50_set == false)) {
+			phase_sun_50_set = true;
+			SetVal_042.MainEstimatorMode 	= 6;
+			SetVal_042.BackupEstimatorMode 	= 5;
+			SetVal_042.ControlMode 			= 50;
+			SetVal_042.ControlTimeout		= 80;
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);			
+		}
+
+		else if ((dt300 > 420) && (phase_sun_13_set == false)) {
+			phase_sun_13_set = true;
+			SetVal_042.MainEstimatorMode 	= 6;
+			SetVal_042.BackupEstimatorMode 	= 5;
+			SetVal_042.ControlMode 			= 13;
+			SetVal_042.ControlTimeout		= 305;
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		}
+		else if ((dt300 > 120) && (phase_sun_12_set == false)) {
+			phase_sun_12_set = true;
+			SetVal_054.Roll = 0.0;
+			SetVal_054.Pitch = 0.0;
+			SetVal_054.Yaw = 0.0;
+			interstatus = ADCS_Comm_SetReferenceRPYValues(&SetVal_054);
+			OS_TaskDelay(10);
+
+			SetVal_042.MainEstimatorMode 	= 6;
+			SetVal_042.BackupEstimatorMode 	= 5;
+			SetVal_042.ControlMode 			= 12;
+			SetVal_042.ControlTimeout		= 305;
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		}
+
+		t0_10 = CFE_TIME_GetTime();	// Initialize 1 seconds Counter
+		dt = 0;	// Initialize time gap
+		
+
+		memset(&RetVal_210, 0, sizeof(RetVal_210));
+		memset(&RetVal_205, 0, sizeof(RetVal_205));
+		memset(&RetVal_209, 0, sizeof(RetVal_209));
+		memset(&RetVal_178, 0, sizeof(RetVal_178));
+		
+		// Comm_07_Tlm_Set.sync_word 	= 0xADC5;
+
+		// 		6-1) Read Tlm of Main:	
+		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		OS_TaskDelay(20);
+
+		// 		6-2) Read Sensor Raw Values - RWL	
+		interstatus = ADCS_Comm_GetRawRWLSensor(&RetVal_205);
+		OS_TaskDelay(20);
+
+		// 		6-3) Read Sensor Calibrated Values - RWL
+		interstatus = ADCS_Comm_GetCalibratedRWLSensor(&RetVal_209);
+		OS_TaskDelay(20);
+		
+		// 		6-4) Read Sensor Calibrated Values - FSS
+		interstatus = ADCS_Comm_GetCalibratedFSSSensor(&RetVal_178);
+		OS_TaskDelay(20);
+		
+		// 7) Write the Tlm to the file
+		Comm_07_Tlm_Set.MainEst		= RetVal_210;
+		Comm_07_Tlm_Set.RawRWL		= RetVal_205;
+		Comm_07_Tlm_Set.CalRWL		= RetVal_209;
+		Comm_07_Tlm_Set.CalFSS		= RetVal_178;
+
+		if ((written = fwrite(&Comm_07_Tlm_Set, sizeof(Comm_07_Tlm_Set), 1, fp)) != 1)
+		{
+			status = -6;		// Something is wrong! ::::: File write error
+			ADCS_HandleReport(status, ADCS_COMM_07_CC, NULL, 0);
+			fclose(fp);
+
+			SetVal_042.MainEstimatorMode 	= 6;
+			SetVal_042.BackupEstimatorMode 	= 5;
+			SetVal_042.ControlMode 			= 3;
+			SetVal_042.ControlTimeout		= 0;
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+			SetVal_056.RWL0		= 0;
+			SetVal_056.RWL1		= 0;
+			SetVal_056.RWL2		= 0;
+			SetVal_056.RWL3		= 0;
+			interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+			return status;
+		}
+
+
+		// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+		tnow = CFE_TIME_GetTime();
+		dt300 = tnow.Seconds - t0_300.Seconds;
+		dt = tnow.Seconds - t0_10.Seconds;
+
+		while (dt < 1)
+		{	// Wait until dt > 1 sec
+			OS_TaskDelay(50);
+			tnow = CFE_TIME_GetTime();
+			dt = tnow.Seconds - t0_10.Seconds;
+		}
+		
+	// 9) Go back to Step 6 until total time meets 720 sec
+	}
+	fclose(fp);
+
+	SetVal_042.MainEstimatorMode 	= 6;
+	SetVal_042.BackupEstimatorMode 	= 5;
+	SetVal_042.ControlMode 			= 3;
+	SetVal_042.ControlTimeout		= 0;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+	SetVal_056.RWL0		= 0;
+	SetVal_056.RWL1		= 0;
+	SetVal_056.RWL2		= 0;
+	SetVal_056.RWL3		= 0;
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+
+	ADCS_HandleReport(CFE_SUCCESS, ADCS_COMM_07_CC, NULL, 0);
+
+	return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_Comm08Cmd(const ADCS_Comm08Cmd_t *msg) {
+	// COMM 08:	HSS Commissioning
+	// [Procedure]
+	// 1) Power On ( GYR0, MAG0, FSS0, HSS0, RWLX )
+	// 2) Check Status of Sensors
+	// 3) Set Est. mode & Cont. mode ( Main: EstGyroEkf  (6) / Main: EstFullEkf  (5) / Control: ConXYXwheel / Timeout: 6000 s )
+	//	  Set Flag of UseEkf: HSS, STT elements false <-- GS Command (already set-up)
+	// 4) Make "adcs_comm_08.bin" file to log the TLMs
+	// 5) Start to count time ( Waiting time before Logging: 10 sec / Tlm period: 10 sec / Comm. Duration: 6000 sec )
+	// 6) Read Tlm of Estimator & Sensors
+	// 		6-1) Read Tlm of Main Estimator
+	// 		6-2) Read Sensor Raw Values - HSS
+	// 		6-3) Read Sensor Calibrated Values - HSS
+	// 7) Append the Tlm to the file
+	// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+	// 9) Go back to Step 6 until total time meets 6000 sec
+	// ** Status between every step must be reported!!
+
+
+	CFE_Status_t						status;
+	CFE_Status_t						interstatus;
+
+	uint8 cnt_try = 0;
+	
+	// 1) Power On ( GYR0, MAG0, FSS0, HSS0, RWLX )
+	ADCS_Comm_PowerState_Cmn_Payload_t		SetVal_056 = {0,};
+	ADCS_Comm_PowerState_Cmn_Payload_t		RetVal_183 = {0,};
+	SetVal_056.MAG0		= 1;
+	SetVal_056.GYR0		= 1;
+	SetVal_056.FSS0		= 1;
+	SetVal_056.HSS0		= 1;
+	SetVal_056.RWL0		= 1;
+	SetVal_056.RWL1		= 1;
+	SetVal_056.RWL2		= 1;
+	SetVal_056.RWL3		= 1;
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set GYR0 & MAG0 & FSS0 & HSS0 & RWLX --> ON
+	OS_TaskDelay(10);
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);		// Get GYR0 & MAG0 & FSS0 & HSS0 & RWLX power state
+	OS_TaskDelay(5000);
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{		
+		if ((interstatus == CFE_SUCCESS) && (RetVal_183.MAG0 == 1) && (RetVal_183.GYR0 == 1) && (RetVal_183.FSS0 == 1) && (RetVal_183.HSS0 == 1) && (RetVal_183.RWL0 == 1) && (RetVal_183.RWL1 == 1) && (RetVal_183.RWL2 == 1) && (RetVal_183.RWL3 == 1)) break;	// Check Power On well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_183.MAG0 != 1) || (RetVal_183.GYR0 != 1) || (RetVal_183.FSS0 != 1) || (RetVal_183.HSS0 != 1) || (RetVal_183.RWL0 != 1) || (RetVal_183.RWL1 != 1) || (RetVal_183.RWL2 != 1) || (RetVal_183.RWL3 != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -1;		// Something is wrong! ::::: Power State
+		ADCS_HandleReport(status, ADCS_COMM_08_CC, &RetVal_183, sizeof(RetVal_183));
+		return status;
+	}
+
+
+	// 2) Check Status of Sensors
+	ADCS_Comm_RawMAGSensorTlm_Paylaod_t	RetVal_180 = {0,};
+	ADCS_Comm_RawGYRSensorTlm_Payload_t	RetVal_204 = {0,};
+	// ADCS_Comm_RawCubeSenseSunTlm_Payload_t RetVal_170 = {0,};		// "FSS0 valid" is not identified yet. After idetification, use this status to check the state of FSS0.
+	ADCS_Comm_RawRWLSensorTlm_Payload_t RetVal_205 = {0,};
+	// ADCS_Comm_RawCubeSenseEarthTlm_Payload_t RetVal_179 = {0,};		// "HSS0 valid" is not identified yet. After idetification, use this status to check the state of FSS0.
+
+	OS_TaskDelay(2000);
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);	// Get Status of wheels
+	
+
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1) && (RetVal_205.RWL0ValidFlag == 1) && (RetVal_205.RWL1ValidFlag == 1) && (RetVal_205.RWL2ValidFlag == 1) && (RetVal_205.RWL3ValidFlag == 1)) break;	// Check Sensors Status Good		
+
+		// if not, wait changing status until 3 times
+		OS_TaskDelay(100);
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);	// Get Status of wheels
+		cnt_try++;
+	}
+
+	
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);	// Get Status of wheels
+
+	if ((interstatus != CFE_SUCCESS) || (RetVal_180.MAG0ValidFlag != 1) || (RetVal_204.GYR0ValidFlag != 1) || (RetVal_205.RWL0ValidFlag != 1) || (RetVal_205.RWL1ValidFlag != 1) || (RetVal_205.RWL2ValidFlag != 1) || (RetVal_205.RWL3ValidFlag != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -3;		// Something is wrong! ::::: Magnetometer Status
+		ADCS_HandleReport(status, ADCS_COMM_06_CC, &RetVal_180, sizeof(RetVal_180));
+		return status;
+	}
+	OS_TaskDelay(10);
+
+
+	// 3) Set Est. mode & Cont. mode ( Main: EstGyroEkf  (6) / Main: EstFullEkf  (5) / Control: ConXYXwheel / Timeout: 6000 s )
+	ADCS_Comm_ReferenceRPYvaluesCmd_Payload_t 		SetVal_054 = {0,};
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	SetVal_042 = {0,};
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	RetVal_150 = {0,};
+
+	SetVal_054.Roll = 0.0;
+	SetVal_054.Pitch = 0.0;
+	SetVal_054.Yaw = 0.0;
+	interstatus = ADCS_Comm_SetReferenceRPYValues(&SetVal_054);
+
+	SetVal_042.MainEstimatorMode 	= 6;
+	SetVal_042.BackupEstimatorMode 	= 5;
+	SetVal_042.ControlMode 			= 12;
+	SetVal_042.ControlTimeout		= 6000;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);	// Set Main Est mode = 6 / Set Backup Est mode = 5 / Control mode & Time out = 3 & 6000 s
+	OS_TaskDelay(100);
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);	// Get Main Est mode
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_150.MainEstimatorMode == 6) && (RetVal_150.ControlMode == 12)) break;	// Check Mode Change well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != 6) || (RetVal_150.ControlMode != 12))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -2;		// Something is wrong! ::::: Estimation Mode
+		ADCS_HandleReport(status, ADCS_COMM_08_CC, &RetVal_150, sizeof(RetVal_150));
+
+		
+		SetVal_042.MainEstimatorMode 	= 6;
+		SetVal_042.BackupEstimatorMode 	= 5;
+		SetVal_042.ControlMode 			= 3;
+		SetVal_042.ControlTimeout		= 0;
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+		SetVal_056.HSS0		= 0;
+		SetVal_056.RWL0		= 0;
+		SetVal_056.RWL1		= 0;
+		SetVal_056.RWL2		= 0;
+		SetVal_056.RWL3		= 0;
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+
+		return status;
+
+	}
+
+	// 4) Make "adcs_comm_08.bin" file to log the TLMs
+	FILE *fp;
+	size_t written;
+	fp = fopen("./cf/adcs_comm_08.bin","wb");
+	if (fp == NULL)
+	{
+		status = -5;		// Something is wrong! ::::: File open error
+		ADCS_HandleReport(status, ADCS_COMM_08_CC, NULL, 0);
+		
+		SetVal_042.MainEstimatorMode 	= 6;
+		SetVal_042.BackupEstimatorMode 	= 5;
+		SetVal_042.ControlMode 			= 3;
+		SetVal_042.ControlTimeout		= 0;
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+		SetVal_056.HSS0		= 0;
+		SetVal_056.RWL0		= 0;
+		SetVal_056.RWL1		= 0;
+		SetVal_056.RWL2		= 0;
+		SetVal_056.RWL3		= 0;
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+		return status;
+	}
+
+	// 5) Start to count time ( Waiting time before Logging: 10 sec / Tlm period: 10 sec / Comm. Duration: 6000 sec )
+	CFE_TIME_SysTime_t		t0_10, t0_300, tnow;
+	t0_10 = CFE_TIME_GetTime();
+
+	uint32 dt = 0;
+	while (dt < 10)
+	{	// Wait until dt > 10 sec
+		OS_TaskDelay(100);
+		tnow = CFE_TIME_GetTime();
+		dt = tnow.Seconds - t0_10.Seconds;
+	}
+
+	// 6) Read Tlm of Estimator & Sensors
+	ADCS_Comm_Estimator_Cmn_Payload_t	RetVal_210 = {0,};
+
+	ADCS_Comm_RawCubeSenseEarthTlm_Payload_t 	RetVal_179 = {0,};
+	ADCS_Comm_CalibratedHSSSensorTlm_Payload_t	RetVal_176 = {0,};
+
+	ADCS_Comm_COMM_08_Payload_t	Comm_08_Tlm_Set = {0,};
+
+	Comm_08_Tlm_Set.sync_word 	= 0xADC5;
+
+	t0_300 = CFE_TIME_GetTime();
+	uint32 dt300 = 0;
+	while (dt300 < 6000)
+	{
+		t0_10 = CFE_TIME_GetTime();	// Initialize 10 seconds Counter
+		dt = 0;	// Initialize time gap
+		
+
+		memset(&RetVal_210, 0, sizeof(RetVal_210));
+		memset(&RetVal_179, 0, sizeof(RetVal_179));
+		memset(&RetVal_176, 0, sizeof(RetVal_176));
+
+		// Comm_08_Tlm_Set.sync_word 	= 0xADC5;
+
+		// 		6-1) Read Tlm of Main:	
+		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		OS_TaskDelay(20);
+
+		// 		6-2) Read Sensor Raw Values - HSS	
+		interstatus = ADCS_Comm_GetRawCubeSenseEarth(&RetVal_179);
+		OS_TaskDelay(20);
+
+		// 		6-3) Read Sensor Calibrated Values - HSS
+		interstatus = ADCS_Comm_GetCalibratedHSSSensor(&RetVal_176);
+		OS_TaskDelay(20);
+
+		
+		// 7) Write the Tlm to the file
+		Comm_08_Tlm_Set.MainEst		= RetVal_210;
+		Comm_08_Tlm_Set.RawHSS 		= RetVal_179;
+		Comm_08_Tlm_Set.CalHSS 		= RetVal_176;
+
+		if ((written = fwrite(&Comm_08_Tlm_Set, sizeof(Comm_08_Tlm_Set), 1, fp)) != 1)
+		{
+			status = -6;		// Something is wrong! ::::: File write error
+			ADCS_HandleReport(status, ADCS_COMM_08_CC, NULL, 0);
+			fclose(fp);
+			
+			SetVal_042.MainEstimatorMode 	= 6;
+			SetVal_042.BackupEstimatorMode 	= 5;
+			SetVal_042.ControlMode 			= 3;
+			SetVal_042.ControlTimeout		= 0;
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+			SetVal_056.HSS0		= 0;
+			SetVal_056.RWL0		= 0;
+			SetVal_056.RWL1		= 0;
+			SetVal_056.RWL2		= 0;
+			SetVal_056.RWL3		= 0;
+			interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+			return status;
+		}
+
+
+		// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+		tnow = CFE_TIME_GetTime();
+		dt300 = tnow.Seconds - t0_300.Seconds;
+		dt = tnow.Seconds - t0_10.Seconds;
+
+		while (dt < 10)
+		{	// Wait until dt > 10 sec
+			OS_TaskDelay(100);
+			tnow = CFE_TIME_GetTime();
+			dt = tnow.Seconds - t0_10.Seconds;
+		}
+		
+	// 9) Go back to Step 6 until total time meets 6000 sec
+	}
+	fclose(fp);
+
+	SetVal_042.MainEstimatorMode 	= 6;
+	SetVal_042.BackupEstimatorMode 	= 5;
+	SetVal_042.ControlMode 			= 3;
+	SetVal_042.ControlTimeout		= 0;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+	SetVal_056.HSS0		= 0;
+	SetVal_056.RWL0		= 0;
+	SetVal_056.RWL1		= 0;
+	SetVal_056.RWL2		= 0;
+	SetVal_056.RWL3		= 0;
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+
+	ADCS_HandleReport(CFE_SUCCESS, ADCS_COMM_08_CC, NULL, 0);
+
+	return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_Comm09Cmd(const ADCS_Comm09Cmd_t *msg) {
+	// COMM 09:	Sun Tracking 3-axis Control
+	// [Procedure]
+	// 1) Power On ( GYR0, MAG0, FSS0, RWLX )
+	// 2) Check Status of Sensors
+	// 3) Set Est. mode & Cont. mode ( Main: EstGyroEkf  (6) / Main: EstGyro  (5) / Control: ConHxyzRW, ConXYZwheel, ConSunTrack / Timeout: 120+300+500 s )
+	//	  Set Flag of UseEkf: (HSS), STT elements false <-- GS Command (already set-up)
+	// ** Status between every step must be reported!!
+
+	CFE_Status_t						status;
+	CFE_Status_t						interstatus;
+
+	uint8 cnt_try = 0;
+		
+	// 1) Power On ( GYR0, MAG0, FSS0, RWLX )
+	ADCS_Comm_PowerState_Cmn_Payload_t		SetVal_056 = {0,};
+	ADCS_Comm_PowerState_Cmn_Payload_t		RetVal_183 = {0,};
+	SetVal_056.MAG0		= 1;
+	SetVal_056.GYR0		= 1;
+	SetVal_056.FSS0		= 1;
+	SetVal_056.RWL0		= 1;
+	SetVal_056.RWL1		= 1;
+	SetVal_056.RWL2		= 1;
+	SetVal_056.RWL3		= 1;
+
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set GYR0 & MAG0 & FSS0 & RWLX --> ON
+	OS_TaskDelay(10);
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);		// Get GYR0 & MAG0 & FSS0 & RWLX power state
+	OS_TaskDelay(5000);
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{		
+		if ((interstatus == CFE_SUCCESS) && (RetVal_183.MAG0 == 1) && (RetVal_183.GYR0 == 1) && (RetVal_183.FSS0 == 1) && (RetVal_183.RWL0 == 1) && (RetVal_183.RWL1 == 1) && (RetVal_183.RWL2 == 1) && (RetVal_183.RWL3 == 1)) break;	// Check Power On well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_183.MAG0 != 1) || (RetVal_183.GYR0 != 1) || (RetVal_183.FSS0 != 1) || (RetVal_183.RWL0 != 1) || (RetVal_183.RWL1 != 1) || (RetVal_183.RWL2 != 1) || (RetVal_183.RWL3 != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -1;		// Something is wrong! ::::: Power State
+		ADCS_HandleReport(status, ADCS_COMM_09_CC, &RetVal_183, sizeof(RetVal_183));
+		return status;
+	}
+
+
+	// 2) Check Status of Sensors
+	ADCS_Comm_RawMAGSensorTlm_Paylaod_t	RetVal_180 = {0,};
+	ADCS_Comm_RawGYRSensorTlm_Payload_t	RetVal_204 = {0,};
+	// ADCS_Comm_RawCubeSenseSunTlm_Payload_t RetVal_170 = {0,};		// "FSS0 valid" is not identified yet. After idetification, use this status to check the state of FSS0. -> (line 1578, 1584)
+	ADCS_Comm_RawRWLSensorTlm_Payload_t RetVal_205 = {0,};
+
+	OS_TaskDelay(2000);
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	// OS_TaskDelay(10);
+	// interstatus = interstatus + ADCS_Comm_GetRawCubeSenseSun(&RetVal_170);	// Get Status of FSS
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);	// Get Status of wheels
+	
+
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1) && (RetVal_205.RWL0ValidFlag == 1) && (RetVal_205.RWL1ValidFlag == 1) && (RetVal_205.RWL2ValidFlag == 1) && (RetVal_205.RWL3ValidFlag == 1)) break;	// Check Sensors Status Good
+		// if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1) && (RetVal_170.ValidResult0 == 1)) break;	// Check Sensors Status Good
+
+		// if not, wait changing status until 3 times
+		OS_TaskDelay(100);
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);	// Get Status of wheels
+		cnt_try++;
+	}
+
+	
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);	// Get Status of magnetometer
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);	// Get Status of gyro
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);	// Get Status of wheels
+
+	if ((interstatus != CFE_SUCCESS) || (RetVal_180.MAG0ValidFlag != 1) || (RetVal_204.GYR0ValidFlag != 1) || (RetVal_205.RWL0ValidFlag != 1) || (RetVal_205.RWL1ValidFlag != 1) || (RetVal_205.RWL2ValidFlag != 1) || (RetVal_205.RWL3ValidFlag != 1))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -3;		// Something is wrong! ::::: Magnetometer Status
+		ADCS_HandleReport(status, ADCS_COMM_09_CC, &RetVal_180, sizeof(RetVal_180));
+		return status;
+	}
+	OS_TaskDelay(10);
+
+	// 3) Set Est. mode & Cont. mode ( Main: EstGyroEkf  (6) / Main: EstGyro  (5) / Control: ConHxyzRW, ConXYZwheel, ConSunTrack / Timeout: 120+300
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	SetVal_042 = {0,};
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t	RetVal_150 = {0,};
+
+	SetVal_042.MainEstimatorMode 	= 6;
+	SetVal_042.BackupEstimatorMode 	= 5;
+	// SetVal_042.ControlMode 			= 51;
+	// SetVal_042.ControlTimeout		= 120;
+	SetVal_042.ControlMode 			= 3;
+	SetVal_042.ControlTimeout		= 0;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);	// Set Main Est mode = 6 / Set Backup Est mode = 5 / Control mode & Time out = 3 & 0 s
+	OS_TaskDelay(100);
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);	// Get Main Est mode
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_150.MainEstimatorMode == 6) && (RetVal_150.ControlMode == 3)) break;	// Check Mode Change well
+
+		// if not, try again until 3 times
+		interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		OS_TaskDelay(10);
+		interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != 6) || (RetVal_150.ControlMode != 3))
+	{	// after full try, if still something is wrong, STOP COMM Sequence!
+		status = -2;		// Something is wrong! ::::: Estimation Mode
+		ADCS_HandleReport(status, ADCS_COMM_09_CC, &RetVal_150, sizeof(RetVal_150));
+		return status;
+
+	}
+
+	// Before 5) Pre-define Hxyz Command values
+	ADCS_Comm_OpenLoopCmdHxyzRWCmd_Payload_t SetVal_076 = {0,};
+	SetVal_076.cmdHx = 0.0;
+	SetVal_076.cmdHy = 0.0;
+	SetVal_076.cmdHz = 0.0;
+	interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+	
+	// 5) Start to count time ( Waiting time before Logging: 2800 sec / Tlm period: 1 sec / Comm. Duration: 720 sec )
+	CFE_TIME_SysTime_t		t0_10, t0_300, tnow;
+	t0_10 = CFE_TIME_GetTime();
+
+	uint32 dt = 0;
+	while (dt < 2800)
+	{	// Wait until dt > 2800 sec
+		OS_TaskDelay(1000);
+		tnow = CFE_TIME_GetTime();
+		dt = tnow.Seconds - t0_10.Seconds;
+	}
+	
+
+	ADCS_Comm_ReferenceRPYvaluesCmd_Payload_t SetVal_054 = {0,};
+	SetVal_042.MainEstimatorMode 	= 6;
+	SetVal_042.BackupEstimatorMode 	= 5;
+	SetVal_042.ControlMode 			= 51;
+	SetVal_042.ControlTimeout		= 125;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+	t0_300 = CFE_TIME_GetTime();
+	uint32 dt300 = 0;
+	bool phase_ctrl_12_set = false;
+	bool phase_ctrl_13_set = false;
+	while (dt300 < 720)
+	{		
+		if ((dt300 > 420) && (phase_ctrl_13_set == false)) {
+			phase_ctrl_13_set = true;
+			SetVal_042.MainEstimatorMode 	= 6;
+			SetVal_042.BackupEstimatorMode 	= 5;
+			SetVal_042.ControlMode 			= 13;
+			SetVal_042.ControlTimeout		= 0;
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		}
+		else if ((dt300 > 120) && (phase_ctrl_12_set == false)) {
+			phase_ctrl_12_set = true;
+			SetVal_054.Roll = 0.0;
+			SetVal_054.Pitch = 0.0;
+			SetVal_054.Yaw = 0.0;
+			interstatus = ADCS_Comm_SetReferenceRPYValues(&SetVal_054);
+			OS_TaskDelay(10);
+
+			SetVal_042.MainEstimatorMode 	= 6;
+			SetVal_042.BackupEstimatorMode 	= 5;
+			SetVal_042.ControlMode 			= 12;
+			SetVal_042.ControlTimeout		= 305;
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		}
+
+		t0_10 = CFE_TIME_GetTime();	// Initialize 1 seconds Counter
+		dt = 0;	// Initialize time gap
+		
+
+		// 8) Check time from beginning of Step 6 to end of Step 7 (dt) -> Wait the remain time (10 - dt)
+		tnow = CFE_TIME_GetTime();
+		dt300 = tnow.Seconds - t0_300.Seconds;
+
+		OS_TaskDelay(1000);		
+	
+	}
+
+	SetVal_042.MainEstimatorMode 	= 6;
+	SetVal_042.BackupEstimatorMode 	= 5;
+	SetVal_042.ControlMode 			= 13;
+	SetVal_042.ControlTimeout		= 0;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+
+	ADCS_HandleReport(CFE_SUCCESS, ADCS_COMM_09_CC, NULL, 0);
+
+	return CFE_SUCCESS;
+}
+
+CFE_Status_t ADCS_Comm10Cmd(const ADCS_Comm10Cmd_t *msg)
+{
+	ADCS_HandleReport(CFE_SUCCESS, ADCS_COMM_10_CC, (void *)&msg->Payload, sizeof(msg->Payload));
+	return CFE_SUCCESS;
+}
+

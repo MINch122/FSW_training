@@ -83,6 +83,8 @@
 #define ADCS_SET_UNSOLICIT_TLM_MSG_SETUP_CC		40 // 112
 #define ADCS_SET_UNSOLICIT_EVENT_MSG_SETUP_CC	41 // 116
 #define ADCS_SET_INITIATE_EVENT_LOG_TRANSFER_CC	42 // 120
+#define ADCS_SET_OPENLOOPCMD_RWL_CC             44 // 74, Table 53
+#define ADCS_SET_OPENLOOP_CMD_HXYZ_RW_CC        45 // 76
 
 /* Telemetry */
 #define	ADCS_GET_ERROR_LOG_SETTING_CC			51 // 132
@@ -131,9 +133,21 @@
 #define ADCS_SEQ_LGCPT_CC						104
 #define ADCS_SEQ_RPYPT_CC						105
 
-
 #define ADCS_SET_ERROR_LOG_CLEAR_CC				110 // 5
 
 #define ADCS_GET_CURRENT_UNIX_TIME_INTERNAL_CC  114 // 133
+
+/* Commissioning Sequence */
+#define ADCS_COMM_01_CC                        120
+#define ADCS_COMM_02_CC                        121
+#define ADCS_COMM_03_CC                        122
+#define ADCS_COMM_04_CC                        123
+#define ADCS_COMM_05_CC                        124
+#define ADCS_COMM_06_CC                        125
+#define ADCS_COMM_07_CC                        126
+#define ADCS_COMM_08_CC                        127
+#define ADCS_COMM_09_CC                        128
+#define ADCS_COMM_10_CC                        129
+
 
 #endif

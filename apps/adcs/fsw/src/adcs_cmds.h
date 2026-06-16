@@ -64,6 +64,8 @@ CFE_Status_t ADCS_SetOrbitModeCmd(const ADCS_OrbitModeCmd_t *msg);	// 51
 CFE_Status_t ADCS_SetMagDeployCmd(const ADCS_MagDeployCmd_t *msg);	// 52
 CFE_Status_t ADCS_SetReferenceRPYValuesCmd(const ADCS_ReferenceRPYvaluesCmd_t *msg);	// 54
 CFE_Status_t ADCS_SetOpenLoopCmdMTQCmd(const ADCS_OpenLoopCmdMTQCmd_t *msg);	// 55
+CFE_Status_t ADCS_SetOpenLoopCmdRWLCmd(const ADCS_OpenLoopCmdRWLCmd_t *msg);	// 74
+CFE_Status_t ADCS_SetOpenLoopCmdHxyzRWCmd(const ADCS_OpenLoopCmdHxyzRWCmd_t *msg);	// 76
 CFE_Status_t ADCS_SetPowerStateCmd(const ADCS_PowerStateCmd_t *msg);	// 56
 CFE_Status_t ADCS_SetRunModeCmd(const ADCS_RunModeCmd_t *msg);	// 57
 CFE_Status_t ADCS_SetControlModeCmd(const ADCS_ControlModeCmd_t *msg);	// 58
@@ -133,5 +135,16 @@ CFE_Status_t ADCS_SequenceCmd_Vpointing(void);
 CFE_Status_t ADCS_SequenceCmd_KSCpointing(void);
 CFE_Status_t ADCS_SequenceCmd_LGCpointing(void);
 CFE_Status_t ADCS_SequenceCmd_RPYpointing(const ADCS_SequenceCmdRPYpointingCmd_t *msg);
+/* Commissioning sequence */
+CFE_Status_t ADCS_Comm01Cmd(const ADCS_Comm01Cmd_t *msg);
+CFE_Status_t ADCS_Comm02Cmd(const ADCS_Comm02Cmd_t *msg);
+CFE_Status_t ADCS_Comm03Cmd(const ADCS_Comm03Cmd_t *msg);
+CFE_Status_t ADCS_Comm04Cmd(const ADCS_Comm04Cmd_t *msg);
+CFE_Status_t ADCS_Comm05Cmd(const ADCS_Comm05Cmd_t *msg);
+CFE_Status_t ADCS_Comm06Cmd(const ADCS_Comm06Cmd_t *msg);
+CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg);
+CFE_Status_t ADCS_Comm08Cmd(const ADCS_Comm08Cmd_t *msg);
+CFE_Status_t ADCS_Comm09Cmd(const ADCS_Comm09Cmd_t *msg);
+CFE_Status_t ADCS_Comm10Cmd(const ADCS_Comm10Cmd_t *msg);
 
 #endif /* ADCS_CMDS_H */

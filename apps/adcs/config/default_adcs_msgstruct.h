@@ -166,6 +166,66 @@ typedef struct{ // ID 55
     ADCS_OpenLoopCmdMTQCmd_Payload_t Payload;
 } ADCS_OpenLoopCmdMTQCmd_t;
 
+typedef struct{ // ID 74, Table 53
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_OpenLoopCmdRWLCmd_Payload_t Payload;
+} ADCS_OpenLoopCmdRWLCmd_t;
+
+typedef struct{ // ID 76
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_Comm_OpenLoopCmdHxyzRWCmd_Payload_t Payload;
+} ADCS_OpenLoopCmdHxyzRWCmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_Comm_COMM_FLAG_Payload_t Payload;
+} ADCS_Comm01Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_Comm_COMM_FLAG_Payload_t Payload;
+} ADCS_Comm02Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_Comm_COMM_FLAG_Payload_t Payload;
+} ADCS_Comm03Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_Comm_COMM_FLAG_Payload_t Payload;
+} ADCS_Comm04Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_Comm_COMM_FLAG_Payload_t Payload;
+} ADCS_Comm05Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_Comm_COMM_FLAG_Payload_t Payload;
+} ADCS_Comm06Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_Comm_COMM_FLAG_Payload_t Payload;
+} ADCS_Comm07Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_Comm_COMM_FLAG_Payload_t Payload;
+} ADCS_Comm08Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_Comm_COMM_FLAG_Payload_t Payload;
+} ADCS_Comm09Cmd_t;
+
+typedef struct{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    ADCS_Comm_COMM_FLAG_Payload_t Payload;
+} ADCS_Comm10Cmd_t;
+
 typedef struct { // ID 56
     CFE_MSG_CommandHeader_t CommandHeader;
     ADCS_PowerStateCmd_Payload_t Payload;

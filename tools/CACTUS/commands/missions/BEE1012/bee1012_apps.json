@@ -177,6 +177,57 @@
         "params": []
       },
       {
+        "name": "Set Openloopcmd Rwl",
+        "mid": "0x1865",
+        "fc": 44,
+        "description": "ADCS_SET_OPENLOOPCMD_RWL_CC; CubeComputer CP8 Table 53 OpenLoopCommandRwl, endpoint ID 74",
+        "params": [
+          {
+            "name": "RWL0_OpenLoopSpeedCmd",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "RWL1_OpenLoopSpeedCmd",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "RWL2_OpenLoopSpeedCmd",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "RWL3_OpenLoopSpeedCmd",
+            "type": "float",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Set Openloop Cmd Hxyz Rw",
+        "mid": "0x1865",
+        "fc": 45,
+        "description": "ADCS_SET_OPENLOOP_CMD_HXYZ_RW_CC; endpoint ID 76",
+        "params": [
+          {
+            "name": "cmdHx",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "cmdHy",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "cmdHz",
+            "type": "float",
+            "default": "0"
+          }
+        ]
+      },
+      {
         "name": "Set Power State",
         "mid": "0x1865",
         "fc": 23,
@@ -653,297 +704,234 @@
         "params": []
       },
       {
-        "name": "Request HK",
-        "mid": "0x1866",
-        "fc": 0,
-        "params": []
-      },
-      {
-        "name": "Request Beacon",
-        "mid": "0x1867",
-        "fc": 0,
-        "description": "ADCS_SEND_BCN_MID",
-        "params": []
-      }
-    ]
-  },
-  {
-    "app": "ADCS2",
-    "description": "Secondary ADCS interface",
-    "commands": [
-      {
-        "name": "Noop",
+        "name": "Commissioning 01",
         "mid": "0x1865",
-        "fc": 0,
-        "params": []
-      },
-      {
-        "name": "Reset Counters",
-        "mid": "0x1865",
-        "fc": 1,
-        "params": []
-      },
-      {
-        "name": "Set Reset",
-        "mid": "0x1865",
-        "fc": 11,
-        "params": []
-      },
-      {
-        "name": "Set Current Unix Time",
-        "mid": "0x1865",
-        "fc": 12,
+        "fc": 120,
+        "description": "ADCS_COMM_01_CC",
         "params": [
           {
-            "name": "CurrentUnixseconds",
-            "type": "uint32",
-            "default": "0"
-          },
-          {
-            "name": "CurrentUnixNanoseconds",
-            "type": "uint32",
-            "default": "0"
-          }
-        ]
-      },
-      {
-        "name": "Persist Config",
-        "mid": "0x1865",
-        "fc": 14,
-        "params": []
-      },
-      {
-        "name": "Set Control Estimation Mode",
-        "mid": "0x1865",
-        "fc": 15,
-        "params": [
-          {
-            "name": "ControlMode",
+            "name": "flag_tlmtype",
             "type": "uint8",
             "default": "0"
           },
           {
-            "name": "MainEstimatorMode",
+            "name": "flag_estmode",
             "type": "uint8",
             "default": "0"
           },
           {
-            "name": "BackupEstimatorMode",
-            "type": "uint8",
-            "default": "0"
-          },
-          {
-            "name": "ControlTimeout",
-            "type": "uint16",
-            "default": "0"
-          }
-        ]
-      },
-      {
-        "name": "Set Orbit Mode",
-        "mid": "0x1865",
-        "fc": 19,
-        "params": [],
-        "description": "ADCS2_SET_ORBIT_MODE_CC"
-      },
-      {
-        "name": "Set Power State",
-        "mid": "0x1865",
-        "fc": 23,
-        "description": "ADCS2_SET_POWER_STATE_CC",
-        "params": []
-      },
-      {
-        "name": "Set Mounting Config",
-        "mid": "0x1865",
-        "fc": 31,
-        "description": "ADCS2_SET_MOUNTING_CONFIG_CC",
-        "params": []
-      },
-      {
-        "name": "Set Estimator Config",
-        "mid": "0x1865",
-        "fc": 33,
-        "params": [],
-        "description": "ADCS2_SET_ESTIMATOR_CONFIG_CC"
-      },
-      {
-        "name": "Set Sat Orbit Param Config",
-        "mid": "0x1865",
-        "fc": 34,
-        "params": [],
-        "description": "ADCS2_SET_SAT_ORBIT_PARAM_CONFIG_CC"
-      },
-      {
-        "name": "Set Openloop Cmd HXYZ RW",
-        "mid": "0x1865",
-        "fc": 43,
-        "description": "ADCS2_SET_OPENLOOP_CMD_HXYZ_RW_CC",
-        "params": [
-          {
-            "name": "cmdHx",
-            "type": "float",
-            "default": "0"
-          },
-          {
-            "name": "cmdHy",
-            "type": "float",
-            "default": "0"
-          },
-          {
-            "name": "cmdHz",
-            "type": "float",
-            "default": "0"
-          }
-        ]
-      },
-      {
-        "name": "Get Current Unix Time",
-        "mid": "0x1865",
-        "fc": 52,
-        "params": []
-      },
-      {
-        "name": "Get Control Estimation Mode",
-        "mid": "0x1865",
-        "fc": 55,
-        "params": []
-      },
-      {
-        "name": "Get Raw Mag Sensor",
-        "mid": "0x1865",
-        "fc": 61,
-        "description": "ADCS2_GET_RAW_MAG_SENSOR_CC",
-        "params": []
-      },
-      {
-        "name": "Get Power State",
-        "mid": "0x1865",
-        "fc": 63,
-        "params": []
-      },
-      {
-        "name": "Get Mounting Config",
-        "mid": "0x1865",
-        "fc": 71,
-        "params": []
-      },
-      {
-        "name": "Get Estimator Config",
-        "mid": "0x1865",
-        "fc": 73,
-        "params": [],
-        "description": "ADCS2_GET_ESTIMATOR_CONFIG_CC"
-      },
-      {
-        "name": "Get Sat Orbit Param Config",
-        "mid": "0x1865",
-        "fc": 74,
-        "params": [],
-        "description": "ADCS2_GET_SAT_ORBIT_PARAM_CONFIG_CC"
-      },
-      {
-        "name": "Get Raw Gyr Sensor",
-        "mid": "0x1865",
-        "fc": 80,
-        "params": []
-      },
-      {
-        "name": "Get Main Estimator TLM",
-        "mid": "0x1865",
-        "fc": 88,
-        "params": [],
-        "description": "ADCS2_GET_MAIN_ESTIMATOR_TLM_CC"
-      },
-      {
-        "name": "Get Raw RWL Sensor",
-        "mid": "0x1865",
-        "fc": 90,
-        "params": [],
-        "description": "ADCS2_GET_RAW_RWL_SENSOR_CC"
-      },
-      {
-        "name": "Set Interface Transport",
-        "mid": "0x1865",
-        "fc": 91,
-        "description": "ADCS2_SET_INTERFACE_TRANSPORT_CC",
-        "params": [
-          {
-            "name": "Transport",
+            "name": "flag_contmode",
             "type": "uint8",
             "default": "0"
           }
         ]
       },
       {
-        "name": "Comm 01",
+        "name": "Commissioning 02",
         "mid": "0x1865",
-        "fc": 101,
-        "description": "ADCS2_COMM_01_CC",
-        "params": []
+        "fc": 121,
+        "description": "ADCS_COMM_02_CC",
+        "params": [
+          {
+            "name": "flag_tlmtype",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_estmode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_contmode",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Comm 02",
+        "name": "Commissioning 03",
         "mid": "0x1865",
-        "fc": 102,
-        "description": "ADCS2_COMM_02_CC",
-        "params": []
+        "fc": 122,
+        "description": "ADCS_COMM_03_CC",
+        "params": [
+          {
+            "name": "flag_tlmtype",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_estmode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_contmode",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Comm 03",
+        "name": "Commissioning 04",
         "mid": "0x1865",
-        "fc": 103,
-        "description": "ADCS2_COMM_03_CC",
-        "params": []
+        "fc": 123,
+        "description": "ADCS_COMM_04_CC",
+        "params": [
+          {
+            "name": "flag_tlmtype",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_estmode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_contmode",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Comm 04",
+        "name": "Commissioning 05",
         "mid": "0x1865",
-        "fc": 104,
-        "description": "ADCS2_COMM_04_CC",
-        "params": []
+        "fc": 124,
+        "description": "ADCS_COMM_05_CC",
+        "params": [
+          {
+            "name": "flag_tlmtype",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_estmode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_contmode",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Comm 05",
+        "name": "Commissioning 06",
         "mid": "0x1865",
-        "fc": 105,
-        "description": "ADCS2_COMM_05_CC",
-        "params": []
+        "fc": 125,
+        "description": "ADCS_COMM_06_CC",
+        "params": [
+          {
+            "name": "flag_tlmtype",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_estmode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_contmode",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Comm 06",
+        "name": "Commissioning 07",
         "mid": "0x1865",
-        "fc": 106,
-        "description": "ADCS2_COMM_06_CC",
-        "params": []
+        "fc": 126,
+        "description": "ADCS_COMM_07_CC",
+        "params": [
+          {
+            "name": "flag_tlmtype",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_estmode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_contmode",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Comm 07",
+        "name": "Commissioning 08",
         "mid": "0x1865",
-        "fc": 107,
-        "description": "ADCS2_COMM_07_CC",
-        "params": []
+        "fc": 127,
+        "description": "ADCS_COMM_08_CC",
+        "params": [
+          {
+            "name": "flag_tlmtype",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_estmode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_contmode",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Comm 08",
+        "name": "Commissioning 09",
         "mid": "0x1865",
-        "fc": 108,
-        "description": "ADCS2_COMM_08_CC",
-        "params": []
+        "fc": 128,
+        "description": "ADCS_COMM_09_CC",
+        "params": [
+          {
+            "name": "flag_tlmtype",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_estmode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_contmode",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Comm 09",
+        "name": "Commissioning 10",
         "mid": "0x1865",
-        "fc": 109,
-        "description": "ADCS2_COMM_09_CC",
-        "params": []
-      },
-      {
-        "name": "Comm 10",
-        "mid": "0x1865",
-        "fc": 110,
-        "description": "ADCS2_COMM_10_CC",
-        "params": []
+        "fc": 129,
+        "description": "ADCS_COMM_10_CC",
+        "params": [
+          {
+            "name": "flag_tlmtype",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_estmode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "flag_contmode",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Request HK",
@@ -955,7 +943,7 @@
         "name": "Request Beacon",
         "mid": "0x1867",
         "fc": 0,
-        "description": "ADCS2_SEND_BCN_MID",
+        "description": "ADCS_SEND_BCN_MID",
         "params": []
       }
     ]

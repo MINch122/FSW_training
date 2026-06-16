@@ -154,6 +154,8 @@ int32 ADCS_SetOrbitMode(const ADCS_OrbitModeCmd_Payload_t *setVal);	// 51
 int32 ADCS_SetMagDeploy(const ADCS_MagDeployCmd_Payload_t *setVal);	// 52
 int32 ADCS_SetReferenceRPYValues(const ADCS_ReferenceRPYvaluesCmd_Payload_t *setVal);	// 54
 int32 ADCS_SetOpenLoopCmdMTQ(const ADCS_OpenLoopCmdMTQCmd_Payload_t *setVal);	// 55
+int32 ADCS_SetOpenLoopCmdRWL(const ADCS_OpenLoopCmdRWLCmd_Payload_t *setVal);	// 74
+int32 ADCS_SetOpenLoopCmdHxyzRW(const ADCS_Comm_OpenLoopCmdHxyzRWCmd_Payload_t *setVal);	// 76
 int32 ADCS_SetPowerState(const ADCS_PowerStateCmd_Payload_t *setVal);	// 56
 int32 ADCS_SetRunMode(const ADCS_RunModeCmd_Payload_t *setVal);	// 57
 int32 ADCS_SetControlMode(const ADCS_ControlModeCmd_Payload_t *setVal);	// 58
@@ -242,5 +244,27 @@ void ADCS_ListenEventTask(void);
  */
 
 int32 ADCS_COMM_InitAngRateEst(void);
+/* Commissioning support helpers */
+int32 ADCS_Comm_SetControlEstimationMode(const ADCS_Comm_ControlEstimationMode_Cmn_Payload_t *setVal);
+int32 ADCS_Comm_SetReferenceRPYValues(const ADCS_Comm_ReferenceRPYvaluesCmd_Payload_t *setVal);
+int32 ADCS_Comm_SetPowerState(const ADCS_Comm_PowerState_Cmn_Payload_t *setVal);
+int32 ADCS_Comm_SetOpenLoopCmdHxyzRW(const ADCS_Comm_OpenLoopCmdHxyzRWCmd_Payload_t *setVal);
+int32 ADCS_Comm_GetControlEstimationMode(ADCS_Comm_ControlEstimationMode_Cmn_Payload_t *returnVal);
+int32 ADCS_Comm_GetRawCubeSenseSun(ADCS_Comm_RawCubeSenseSunTlm_Payload_t *returnVal);
+int32 ADCS_Comm_GetControllerTlm(ADCS_Comm_ControllerTlm_Payload_t *returnVal);
+int32 ADCS_Comm_GetBackupEstTlm(ADCS_Comm_Estimator_Cmn_Payload_t *returnVal);
+int32 ADCS_Comm_GetModelsTlm(ADCS_Comm_ModelsTlm_Payload_t *returnVal);
+int32 ADCS_Comm_GetCalibratedHSSSensor(ADCS_Comm_CalibratedHSSSensorTlm_Payload_t *returnVal);
+int32 ADCS_Comm_GetCalibratedMAGSensor(ADCS_Comm_CalibratedMAGSensorTlm_Payload_t *returnVal);
+int32 ADCS_Comm_GetCalibratedFSSSensor(ADCS_Comm_CalibratedFSSSensorTlm_Payload_t *returnVal);
+int32 ADCS_Comm_GetRawCubeSenseEarth(ADCS_Comm_RawCubeSenseEarthTlm_Payload_t *returnVal);
+int32 ADCS_Comm_GetRawMAGSensor(ADCS_Comm_RawMAGSensorTlm_Paylaod_t *returnVal);
+int32 ADCS_Comm_GetPowerState(ADCS_Comm_PowerState_Cmn_Payload_t *returnVal);
+int32 ADCS_Comm_GetRawCSSSensor(ADCS_Comm_RawCSSSensorTlm_Payload_t *returnVal);
+int32 ADCS_Comm_GetRawGYRSensor(ADCS_Comm_RawGYRSensorTlm_Payload_t *returnVal);
+int32 ADCS_Comm_GetRawRWLSensor(ADCS_Comm_RawRWLSensorTlm_Payload_t *returnVal);
+int32 ADCS_Comm_GetCalibratedCSSSensor(ADCS_Comm_CalibratedCSSSensorTlm_Payload_t *returnVal);
+int32 ADCS_Comm_GetCalibratedRWLSensor(ADCS_Comm_CalibratedRWLSensorTlm_Payload_t *returnVal);
+int32 ADCS_Comm_GetMainEstTlm(ADCS_Comm_Estimator_Cmn_Payload_t *returnVal);
 
 #endif

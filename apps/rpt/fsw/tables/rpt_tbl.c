@@ -9,7 +9,6 @@
 #include "ci_lab_msgids.h"
 
 #include "adcs_msgids.h"
-#include "adcs2_msgids.h"
 #include "eps_msgids.h"
 #include "gpio_msgids.h"
 #include "paybee_kisscam_msgids.h"
@@ -56,8 +55,8 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 6 */
-    {.UsedState = RPT_ENABLED,
-        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(ADCS2_REPORT_TLM_MID),
+    {.UsedState = RPT_DISABLED,
+        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 7 */

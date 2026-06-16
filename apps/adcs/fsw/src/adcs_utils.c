@@ -487,6 +487,53 @@ static ErrorCode cubeObc_sendReceive(TctlmCommsMasterSvc_Endpoint *masterEndpoin
 
 
 
+
+int32 ADCS_SetCommand_Common(uint16 cmdId, const void *setVal, uint16 size)
+{
+    int32_t status;
+    TctlmCommsMasterSvc_Endpoint target;
+    uint8_t *tx_buffer;
+
+    ZERO_VAR(target);
+    target.id = cmdId;
+    memcpy((uint8_t *)&target.endpoint, (uint8_t *)&endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+    tx_buffer = cubeObc_connect_buffer(&target);
+    if ((size > 0u) && (setVal != NULL))
+    {
+        memcpy(tx_buffer, setVal, size);
+    }
+
+    if ((status = cubeObc_sendReceive(&target, size)) != CUBEOBC_ERROR_OK)
+    {
+        OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n", status, target.id);
+        return status;
+    }
+
+    return CFE_SUCCESS;
+}
+
+int32 ADCS_GetTelemetry_Common(uint16 tlmId, void *returnVal, uint16 bufferSize)
+{
+    int32_t status;
+    TctlmCommsMasterSvc_Endpoint target;
+    uint8_t *rx_buffer;
+
+    ZERO_VAR(target);
+    target.id = tlmId;
+    memcpy((uint8_t *)&target.endpoint, (uint8_t *)&endpoint, sizeof(TypeDef_TctlmEndpoint));
+
+    rx_buffer = cubeObc_connect_buffer(&target);
+    if ((status = cubeObc_sendReceive(&target, bufferSize)) != CUBEOBC_ERROR_OK)
+    {
+        OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
+        return status;
+    }
+
+    memcpy(returnVal, rx_buffer, bufferSize);
+    return CFE_SUCCESS;
+}
+
 /********************************************************
  * 
  * COSMIC Actual Set Command Function
@@ -840,6 +887,17 @@ int32 ADCS_SetOpenLoopCmdMTQ(const ADCS_OpenLoopCmdMTQCmd_Payload_t *setVal)
 	}
 
 	return CFE_SUCCESS;
+}
+
+
+int32 ADCS_SetOpenLoopCmdRWL(const ADCS_OpenLoopCmdRWLCmd_Payload_t *setVal)
+{
+    return ADCS_SetCommand_Common(ADCS_ID_SET_OPENLOOPCMD_RWL, setVal, sizeof(*setVal));
+}
+
+int32 ADCS_SetOpenLoopCmdHxyzRW(const ADCS_Comm_OpenLoopCmdHxyzRWCmd_Payload_t *setVal)
+{
+    return ADCS_SetCommand_Common(ADCS_ID_SET_OPENLOOP_CMD_HXYZ_RW, setVal, sizeof(*setVal));
 }
 
 int32 ADCS_SetPowerState(const ADCS_PowerStateCmd_Payload_t *setVal)
@@ -2942,3 +3000,30 @@ int32 ADCS_SubSeqTlmSet_InitAngRateEst() {
 	return CFE_SUCCESS;
 }
 */
+
+
+/********************************************************
+ * Commissioning support helpers
+ ********************************************************/
+int32 ADCS_Comm_SetControlEstimationMode(const ADCS_Comm_ControlEstimationMode_Cmn_Payload_t *setVal) { return ADCS_SetCommand_Common(ADCS_ID_SET_CONTROL_ESTIMATION_MODE, setVal, sizeof(*setVal)); }
+int32 ADCS_Comm_SetReferenceRPYValues(const ADCS_Comm_ReferenceRPYvaluesCmd_Payload_t *setVal) { return ADCS_SetCommand_Common(ADCS_ID_SET_REFERENCE_RPY_VALUES, setVal, sizeof(*setVal)); }
+int32 ADCS_Comm_SetPowerState(const ADCS_Comm_PowerState_Cmn_Payload_t *setVal) { return ADCS_SetCommand_Common(ADCS_ID_SET_POWER_STATE, setVal, sizeof(*setVal)); }
+int32 ADCS_Comm_SetOpenLoopCmdHxyzRW(const ADCS_Comm_OpenLoopCmdHxyzRWCmd_Payload_t *setVal) { return ADCS_SetCommand_Common(ADCS_ID_SET_OPENLOOP_CMD_HXYZ_RW, setVal, sizeof(*setVal)); }
+int32 ADCS_Comm_GetControlEstimationMode(ADCS_Comm_ControlEstimationMode_Cmn_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_CONTROL_ESTIMATION_MODE, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetRawCubeSenseSun(ADCS_Comm_RawCubeSenseSunTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_RAW_CUBESENSE_SUN, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetControllerTlm(ADCS_Comm_ControllerTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_CONTROLLER_TLM, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetBackupEstTlm(ADCS_Comm_Estimator_Cmn_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_BACKUP_ESTIMATOR_TLM, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetModelsTlm(ADCS_Comm_ModelsTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_MODELS_TLM, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetCalibratedHSSSensor(ADCS_Comm_CalibratedHSSSensorTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_CALIBRATED_HSS_SENSOR, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetCalibratedMAGSensor(ADCS_Comm_CalibratedMAGSensorTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_CALIBRATED_MAG_SENSOR, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetCalibratedFSSSensor(ADCS_Comm_CalibratedFSSSensorTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_CALIBRATED_FSS_SENSOR, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetRawCubeSenseEarth(ADCS_Comm_RawCubeSenseEarthTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_RAW_CUBESENSE_EARTH, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetRawMAGSensor(ADCS_Comm_RawMAGSensorTlm_Paylaod_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_RAW_MAG_SENSOR, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetPowerState(ADCS_Comm_PowerState_Cmn_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_POWERSTATE, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetRawCSSSensor(ADCS_Comm_RawCSSSensorTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_RAW_CSS_SENSOR, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetRawGYRSensor(ADCS_Comm_RawGYRSensorTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_RAW_GYR_SENSOR, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetRawRWLSensor(ADCS_Comm_RawRWLSensorTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_RAW_RWL_SENSOR, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetCalibratedCSSSensor(ADCS_Comm_CalibratedCSSSensorTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_CALIBRATED_CSS_SENSOR, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetCalibratedRWLSensor(ADCS_Comm_CalibratedRWLSensorTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_CALIBRATED_RWL_SENSOR, returnVal, sizeof(*returnVal)); }
+int32 ADCS_Comm_GetMainEstTlm(ADCS_Comm_Estimator_Cmn_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_MAIN_ESTIMATOR_TLM, returnVal, sizeof(*returnVal)); }
+

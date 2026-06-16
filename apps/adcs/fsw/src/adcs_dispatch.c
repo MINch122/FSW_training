@@ -262,6 +262,20 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
+        case ADCS_SET_OPENLOOPCMD_RWL_CC:
+            // ID 74, Table 53
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_OpenLoopCmdRWLCmd_t))) {
+                ADCS_SetOpenLoopCmdRWLCmd((const ADCS_OpenLoopCmdRWLCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_SET_OPENLOOP_CMD_HXYZ_RW_CC:
+            // ID 76
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_OpenLoopCmdHxyzRWCmd_t))) {
+                ADCS_SetOpenLoopCmdHxyzRWCmd((const ADCS_OpenLoopCmdHxyzRWCmd_t *)SBBufPtr);
+            }
+            break;
+
         case ADCS_SET_POWER_STATE_CC:
             // ID 56
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_PowerStateCmd_t))) {
@@ -719,6 +733,68 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
                 ADCS_GetCurrentUnixTimeInternalCmd();
             }
             break;		
+
+        /* ADCS commissioning commands. */
+        case ADCS_COMM_01_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm01Cmd_t))) {
+                ADCS_Comm01Cmd((const ADCS_Comm01Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_COMM_02_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm02Cmd_t))) {
+                ADCS_Comm02Cmd((const ADCS_Comm02Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_COMM_03_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm03Cmd_t))) {
+                ADCS_Comm03Cmd((const ADCS_Comm03Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_COMM_04_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm04Cmd_t))) {
+                ADCS_Comm04Cmd((const ADCS_Comm04Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_COMM_05_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm05Cmd_t))) {
+                ADCS_Comm05Cmd((const ADCS_Comm05Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_COMM_06_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm06Cmd_t))) {
+                ADCS_Comm06Cmd((const ADCS_Comm06Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_COMM_07_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm07Cmd_t))) {
+                ADCS_Comm07Cmd((const ADCS_Comm07Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_COMM_08_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm08Cmd_t))) {
+                ADCS_Comm08Cmd((const ADCS_Comm08Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_COMM_09_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm09Cmd_t))) {
+                ADCS_Comm09Cmd((const ADCS_Comm09Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_COMM_10_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm10Cmd_t))) {
+                ADCS_Comm10Cmd((const ADCS_Comm10Cmd_t *)SBBufPtr);
+            }
+            break;
+
         /* default case already found during FC vs length test */
         default:
             CFE_EVS_SendEvent(ADCS_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
