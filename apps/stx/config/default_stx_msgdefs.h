@@ -30,7 +30,7 @@
 #include "stx_fcncodes.h"
 
 #ifndef ESUP_MAX_DATA_LENGTH
-#define ESUP_MAX_DATA_LENGTH  1479
+#define ESUP_MAX_DATA_LENGTH  1472
 #endif
 
 
@@ -52,6 +52,11 @@ typedef struct STX_Set_Payload
 {
     uint8 data;                            /**< 32 bit unsigned integer value */
 } STX_Set_Payload_t;
+
+typedef struct STX_SetModuleId_Payload
+{
+    uint16 ModuleId;
+} STX_SetModuleId_Payload_t;
 
 typedef struct STX_Set1_Payload
 {

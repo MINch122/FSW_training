@@ -2,10 +2,10 @@
  * @file ftpnew.h
  * @author Han-Gyeol Ryu (ryu@yonsei.ac.kr)
  * @brief FTP-NEW server.
- *        FTP-NEW stands for "F***ing Tired of Patching this 
+ *        FTP-NEW stands for "F***ing Tired of Patching these 
  *            Nonsensical Extensions and Wrappers for FTP."
- * @version 0.1
- * @date 2026-06-01
+ * @version 1.0
+ * @date 2026-06-04
  * 
  * Astrodynamics & Control Lab, Yonsei University.
  */

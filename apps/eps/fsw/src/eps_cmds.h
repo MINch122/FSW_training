@@ -50,7 +50,7 @@ CFE_Status_t EPS_ResetCountersCmd(const EPS_ResetCountersCmd_t *Msg);
  *
  * Beacon byte meanings:
  * - PMU.sm_en_mask: bit0..7 = PMU submodule enable status 0..7, 1=enabled.
- * - PDU.out_i/out_en: channels 8,10,12,14,15,16,18,19,20,21,22,23.
+ * - PDU.out_i/out_en: channels 8,10,11,12,14,15,16,18,19,20,21,22,23.
  */
 CFE_Status_t EPS_SendBcnCmd(const EPS_SendBcnCmd_t *Msg);
 /*

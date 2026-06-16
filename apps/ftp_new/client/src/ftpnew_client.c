@@ -2,15 +2,15 @@
  * @file ftpnew_client.c
  * @author Han-Gyeol Ryu (ryu@yonsei.ac.kr)
  * @brief Ground-side client for the ftpnew backend.
- * @version 0.1
- * @date 2026-06-02
+ * @version 1.0
+ * @date 2026-06-04
  * 
  * Astrodynamics & Control Lab, Yonsei University.
  *
  * Endian convention: all multi-byte payload integers cross the wire through
  * csp_hton32 / csp_ntoh32, including the extension requests.
- * Upload FTP_DATA chunk index keeps the historical little-endian exception;
- * download FTP_DATA chunk index follows network byte order for legacy GS FTP compatibility.
+ * The historical blunder for FTP_DATA chunk index is still an exception,
+ * which is always LE.
  */
 #include "ftpnew_client.h"
 #include "ftpnew_types_internal.h"
@@ -26,7 +26,6 @@
 
 #include <gs/util/error.h>
 #include <gs/ftp/client.h>
-#include <gs/util/crc32.h>
 
 #define GS_FTP_INTERNAL_USE 1
 #include <gs/ftp/internal/types.h>
@@ -398,7 +397,7 @@ static gs_error_t ftpnew_status_reply(ftpnew_state_t* state)
         }
 
         ftp_packet_t* fp = (ftp_packet_t*)&packet->data;
-        fp->data.chunk = csp_ntoh32(fp->data.chunk);
+        fp->data.chunk = csp_letoh32(fp->data.chunk);
 
         /* Server overloads the type byte with an ftp_ret_t error code on a
          * mid-stream read failure. Decode as int8_t to recover the sign. */

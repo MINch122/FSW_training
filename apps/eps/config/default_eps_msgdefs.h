@@ -40,9 +40,9 @@
 #define EPS_BCN_NODE_BP8_INDEX 4u
 #define EPS_BCN_NODE_MASK(index) ((uint8)(1u << (index)))
 #define EPS_BCN_INVALID_FILL 0x00u
-#define EPS_PDU_BCN_USED_CH_COUNT 12u
+#define EPS_PDU_BCN_USED_CH_COUNT 13u
 #define EPS_PDU_BCN_USED_CH_LIST \
-    {8u, 10u, 12u, 14u, 15u, 16u, 18u, 19u, 20u, 21u, 22u, 23u}
+    {8u, 10u, 11u, 12u, 14u, 15u, 16u, 18u, 19u, 20u, 21u, 22u, 23u}
 #define EPS_RPARAM_DATA_MAX_LEN 128
 /* Matches libgscsp RPARAM store/slot fields: 25 chars plus NUL. */
 #define EPS_RPARAM_STORE_NAME_LEN 26
@@ -441,9 +441,9 @@ typedef struct EPS_PACK {
 } EPS_BcnTlm_PMU_Payload_t;
 
 /*
- * PDU Beacon - 36 bytes
+ * PDU Beacon - 39 bytes
  * Channels are the operational PDU power-if channel numbers:
- * 8, 10, 12, 14, 15, 16, 18, 19, 20, 21, 22, 23.
+ * 8, 10, 11, 12, 14, 15, 16, 18, 19, 20, 21, 22, 23.
  */
 typedef struct EPS_PACK {
     int16  out_i[EPS_PDU_BCN_USED_CH_COUNT];   /* PDU output current [mA] for used channels */
@@ -469,7 +469,7 @@ typedef struct EPS_PACK {
     uint16 heater_i;           /* BP8 addr 0x2A */
 } EPS_BcnTlm_BP8_Payload_t;
 
-/* Full EPS Beacon Payload: PMU(36) + PDU(36) + ACU(25) * 2 + BP8(22) = 144 bytes */
+/* Full EPS Beacon Payload: PMU(36) + PDU(39) + ACU(25) * 2 + BP8(22) = 147 bytes */
 typedef struct EPS_PACK {
     EPS_BcnTlm_PMU_Payload_t  PMU;
     EPS_BcnTlm_PDU_Payload_t  PDU;

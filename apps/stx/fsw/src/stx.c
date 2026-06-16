@@ -241,5 +241,20 @@ CFE_Status_t STX_Init(void)
                           VersionString);
     }
 
+    STX_Set_SYMBOLRAtE_t init_symrate;
+    STX_Set_CENTERFREQ_t init_centfreq;
+    STX_Set_MODCOD_t init_modcod;
+    STX_Set_ROLLOFF_t init_rolloff;
+
+    init_symrate.Payload.data = 0x04;
+    init_centfreq.Payload.data = 2403.5;
+    init_modcod.Payload.data = 1;
+    init_rolloff.Payload.data = 2;
+
+    STX_SET_SYMBOLRATECmd(&init_symrate);
+    STX_Set_CENTERFREQCmd(&init_centfreq);
+    STX_Set_MODCODCmd(&init_modcod);
+    STX_Set_ROLLOFFCmd(&init_rolloff);
+
     return status;
 }

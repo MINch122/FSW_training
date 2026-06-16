@@ -14,8 +14,24 @@
 extern CFE_SRL_IO_Handle_t *Handle;
 uint32_t open_file_size = 0;
 CFE_SRL_IO_Param_t Params = {0,};
-uint16_t STX_timeout = 30; //[ms]
-uint16_t MODULE_ID = 0x1220;
+uint16_t STX_timeout = 1000; //[ms]
+static uint16_t ESUP_ModuleId = MODULE_ID;
+
+int32_t ESUP_SetModuleId(uint16_t module_id)
+{
+    if (module_id != STX_MODULE_ID_A && module_id != STX_MODULE_ID_B)
+    {
+        return STX_ESUP_MODULE_ID_ERR;
+    }
+
+    ESUP_ModuleId = module_id;
+    return 0;
+}
+
+uint16_t ESUP_GetModuleId(void)
+{
+    return ESUP_ModuleId;
+}
 
 static uint16_t ESUP_Encoder(uint16_t comm_stt, uint16_t comm, uint16_t type, void * data, uint16_t length, uint16_t padlen, ESUP_Packet_t * packet)
 {   
@@ -23,7 +39,7 @@ static uint16_t ESUP_Encoder(uint16_t comm_stt, uint16_t comm, uint16_t type, vo
         return 0;
 
     packet->header.header = ESUP_HEADER;                              // Header
-    packet->header.mod_id = MODULE_ID;                            // Module ID
+    packet->header.mod_id = ESUP_ModuleId;                            // Module ID
     packet->header.length = length;                                   // Data Length
     packet->header.com_stt = comm_stt;                                // Command Status
     packet->header.command = comm;                                    // Command
@@ -261,12 +277,12 @@ int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * txdata, uin
         return STX_ESUP_WRITE_ERR;
     }
     
-    usleep(30000); //[micro s] 
+    usleep(50000); //[micro s] 
 
     retu_status = ESUP_Receive(reply, STX_timeout);
 
     if(retu_status < 0)
-    {
+    {   
         OS_printf("ESUP receive fail\n");
         OS_printf("RS485 has no reply.\n");
         OS_printf("%d\n", retu_status); 
@@ -274,17 +290,22 @@ int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * txdata, uin
     }
 
     retu_len = ESUP_Decoder(reply);
+    if(retu_len <= 0)
+    {
+        OS_printf("ESUP Read Failed!\n");
+        return STX_ESUP_DECODER_ERR;
+    }
+    if(retu_len != ESUP_ModuleId)
+    {
+        OS_printf("ESUP module id mismatch. expected=%04hx received=%04hx\n", ESUP_ModuleId, retu_len);
+        return STX_ESUP_MODULE_ID_ERR;
+    }
     /********************************************************************************* */
     if (reply->header.command == 0x0108 && reply->header.length != 0x0000 && reply->DCP[0] == 0x00){
         memcpy(&open_file_size, &(reply->DCP[5]), sizeof(uint32_t));
         OS_printf("open file size : %d\n", open_file_size);
     }
     /********************************************************************************* */
-    if(retu_len <= 0)  
-    {
-        OS_printf("ESUP Read Failed!\n");
-        return STX_ESUP_DECODER_ERR;
-    }
 
     OS_printf("ESUP_read success via RS485.\n");
 

@@ -2,8 +2,8 @@
  * @file ftpnew_utils.c
  * @author Han-Gyeol Ryu (ryu@yonsei.ac.kr)
  * @brief FTP-NEW server utility functions.
- * @version 0.1
- * @date 2026-06-01
+ * @version 1.0
+ * @date 2026-06-04
  * 
  * Astrodynamics & Control Lab, Yonsei University.
  */

@@ -64,9 +64,9 @@ typedef struct
 
 typedef struct
 {
-    CFE_MSG_CommandHeader_t CommandHeader;
-    STX_Set3_Payload_t Payload;
-} STX_ModuleIdInitCmd_t;
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+    STX_SetModuleId_Payload_t Payload;
+} STX_SetModuleIdCmd_t;
 
 typedef struct
 {

@@ -43,11 +43,13 @@ typedef struct {
 
 
 #define ESUP_MAX_PACKET_LENGTH    1504        // (패딩포함) max data length 1490 아닌가? (그전에는 1472)
-#define ESUP_MAX_DATA_LENGTH  1479
-#define ESUP_MAX_WRITE_LENGTH  1479
+#define ESUP_MAX_DATA_LENGTH  1472
+#define ESUP_MAX_WRITE_LENGTH  1200
 
 #define ESUP_HEADER     0x50555345  // header
-//#define MODULE_ID       0x1213         // module ID
+#define STX_MODULE_ID_A 0x1212
+#define STX_MODULE_ID_B 0x1213
+#define MODULE_ID       STX_MODULE_ID_A         // default module ID
 
 // Command Status
 #define ESUP_ACK        0x0005
@@ -65,6 +67,7 @@ typedef struct {
 #define STX_ESUP_READ_ERR   -103
 #define STX_ESUP_HEADF_ERR   -104
 #define STX_ESUP_DATAS_ERR   -105
+#define STX_ESUP_MODULE_ID_ERR -106
 
 // Command
 #define CONFIG_CUSTOM_SCAN          0xffff
@@ -121,5 +124,7 @@ typedef struct {
 int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * data, uint16_t length, void * rxdata, uint16_t rxlength);
 long latch_ms(void);
 int32_t ESUP_ACK_CMD(uint16_t comm_stt, uint16_t comm, uint16_t type);
+int32_t ESUP_SetModuleId(uint16_t module_id);
+uint16_t ESUP_GetModuleId(void);
 
 #endif

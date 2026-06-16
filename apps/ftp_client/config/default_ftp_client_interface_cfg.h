@@ -1,4 +1,0 @@
-#ifndef FTP_CLIENT_INTERFACE_CFG_H
-#define FTP_CLIENT_INTERFACE_CFG_H
-
-#endif

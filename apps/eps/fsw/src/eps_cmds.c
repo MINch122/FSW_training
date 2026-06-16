@@ -205,8 +205,7 @@ CFE_Status_t EPS_NoopCmd(const EPS_NoopCmd_t *Msg)
 
     CFE_EVS_SendEvent(EPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "EPS: NOOP command %s",
                       EPS_VERSION);
-    static const char NoopReport[] = "Yosi In Space";
-    EPS_SendReport(Msg, NoopReport, sizeof(NoopReport),
+    EPS_SendReport(Msg, &EPS_AppData.Counters, sizeof(EPS_AppData.Counters),
                    CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
@@ -241,7 +240,7 @@ CFE_Status_t EPS_P80_Power_If_Get_Cmd(const EPS_P80_Power_If_Get_Cmd_t *Msg)
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: Power Interface Get rejected, node %u is not PMU/PDU",
                           Msg->Payload.csp_node);
-        EPS_APP_printf("[EPS] Power Interface Get REJECTED node=%u: valid nodes are PMU(1) or PDU(4)\n",
+        OS_printf("[EPS] Power Interface Get REJECTED node=%u: valid nodes are PMU(1) or PDU(4)\n",
                   Msg->Payload.csp_node);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     CFE_STATUS_RANGE_ERROR, RPT_RETTYPE_APP);
@@ -284,7 +283,7 @@ CFE_Status_t EPS_P80_Power_If_Set_Cmd(const EPS_P80_Power_If_Set_Cmd_t *Msg)
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: Power Interface Set rejected, node %u is not PMU/PDU",
                           Msg->Payload.csp_node);
-        EPS_APP_printf("[EPS] Power Interface Set REJECTED node=%u request_args: name=%s mode=%u on_cnt=%u off_cnt=%u; valid nodes are PMU(1) or PDU(4)\n",
+        OS_printf("[EPS] Power Interface Set REJECTED node=%u request_args: name=%s mode=%u on_cnt=%u off_cnt=%u; valid nodes are PMU(1) or PDU(4)\n",
                   Msg->Payload.csp_node, name, Msg->Payload.mode,
                   Msg->Payload.on_cnt, Msg->Payload.off_cnt);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
@@ -300,7 +299,7 @@ CFE_Status_t EPS_P80_Power_If_Set_Cmd(const EPS_P80_Power_If_Set_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: Power Interface Set command failed, err=%d", err);
-        EPS_APP_printf("[EPS] Power Interface Set FAILED device=%s node=%u request_args: name=%s mode=%u on_cnt=%u off_cnt=%u err=%d\n",
+        OS_printf("[EPS] Power Interface Set FAILED device=%s node=%u request_args: name=%s mode=%u on_cnt=%u off_cnt=%u err=%d\n",
                   device, Msg->Payload.csp_node, name, Msg->Payload.mode,
                   Msg->Payload.on_cnt, Msg->Payload.off_cnt, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
@@ -308,8 +307,8 @@ CFE_Status_t EPS_P80_Power_If_Set_Cmd(const EPS_P80_Power_If_Set_Cmd_t *Msg)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] Power Interface Set OK device=%s node=%u\n", device, Msg->Payload.csp_node);
-    EPS_APP_printf("  request_args: name=%s mode=%u on_cnt=%u off_cnt=%u\n",
+    OS_printf("[EPS] Power Interface Set OK device=%s node=%u\n", device, Msg->Payload.csp_node);
+    OS_printf("  request_args: name=%s mode=%u on_cnt=%u off_cnt=%u\n",
               name, Msg->Payload.mode, Msg->Payload.on_cnt, Msg->Payload.off_cnt);
     /* SET response carries a pre-switch analog snapshot (stale voltage/current);
      * report success only and use Power Interface Get for applied status fields. */
@@ -330,7 +329,7 @@ CFE_Status_t EPS_P80_Power_If_List_Cmd(const EPS_P80_Power_If_List_Cmd_t *Msg)
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: Power Interface List rejected, node %u is not PMU/PDU",
                           Msg->Payload.csp_node);
-        EPS_APP_printf("[EPS] Power Interface List REJECTED node=%u: valid nodes are PMU(1) or PDU(4)\n",
+        OS_printf("[EPS] Power Interface List REJECTED node=%u: valid nodes are PMU(1) or PDU(4)\n",
                   Msg->Payload.csp_node);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     CFE_STATUS_RANGE_ERROR, RPT_RETTYPE_APP);
@@ -407,7 +406,7 @@ CFE_Status_t EPS_Get_HK_All_Cmd(const EPS_Get_HK_All_Cmd_t *Msg)
     (void)Msg;
     EPS_AppData.Counters.CmdCounter++;
 
-    EPS_APP_printf("\n================[EPS HK ALL]===================\n");
+    OS_printf("\n================[EPS HK ALL]===================\n");
     for (size_t i = 0; i < (sizeof(nodes) / sizeof(nodes[0])); i++)
     {
         uint8_t node = nodes[i];
@@ -417,7 +416,7 @@ CFE_Status_t EPS_Get_HK_All_Cmd(const EPS_Get_HK_All_Cmd_t *Msg)
         if (err != GS_OK)
         {
             fail_count++;
-            EPS_APP_printf("[EPS] Get HK All FAILED device=%s node=%u err=%d\n", device, node, err);
+            OS_printf("[EPS] Get HK All FAILED device=%s node=%u err=%d\n", device, node, err);
             EPS_SendNodeStatusReport(Msg, node, (int32)err, RPT_RETTYPE_LIB);
         }
         else
@@ -426,10 +425,10 @@ CFE_Status_t EPS_Get_HK_All_Cmd(const EPS_Get_HK_All_Cmd_t *Msg)
             EPS_SendHkQueryReport(Msg, node);
         }
     }
-    EPS_APP_printf("[EPS] Get HK All DONE success=%u fail=%u\n",
+    OS_printf("[EPS] Get HK All DONE success=%u fail=%u\n",
               (unsigned int)((sizeof(nodes) / sizeof(nodes[0])) - fail_count),
               (unsigned int)fail_count);
-    EPS_APP_printf("=======================================================\n");
+    OS_printf("=======================================================\n");
 
     if (fail_count > 0)
     {
@@ -486,14 +485,14 @@ CFE_Status_t EPS_P80_Gnd_Watchdog_Clear_Cmd(const EPS_P80_Gnd_Watchdog_Clear_Cmd
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: GND WDT clear failed on %s node %u, err=%d",
                           device, Msg->Payload.csp_node, err);
-        EPS_APP_printf("[EPS] GND WDT Clear FAILED device=%s node=%u err=%d\n",
+        OS_printf("[EPS] GND WDT Clear FAILED device=%s node=%u err=%d\n",
                   device, Msg->Payload.csp_node, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     (int32)err, RPT_RETTYPE_LIB);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] GND WDT Clear OK device=%s node=%u\n", device, Msg->Payload.csp_node);
+    OS_printf("[EPS] GND WDT Clear OK device=%s node=%u\n", device, Msg->Payload.csp_node);
     EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                 CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
@@ -542,12 +541,12 @@ CFE_Status_t EPS_P80_Gnd_Watchdog_Clear_All_Cmd(const EPS_P80_Gnd_Watchdog_Clear
         if (err != GS_OK)
         {
             fail_count++;
-            EPS_APP_printf("[EPS] GND WDT Clear All FAILED device=%s node=%u err=%d\n", device, node, err);
+            OS_printf("[EPS] GND WDT Clear All FAILED device=%s node=%u err=%d\n", device, node, err);
             EPS_SendNodeStatusReport(Msg, node, (int32)err, RPT_RETTYPE_LIB);
         }
         else
         {
-            EPS_APP_printf("[EPS] GND WDT Clear All OK device=%s node=%u\n", device, node);
+            OS_printf("[EPS] GND WDT Clear All OK device=%s node=%u\n", device, node);
             EPS_SendNodeStatusReport(Msg, node, CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
         }
     }
@@ -581,7 +580,7 @@ CFE_Status_t EPS_RParam_Set_Cmd(const EPS_RParam_Set_Cmd_t *Msg)
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam Set size too large, size=%u max=%u",
                           Msg->Payload.size, (unsigned int)sizeof(Msg->Payload.data));
-        EPS_APP_printf("[EPS] RParam Set REJECTED device=%s node=%u table=%u(%s) addr=%u size=%u max=%u\n",
+        OS_printf("[EPS] RParam Set REJECTED device=%s node=%u table=%u(%s) addr=%u size=%u max=%u\n",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
                   Msg->Payload.addr, Msg->Payload.size, (unsigned int)sizeof(Msg->Payload.data));
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
@@ -601,23 +600,23 @@ CFE_Status_t EPS_RParam_Set_Cmd(const EPS_RParam_Set_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam Set command failed, err=%d", err);
-        EPS_APP_printf("[EPS] RParam Set FAILED device=%s node=%u table=%u(%s) addr=%u type=%u size=%u request_data=",
+        OS_printf("[EPS] RParam Set FAILED device=%s node=%u table=%u(%s) addr=%u type=%u size=%u request_data=",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
                   Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size);
         for (uint16_t i = 0; i < Msg->Payload.size && i < sizeof(Msg->Payload.data); i++)
-            EPS_APP_printf("%02X ", Msg->Payload.data[i]);
-        EPS_APP_printf("err=%d\n", err);
+            OS_printf("%02X ", Msg->Payload.data[i]);
+        OS_printf("err=%d\n", err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     (int32)err, RPT_RETTYPE_LIB);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] RParam Set OK device=%s node=%u table=%u(%s) addr=%u type=%u size=%u request_data=",
+    OS_printf("[EPS] RParam Set OK device=%s node=%u table=%u(%s) addr=%u type=%u size=%u request_data=",
               device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
               Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size);
     for (uint16_t i = 0; i < Msg->Payload.size && i < sizeof(Msg->Payload.data); i++)
-        EPS_APP_printf("%02X ", Msg->Payload.data[i]);
-    EPS_APP_printf("\n");
+        OS_printf("%02X ", Msg->Payload.data[i]);
+    OS_printf("\n");
     EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                 CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
@@ -638,7 +637,7 @@ CFE_Status_t EPS_RParam_Get_Cmd(const EPS_RParam_Get_Cmd_t *Msg)
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam Get size too large, size=%u max=%u",
                           Msg->Payload.size, (unsigned int)EPS_RPARAM_DATA_MAX_LEN);
-        EPS_APP_printf("[EPS] RParam Get REJECTED device=%s node=%u table=%u(%s) addr=%u size=%u max=%u\n",
+        OS_printf("[EPS] RParam Get REJECTED device=%s node=%u table=%u(%s) addr=%u size=%u max=%u\n",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
                   Msg->Payload.addr, Msg->Payload.size, (unsigned int)EPS_RPARAM_DATA_MAX_LEN);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
@@ -658,7 +657,7 @@ CFE_Status_t EPS_RParam_Get_Cmd(const EPS_RParam_Get_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam Get command failed, err=%d", err);
-        EPS_APP_printf("[EPS] RParam Get FAILED device=%s node=%u table=%u(%s) addr=%u type=%u size=%u err=%d\n",
+        OS_printf("[EPS] RParam Get FAILED device=%s node=%u table=%u(%s) addr=%u type=%u size=%u err=%d\n",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
                   Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
@@ -666,12 +665,12 @@ CFE_Status_t EPS_RParam_Get_Cmd(const EPS_RParam_Get_Cmd_t *Msg)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] RParam Get OK device=%s node=%u table=%u(%s) addr=%u type=%u size=%u data=",
+    OS_printf("[EPS] RParam Get OK device=%s node=%u table=%u(%s) addr=%u type=%u size=%u data=",
               device, Msg->Payload.csp_node, Msg->Payload.table_id, table,
               Msg->Payload.addr, Msg->Payload.type, Msg->Payload.size);
     for (uint16_t i = 0; i < Msg->Payload.size && i < sizeof(data); i++)
-        EPS_APP_printf("%02X ", data[i]);
-    EPS_APP_printf("\n");
+        OS_printf("%02X ", data[i]);
+    OS_printf("\n");
 
     EPS_RParam_Get_Report_Payload_t report = {0};
     report.csp_node = Msg->Payload.csp_node;
@@ -702,7 +701,7 @@ CFE_Status_t EPS_RParam_Get_Full_Table_Cmd(const EPS_RParam_Get_Full_Table_Cmd_t
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam Get Full Table command failed, err=%d", err);
-        EPS_APP_printf("[EPS] RParam Get Full Table FAILED device=%s node=%u table=%u(%s) err=%d\n",
+        OS_printf("[EPS] RParam Get Full Table FAILED device=%s node=%u table=%u(%s) err=%d\n",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     (int32)err, RPT_RETTYPE_LIB);
@@ -747,14 +746,14 @@ CFE_Status_t EPS_RParam_Table_Save_Cmd(const EPS_RParam_Table_Save_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: Table Save command failed, err=%d", err);
-        EPS_APP_printf("[EPS] Table Save FAILED device=%s node=%u table=%u(%s) err=%d\n",
+        OS_printf("[EPS] Table Save FAILED device=%s node=%u table=%u(%s) err=%d\n",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     (int32)err, RPT_RETTYPE_LIB);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] Table Save OK device=%s node=%u table=%u(%s)\n",
+    OS_printf("[EPS] Table Save OK device=%s node=%u table=%u(%s)\n",
               device, Msg->Payload.csp_node, Msg->Payload.table_id, table);
     EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                 CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
@@ -776,14 +775,14 @@ CFE_Status_t EPS_RParam_Table_Load_Cmd(const EPS_RParam_Table_Load_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: Table Load command failed, err=%d", err);
-        EPS_APP_printf("[EPS] Table Load FAILED device=%s node=%u table=%u(%s) err=%d\n",
+        OS_printf("[EPS] Table Load FAILED device=%s node=%u table=%u(%s) err=%d\n",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     (int32)err, RPT_RETTYPE_LIB);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] Table Load OK device=%s node=%u table=%u(%s)\n",
+    OS_printf("[EPS] Table Load OK device=%s node=%u table=%u(%s)\n",
               device, Msg->Payload.csp_node, Msg->Payload.table_id, table);
     EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                 CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
@@ -808,7 +807,7 @@ CFE_Status_t EPS_RParam_Save_To_Store_Cmd(const EPS_RParam_Save_To_Store_Cmd_t *
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam SaveToStore rejected, empty store");
-        EPS_APP_printf("[EPS] RParam SaveToStore REJECTED device=%s node=%u table=%u(%s): empty store\n",
+        OS_printf("[EPS] RParam SaveToStore REJECTED device=%s node=%u table=%u(%s): empty store\n",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     CFE_STATUS_RANGE_ERROR, RPT_RETTYPE_APP);
@@ -827,14 +826,14 @@ CFE_Status_t EPS_RParam_Save_To_Store_Cmd(const EPS_RParam_Save_To_Store_Cmd_t *
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam SaveToStore command failed, err=%d", err);
-        EPS_APP_printf("[EPS] RParam SaveToStore FAILED device=%s node=%u table=%u(%s) store=%s slot=%s err=%d\n",
+        OS_printf("[EPS] RParam SaveToStore FAILED device=%s node=%u table=%u(%s) store=%s slot=%s err=%d\n",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table, store, slot_print, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     (int32)err, RPT_RETTYPE_LIB);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] RParam SaveToStore OK device=%s node=%u table=%u(%s) store=%s slot=%s\n",
+    OS_printf("[EPS] RParam SaveToStore OK device=%s node=%u table=%u(%s) store=%s slot=%s\n",
               device, Msg->Payload.csp_node, Msg->Payload.table_id, table, store, slot_print);
     EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                 CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
@@ -859,7 +858,7 @@ CFE_Status_t EPS_RParam_Load_From_Store_Cmd(const EPS_RParam_Load_From_Store_Cmd
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam LoadFromStore rejected, empty store");
-        EPS_APP_printf("[EPS] RParam LoadFromStore REJECTED device=%s node=%u table=%u(%s): empty store\n",
+        OS_printf("[EPS] RParam LoadFromStore REJECTED device=%s node=%u table=%u(%s): empty store\n",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     CFE_STATUS_RANGE_ERROR, RPT_RETTYPE_APP);
@@ -878,14 +877,14 @@ CFE_Status_t EPS_RParam_Load_From_Store_Cmd(const EPS_RParam_Load_From_Store_Cmd
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: RParam LoadFromStore command failed, err=%d", err);
-        EPS_APP_printf("[EPS] RParam LoadFromStore FAILED device=%s node=%u table=%u(%s) store=%s slot=%s err=%d\n",
+        OS_printf("[EPS] RParam LoadFromStore FAILED device=%s node=%u table=%u(%s) store=%s slot=%s err=%d\n",
                   device, Msg->Payload.csp_node, Msg->Payload.table_id, table, store, slot_print, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     (int32)err, RPT_RETTYPE_LIB);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] RParam LoadFromStore OK device=%s node=%u table=%u(%s) store=%s slot=%s\n",
+    OS_printf("[EPS] RParam LoadFromStore OK device=%s node=%u table=%u(%s) store=%s slot=%s\n",
               device, Msg->Payload.csp_node, Msg->Payload.table_id, table, store, slot_print);
     EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                 CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
@@ -904,14 +903,14 @@ CFE_Status_t EPS_RParam_Save_All_Cmd(const EPS_RParam_Save_All_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: Param Save (all tables) command failed, err=%d", err);
-        EPS_APP_printf("[EPS] Param SaveAll FAILED device=%s node=%u err=%d\n",
+        OS_printf("[EPS] Param SaveAll FAILED device=%s node=%u err=%d\n",
                   device, Msg->Payload.csp_node, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     (int32)err, RPT_RETTYPE_LIB);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] Param SaveAll OK device=%s node=%u\n", device, Msg->Payload.csp_node);
+    OS_printf("[EPS] Param SaveAll OK device=%s node=%u\n", device, Msg->Payload.csp_node);
     EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                 CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
@@ -962,7 +961,7 @@ static int EPS_CSP_PrintPs(const EPS_CSP_PS_Cmd_t *Msg, uint8_t node, uint32_t t
         size_t text_len = (packet->length < data_len) ? packet->length : (data_len - 1U);
 
         packet->data[text_len] = 0;
-        EPS_APP_printf("%s", (char *)packet->data);
+        OS_printf("%s", (char *)packet->data);
         EPS_SendQueryReport(Msg, node, EPS_QUERY_REPORT_CSP_PS_TEXT, 0, 0,
                             packet->data, text_len);
 
@@ -983,21 +982,21 @@ CFE_Status_t EPS_CSP_PS_Cmd(const EPS_CSP_PS_Cmd_t *Msg)
     const char *device = EPS_GetCspNodeDeviceName(Msg->Payload.csp_node);
     int         err    = 0;
 
-    EPS_APP_printf("[EPS] CSP PS BEGIN device=%s node=%u\n", device, Msg->Payload.csp_node);
+    OS_printf("[EPS] CSP PS BEGIN device=%s node=%u\n", device, Msg->Payload.csp_node);
     err = EPS_CSP_PrintPs(Msg, Msg->Payload.csp_node, CSP_TIMEOUT(1));
     if (err != CSP_ERR_NONE)
     {
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: CSP PS failed on node %u, err=%d", Msg->Payload.csp_node, err);
-        EPS_APP_printf("[EPS] CSP PS FAILED device=%s node=%u err=%d\n",
+        OS_printf("[EPS] CSP PS FAILED device=%s node=%u err=%d\n",
                   device, Msg->Payload.csp_node, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     (int32)err, RPT_RETTYPE_LIB);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("\n[EPS] CSP PS END device=%s node=%u\n", device, Msg->Payload.csp_node);
+    OS_printf("\n[EPS] CSP PS END device=%s node=%u\n", device, Msg->Payload.csp_node);
     EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                 CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
@@ -1017,14 +1016,14 @@ CFE_Status_t EPS_CSP_MemFree_Cmd(const EPS_CSP_MemFree_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: CSP MemFree failed on node %u, err=%d", Msg->Payload.csp_node, err);
-        EPS_APP_printf("[EPS] CSP MemFree FAILED device=%s node=%u err=%d\n",
+        OS_printf("[EPS] CSP MemFree FAILED device=%s node=%u err=%d\n",
                   device, Msg->Payload.csp_node, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     (int32)err, RPT_RETTYPE_LIB);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] CSP MemFree OK device=%s node=%u bytes=%lu\n",
+    OS_printf("[EPS] CSP MemFree OK device=%s node=%u bytes=%lu\n",
               device, Msg->Payload.csp_node, (unsigned long)memfree);
     EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_CSP_MEMFREE, 0, 0,
                         &memfree, sizeof(memfree));
@@ -1045,14 +1044,14 @@ CFE_Status_t EPS_CSP_BufFree_Cmd(const EPS_CSP_BufFree_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: CSP BufFree failed on node %u, err=%d", Msg->Payload.csp_node, err);
-        EPS_APP_printf("[EPS] CSP BufFree FAILED device=%s node=%u err=%d\n",
+        OS_printf("[EPS] CSP BufFree FAILED device=%s node=%u err=%d\n",
                   device, Msg->Payload.csp_node, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     (int32)err, RPT_RETTYPE_LIB);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] CSP BufFree OK device=%s node=%u buffers=%lu\n",
+    OS_printf("[EPS] CSP BufFree OK device=%s node=%u buffers=%lu\n",
               device, Msg->Payload.csp_node, (unsigned long)buf_free);
     EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_CSP_BUF_FREE, 0, 0,
                         &buf_free, sizeof(buf_free));
@@ -1073,14 +1072,14 @@ CFE_Status_t EPS_CSP_Uptime_Cmd(const EPS_CSP_Uptime_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: CSP Uptime failed on node %u, err=%d", Msg->Payload.csp_node, err);
-        EPS_APP_printf("[EPS] CSP Uptime FAILED device=%s node=%u err=%d\n",
+        OS_printf("[EPS] CSP Uptime FAILED device=%s node=%u err=%d\n",
                   device, Msg->Payload.csp_node, err);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     (int32)err, RPT_RETTYPE_LIB);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] CSP Uptime OK device=%s node=%u seconds=%lu\n",
+    OS_printf("[EPS] CSP Uptime OK device=%s node=%u seconds=%lu\n",
               device, Msg->Payload.csp_node, (unsigned long)uptime);
     EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_CSP_UPTIME, 0, 0,
                         &uptime, sizeof(uptime));
@@ -1101,7 +1100,7 @@ CFE_Status_t EPS_CSP_Ping_Cmd(const EPS_CSP_Ping_Cmd_t *Msg)
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: CSP Ping size too large, size=%u max=%u",
                           size, EPS_CSP_PING_MAX_SIZE);
-        EPS_APP_printf("[EPS] CSP Ping REJECTED device=%s node=%u size=%u max=%u\n",
+        OS_printf("[EPS] CSP Ping REJECTED device=%s node=%u size=%u max=%u\n",
                   device, Msg->Payload.csp_node, size, EPS_CSP_PING_MAX_SIZE);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     CFE_STATUS_RANGE_ERROR, RPT_RETTYPE_APP);
@@ -1114,14 +1113,14 @@ CFE_Status_t EPS_CSP_Ping_Cmd(const EPS_CSP_Ping_Cmd_t *Msg)
         EPS_AppData.Counters.ErrCounter++;
         CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "EPS: CSP Ping failed on node %u", Msg->Payload.csp_node);
-        EPS_APP_printf("[EPS] CSP Ping FAILED device=%s node=%u size=%u opts=0x%02X\n",
+        OS_printf("[EPS] CSP Ping FAILED device=%s node=%u size=%u opts=0x%02X\n",
                   device, Msg->Payload.csp_node, size, Msg->Payload.opts);
         EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                     elapsed_ms, RPT_RETTYPE_LIB);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    EPS_APP_printf("[EPS] CSP Ping OK device=%s node=%u size=%u opts=0x%02X rtt=%d ms\n",
+    OS_printf("[EPS] CSP Ping OK device=%s node=%u size=%u opts=0x%02X rtt=%d ms\n",
               device, Msg->Payload.csp_node, size, Msg->Payload.opts, elapsed_ms);
     int32_t elapsedReport = elapsed_ms;
     EPS_SendQueryReport(Msg, Msg->Payload.csp_node, EPS_QUERY_REPORT_CSP_PING_MS, 0, 0,
@@ -1138,7 +1137,7 @@ CFE_Status_t EPS_CSP_Reboot_Cmd(const EPS_CSP_Reboot_Cmd_t *Msg)
 
     csp_reboot(Msg->Payload.csp_node);
 
-    EPS_APP_printf("[EPS] CSP Reboot sent device=%s node=%u\n", device, Msg->Payload.csp_node);
+    OS_printf("[EPS] CSP Reboot sent device=%s node=%u\n", device, Msg->Payload.csp_node);
     EPS_SendPayloadStatusReport(Msg, &Msg->Payload, sizeof(Msg->Payload),
                                 CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
     CFE_EVS_SendEvent(EPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,

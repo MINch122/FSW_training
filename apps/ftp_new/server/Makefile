@@ -5,16 +5,20 @@
 #   make TARGET=arm32           # cross-build for ARM32
 #   make KEEP_OBJ=true          # also emit per-source .o under build/<target>/
 #
-# Per-target outputs land in build/$(TARGET)/. Both targets coexist.
+# Per-target outputs land in build/$(TARGET)/. Both targets coexist. The
+# final .so is size-optimized (-Os), dead-section-stripped, and run through
+# 'strip --strip-unneeded' to drop everything but the dynamic symbol table.
 
 
 TARGET   ?= native
 KEEP_OBJ ?= false
 
 ifeq ($(TARGET),native)
-    CC := gcc
+    CC    := gcc
+    STRIP := strip
 else ifeq ($(TARGET),arm32)
-    CC := arm-linux-gnueabi-gcc
+    CC    := arm-linux-gnueabi-gcc
+    STRIP := arm-linux-gnueabi-strip
 else
     $(error TARGET must be 'native' or 'arm32' (got '$(TARGET)'))
 endif
@@ -34,12 +38,22 @@ BUILDDIR     = build/$(TARGET)
 
 SRCS         = $(SRCDIR)/ftpnew.c $(SRCDIR)/ftpnew_utils.c
 
-CFLAGS       = -Wall -Wextra -O2 -fPIC \
+# -Os                            : optimize for size, not speed
+# -ffunction-sections / -fdata-sections : per-symbol ELF sections so the
+#                                  linker can drop unreferenced ones
+# -fPIC                          : required for shared library code
+CFLAGS       = -Wall -Wextra -Os -fPIC \
+               -ffunction-sections -fdata-sections \
                -I$(INCDIR) \
                -I$(CONFDIR) \
                -I$(EXT_INC)
 
+# --gc-sections   : drop unreferenced per-symbol sections (paired with
+#                   -ffunction/-fdata-sections above)
+# --as-needed     : omit DT_NEEDED entries for libs whose symbols nothing
+#                   in the output actually references
 LDFLAGS      = -shared -Wl,-soname,$(SO_FILE) \
+               -Wl,--gc-sections -Wl,--as-needed \
                -L$(EXT_LIB_DIR)
 
 LIBS         = -lcsp -lpthread
@@ -55,6 +69,7 @@ OBJS = $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SRCS))
 
 $(OUT): $(OBJS) | $(BUILDDIR)
 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(STRIP) --strip-unneeded $@
 	ln -sf $(SO_FILE) $(BUILDDIR)/$(SO_NAME)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c | $(BUILDDIR)
@@ -64,6 +79,7 @@ else
 
 $(OUT): $(SRCS) | $(BUILDDIR)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(SRCS) $(LIBS)
+	$(STRIP) --strip-unneeded $@
 	ln -sf $(SO_FILE) $(BUILDDIR)/$(SO_NAME)
 
 endif

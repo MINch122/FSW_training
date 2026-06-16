@@ -646,25 +646,25 @@
     "commands": [
       {
         "name": "Noop",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 0,
         "params": []
       },
       {
         "name": "Reset Counters",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 1,
         "params": []
       },
       {
         "name": "Set Reset",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 11,
         "params": []
       },
       {
         "name": "Set Current Unix Time",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 12,
         "params": [
           {
@@ -681,13 +681,13 @@
       },
       {
         "name": "Persist Config",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 14,
         "params": []
       },
       {
         "name": "Set Control Estimation Mode",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 15,
         "params": [
           {
@@ -714,134 +714,134 @@
       },
       {
         "name": "Set Power State",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 23,
         "description": "ADCS2_SET_POWER_STATE_CC",
         "params": []
       },
       {
         "name": "Set Mounting Config",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 31,
         "description": "ADCS2_SET_MOUNTING_CONFIG_CC",
         "params": []
       },
       {
         "name": "Get Current Unix Time",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 52,
         "params": []
       },
       {
         "name": "Get Control Estimation Mode",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 55,
         "params": []
       },
       {
         "name": "Get Raw Mag Sensor",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 61,
         "description": "ADCS2_GET_RAW_MAG_SENSOR_CC",
         "params": []
       },
       {
         "name": "Get Power State",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 63,
         "params": []
       },
       {
         "name": "Get Mounting Config",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 71,
         "params": []
       },
       {
         "name": "Get Raw Gyr Sensor",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 80,
         "params": []
       },
       {
         "name": "Comm 01",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 101,
         "description": "ADCS2_COMM_01_CC",
         "params": []
       },
       {
         "name": "Comm 02",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 102,
         "description": "ADCS2_COMM_02_CC",
         "params": []
       },
       {
         "name": "Comm 03",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 103,
         "description": "ADCS2_COMM_03_CC",
         "params": []
       },
       {
         "name": "Comm 04",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 104,
         "description": "ADCS2_COMM_04_CC",
         "params": []
       },
       {
         "name": "Comm 05",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 105,
         "description": "ADCS2_COMM_05_CC",
         "params": []
       },
       {
         "name": "Comm 06",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 106,
         "description": "ADCS2_COMM_06_CC",
         "params": []
       },
       {
         "name": "Comm 07",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 107,
         "description": "ADCS2_COMM_07_CC",
         "params": []
       },
       {
         "name": "Comm 08",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 108,
         "description": "ADCS2_COMM_08_CC",
         "params": []
       },
       {
         "name": "Comm 09",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 109,
         "description": "ADCS2_COMM_09_CC",
         "params": []
       },
       {
         "name": "Comm 10",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 110,
         "description": "ADCS2_COMM_10_CC",
         "params": []
       },
       {
         "name": "Request HK",
-        "mid": "0x186A",
+        "mid": "0x1866",
         "fc": 0,
         "params": []
       },
       {
         "name": "Request Beacon",
-        "mid": "0x186B",
+        "mid": "0x1867",
         "fc": 0,
         "description": "ADCS2_SEND_BCN_MID",
         "params": []
@@ -1110,7 +1110,7 @@
             "name": "FilterMask",
             "type": "uint32",
             "default": "0xFFFFFFFF",
-            "description": "Bitmask — 1 = enable perf ID"
+            "description": "Bitmask \u2014 1 = enable perf ID"
           }
         ]
       },
@@ -1130,7 +1130,7 @@
             "name": "TriggerMask",
             "type": "uint32",
             "default": "0xFFFFFFFF",
-            "description": "Bitmask — 1 = enable perf ID"
+            "description": "Bitmask \u2014 1 = enable perf ID"
           }
         ]
       },
@@ -1200,7 +1200,7 @@
             "length": "CFE_MISSION_MAX_API_LEN",
             "default": "",
             "hidden": true,
-            "description": "RESERVED — must be all zeroes"
+            "description": "RESERVED \u2014 must be all zeroes"
           },
           {
             "name": "PoolHandle",
@@ -1467,7 +1467,7 @@
             "name": "BitMask",
             "type": "uint8",
             "default": "0x01",
-            "description": "Port bit mask (Bit0=Port1 … Bit3=Port4)"
+            "description": "Port bit mask (Bit0=Port1 \u2026 Bit3=Port4)"
           },
           {
             "name": "Spare",
@@ -1488,7 +1488,7 @@
             "name": "BitMask",
             "type": "uint8",
             "default": "0x01",
-            "description": "Port bit mask (Bit0=Port1 … Bit3=Port4)"
+            "description": "Port bit mask (Bit0=Port1 \u2026 Bit3=Port4)"
           },
           {
             "name": "Spare",
@@ -1695,7 +1695,7 @@
         "name": "Enable Route",
         "mid": "0x1804",
         "fc": 4,
-        "description": "Enable a specific MsgId → Pipe route.",
+        "description": "Enable a specific MsgId \u2192 Pipe route.",
         "params": [
           {
             "name": "MsgId",
@@ -1722,7 +1722,7 @@
         "name": "Disable Route",
         "mid": "0x1804",
         "fc": 5,
-        "description": "Disable a specific MsgId → Pipe route.",
+        "description": "Disable a specific MsgId \u2192 Pipe route.",
         "params": [
           {
             "name": "MsgId",
@@ -2124,7 +2124,7 @@
             "name": "MicroSeconds",
             "type": "uint32",
             "default": "0",
-            "description": "Microseconds (0 – 999999)"
+            "description": "Microseconds (0 \u2013 999999)"
           }
         ]
       },
@@ -2144,7 +2144,7 @@
             "name": "MicroSeconds",
             "type": "uint32",
             "default": "0",
-            "description": "Microseconds (0 – 999999)"
+            "description": "Microseconds (0 \u2013 999999)"
           }
         ]
       },
@@ -2164,7 +2164,7 @@
             "name": "MicroSeconds",
             "type": "uint32",
             "default": "0",
-            "description": "Microseconds part (0 – 999999)"
+            "description": "Microseconds part (0 \u2013 999999)"
           }
         ]
       },
@@ -2184,7 +2184,7 @@
             "name": "MicroSeconds",
             "type": "uint32",
             "default": "0",
-            "description": "Microseconds (0 – 999999)"
+            "description": "Microseconds (0 \u2013 999999)"
           }
         ]
       },
@@ -2204,7 +2204,7 @@
             "name": "MicroSeconds",
             "type": "uint32",
             "default": "0",
-            "description": "Microseconds (0 – 999999)"
+            "description": "Microseconds (0 \u2013 999999)"
           }
         ]
       },
@@ -2238,7 +2238,7 @@
             "name": "MicroSeconds",
             "type": "uint32",
             "default": "0",
-            "description": "Microseconds (0 – 999999)"
+            "description": "Microseconds (0 \u2013 999999)"
           }
         ]
       },
@@ -2258,7 +2258,7 @@
             "name": "MicroSeconds",
             "type": "uint32",
             "default": "0",
-            "description": "Microseconds (0 – 999999)"
+            "description": "Microseconds (0 \u2013 999999)"
           }
         ]
       },
@@ -3013,6 +3013,12 @@
         ]
       },
       {
+        "name": "Request HK",
+        "mid": "0x1876",
+        "fc": 0,
+        "params": []
+      },
+      {
         "name": "Request Beacon",
         "mid": "0x1877",
         "fc": 0,
@@ -3744,7 +3750,7 @@
   },
   {
     "app": "LGBAT",
-    "description": "LG Energy Solution BMS Battery Pack App — I2C communication with BMS (INR21700M52V, 2S1P)",
+    "description": "LG Energy Solution BMS Battery Pack App \u2014 I2C communication with BMS (INR21700M52V, 2S1P)",
     "mids": {
       "cmd": {
         "mid": "0x18C6",
@@ -3755,13 +3761,13 @@
         "mid": "0x18C7",
         "name": "LGBAT_SEND_HK_MID",
         "direction": "SCH->OBC",
-        "description": "SCH wakeup — triggers I2C poll and HK publish"
+        "description": "SCH wakeup \u2014 triggers I2C poll and HK publish"
       },
       "send_bcn": {
         "mid": "0x18C8",
         "name": "LGBAT_SEND_BCN_MID",
         "direction": "SCH->OBC",
-        "description": "SCH beacon trigger — causes OBC to emit BCN_TLM"
+        "description": "SCH beacon trigger \u2014 causes OBC to emit BCN_TLM"
       },
       "hk_tlm": {
         "mid": "0x08C6",
@@ -3883,14 +3889,14 @@
         "name": "Request HK",
         "mid": "0x18C7",
         "fc": 0,
-        "description": "LGBAT_SEND_HK_MID — SCH wakeup: triggers I2C poll and publishes HK_TLM (0x08C6).",
+        "description": "LGBAT_SEND_HK_MID \u2014 SCH wakeup: triggers I2C poll and publishes HK_TLM (0x08C6).",
         "params": []
       },
       {
         "name": "Request Beacon",
         "mid": "0x18C8",
         "fc": 0,
-        "description": "LGBAT_SEND_BCN_MID — SCH beacon trigger: causes OBC to emit BCN_TLM (0x08C8).",
+        "description": "LGBAT_SEND_BCN_MID \u2014 SCH beacon trigger: causes OBC to emit BCN_TLM (0x08C8).",
         "params": []
       }
     ],
@@ -3954,7 +3960,7 @@
             "type": "uint16",
             "unit": "%",
             "scale": 0.01,
-            "description": "State of charge × 100"
+            "description": "State of charge \u00d7 100"
           },
           {
             "name": "SOH_pct",
@@ -3987,13 +3993,13 @@
             "name": "FailStatus2_Raw",
             "type": "uint8",
             "unit": "",
-            "description": "Raw byte — see 0x0A bit-field table"
+            "description": "Raw byte \u2014 see 0x0A bit-field table"
           },
           {
             "name": "FailStatus3_Raw",
             "type": "uint8",
             "unit": "",
-            "description": "Raw byte — see 0x0A bit-field table"
+            "description": "Raw byte \u2014 see 0x0A bit-field table"
           }
         ]
       },
@@ -4049,7 +4055,7 @@
             "type": "uint16",
             "unit": "%",
             "scale": 0.01,
-            "description": "[0x02] SOC × 100"
+            "description": "[0x02] SOC \u00d7 100"
           },
           {
             "name": "SOH",
@@ -4107,7 +4113,7 @@
             "type": "uint16",
             "unit": "%",
             "scale": 0.1,
-            "description": "[0x04] Charge percentage × 10"
+            "description": "[0x04] Charge percentage \u00d7 10"
           },
           {
             "name": "DesCap",
@@ -4142,13 +4148,13 @@
           {
             "name": "CTMax",
             "type": "int16",
-            "unit": "x0.1°C",
+            "unit": "x0.1\u00b0C",
             "description": "[0x05] Max cell temperature"
           },
           {
             "name": "CTMin",
             "type": "int16",
-            "unit": "x0.1°C",
+            "unit": "x0.1\u00b0C",
             "description": "[0x05] Min cell temperature"
           },
           {
@@ -4166,37 +4172,37 @@
           {
             "name": "CT02",
             "type": "int16",
-            "unit": "x0.1°C",
+            "unit": "x0.1\u00b0C",
             "description": "[0x07] Cell 2 temperature"
           },
           {
             "name": "CT01",
             "type": "int16",
-            "unit": "x0.1°C",
+            "unit": "x0.1\u00b0C",
             "description": "[0x07] Cell 1 temperature"
           },
           {
             "name": "BalT",
             "type": "int16",
-            "unit": "x0.1°C",
+            "unit": "x0.1\u00b0C",
             "description": "[0x07] Balancing temperature"
           },
           {
             "name": "PreChgT",
             "type": "int16",
-            "unit": "x0.1°C",
+            "unit": "x0.1\u00b0C",
             "description": "[0x07] Pre-charge temperature"
           },
           {
             "name": "FDnT",
             "type": "int16",
-            "unit": "x0.1°C",
+            "unit": "x0.1\u00b0C",
             "description": "[0x08] FET turn-down temperature"
           },
           {
             "name": "FUpT",
             "type": "int16",
-            "unit": "x0.1°C",
+            "unit": "x0.1\u00b0C",
             "description": "[0x08] FET turn-up temperature"
           },
           {
@@ -4340,13 +4346,13 @@
           {
             "name": "PCB_T",
             "type": "int16",
-            "unit": "x0.1°C",
+            "unit": "x0.1\u00b0C",
             "description": "[0x0C] PCB temperature"
           },
           {
             "name": "BOOST_T",
             "type": "int16",
-            "unit": "x0.1°C",
+            "unit": "x0.1\u00b0C",
             "description": "[0x0C] Boost converter temperature"
           },
           {
@@ -5245,6 +5251,12 @@
         "fc": 0,
         "description": "PAYUEL_AOS_SEND_HK_MID",
         "params": []
+      },
+      {
+        "name": "Request Beacon",
+        "mid": "0x1849",
+        "fc": 0,
+        "params": []
       }
     ]
   },
@@ -5365,6 +5377,12 @@
             "default": "0"
           }
         ]
+      },
+      {
+        "name": "Request HK",
+        "mid": "0x18C4",
+        "fc": 0,
+        "params": []
       },
       {
         "name": "Request Beacon",
@@ -5538,6 +5556,12 @@
         "mid": "0x1836",
         "fc": 0,
         "description": "PAYUEL_LGPM_SEND_HK_MID",
+        "params": []
+      },
+      {
+        "name": "Request Beacon",
+        "mid": "0x1837",
+        "fc": 0,
         "params": []
       }
     ]
@@ -5762,6 +5786,12 @@
             "description": "Sensor data number/index, 0..255"
           }
         ]
+      },
+      {
+        "name": "Request HK",
+        "mid": "0x18C1",
+        "fc": 0,
+        "params": []
       },
       {
         "name": "Request Beacon",

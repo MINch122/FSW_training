@@ -33,14 +33,6 @@
 
 #include "eps_interface_cfg.h"
 
-#ifndef EPS_DEBUG
-#define EPS_DEBUG false
-#endif
 
-#ifndef DEBUG_EPS
-#define DEBUG_EPS EPS_DEBUG
-#endif
-
-#define EPS_APP_printf(...) do { if (DEBUG_EPS) { OS_printf(__VA_ARGS__); } } while (0)
 
 #endif

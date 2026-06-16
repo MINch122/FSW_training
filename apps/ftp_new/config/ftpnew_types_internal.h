@@ -3,7 +3,7 @@
  * @author Han-Gyeol Ryu (ryu@yonsei.ac.kr)
  * @brief Internal type definitions for the ftpnew backend. Server and client
  *        share these definitions but they are not part of the public API.
- * @version 0.1
+ * @version 1.0
  * @date 2026-06-04
  * 
  * Astrodynamics & Control Lab, Yonsei University.

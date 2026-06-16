@@ -47,13 +47,6 @@
         "params": []
       },
       {
-        "name": "CSP Ping",
-        "mid": "0x1865",
-        "fc": 7,
-        "description": "ADCS_CSP_PING_CC",
-        "params": []
-      },
-      {
         "name": "GPIO Boot High",
         "mid": "0x1865",
         "fc": 8,
@@ -324,6 +317,13 @@
         "params": []
       },
       {
+        "name": "Set Commanded GNSS Measurements",
+        "mid": "0x1865",
+        "fc": 43,
+        "params": [],
+        "description": "ADCS_SET_COMMANDED_GNSS_MEASUREMENTS_CC"
+      },
+      {
         "name": "Get Error Log Setting",
         "mid": "0x1865",
         "fc": 51,
@@ -578,6 +578,26 @@
         "params": []
       },
       {
+        "name": "Get Raw RWL Sensor",
+        "mid": "0x1865",
+        "fc": 90,
+        "params": [],
+        "description": "ADCS_GET_RAW_RWL_SENSOR_CC"
+      },
+      {
+        "name": "Set Interface Transport",
+        "mid": "0x1865",
+        "fc": 91,
+        "description": "ADCS_SET_INTERFACE_TRANSPORT_CC",
+        "params": [
+          {
+            "name": "Transport",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
         "name": "Seq Dtumb",
         "mid": "0x1865",
         "fc": 100,
@@ -653,25 +673,25 @@
     "commands": [
       {
         "name": "Noop",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 0,
         "params": []
       },
       {
         "name": "Reset Counters",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 1,
         "params": []
       },
       {
         "name": "Set Reset",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 11,
         "params": []
       },
       {
         "name": "Set Current Unix Time",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 12,
         "params": [
           {
@@ -688,13 +708,13 @@
       },
       {
         "name": "Persist Config",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 14,
         "params": []
       },
       {
         "name": "Set Control Estimation Mode",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 15,
         "params": [
           {
@@ -720,135 +740,220 @@
         ]
       },
       {
+        "name": "Set Orbit Mode",
+        "mid": "0x1865",
+        "fc": 19,
+        "params": [],
+        "description": "ADCS2_SET_ORBIT_MODE_CC"
+      },
+      {
         "name": "Set Power State",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 23,
         "description": "ADCS2_SET_POWER_STATE_CC",
         "params": []
       },
       {
         "name": "Set Mounting Config",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 31,
         "description": "ADCS2_SET_MOUNTING_CONFIG_CC",
         "params": []
       },
       {
+        "name": "Set Estimator Config",
+        "mid": "0x1865",
+        "fc": 33,
+        "params": [],
+        "description": "ADCS2_SET_ESTIMATOR_CONFIG_CC"
+      },
+      {
+        "name": "Set Sat Orbit Param Config",
+        "mid": "0x1865",
+        "fc": 34,
+        "params": [],
+        "description": "ADCS2_SET_SAT_ORBIT_PARAM_CONFIG_CC"
+      },
+      {
+        "name": "Set Openloop Cmd HXYZ RW",
+        "mid": "0x1865",
+        "fc": 43,
+        "description": "ADCS2_SET_OPENLOOP_CMD_HXYZ_RW_CC",
+        "params": [
+          {
+            "name": "cmdHx",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "cmdHy",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "cmdHz",
+            "type": "float",
+            "default": "0"
+          }
+        ]
+      },
+      {
         "name": "Get Current Unix Time",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 52,
         "params": []
       },
       {
         "name": "Get Control Estimation Mode",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 55,
         "params": []
       },
       {
         "name": "Get Raw Mag Sensor",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 61,
         "description": "ADCS2_GET_RAW_MAG_SENSOR_CC",
         "params": []
       },
       {
         "name": "Get Power State",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 63,
         "params": []
       },
       {
         "name": "Get Mounting Config",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 71,
         "params": []
       },
       {
+        "name": "Get Estimator Config",
+        "mid": "0x1865",
+        "fc": 73,
+        "params": [],
+        "description": "ADCS2_GET_ESTIMATOR_CONFIG_CC"
+      },
+      {
+        "name": "Get Sat Orbit Param Config",
+        "mid": "0x1865",
+        "fc": 74,
+        "params": [],
+        "description": "ADCS2_GET_SAT_ORBIT_PARAM_CONFIG_CC"
+      },
+      {
         "name": "Get Raw Gyr Sensor",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 80,
         "params": []
       },
       {
+        "name": "Get Main Estimator TLM",
+        "mid": "0x1865",
+        "fc": 88,
+        "params": [],
+        "description": "ADCS2_GET_MAIN_ESTIMATOR_TLM_CC"
+      },
+      {
+        "name": "Get Raw RWL Sensor",
+        "mid": "0x1865",
+        "fc": 90,
+        "params": [],
+        "description": "ADCS2_GET_RAW_RWL_SENSOR_CC"
+      },
+      {
+        "name": "Set Interface Transport",
+        "mid": "0x1865",
+        "fc": 91,
+        "description": "ADCS2_SET_INTERFACE_TRANSPORT_CC",
+        "params": [
+          {
+            "name": "Transport",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
         "name": "Comm 01",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 101,
         "description": "ADCS2_COMM_01_CC",
         "params": []
       },
       {
         "name": "Comm 02",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 102,
         "description": "ADCS2_COMM_02_CC",
         "params": []
       },
       {
         "name": "Comm 03",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 103,
         "description": "ADCS2_COMM_03_CC",
         "params": []
       },
       {
         "name": "Comm 04",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 104,
         "description": "ADCS2_COMM_04_CC",
         "params": []
       },
       {
         "name": "Comm 05",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 105,
         "description": "ADCS2_COMM_05_CC",
         "params": []
       },
       {
         "name": "Comm 06",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 106,
         "description": "ADCS2_COMM_06_CC",
         "params": []
       },
       {
         "name": "Comm 07",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 107,
         "description": "ADCS2_COMM_07_CC",
         "params": []
       },
       {
         "name": "Comm 08",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 108,
         "description": "ADCS2_COMM_08_CC",
         "params": []
       },
       {
         "name": "Comm 09",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 109,
         "description": "ADCS2_COMM_09_CC",
         "params": []
       },
       {
         "name": "Comm 10",
-        "mid": "0x1869",
+        "mid": "0x1865",
         "fc": 110,
         "description": "ADCS2_COMM_10_CC",
         "params": []
       },
       {
         "name": "Request HK",
-        "mid": "0x186A",
+        "mid": "0x1866",
         "fc": 0,
         "params": []
       },
       {
         "name": "Request Beacon",
-        "mid": "0x186B",
+        "mid": "0x1867",
         "fc": 0,
         "description": "ADCS2_SEND_BCN_MID",
         "params": []
@@ -2548,73 +2653,6 @@
     ]
   },
   {
-    "app": "EO",
-    "description": "Experiment operations state machine",
-    "commands": [
-      {
-        "name": "Noop",
-        "mid": "0x1890",
-        "fc": 0,
-        "params": []
-      },
-      {
-        "name": "Reset Counters",
-        "mid": "0x1890",
-        "fc": 1,
-        "params": []
-      },
-      {
-        "name": "Reset Phase",
-        "mid": "0x1890",
-        "fc": 2,
-        "params": []
-      },
-      {
-        "name": "Next Phase",
-        "mid": "0x1890",
-        "fc": 3,
-        "params": []
-      },
-      {
-        "name": "Finish Phase",
-        "mid": "0x1890",
-        "fc": 4,
-        "params": []
-      },
-      {
-        "name": "Exit Child Task",
-        "mid": "0x1890",
-        "fc": 5,
-        "params": []
-      },
-      {
-        "name": "Start Child Task",
-        "mid": "0x1890",
-        "fc": 6,
-        "params": []
-      },
-      {
-        "name": "Apps Permanently Off",
-        "mid": "0x1890",
-        "fc": 7,
-        "params": []
-      },
-      {
-        "name": "Request Beacon",
-        "mid": "0x1891",
-        "fc": 0,
-        "params": []
-      },
-      {
-        "name": "Wakeup",
-        "mid": "0x1892",
-        "fc": 0,
-        "description": "EO_WAKEUP_MID",
-        "params": []
-      }
-    ]
-  },
-  {
     "app": "EPS",
     "description": "Electrical power system",
     "commands": [
@@ -3020,6 +3058,12 @@
         ]
       },
       {
+        "name": "Request HK",
+        "mid": "0x1876",
+        "fc": 0,
+        "params": []
+      },
+      {
         "name": "Request Beacon",
         "mid": "0x1877",
         "fc": 0,
@@ -3330,225 +3374,531 @@
         "name": "Noop",
         "mid": "0x1894",
         "fc": 0,
+        "description": "GPS_NOOP_CC",
         "params": []
       },
       {
         "name": "Reset Counters",
         "mid": "0x1894",
         "fc": 1,
+        "description": "GPS_RESET_COUNTERS_CC",
         "params": []
       },
       {
         "name": "Get Counters",
         "mid": "0x1894",
         "fc": 2,
+        "description": "GPS_GET_COUNTERS_CC",
         "params": []
       },
       {
-        "name": "Get App Data",
+        "name": "Get Appdata",
         "mid": "0x1894",
         "fc": 3,
+        "description": "GPS_GET_APPDATA_CC",
         "params": []
       },
       {
         "name": "Driver Report HK",
         "mid": "0x1894",
         "fc": 4,
+        "description": "GPS_DRIVER_REPORT_HK_CC",
         "params": []
       },
       {
         "name": "Driver Clear HK",
         "mid": "0x1894",
         "fc": 5,
+        "description": "GPS_DRIVER_CLEAR_HK_CC",
         "params": []
       },
       {
-        "name": "Oem Cmd Log",
+        "name": "OEM Cmd Log",
         "mid": "0x1894",
-        "fc": 12,
+        "fc": 10,
         "description": "GPS_OEM_CMD_LOG_CC",
-        "params": []
-      },
-      {
-        "name": "Oem Cmd Log Once",
-        "mid": "0x1894",
-        "fc": 13,
-        "description": "GPS_OEM_CMD_LOG_ONCE_CC",
-        "params": []
-      },
-      {
-        "name": "Oem Cmd Log Ontime",
-        "mid": "0x1894",
-        "fc": 14,
-        "description": "GPS_OEM_CMD_LOG_ONTIME_CC",
-        "params": []
-      },
-      {
-        "name": "Oem Cmd Log Onchanged",
-        "mid": "0x1894",
-        "fc": 15,
-        "description": "GPS_OEM_CMD_LOG_ONCHANGED_CC",
-        "params": []
-      },
-      {
-        "name": "Oem Cmd Log Onnew",
-        "mid": "0x1894",
-        "fc": 16,
-        "description": "GPS_OEM_CMD_LOG_ONNEW_CC",
-        "params": []
-      },
-      {
-        "name": "Oem Cmd Unlog",
-        "mid": "0x1894",
-        "fc": 17,
-        "description": "GPS_OEM_CMD_UNLOG_CC",
-        "params": []
-      },
-      {
-        "name": "Oem Cmd Unlogall",
-        "mid": "0x1894",
-        "fc": 18,
-        "description": "GPS_OEM_CMD_UNLOGALL_CC",
-        "params": []
-      },
-      {
-        "name": "Oem Cmd Elevation Cutoff",
-        "mid": "0x1894",
-        "fc": 19,
-        "description": "GPS_OEM_CMD_ELEVATION_CUTOFF_CC",
-        "params": []
-      },
-      {
-        "name": "Oem Cmd Interface Mode",
-        "mid": "0x1894",
-        "fc": 20,
-        "description": "GPS_OEM_CMD_INTERFACE_MODE_CC",
-        "params": []
-      },
-      {
-        "name": "Oem Cmd Serial Config",
-        "mid": "0x1894",
-        "fc": 21,
-        "description": "GPS_OEM_CMD_SERIAL_CONFIG_CC",
-        "params": []
-      },
-      {
-        "name": "Oem Cmd Publish",
-        "mid": "0x1894",
-        "fc": 22,
-        "description": "GPS_OEM_CMD_PUBLISH_CC",
-        "params": []
-      },
-      {
-        "name": "Get Handler HK",
-        "mid": "0x1894",
-        "fc": 30,
         "params": [
           {
-            "name": "msgId",
-            "type": "uint16",
-            "default": "42"
-          }
-        ]
-      },
-      {
-        "name": "Get Message Stats",
-        "mid": "0x1894",
-        "fc": 31,
-        "params": [
-          {
-            "name": "msgId",
-            "type": "uint16",
-            "default": "42"
-          }
-        ]
-      },
-      {
-        "name": "Set Handler Status",
-        "mid": "0x1894",
-        "fc": 32,
-        "params": [
-          {
-            "name": "msgId",
-            "type": "uint16",
-            "default": "42"
+            "name": "interfaceIndex",
+            "type": "int32",
+            "default": "0"
           },
           {
-            "name": "status",
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "type",
             "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "padding",
+            "type": "uint8",
+            "default": "0",
+            "hidden": true
+          },
+          {
+            "name": "port",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "trigger",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "hold",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "period",
+            "type": "double",
             "default": "1"
           },
           {
-            "name": "override",
-            "type": "enum",
-            "storage": "uint8",
-            "values": {
-              "FALSE": 0,
-              "TRUE": 1
-            },
-            "default": "FALSE"
+            "name": "offset",
+            "type": "double",
+            "default": "0"
           }
         ]
       },
       {
-        "name": "Get Handler Status",
+        "name": "OEM Cmd Log Once",
+        "mid": "0x1894",
+        "fc": 11,
+        "description": "GPS_OEM_CMD_LOG_ONCE_CC",
+        "params": [
+          {
+            "name": "interfaceIndex",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "padding",
+            "type": "bytes",
+            "default": "",
+            "length": 2,
+            "hidden": true
+          },
+          {
+            "name": "port",
+            "type": "uint32",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Cmd Log Ontime",
+        "mid": "0x1894",
+        "fc": 12,
+        "description": "GPS_OEM_CMD_LOG_ONTIME_CC",
+        "params": [
+          {
+            "name": "interfaceIndex",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "port",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "period",
+            "type": "double",
+            "default": "1"
+          },
+          {
+            "name": "offset",
+            "type": "double",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Cmd Log Onchanged",
+        "mid": "0x1894",
+        "fc": 13,
+        "description": "GPS_OEM_CMD_LOG_ONCHANGED_CC",
+        "params": [
+          {
+            "name": "interfaceIndex",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "padding",
+            "type": "bytes",
+            "default": "",
+            "length": 2,
+            "hidden": true
+          },
+          {
+            "name": "port",
+            "type": "uint32",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Cmd Log Onnew",
+        "mid": "0x1894",
+        "fc": 14,
+        "description": "GPS_OEM_CMD_LOG_ONNEW_CC",
+        "params": [
+          {
+            "name": "interfaceIndex",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "padding",
+            "type": "bytes",
+            "default": "",
+            "length": 2,
+            "hidden": true
+          },
+          {
+            "name": "port",
+            "type": "uint32",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Cmd Unlog",
+        "mid": "0x1894",
+        "fc": 15,
+        "description": "GPS_OEM_CMD_UNLOG_CC",
+        "params": [
+          {
+            "name": "interfaceIndex",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "type",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "padding",
+            "type": "uint8",
+            "default": "0",
+            "hidden": true
+          },
+          {
+            "name": "port",
+            "type": "uint32",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Cmd Unlogall",
+        "mid": "0x1894",
+        "fc": 16,
+        "description": "GPS_OEM_CMD_UNLOGALL_CC",
+        "params": [
+          {
+            "name": "interfaceIndex",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "port",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "held",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Cmd Elevation Cutoff",
+        "mid": "0x1894",
+        "fc": 17,
+        "description": "GPS_OEM_CMD_ELEVATION_CUTOFF_CC",
+        "params": [
+          {
+            "name": "interfaceIndex",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "constellation",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "cutoff",
+            "type": "float",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Cmd Interface Mode",
+        "mid": "0x1894",
+        "fc": 18,
+        "description": "GPS_OEM_CMD_INTERFACE_MODE_CC",
+        "params": [
+          {
+            "name": "interfaceIndex",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "port",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "rxType",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "txType",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "responses",
+            "type": "uint32",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Cmd Serial Config",
+        "mid": "0x1894",
+        "fc": 19,
+        "description": "GPS_OEM_CMD_SERIAL_CONFIG_CC",
+        "params": [
+          {
+            "name": "interfaceIndex",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "port",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "baud",
+            "type": "uint32",
+            "default": "9600"
+          },
+          {
+            "name": "parity",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "databits",
+            "type": "uint32",
+            "default": "8"
+          },
+          {
+            "name": "stopbits",
+            "type": "uint32",
+            "default": "1"
+          },
+          {
+            "name": "handshake",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "_break",
+            "type": "uint32",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Cmd Publish",
+        "mid": "0x1894",
+        "fc": 29,
+        "description": "GPS_OEM_CMD_PUBLISH_CC",
+        "params": [
+          {
+            "name": "interfaceIndex",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "bodylength",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "body",
+            "type": "bytes",
+            "default": "",
+            "length": 256
+          }
+        ]
+      },
+      {
+        "name": "OEM Log Get Handler HK",
+        "mid": "0x1894",
+        "fc": 30,
+        "description": "GPS_OEM_LOG_GET_HANDLER_HK_CC",
+        "params": [
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Log Get Stat",
+        "mid": "0x1894",
+        "fc": 31,
+        "description": "GPS_OEM_LOG_GET_STAT_CC",
+        "params": [
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Log Reset Stat",
+        "mid": "0x1894",
+        "fc": 32,
+        "description": "GPS_OEM_LOG_RESET_STAT_CC",
+        "params": [
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Log Get Recent Message",
         "mid": "0x1894",
         "fc": 33,
+        "description": "GPS_OEM_LOG_GET_RECENT_MESSAGE_CC",
         "params": [
           {
             "name": "msgId",
             "type": "uint16",
-            "default": "42"
+            "default": "0"
+          },
+          {
+            "name": "padding",
+            "type": "uint16",
+            "default": "0",
+            "hidden": true
+          },
+          {
+            "name": "offset",
+            "type": "uint32",
+            "default": "0"
           }
         ]
       },
       {
-        "name": "Activate Handler",
+        "name": "OEM Log Handler Get Status",
         "mid": "0x1894",
         "fc": 34,
+        "description": "GPS_OEM_LOG_HANDLER_GET_STATUS_CC",
         "params": [
           {
             "name": "msgId",
             "type": "uint16",
-            "default": "42"
+            "default": "0"
           }
         ]
       },
       {
-        "name": "Deactivate Handler",
+        "name": "OEM Log Handler Activate",
         "mid": "0x1894",
         "fc": 35,
+        "description": "GPS_OEM_LOG_HANDLER_ACTIVATE_CC",
         "params": [
           {
             "name": "msgId",
             "type": "uint16",
-            "default": "42"
+            "default": "0"
           }
         ]
       },
       {
-        "name": "Oem Log Handler Go Dormant",
+        "name": "OEM Log Handler Deactivate",
         "mid": "0x1894",
         "fc": 36,
-        "description": "GPS_OEM_LOG_HANDLER_GO_DORMANT_CC",
-        "params": []
+        "description": "GPS_OEM_LOG_HANDLER_DEACTIVATE_CC",
+        "params": [
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Wake Handler",
+        "name": "OEM Log Handler Go Dormant",
         "mid": "0x1894",
         "fc": 37,
+        "description": "GPS_OEM_LOG_HANDLER_GO_DORMANT_CC",
         "params": [
           {
             "name": "msgId",
             "type": "uint16",
-            "default": "42"
+            "default": "0"
           }
         ]
       },
       {
-        "name": "Activate All Handlers",
+        "name": "OEM Log Handler Wakeup",
         "mid": "0x1894",
         "fc": 38,
+        "description": "GPS_OEM_LOG_HANDLER_WAKEUP_CC",
         "params": [
           {
             "name": "msgId",
@@ -3558,9 +3908,10 @@
         ]
       },
       {
-        "name": "Deactivate All Handlers",
+        "name": "OEM Log Handler Activate All",
         "mid": "0x1894",
         "fc": 39,
+        "description": "GPS_OEM_LOG_HANDLER_ACTIVATE_ALL_CC",
         "params": [
           {
             "name": "msgId",
@@ -3570,20 +3921,34 @@
         ]
       },
       {
-        "name": "Register Handler",
+        "name": "OEM Log Handler Deactivate All",
+        "mid": "0x1894",
+        "fc": 40,
+        "description": "GPS_OEM_LOG_HANDLER_DEACTIVATE_ALL_CC",
+        "params": [
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "OEM Log Handler Register",
         "mid": "0x1894",
         "fc": 50,
+        "description": "GPS_OEM_LOG_HANDLER_REGISTER_CC",
         "params": [
           {
             "name": "name",
             "type": "string",
-            "length": 16,
-            "default": "BESTPOS"
+            "default": "",
+            "length": 16
           },
           {
             "name": "msgId",
             "type": "uint16",
-            "default": "42"
+            "default": "0"
           },
           {
             "name": "msgLength",
@@ -3593,104 +3958,154 @@
         ]
       },
       {
-        "name": "Unregister Handler",
+        "name": "OEM Log Handler Unregister",
         "mid": "0x1894",
         "fc": 51,
+        "description": "GPS_OEM_LOG_HANDLER_UNREGISTER_CC",
         "params": [
           {
             "name": "msgId",
             "type": "uint16",
-            "default": "42"
+            "default": "0"
           }
         ]
       },
       {
-        "name": "Oem Log Add Callback",
+        "name": "OEM Log Add Callback",
         "mid": "0x1894",
         "fc": 52,
         "description": "GPS_OEM_LOG_ADD_CALLBACK_CC",
-        "params": []
+        "params": [
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "options",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "libpath",
+            "type": "string",
+            "default": "",
+            "length": 64
+          },
+          {
+            "name": "funcName",
+            "type": "string",
+            "default": "",
+            "length": 32
+          }
+        ]
       },
       {
-        "name": "Oem Log Clear Callback",
+        "name": "OEM Log Clear Callbacks",
         "mid": "0x1894",
         "fc": 53,
-        "description": "GPS_OEM_LOG_CLEAR_CALLBACK_CC",
-        "params": []
+        "description": "GPS_OEM_LOG_CLEAR_CALLBACKS_CC",
+        "params": [
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Oem Log Handler Set Broken",
+        "name": "OEM Log Handler Mark Broken",
         "mid": "0x1894",
         "fc": 54,
-        "description": "GPS_OEM_LOG_HANDLER_SET_BROKEN_CC",
-        "params": []
+        "description": "GPS_OEM_LOG_HANDLER_MARK_BROKEN_CC",
+        "params": [
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Oem Log Get Message Length",
+        "name": "OEM Log Get Message Length",
         "mid": "0x1894",
         "fc": 55,
         "description": "GPS_OEM_LOG_GET_MESSAGE_LENGTH_CC",
-        "params": []
+        "params": [
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Oem Log Get Handler Name",
+        "name": "OEM Log Get Handler Name",
         "mid": "0x1894",
         "fc": 56,
         "description": "GPS_OEM_LOG_GET_HANDLER_NAME_CC",
-        "params": []
+        "params": [
+          {
+            "name": "msgId",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Reset Handler Counters",
+        "name": "OEM Log Handler Set Status",
         "mid": "0x1894",
         "fc": 57,
+        "description": "GPS_OEM_LOG_HANDLER_SET_STATUS_CC",
         "params": [
           {
             "name": "msgId",
             "type": "uint16",
-            "default": "42"
+            "default": "0"
+          },
+          {
+            "name": "status",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "override",
+            "type": "uint8",
+            "default": "0"
           }
         ]
       },
       {
-        "name": "Dump Recent Message",
+        "name": "OEM Log Ignore Missing Crc",
         "mid": "0x1894",
         "fc": 58,
+        "description": "GPS_OEM_LOG_IGNORE_MISSING_CRC_CC",
         "params": [
           {
             "name": "msgId",
             "type": "uint16",
-            "default": "42"
+            "default": "0"
           }
         ]
       },
       {
-        "name": "Ignore Checksum",
+        "name": "OEM Log Reject Missing Crc",
         "mid": "0x1894",
         "fc": 59,
+        "description": "GPS_OEM_LOG_REJECT_MISSING_CRC_CC",
         "params": [
           {
             "name": "msgId",
             "type": "uint16",
-            "default": "42"
+            "default": "0"
           }
         ]
       },
       {
-        "name": "Do Not Ignore Checksum",
-        "mid": "0x1894",
-        "fc": 60,
-        "params": [
-          {
-            "name": "msgId",
-            "type": "uint16",
-            "default": "42"
-          }
-        ]
-      },
-      {
-        "name": "Lock Handlers",
+        "name": "OEM Log Lock Handlers",
         "mid": "0x1894",
         "fc": 100,
+        "description": "GPS_OEM_LOG_LOCK_HANDLERS_CC",
         "params": [
           {
             "name": "Magic",
@@ -3700,9 +4115,10 @@
         ]
       },
       {
-        "name": "Unlock Handlers",
+        "name": "OEM Log Unlock Handlers",
         "mid": "0x1894",
         "fc": 101,
+        "description": "GPS_OEM_LOG_UNLOCK_HANDLERS_CC",
         "params": [
           {
             "name": "Magic",
@@ -3715,7 +4131,8 @@
         "name": "Request HK",
         "mid": "0x1895",
         "fc": 0,
-        "params": []
+        "params": [],
+        "description": "GPS_SEND_HK_MID"
       }
     ]
   },
@@ -4534,48 +4951,6 @@
     ]
   },
   {
-    "app": "FTP_CLIENT",
-    "description": "CSP FTP client and CSP buffer monitor",
-    "commands": [
-      {
-        "name": "Noop",
-        "mid": "0x18A0",
-        "fc": 0,
-        "params": []
-      },
-      {
-        "name": "Upload",
-        "mid": "0x18A0",
-        "fc": 1,
-        "description": "Upload a local file to a remote CSP FTP server.",
-        "params": [
-          {"name": "Host", "type": "uint8", "default": "1"},
-          {"name": "Port", "type": "uint8", "default": "9"},
-          {"name": "Reserved", "type": "uint16", "hidden": true, "default": "0"},
-          {"name": "Timeout", "type": "uint32", "default": "1000"},
-          {"name": "ChunkSize", "type": "uint32", "default": "185"},
-          {"name": "LocalUrl", "type": "string", "length": 50, "default": "/cf/cspbuf.txt"},
-          {"name": "RemoteUrl", "type": "string", "length": 50, "default": "/cspbuf.txt"}
-        ]
-      },
-      {
-        "name": "Download",
-        "mid": "0x18A0",
-        "fc": 2,
-        "description": "Download a remote file from a CSP FTP server.",
-        "params": [
-          {"name": "Host", "type": "uint8", "default": "1"},
-          {"name": "Port", "type": "uint8", "default": "9"},
-          {"name": "Reserved", "type": "uint16", "hidden": true, "default": "0"},
-          {"name": "Timeout", "type": "uint32", "default": "1000"},
-          {"name": "ChunkSize", "type": "uint32", "default": "185"},
-          {"name": "LocalUrl", "type": "string", "length": 50, "default": "/cf/download.bin"},
-          {"name": "RemoteUrl", "type": "string", "length": 50, "default": "/remote.bin"}
-        ]
-      }
-    ]
-  },
-  {
     "app": "RPT",
     "description": "Report queue service",
     "commands": [
@@ -4763,151 +5138,6 @@
     ]
   },
   {
-    "app": "SP",
-    "description": "Separation system",
-    "commands": [
-      {
-        "name": "Noop",
-        "mid": "0x1858",
-        "fc": 0,
-        "params": []
-      },
-      {
-        "name": "Reset Counters",
-        "mid": "0x1858",
-        "fc": 1,
-        "params": []
-      },
-      {
-        "name": "Get HK",
-        "mid": "0x1858",
-        "fc": 2,
-        "params": []
-      },
-      {
-        "name": "Deploy",
-        "mid": "0x1858",
-        "fc": 3,
-        "params": [
-          {
-            "name": "DspNum",
-            "type": "uint8",
-            "default": "0"
-          },
-          {
-            "name": "BurnDuration",
-            "type": "uint8",
-            "default": "0"
-          },
-          {
-            "name": "spare",
-            "type": "bytes",
-            "length": 2,
-            "default": "",
-            "hidden": true
-          }
-        ]
-      },
-      {
-        "name": "Stop Burn",
-        "mid": "0x1858",
-        "fc": 4,
-        "params": [
-          {
-            "name": "DspNum",
-            "type": "uint8",
-            "default": "0"
-          },
-          {
-            "name": "spare",
-            "type": "bytes",
-            "length": 3,
-            "default": "",
-            "hidden": true
-          }
-        ]
-      },
-      {
-        "name": "Auto Deploy",
-        "mid": "0x1858",
-        "fc": 5,
-        "params": [
-          {
-            "name": "StartBurnTime",
-            "type": "uint8",
-            "default": "0"
-          },
-          {
-            "name": "Increment",
-            "type": "uint8",
-            "default": "0"
-          },
-          {
-            "name": "MaxBurnTime",
-            "type": "uint8",
-            "default": "0"
-          },
-          {
-            "name": "spare",
-            "type": "uint8",
-            "default": "0",
-            "hidden": true
-          }
-        ]
-      },
-      {
-        "name": "Scan AR6",
-        "mid": "0x1858",
-        "fc": 6,
-        "params": []
-      },
-      {
-        "name": "Set AR6 Address",
-        "mid": "0x1858",
-        "fc": 7,
-        "params": [
-          {
-            "name": "CurrentAddr",
-            "type": "uint8",
-            "default": "0x07"
-          },
-          {
-            "name": "NewAddr",
-            "type": "uint8",
-            "default": "0x08"
-          },
-          {
-            "name": "spare",
-            "type": "bytes",
-            "length": 2,
-            "default": "",
-            "hidden": true
-          }
-        ]
-      },
-      {
-        "name": "Report Beacon",
-        "mid": "0x1858",
-        "fc": 8,
-        "params": []
-      },
-      {
-        "name": "Request HK",
-        "mid": "0x185A",
-        "fc": 0,
-        "description": "SP_SEND_HK_MID",
-        "params": []
-      },
-      {
-        "name": "Request Beacon",
-        "mid": "0x1859",
-        "fc": 0,
-        "description": "SP_SEND_BCN_MID",
-        "params": []
-      }
-    ]
-  },
-  {
     "app": "STX",
     "description": "STX payload interface",
     "commands": [
@@ -4915,40 +5145,515 @@
         "name": "Noop",
         "mid": "0x1854",
         "fc": 0,
-        "params": []
+        "params": [],
+        "description": "STX_NOOP_CC"
       },
       {
         "name": "Reset Counters",
         "mid": "0x1854",
         "fc": 1,
-        "params": []
+        "params": [],
+        "description": "STX_RESET_COUNTERS_CC"
+      },
+      {
+        "name": "Param Init",
+        "mid": "0x1854",
+        "fc": 2,
+        "params": [],
+        "description": "STX_PARAM_INIT_CC"
+      },
+      {
+        "name": "Set Module ID",
+        "mid": "0x1854",
+        "fc": 3,
+        "description": "STX_SET_MODULE_ID_CC",
+        "params": [
+          {
+            "name": "ModuleId",
+            "type": "uint16",
+            "default": "0x1212"
+          }
+        ]
+      },
+      {
+        "name": "Set Symbol Rate",
+        "mid": "0x1854",
+        "fc": 10,
+        "description": "STX_SET_SYMBOLRATE",
+        "params": [
+          {
+            "name": "data",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Set Transmit Power",
+        "mid": "0x1854",
+        "fc": 11,
+        "description": "STX_SET_TRANSMITPW",
+        "params": [
+          {
+            "name": "data",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Set Center Frequency",
+        "mid": "0x1854",
+        "fc": 12,
+        "description": "STX_SET_CENTERFREQ",
+        "params": [
+          {
+            "name": "data",
+            "type": "float",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Set MODCOD",
+        "mid": "0x1854",
+        "fc": 13,
+        "description": "STX_SET_MODCOD",
+        "params": [
+          {
+            "name": "data",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Set Roll Off",
+        "mid": "0x1854",
+        "fc": 14,
+        "description": "STX_SET_ROLLOFF",
+        "params": [
+          {
+            "name": "data",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Set Pilot Signal",
+        "mid": "0x1854",
+        "fc": 15,
+        "description": "STX_SET_PILOTSIG",
+        "params": [
+          {
+            "name": "data",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Set FEC Frame Size",
+        "mid": "0x1854",
+        "fc": 16,
+        "description": "STX_SET_FECFRAMESZ",
+        "params": [
+          {
+            "name": "data",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Set PreTX Delay",
+        "mid": "0x1854",
+        "fc": 17,
+        "description": "STX_SET_PRETX_DELAY",
+        "params": [
+          {
+            "name": "data",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Set All Parameters",
+        "mid": "0x1854",
+        "fc": 18,
+        "description": "STX_SET_ALL_PRAMETERS",
+        "params": [
+          {
+            "name": "symbol_rate",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "transmit_power",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "modcod",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "roll_off",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "pilot_signal",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "fec_frame_size",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "pretransmission_delay",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "center_frequency",
+            "type": "float",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Set RS485 Baud",
+        "mid": "0x1854",
+        "fc": 19,
+        "description": "STX_SET_RS485BAUD",
+        "params": [
+          {
+            "name": "data",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Set Modulator Data Interface",
+        "mid": "0x1854",
+        "fc": 20,
+        "description": "STX_SET_MODULATOR_DATA_INTERFACE",
+        "params": [
+          {
+            "name": "modulator_interface_type",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "lvds_io_type",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Get Symbol Rate",
+        "mid": "0x1854",
+        "fc": 30,
+        "params": [],
+        "description": "STX_GET_SYMBOL_RATE"
+      },
+      {
+        "name": "Get TX Power",
+        "mid": "0x1854",
+        "fc": 31,
+        "params": [],
+        "description": "STX_GET_TX_POWER"
+      },
+      {
+        "name": "Get Center Frequency",
+        "mid": "0x1854",
+        "fc": 32,
+        "params": [],
+        "description": "STX_GET_CENTER_FREQ"
+      },
+      {
+        "name": "Get MODCOD",
+        "mid": "0x1854",
+        "fc": 33,
+        "params": [],
+        "description": "STX_GET_MODCOD"
+      },
+      {
+        "name": "Get Roll Off",
+        "mid": "0x1854",
+        "fc": 34,
+        "params": [],
+        "description": "STX_GET_ROLL_OFF"
+      },
+      {
+        "name": "Get Pilot Signal",
+        "mid": "0x1854",
+        "fc": 35,
+        "params": [],
+        "description": "STX_GET_PILOT_SIGNAL"
+      },
+      {
+        "name": "Get FEC Frame Size",
+        "mid": "0x1854",
+        "fc": 36,
+        "params": [],
+        "description": "STX_GET_FEC_FRAME_SIZE"
+      },
+      {
+        "name": "Get PreTX Delay",
+        "mid": "0x1854",
+        "fc": 37,
+        "params": [],
+        "description": "STX_GET_PRETX_DELAY"
+      },
+      {
+        "name": "Get All Parameters",
+        "mid": "0x1854",
+        "fc": 38,
+        "params": [],
+        "description": "STX_GET_ALL_PRAMETERS"
+      },
+      {
+        "name": "Get Report",
+        "mid": "0x1854",
+        "fc": 39,
+        "params": [],
+        "description": "STX_GET_REPORT"
+      },
+      {
+        "name": "Get Modulator Data Interface",
+        "mid": "0x1854",
+        "fc": 40,
+        "params": [],
+        "description": "STX_GET_MODULATOR_DATA_INTERFACE"
+      },
+      {
+        "name": "FileSys Dir",
+        "mid": "0x1854",
+        "fc": 50,
+        "params": [],
+        "description": "STX_FILESYS_CC_DIR"
+      },
+      {
+        "name": "FileSys Dir Next",
+        "mid": "0x1854",
+        "fc": 51,
+        "params": [],
+        "description": "STX_FILESYS_CC_DIRNEXT"
+      },
+      {
+        "name": "FileSys Delete File",
+        "mid": "0x1854",
+        "fc": 52,
+        "description": "STX_FILESYS_CC_DELFILE",
+        "params": [
+          {
+            "name": "filename_max",
+            "type": "string",
+            "default": "",
+            "length": 30
+          },
+          {
+            "name": "filename_len",
+            "type": "int8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "FileSys Delete All Files",
+        "mid": "0x1854",
+        "fc": 53,
+        "params": [],
+        "description": "STX_FILESYS_CC_DELALLFILE"
+      },
+      {
+        "name": "FileSys Create File",
+        "mid": "0x1854",
+        "fc": 54,
+        "description": "STX_FILESYS_CC_CREATEFILE",
+        "params": [
+          {
+            "name": "filename_max",
+            "type": "string",
+            "default": "",
+            "length": 30
+          },
+          {
+            "name": "filename_len",
+            "type": "int8",
+            "default": "0"
+          },
+          {
+            "name": "file_size",
+            "type": "uint32",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "FileSys Write File",
+        "mid": "0x1854",
+        "fc": 55,
+        "description": "STX_FILESYS_CC_WRITEFILE",
+        "params": [
+          {
+            "name": "filename",
+            "type": "string",
+            "default": "/cf/file.bin",
+            "length": 64
+          },
+          {
+            "name": "size",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "offset",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "interpacket_delay",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "FileSys Open File",
+        "mid": "0x1854",
+        "fc": 56,
+        "description": "STX_FILESYS_CC_OPENFILE",
+        "params": [
+          {
+            "name": "filename_max",
+            "type": "string",
+            "default": "",
+            "length": 30
+          },
+          {
+            "name": "filename_len",
+            "type": "int8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "FileSys Read File",
+        "mid": "0x1854",
+        "fc": 57,
+        "params": [],
+        "description": "STX_FILESYS_CC_READFILE"
+      },
+      {
+        "name": "FileSys Send File",
+        "mid": "0x1854",
+        "fc": 58,
+        "description": "STX_FILESYS_CC_SENDFILE",
+        "params": [
+          {
+            "name": "filename_max",
+            "type": "string",
+            "default": "",
+            "length": 30
+          },
+          {
+            "name": "filename_len",
+            "type": "int8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "FileSys Send File RTI",
+        "mid": "0x1854",
+        "fc": 59,
+        "description": "STX_FILESYS_CC_SENDFILERTI",
+        "params": [
+          {
+            "name": "filename_max",
+            "type": "string",
+            "default": "",
+            "length": 30
+          },
+          {
+            "name": "filename_len",
+            "type": "int8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Transmit Mode",
+        "mid": "0x1854",
+        "fc": 62,
+        "params": [],
+        "description": "STX_SYSCONF_CC_TRANSMITMODE"
+      },
+      {
+        "name": "Idle Mode",
+        "mid": "0x1854",
+        "fc": 63,
+        "params": [],
+        "description": "STX_SYSCONF_CC_IDLEMODE"
+      },
+      {
+        "name": "Update FW",
+        "mid": "0x1854",
+        "fc": 64,
+        "params": [],
+        "description": "STX_SYSCONF_CC_UPDATEFW"
+      },
+      {
+        "name": "Safe Shutdown",
+        "mid": "0x1854",
+        "fc": 65,
+        "params": [],
+        "description": "STX_SYSCONF_CC_SAFESHUTDOWN"
+      },
+      {
+        "name": "Get Result",
+        "mid": "0x1854",
+        "fc": 66,
+        "params": [],
+        "description": "STX_GETRES_CC_GETRES"
       },
       {
         "name": "HK",
         "mid": "0x1854",
         "fc": 67,
-        "description": "STX_HK_CC",
-        "params": []
+        "params": [],
+        "description": "STX_HK_CC"
       },
       {
         "name": "Beacon",
         "mid": "0x1854",
         "fc": 68,
-        "description": "STX_BCN_CC",
-        "params": []
+        "params": [],
+        "description": "STX_BCN_CC"
       },
       {
         "name": "Request HK",
         "mid": "0x1855",
         "fc": 0,
-        "params": []
+        "params": [],
+        "description": "STX_SEND_HK_MID"
       },
       {
         "name": "Request Beacon",
         "mid": "0x1856",
         "fc": 0,
-        "description": "STX_SEND_BCN_MID",
-        "params": []
+        "params": [],
+        "description": "STX_SEND_BCN_MID"
       }
     ]
   },
@@ -5472,241 +6177,6 @@
     ]
   },
   {
-    "app": "UANT_APP",
-    "description": "ANT-6F deployment controller",
-    "commands": [
-      {
-        "name": "Noop",
-        "mid": "0x1840",
-        "fc": 0,
-        "params": []
-      },
-      {
-        "name": "Reset Counters",
-        "mid": "0x1840",
-        "fc": 1,
-        "params": []
-      },
-      {
-        "name": "Soft Reboot",
-        "mid": "0x1840",
-        "fc": 2,
-        "params": [
-          {
-            "name": "Addr",
-            "type": "enum",
-            "storage": "uint8",
-            "values": {
-              "ANT_A": 5,
-              "ANT_B": 6
-            },
-            "default": "ANT_A"
-          }
-        ]
-      },
-      {
-        "name": "Burn Channel",
-        "mid": "0x1840",
-        "fc": 3,
-        "params": [
-          {
-            "name": "Addr",
-            "type": "enum",
-            "storage": "uint8",
-            "values": {
-              "ANT_A": 5,
-              "ANT_B": 6
-            },
-            "default": "ANT_A"
-          },
-          {
-            "name": "Channel",
-            "type": "enum",
-            "storage": "uint8",
-            "values": {
-              "CH0": 0,
-              "CH1": 1
-            },
-            "default": "CH0"
-          },
-          {
-            "name": "Duration",
-            "type": "uint8",
-            "default": "1"
-          }
-        ]
-      },
-      {
-        "name": "Stop Burn",
-        "mid": "0x1840",
-        "fc": 4,
-        "params": [
-          {
-            "name": "Addr",
-            "type": "enum",
-            "storage": "uint8",
-            "values": {
-              "ANT_A": 5,
-              "ANT_B": 6
-            },
-            "default": "ANT_A"
-          }
-        ]
-      },
-      {
-        "name": "Get Status",
-        "mid": "0x1840",
-        "fc": 5,
-        "params": [
-          {
-            "name": "Addr",
-            "type": "enum",
-            "storage": "uint8",
-            "values": {
-              "ANT_A": 5,
-              "ANT_B": 6
-            },
-            "default": "ANT_A"
-          }
-        ]
-      },
-      {
-        "name": "Get Backup Status",
-        "mid": "0x1840",
-        "fc": 6,
-        "params": [
-          {
-            "name": "Addr",
-            "type": "enum",
-            "storage": "uint8",
-            "values": {
-              "ANT_A": 5,
-              "ANT_B": 6
-            },
-            "default": "ANT_A"
-          }
-        ]
-      },
-      {
-        "name": "Get Board Status",
-        "mid": "0x1840",
-        "fc": 7,
-        "params": [
-          {
-            "name": "Addr",
-            "type": "enum",
-            "storage": "uint8",
-            "values": {
-              "ANT_A": 5,
-              "ANT_B": 6
-            },
-            "default": "ANT_A"
-          }
-        ]
-      },
-      {
-        "name": "Get Temperature",
-        "mid": "0x1840",
-        "fc": 8,
-        "params": [
-          {
-            "name": "Addr",
-            "type": "enum",
-            "storage": "uint8",
-            "values": {
-              "ANT_A": 5,
-              "ANT_B": 6
-            },
-            "default": "ANT_A"
-          }
-        ]
-      },
-      {
-        "name": "Get Settings",
-        "mid": "0x1840",
-        "fc": 9,
-        "params": [
-          {
-            "name": "Addr",
-            "type": "enum",
-            "storage": "uint8",
-            "values": {
-              "ANT_A": 5,
-              "ANT_B": 6
-            },
-            "default": "ANT_A"
-          }
-        ]
-      },
-      {
-        "name": "Set Settings",
-        "mid": "0x1840",
-        "fc": 10,
-        "params": [
-          {
-            "name": "Addr",
-            "type": "enum",
-            "storage": "uint8",
-            "values": {
-              "ANT_A": 5,
-              "ANT_B": 6
-            },
-            "default": "ANT_A"
-          },
-          {
-            "name": "_align",
-            "type": "bytes",
-            "length": 1,
-            "default": "",
-            "hidden": true
-          },
-          {
-            "name": "MinutesUntilDeploy",
-            "type": "uint16",
-            "default": "0"
-          },
-          {
-            "name": "BackupActive",
-            "type": "uint8",
-            "default": "0"
-          },
-          {
-            "name": "MaxBurnDuration",
-            "type": "uint8",
-            "default": "0"
-          }
-        ]
-      },
-      {
-        "name": "Uant Burn Channel Internal",
-        "mid": "0x1840",
-        "fc": 23,
-        "description": "UANT_BURN_CHANNEL_INTERNAL_CC",
-        "params": []
-      },
-      {
-        "name": "Uant Get Status Internal",
-        "mid": "0x1840",
-        "fc": 24,
-        "description": "UANT_GET_STATUS_INTERNAL_CC",
-        "params": []
-      },
-      {
-        "name": "Request HK",
-        "mid": "0x1841",
-        "fc": 0,
-        "params": []
-      },
-      {
-        "name": "Request Beacon",
-        "mid": "0x1842",
-        "fc": 0,
-        "description": "UANT_APP_SEND_BCN_MID",
-        "params": []
-      }
-    ]
-  },
-  {
     "app": "UTRX",
     "description": "UHF transceiver",
     "commands": [
@@ -5929,25 +6399,25 @@
     "commands": [
       {
         "name": "Noop",
-        "mid": "0x1892",
+        "mid": "0x182B",
         "fc": 0,
         "params": []
       },
       {
         "name": "Reset Counters",
-        "mid": "0x1892",
+        "mid": "0x182B",
         "fc": 1,
         "params": []
       },
       {
         "name": "Process",
-        "mid": "0x1892",
+        "mid": "0x182B",
         "fc": 2,
         "params": []
       },
       {
         "name": "Display Param",
-        "mid": "0x1892",
+        "mid": "0x182B",
         "fc": 3,
         "params": [
           {
@@ -5970,43 +6440,85 @@
       },
       {
         "name": "LTRX EN On",
-        "mid": "0x1892",
+        "mid": "0x182B",
         "fc": 4,
         "params": []
       },
       {
         "name": "LTRX EN Off",
-        "mid": "0x1892",
+        "mid": "0x182B",
         "fc": 5,
         "params": []
       },
       {
         "name": "DEP1 EN On",
-        "mid": "0x1892",
+        "mid": "0x182B",
         "fc": 6,
         "params": []
       },
       {
         "name": "DEP1 EN Off",
-        "mid": "0x1892",
+        "mid": "0x182B",
         "fc": 7,
         "params": []
       },
       {
         "name": "DEP2 EN On",
-        "mid": "0x1892",
+        "mid": "0x182B",
         "fc": 8,
         "params": []
       },
       {
         "name": "DEP2 EN Off",
-        "mid": "0x1892",
+        "mid": "0x182B",
         "fc": 9,
         "params": []
       },
       {
+        "name": "SP IN Read 5s",
+        "mid": "0x182B",
+        "fc": 10,
+        "params": []
+      },
+      {
+        "name": "STX EN On",
+        "mid": "0x182B",
+        "fc": 11,
+        "params": []
+      },
+      {
+        "name": "STX EN Off",
+        "mid": "0x182B",
+        "fc": 12,
+        "params": []
+      },
+      {
+        "name": "ADCS EN On",
+        "mid": "0x182B",
+        "fc": 13,
+        "params": []
+      },
+      {
+        "name": "ADCS EN Off",
+        "mid": "0x182B",
+        "fc": 14,
+        "params": []
+      },
+      {
+        "name": "ADCS Boot On",
+        "mid": "0x182B",
+        "fc": 15,
+        "params": []
+      },
+      {
+        "name": "ADCS Boot Off",
+        "mid": "0x182B",
+        "fc": 16,
+        "params": []
+      },
+      {
         "name": "DEP Burn 90s",
-        "mid": "0x1892",
+        "mid": "0x182B",
         "fc": 17,
         "description": "Channel 1 burns DEP1_EN for 90 seconds; channel 2 burns DEP2_EN for 90 seconds",
         "params": [
@@ -6018,14 +6530,14 @@
         ]
       },
       {
-        "name": "SP IN Read 5s",
-        "mid": "0x1892",
-        "fc": 10,
+        "name": "Request HK",
+        "mid": "0x182C",
+        "fc": 0,
         "params": []
       },
       {
-        "name": "Request HK",
-        "mid": "0x1893",
+        "name": "Request Beacon",
+        "mid": "0x182D",
         "fc": 0,
         "params": []
       }
@@ -6133,205 +6645,205 @@
     "commands": [
       {
         "name": "Noop",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 0,
         "params": []
       },
       {
         "name": "Reset Counters",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 1,
         "params": []
       },
       {
         "name": "Report Beacon",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 2,
         "params": []
       },
       {
         "name": "IFB CSP CMP",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 10,
         "params": []
       },
       {
         "name": "IFB CSP Ping",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 11,
         "params": []
       },
       {
         "name": "IFB CSP PS",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 12,
         "params": []
       },
       {
         "name": "IFB CSP Mem Free",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 13,
         "params": []
       },
       {
         "name": "IFB CSP Reboot",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 14,
         "params": []
       },
       {
         "name": "IFB CSP Buf Free",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 15,
         "params": []
       },
       {
         "name": "IFB CSP Uptime",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 16,
         "params": []
       },
       {
         "name": "IFB CSP GndWdt",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 17,
         "params": []
       },
       {
         "name": "IFB Get Board UID",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 18,
         "params": []
       },
       {
         "name": "IFB Get Board Rev",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 19,
         "params": []
       },
       {
         "name": "IFB Get CSP Addr",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 20,
         "params": []
       },
       {
         "name": "IFB Get CAN Speed",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 21,
         "params": []
       },
       {
         "name": "IFB Get I2C Addr",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 22,
         "params": []
       },
       {
         "name": "IFB Get I2C Speed",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 23,
         "params": []
       },
       {
         "name": "IFB Get WDT Val",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 24,
         "params": []
       },
       {
         "name": "IFB Get CSP Rtable",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 25,
         "params": []
       },
       {
         "name": "IFB Get Sys Status",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 26,
         "params": []
       },
       {
         "name": "IFB Get Sys Uptime",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 27,
         "params": []
       },
       {
         "name": "IFB Get Boot Cnt",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 28,
         "params": []
       },
       {
         "name": "IFB Get Boot Cause",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 29,
         "params": []
       },
       {
         "name": "IFB Get Reboot Cause",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 30,
         "params": []
       },
       {
         "name": "IFB Get WDT Left",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 31,
         "params": []
       },
       {
         "name": "IFB Get Board Temp",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 32,
         "params": []
       },
       {
         "name": "IFB Get Power Current",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 33,
         "params": []
       },
       {
         "name": "IFB Get IMU Data",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 34,
         "params": []
       },
       {
         "name": "IFB Get NTC Data",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 35,
         "params": []
       },
       {
         "name": "IFB Save Table0",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 36,
         "params": []
       },
       {
         "name": "IFB Save Table1",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 37,
         "params": []
       },
       {
         "name": "IFB Save Table4",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 38,
         "params": []
       },
       {
         "name": "IFB Save All Table",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 39,
         "params": []
       },
       {
         "name": "IFB Set CSP Addr",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 40,
         "params": [
           {
@@ -6343,7 +6855,7 @@
       },
       {
         "name": "IFB Set CAN Speed",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 41,
         "params": [
           {
@@ -6355,7 +6867,7 @@
       },
       {
         "name": "IFB Set I2C Addr",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 42,
         "params": [
           {
@@ -6367,7 +6879,7 @@
       },
       {
         "name": "IFB Set I2C Speed",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 43,
         "params": [
           {
@@ -6379,7 +6891,7 @@
       },
       {
         "name": "IFB Set WDT Val",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 44,
         "params": [
           {
@@ -6391,7 +6903,7 @@
       },
       {
         "name": "IFB Set CSP Rtable",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 45,
         "params": [
           {
@@ -6404,187 +6916,187 @@
       },
       {
         "name": "EXP CSP CMP",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 50,
         "params": []
       },
       {
         "name": "EXP CSP Ping",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 51,
         "params": []
       },
       {
         "name": "EXP CSP PS",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 52,
         "params": []
       },
       {
         "name": "EXP CSP Mem Free",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 53,
         "params": []
       },
       {
         "name": "EXP CSP Reboot",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 54,
         "params": []
       },
       {
         "name": "EXP CSP Buf Free",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 55,
         "params": []
       },
       {
         "name": "EXP CSP Uptime",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 56,
         "params": []
       },
       {
         "name": "EXP CSP GndWdt",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 57,
         "params": []
       },
       {
         "name": "EXP Get Board UID",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 58,
         "params": []
       },
       {
         "name": "EXP Get Board Rev",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 59,
         "params": []
       },
       {
         "name": "EXP Get CSP Addr",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 60,
         "params": []
       },
       {
         "name": "EXP Get CAN Speed",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 61,
         "params": []
       },
       {
         "name": "EXP Get I2C Addr",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 62,
         "params": []
       },
       {
         "name": "EXP Get I2C Speed",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 63,
         "params": []
       },
       {
         "name": "EXP Get WDT Val",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 64,
         "params": []
       },
       {
         "name": "EXP Get CSP Rtable",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 65,
         "params": []
       },
       {
         "name": "EXP Get Sys Status",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 66,
         "params": []
       },
       {
         "name": "EXP Get Sys Uptime",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 67,
         "params": []
       },
       {
         "name": "EXP Get Boot Cnt",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 68,
         "params": []
       },
       {
         "name": "EXP Get Boot Cause",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 69,
         "params": []
       },
       {
         "name": "EXP Get Reboot Cause",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 70,
         "params": []
       },
       {
         "name": "EXP Get WDT Left",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 71,
         "params": []
       },
       {
         "name": "EXP Get Board Temp",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 72,
         "params": []
       },
       {
         "name": "EXP Get Power Current",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 73,
         "params": []
       },
       {
         "name": "EXP Get IMU Data",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 74,
         "params": []
       },
       {
         "name": "EXP Get NTC Data",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 75,
         "params": []
       },
       {
         "name": "EXP Save Table0",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 76,
         "params": []
       },
       {
         "name": "EXP Save Table1",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 77,
         "params": []
       },
       {
         "name": "EXP Save Table4",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 78,
         "params": []
       },
       {
         "name": "EXP Save All Table",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 79,
         "params": []
       },
       {
         "name": "EXP Set CSP Addr",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 80,
         "params": [
           {
@@ -6596,7 +7108,7 @@
       },
       {
         "name": "EXP Set CAN Speed",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 81,
         "params": [
           {
@@ -6608,7 +7120,7 @@
       },
       {
         "name": "EXP Set I2C Addr",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 82,
         "params": [
           {
@@ -6620,7 +7132,7 @@
       },
       {
         "name": "EXP Set I2C Speed",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 83,
         "params": [
           {
@@ -6632,7 +7144,7 @@
       },
       {
         "name": "EXP Set WDT Val",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 84,
         "params": [
           {
@@ -6644,7 +7156,7 @@
       },
       {
         "name": "EXP Set CSP Rtable",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 85,
         "params": [
           {
@@ -6657,7 +7169,7 @@
       },
       {
         "name": "EXP I2C Read Chunk",
-        "mid": "0x1810",
+        "mid": "0x1830",
         "fc": 86,
         "params": [
           {
@@ -6669,15 +7181,209 @@
       },
       {
         "name": "Request HK",
-        "mid": "0x1811",
+        "mid": "0x1831",
         "fc": 0,
         "params": []
       },
       {
         "name": "Request Beacon",
-        "mid": "0x1812",
+        "mid": "0x1832",
         "fc": 0,
         "params": []
+      }
+    ]
+  },
+  {
+    "app": "PAY_KISSCAM",
+    "description": "BEE1012 KISS CAM payload interface",
+    "commands": [
+      {
+        "name": "Noop",
+        "mid": "0x1833",
+        "fc": 0,
+        "params": []
+      },
+      {
+        "name": "Reset Counters",
+        "mid": "0x1833",
+        "fc": 1,
+        "params": []
+      },
+      {
+        "name": "Ping",
+        "mid": "0x1833",
+        "fc": 2,
+        "params": [
+          {
+            "name": "PN",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Set Mode",
+        "mid": "0x1833",
+        "fc": 3,
+        "params": [
+          {
+            "name": "MD",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Memory Status",
+        "mid": "0x1833",
+        "fc": 4,
+        "params": []
+      },
+      {
+        "name": "Set Exposure",
+        "mid": "0x1833",
+        "fc": 5,
+        "params": [
+          {
+            "name": "EX1",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "EX2",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Capture",
+        "mid": "0x1833",
+        "fc": 6,
+        "params": [
+          {
+            "name": "MEM",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "TST",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Download",
+        "mid": "0x1833",
+        "fc": 7,
+        "params": [
+          {
+            "name": "MEM",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "PRE",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "LN1",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "LN2",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Read Register",
+        "mid": "0x1833",
+        "fc": 8,
+        "params": [
+          {
+            "name": "AD1",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "AD2",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Write Register",
+        "mid": "0x1833",
+        "fc": 9,
+        "params": [
+          {
+            "name": "AD1",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "AD2",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "RG1",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "RG2",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Download All",
+        "mid": "0x1833",
+        "fc": 10,
+        "params": [
+          {
+            "name": "MEM",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "PRE",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "StartLine",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "LineNum",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Request HK",
+        "mid": "0x1834",
+        "fc": 0,
+        "params": [],
+        "description": "Reserved; enable app SEND_HK handler before use"
+      },
+      {
+        "name": "Request Beacon",
+        "mid": "0x1835",
+        "fc": 0,
+        "params": [],
+        "description": "Reserved; enable app SEND_BCN handler before use"
       }
     ]
   }

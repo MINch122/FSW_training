@@ -2,8 +2,8 @@
  * @file ftpnew_client_config.c
  * @author Han-Gyeol Ryu (ryu@yonsei.ac.kr)
  * @brief Ground-side client configurations.
- * @version 0.1
- * @date 2026-06-02
+ * @version 1.0
+ * @date 2026-06-04
  * 
  * Astrodynamics & Control Lab, Yonsei University.
  */

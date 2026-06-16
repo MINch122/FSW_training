@@ -18,9 +18,9 @@
 #define EPS_P80_DRV_PACK __attribute__((packed))
 #endif
 
-#define EPS_P80_DRV_PDU_BCN_USED_CH_COUNT 12u
+#define EPS_P80_DRV_PDU_BCN_USED_CH_COUNT 13u
 #define EPS_P80_DRV_PDU_BCN_USED_CH_LIST \
-    {8u, 10u, 12u, 14u, 15u, 16u, 18u, 19u, 20u, 21u, 22u, 23u}
+    {8u, 10u, 11u, 12u, 14u, 15u, 16u, 18u, 19u, 20u, 21u, 22u, 23u}
 
 /**
  * PMU Housekeeping data structure (driver-level, no cFE dependency)

@@ -34,8 +34,7 @@ void STX_SendHkCmd(void);
 void STX_SendBCNCmd(void);
 CFE_Status_t STX_ResetCountersCmd(const STX_ResetCountersCmd_t *Msg);
 CFE_Status_t STX_NoopCmd(const STX_NoopCmd_t *Msg);
-CFE_Status_t STX_ParamInitCmd(const STX_ParamInitCmd_t *Msg);
-CFE_Status_t STX_ModuleIdInitCmd(const STX_ModuleIdInitCmd_t *Msg);
+CFE_Status_t STX_SetModuleIdCmd(const STX_SetModuleIdCmd_t *Msg);
 
 /* SET COMMAND */
 void STX_SET_SYMBOLRATECmd(const STX_Set_SYMBOLRAtE_t *Msg);
@@ -79,5 +78,8 @@ void STX_GET_PRETX_DELAYCmd(void);
 void STX_GET_ALL_PRAMETERSCmd(void);
 void STX_GET_REPORTCmd(void);
 void STX_GET_MODULATOR_DATA_INTERFACECmd(void);
+
+
+void STX_Param_init(void);
 
 #endif /* STX_CMDS_H */

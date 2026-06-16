@@ -3,7 +3,7 @@
  * @author Han-Gyeol Ryu (ryu@yonsei.ac.kr)
  * @brief Shared type definitions for the ftpnew APIs and backend.
  *        Included by both server and client.
- * @version 0.1
+ * @version 1.0
  * @date 2026-06-04
  * 
  * Astrodynamics & Control Lab, Yonsei University.

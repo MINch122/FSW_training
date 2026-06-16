@@ -117,7 +117,8 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
         {CFE_SB_MSGID_WRAP_VALUE(ADCS_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
         {CFE_SB_MSGID_WRAP_VALUE(HK_SEND_COMBINED_PKT_MID), SCH_LAB_TICK_RATE * 2, 0,
          sizeof(HK_SendCombinedPkt_Payload_t), {(uint16)HK_COMBINED_PKT1_MID, 0}},
-
+        
+         {CFE_SB_MSGID_WRAP_VALUE(TTC_ONEHZ_WAKEUP_MID), SCH_LAB_TICK_RATE, 0},
         // /* Periodic wakeups for apps with internal timed work */
         // {CFE_SB_MSGID_WRAP_VALUE(ADCS_LOOP_MID), SCH_LAB_TICK_RATE, 0},
         // {CFE_SB_MSGID_WRAP_VALUE(LGBAT_WAKEUP_MID), SCH_LAB_TICK_RATE * 5, 0},
@@ -146,9 +147,6 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
 #endif
 #ifdef HAVE_DS
         // {CFE_SB_MSGID_WRAP_VALUE(DS_SEND_HK_MID), 102, 0},
-#endif
-#ifdef HAVE_TTC
-        {CFE_SB_MSGID_WRAP_VALUE(TTC_ONEHZ_WAKEUP_MID), SCH_LAB_TICK_RATE, 0},
 #endif
 
     }};

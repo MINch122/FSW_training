@@ -2,10 +2,10 @@
  * @file ftpnew.c
  * @author Han-Gyeol Ryu (ryu@yonsei.ac.kr)
  * @brief FTP-NEW server implementation.
- *        FTP-NEW stands for "F***ing Tired of Patching this
+ *        FTP-NEW stands for "F***ing Tired of Patching these
  *            Nonsensical Extensions and Wrappers for FTP."
- * @version 0.1
- * @date 2026-06-01
+ * @version 1.0
+ * @date 2026-06-04
  * 
  * Astrodynamics & Control Lab, Yonsei University.
  */
@@ -460,8 +460,8 @@ static ftp_ret_t ftp_handler_status_reply(csp_packet_t* packet,
             }
 
             rep->type = FTP_DATA;
-            /* Download data chunk follows the legacy GS FTP client: network byte order. */
-            rep->data.chunk = csp_hton32(chunk);
+            /* Chunk is always LE (original GomSpace code blunder) */
+            rep->data.chunk = csp_htole32(chunk);
             packet->length = data_packet_size;
             if (!csp_send(server_state->conn, packet, server_state->timeout)) {
                 ftp_debug_error("error sending data packet\n");

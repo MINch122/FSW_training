@@ -2,8 +2,8 @@
  * @file ftpnew_config.h
  * @author Han-Gyeol Ryu (ryu@yonsei.ac.kr)
  * @brief Server-client mission configurations.
- * @version 0.1
- * @date 2026-06-02
+ * @version 1.0
+ * @date 2026-06-04
  * 
  * Astrodynamics & Control Lab, Yonsei University.
  */

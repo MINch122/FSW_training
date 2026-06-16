@@ -2,8 +2,8 @@
  * @file ftpnew_client_crc32.c
  * @author Han-Gyeol Ryu (ryu@yonsei.ac.kr)
  * @brief CRC32 fork for self-contained client source. Identical to gs_crc32.c
- * @version 0.1
- * @date 2026-06-02
+ * @version 1.0
+ * @date 2026-06-04
  * 
  * Astrodynamics & Control Lab, Yonsei University.
  */

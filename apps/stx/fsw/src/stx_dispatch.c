@@ -101,13 +101,14 @@ void STX_Basic_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
 
         case STX_PARAM_INIT_CC :
             if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_ParamInitCmd_t))){
-                STX_ParamInitCmd((const STX_ParamInitCmd_t *)SBBufPtr);
+                STX_Param_init();
             }
             break;
 
-        case STX_MODULE_ID_INIT_CC :
-            if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_ModuleIdInitCmd_t))){
-                STX_ModuleIdInitCmd((const STX_ModuleIdInitCmd_t *)SBBufPtr);
+        case STX_SET_MODULE_ID_CC:
+            if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_SetModuleIdCmd_t)))
+            {
+                STX_SetModuleIdCmd((const STX_SetModuleIdCmd_t *)SBBufPtr);
             }
             break;
 
@@ -435,5 +436,4 @@ void STX_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
             break;
     }
 }
-
 
