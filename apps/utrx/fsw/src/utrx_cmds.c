@@ -195,34 +195,56 @@ void CmdErrCounter(uint8 *CmdCounter,
 
 void UTRX_ReportHousekeeping(void)
 {
-    UTRX_HkTlm_Payload_t hk;
+    CFE_Status_t Status;
+    UTRX_HkTlm_t *BufPtr = (UTRX_HkTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(UTRX_HkTlm_t));
+    UTRX_HkTlm_Payload_t *hk;
     uint32 errmask = 0;
 
-    memset(&hk, 0, sizeof(hk));
+    if (BufPtr == NULL)
+    {
+        return;
+    }
 
-    if (UTRX_TLM_GetTempBrd(&hk.TempBrd)       != DEVICE_SUCCESS) errmask |= (1u << 0);
-    if (UTRX_TLM_GetLastRssi(&hk.LastRssi)     != DEVICE_SUCCESS) errmask |= (1u << 1);
-    if (UTRX_TLM_GetLastRferr(&hk.LastRferr)   != DEVICE_SUCCESS) errmask |= (1u << 2);
-    if (UTRX_TLM_GetActiveConf(&hk.ActiveConf) != DEVICE_SUCCESS) errmask |= (1u << 3);
-    if (UTRX_TLM_GetBootCount(&hk.BootCount)   != DEVICE_SUCCESS) errmask |= (1u << 4);
-    if (UTRX_TLM_GetBootCause(&hk.BootCause)   != DEVICE_SUCCESS) errmask |= (1u << 5);
-    if (UTRX_TLM_GetLastContact(&hk.LastContact)!= DEVICE_SUCCESS) errmask |= (1u << 6);
-    if (UTRX_TLM_GetTotTxBytes(&hk.TotTxBytes) != DEVICE_SUCCESS) errmask |= (1u << 7);
-    if (UTRX_TLM_GetTotRxBytes(&hk.TotRxBytes) != DEVICE_SUCCESS) errmask |= (1u << 8);
+    Status = CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(UTRX_HK_TLM_MID),
+                          sizeof(UTRX_HkTlm_t));
+    if (Status != CFE_SUCCESS)
+    {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
+
+    hk = &BufPtr->Payload;
+    memset(hk, 0, sizeof(*hk));
+
+    if (UTRX_TLM_GetTempBrd(&hk->TempBrd)       != DEVICE_SUCCESS) errmask |= (1u << 0);
+    if (UTRX_TLM_GetLastRssi(&hk->LastRssi)     != DEVICE_SUCCESS) errmask |= (1u << 1);
+    if (UTRX_TLM_GetLastRferr(&hk->LastRferr)   != DEVICE_SUCCESS) errmask |= (1u << 2);
+    if (UTRX_TLM_GetActiveConf(&hk->ActiveConf) != DEVICE_SUCCESS) errmask |= (1u << 3);
+    if (UTRX_TLM_GetBootCount(&hk->BootCount)   != DEVICE_SUCCESS) errmask |= (1u << 4);
+    if (UTRX_TLM_GetBootCause(&hk->BootCause)   != DEVICE_SUCCESS) errmask |= (1u << 5);
+    if (UTRX_TLM_GetLastContact(&hk->LastContact)!= DEVICE_SUCCESS) errmask |= (1u << 6);
+    if (UTRX_TLM_GetTotTxBytes(&hk->TotTxBytes) != DEVICE_SUCCESS) errmask |= (1u << 7);
+    if (UTRX_TLM_GetTotRxBytes(&hk->TotRxBytes) != DEVICE_SUCCESS) errmask |= (1u << 8);
 
     if (errmask != 0u) {
         OS_printf("[UTRX][HK] collected with errors mask=0x%08X\n", (unsigned)errmask);
     }
 
     UTRX_APP_printf("UTRX: HK report requested\n");
-    UTRX_SendCmdReport(0, CFE_SUCCESS, &hk, sizeof(hk), RPT_RETTYPE_SUCCESS);
-
     OS_printf("[UTRX][HK] temp=%d, rssi=%d, rferr=%d, act=%u, boot_cnt=%u, cause=0x%08X, "
               "last=%u, tx=%u, rx=%u\n",
-              (int)hk.TempBrd, (int)hk.LastRssi, (int)hk.LastRferr,
-              (unsigned)hk.ActiveConf, (unsigned)hk.BootCount,
-              (unsigned)hk.BootCause, (unsigned)hk.LastContact,
-              (unsigned)hk.TotTxBytes, (unsigned)hk.TotRxBytes);
+              (int)hk->TempBrd, (int)hk->LastRssi, (int)hk->LastRferr,
+              (unsigned)hk->ActiveConf, (unsigned)hk->BootCount,
+              (unsigned)hk->BootCause, (unsigned)hk->LastContact,
+              (unsigned)hk->TotTxBytes, (unsigned)hk->TotRxBytes);
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+    Status = CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true);
+    if (Status != CFE_SUCCESS)
+    {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
 }
 
 
