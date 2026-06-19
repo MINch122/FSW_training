@@ -9,7 +9,7 @@
 #endif
 
 #ifndef DEBUG_MISSION
-#define DEBUG_MISSION false
+#define DEBUG_MISSION true
 #endif
 
 #if DEBUG_MISSION

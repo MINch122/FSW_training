@@ -1,2 +1,2 @@
 #!/bin/bash
-scp -r build/exe/obc root@192.168.0.136:/root/0508
+scp -r build/exe/obc root@192.168.1.136:/root/BEE_0619

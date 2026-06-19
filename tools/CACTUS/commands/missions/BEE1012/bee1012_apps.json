@@ -31,7 +31,7 @@
         "name": "Set Communication Mode As CAN",
         "mid": "0x1865",
         "fc": 4,
-        "description": "ADCS_SET_COMMUNICATION_MODE_AS_CAN_CC",
+        "description": "ADCS_SET_COMMUNICATION_MODE_AS_CAN_CC; defined but not dispatched by current ADCS app, use Set Interface Transport (fc=91)",
         "params": []
       },
       {
@@ -92,7 +92,14 @@
         "mid": "0x1865",
         "fc": 13,
         "description": "ADCS_SET_ERROR_LOG_SETTING_CC",
-        "params": []
+        "params": [
+          {
+            "name": "ErrorLogSettingFlags",
+            "type": "uint8",
+            "default": "0",
+            "description": "Packed ADCS_ErrorLogSettingCmd_Payload_t: bit0=ActiveState, bit1=BufferFullAction"
+          }
+        ]
       },
       {
         "name": "Persist Config",
@@ -132,55 +139,138 @@
         "mid": "0x1865",
         "fc": 16,
         "description": "ADCS_SET_DISABLE_MAG_RWL_MNT_MNG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "Duration",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Reference Irc Vector",
         "mid": "0x1865",
         "fc": 17,
         "description": "ADCS_SET_REFERENCE_IRC_VECTOR_CC",
-        "params": []
+        "params": [
+          {
+            "name": "ECIPointingVectorX",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "ECIPointingVectorY",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "ECIPointingVectorZ",
+            "type": "float",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Reference Llh Target",
         "mid": "0x1865",
         "fc": 18,
         "description": "ADCS_SET_REFERENCE_LLH_TARGET_CC",
-        "params": []
+        "params": [
+          {
+            "name": "TargetLatitude",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "TargetLongiTude",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "TargetAltitude",
+            "type": "float",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Orbit Mode",
         "mid": "0x1865",
         "fc": 19,
         "description": "ADCS_SET_ORBIT_MODE_CC",
-        "params": []
+        "params": [
+          {
+            "name": "OrbitMode",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Mag Deploy Cmd",
         "mid": "0x1865",
         "fc": 20,
         "description": "ADCS_SET_MAG_DEPLOY_CMD_CC",
-        "params": []
+        "params": [
+          {
+            "name": "MagDeployFlags",
+            "type": "uint8",
+            "default": "0",
+            "description": "Packed ADCS_MagDeployCmd_Payload_t: bit0=DeployMAG0, bit1=DeployMAG1"
+          }
+        ]
       },
       {
         "name": "Set Reference Rpy Values",
         "mid": "0x1865",
         "fc": 21,
         "description": "ADCS_SET_REFERENCE_RPY_VALUES_CC",
-        "params": []
+        "params": [
+          {
+            "name": "Roll",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Pitch",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Yaw",
+            "type": "float",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Openloopcmd Mtq",
         "mid": "0x1865",
         "fc": 22,
         "description": "ADCS_SET_OPENLOOPCMD_MTQ_CC",
-        "params": []
+        "params": [
+          {
+            "name": "MTQ0_OpenLoopCmd",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MTQ1_OpenLoopCmd",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MTQ2_OpenLoopCmd",
+            "type": "int16",
+            "default": "0"
+          }
+        ]
       },
       {
-        "name": "Set Openloopcmd Rwl",
+        "name": "Set RWL RPM Openloop",
         "mid": "0x1865",
         "fc": 44,
-        "description": "ADCS_SET_OPENLOOPCMD_RWL_CC; CubeComputer CP8 Table 53 OpenLoopCommandRwl, endpoint ID 74",
+        "description": "ADCS_SET_OPENLOOPCMD_RWL_CC; CubeComputer CP8 Table 53 OpenLoopCommandRwl speed command in RPM, endpoint ID 74",
         "params": [
           {
             "name": "RWL0_OpenLoopSpeedCmd",
@@ -232,146 +322,1086 @@
         "mid": "0x1865",
         "fc": 23,
         "description": "ADCS_SET_POWER_STATE_CC",
-        "params": []
+        "params": [
+          {
+            "name": "RWL0",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "RWL1",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "RWL2",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "RWL3",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "MAG0",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "MAG1",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "GYR0",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "GYR1",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "FSS0",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "FSS1",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "FSS2",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "FSS3",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "HSS0",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "HSS1",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "STR0",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "STR1",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "ExtSensor0",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "ExtSensor1",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "ExtGYR0",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "ExtGYR1",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Run Mode",
         "mid": "0x1865",
         "fc": 24,
         "description": "ADCS_SET_RUN_MODE_CC",
-        "params": []
+        "params": [
+          {
+            "name": "RunMode",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Control Mode",
         "mid": "0x1865",
         "fc": 25,
         "description": "ADCS_SET_CONTROL_MODE_CC",
-        "params": []
+        "params": [
+          {
+            "name": "ControlMode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "Controltimeout",
+            "type": "uint16",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Whl Config",
         "mid": "0x1865",
         "fc": 26,
         "description": "ADCS_SET_WHL_CONFIG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "Rwl0Inertia",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Rwl0MaxMomentum",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Rwl0MaxToque",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Rwl1Inertia",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Rwl1MaxMomentum",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Rwl1MaxToque",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Rwl2Inertia",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Rwl2MaxMomentum",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Rwl2MaxToque",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Rwl3Inertia",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Rwl3MaxMomentum",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Rwl3MaxToque",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "WheelRampTorque",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "WheelScheme",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "FailedWheelID",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "PyramidNominalMomentum",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "PyramidTiltAngle",
+            "type": "float",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Satellite Config",
         "mid": "0x1865",
         "fc": 27,
         "description": "ADCS_SET_SATELLITE_CONFIG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "Ixx",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Iyy",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Izz",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Ixy",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Ixz",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "Iyz",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "SunPointingBodyVectorX",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "SunPointingBodyVectorY",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "SunPointingBodyVectorZ",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "TargetTrackingBodyVectorX",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "TargetTrackingBodyVectorY",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "TargetTrackingBodyVectorZ",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "SatTrackingBodyVectorX",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "SatTrackingBodyVectorY",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "SatTrackingBodyVectorZ",
+            "type": "int16",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Controller Config",
         "mid": "0x1865",
         "fc": 28,
         "description": "ADCS_SET_CONTROLLER_CONFIG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "DefaultControlMode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "DetumblingDampingGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "SunSpinGainSunlit",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "SunSpinGainEclipse",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "DetumblingSpinGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "FastBDotGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "YMomentumNutationDampingGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "YMomentumQuatGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "XAxisGGQuatGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "YAxisGGQuatGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "ZAxisGGQuatGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "WheelDesaturationGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "YMomentumProportionalGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "YMomentumDerivativeGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "RWheelProportionalGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "RWheelDerivativeGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "TrackingProportionalGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "TrackingDerivativeGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "TrackingIntegralGain",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "ReferenceSpinRate",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "ReferenceWheelMomentum",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "YWheelBiasMomentum",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "ReferenceSpinRateRWspinControl",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "SunKeepOutAngle",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "RollLimitAngle",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "ControllerConfigFlags",
+            "type": "uint8",
+            "default": "0",
+            "description": "Packed flags: bit0=YawCompensationForEarthRotation, bit1=EnableSunTrackingInEclipse, bit2=EnableSunAvoidance"
+          }
+        ]
       },
       {
         "name": "Set Mag0 Mmt Calib Config",
         "mid": "0x1865",
         "fc": 29,
         "description": "ADCS_SET_MAG0_MMT_CALIB_CONFIG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "MMT_Ch1Offset",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_Ch2Offset",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_Ch3Offset",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S11",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S22",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S33",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S12",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S13",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S21",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S23",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S31",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S32",
+            "type": "int16",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Default Mode Config",
         "mid": "0x1865",
         "fc": 30,
         "description": "ADCS_SET_DEFAULT_MODE_CONFIG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "DefaultRunMode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "DefaultOperationalState",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "DefaultControlModeInOpStateSafe",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "DefaultControlModeInOpStateAuto",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Mounting Config",
         "mid": "0x1865",
         "fc": 31,
         "description": "ADCS_SET_MOUNTING_CONFIG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "StackAndActuatorMounting",
+            "type": "uint8",
+            "default": "0",
+            "count": 10,
+            "description": "StackX/Y/Z, MTQ0/1/2, Wheel0/1/2/3 mounting values"
+          },
+          {
+            "name": "PyramidRWLAngles",
+            "type": "int16",
+            "default": "0",
+            "count": 3,
+            "description": "PyramidRWL alpha,beta,gamma raw values"
+          },
+          {
+            "name": "CSSMounting",
+            "type": "uint8",
+            "default": "0",
+            "count": 10,
+            "description": "CSS0..CSS9 mounting values"
+          },
+          {
+            "name": "FSSAngles",
+            "type": "int16",
+            "default": "0",
+            "count": 12,
+            "description": "FSS0..FSS3 alpha,beta,gamma raw values"
+          },
+          {
+            "name": "HSSAngles",
+            "type": "int16",
+            "default": "0",
+            "count": 6,
+            "description": "HSS0..HSS1 alpha,beta,gamma raw values"
+          },
+          {
+            "name": "MAGAngles",
+            "type": "int16",
+            "default": "0",
+            "count": 6,
+            "description": "MAG0..MAG1 alpha,beta,gamma raw values"
+          },
+          {
+            "name": "STRAngles",
+            "type": "int16",
+            "default": "0",
+            "count": 6,
+            "description": "STR0..STR1 alpha,beta,gamma raw values"
+          },
+          {
+            "name": "ExtSensorAngles",
+            "type": "int16",
+            "default": "0",
+            "count": 6,
+            "description": "ExtSensor0..1 alpha,beta,gamma raw values"
+          },
+          {
+            "name": "ExtGyroAxisMounting",
+            "type": "uint8",
+            "default": "0",
+            "count": 6,
+            "description": "ExtGyro0/1 axis1,axis2,axis3 mounting values"
+          }
+        ]
       },
       {
         "name": "Set Mag1 Mmt Calib Config",
         "mid": "0x1865",
         "fc": 32,
         "description": "ADCS_SET_MAG1_MMT_CALIB_CONFIG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "MMT_Ch1Offset",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_Ch2Offset",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_Ch3Offset",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S11",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S22",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S33",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S12",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S13",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S21",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S23",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S31",
+            "type": "int16",
+            "default": "0"
+          },
+          {
+            "name": "MMT_SensitivityMAT_S32",
+            "type": "int16",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Estimator Config",
         "mid": "0x1865",
         "fc": 33,
         "description": "ADCS_SET_ESTIMATOR_CONFIG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "DefaultMainEstimatorMode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "DefaultBackupEstimatorMode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "MAGMeasurementNoise",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "CSSMeasurementNoise",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "FSSMeasurementNoise",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "HSSMeasurementNoise",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "STRMeasurementNoise",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "MMTRKFSystemNoise",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "EKFSystemNoise",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "NutationEpsilonCorrection",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "NutationPsiCorrection",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "EstimatorConfigFlags0",
+            "type": "uint8",
+            "default": "0",
+            "description": "Packed byte: bit0=UseFSSinEKF, bit1=UseCSSinEKF, bit2=UseHSSinEKF, bit3=UseSTRinEKF, bits4..7=TriadVector1"
+          },
+          {
+            "name": "EstimatorConfigFlags1",
+            "type": "uint8",
+            "default": "0",
+            "description": "Packed byte: bits0..3=TriadVector2"
+          }
+        ]
       },
       {
         "name": "Set Sat Orbit Params Config",
         "mid": "0x1865",
         "fc": 34,
         "description": "ADCS_SET_SAT_ORBIT_PARAMS_CONFIG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "Epoch",
+            "type": "double",
+            "default": "0"
+          },
+          {
+            "name": "Inclination",
+            "type": "double",
+            "default": "0"
+          },
+          {
+            "name": "RAAN",
+            "type": "double",
+            "default": "0"
+          },
+          {
+            "name": "Eccentricity",
+            "type": "double",
+            "default": "0"
+          },
+          {
+            "name": "AOP",
+            "type": "double",
+            "default": "0"
+          },
+          {
+            "name": "MeanAnomaly",
+            "type": "double",
+            "default": "0"
+          },
+          {
+            "name": "MeanMotion",
+            "type": "double",
+            "default": "0"
+          },
+          {
+            "name": "B_StarDrag",
+            "type": "double",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Node Selection Config",
         "mid": "0x1865",
         "fc": 35,
         "description": "ADCS_SET_NODE_SELECTION_CONFIG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "RSWSelectionFlags",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "MAGSelectionFlags",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "FSSSelectionFlags",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "HSSSelectionFlags",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "GYRSelectionFlags",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "STRSelectionFlags",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "GNSSSelectionFlags",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "ExtSensorSelectionFlags",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Mtq Config",
         "mid": "0x1865",
         "fc": 36,
         "description": "ADCS_SET_MTQ_CONFIG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "MTQ0MaxDipoleMoment",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "MTQ1MaxDipoleMoment",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "MTQ2MaxDipoleMoment",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "MaxMTQOnTime",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "MinMTQOnTime",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "MagneticControlFilterFactor",
+            "type": "float",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Estimation Mode",
         "mid": "0x1865",
         "fc": 37,
         "description": "ADCS_SET_ESTIMATION_MODE_CC",
-        "params": []
+        "params": [
+          {
+            "name": "MainEstimatorMode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "BackupEstimatorMode",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Operational State",
         "mid": "0x1865",
         "fc": 38,
         "description": "ADCS_SET_OPERATIONAL_STATE_CC",
-        "params": []
+        "params": [
+          {
+            "name": "OperationalState",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Mag Sensing Elm Config",
         "mid": "0x1865",
         "fc": 39,
         "description": "ADCS_SET_MAG_SENSING_ELM_CONFIG_CC",
-        "params": []
+        "params": [
+          {
+            "name": "MagSensingElementFlags",
+            "type": "uint8",
+            "default": "0",
+            "description": "Packed ADCS_MagSensingElmConfigCmd_Payload_t: bit0=Mag0SensingElement, bit1=Mag1SensingElement"
+          }
+        ]
       },
       {
         "name": "Set Unsolicit Tlm Msg Setup",
         "mid": "0x1865",
         "fc": 40,
         "description": "ADCS_SET_UNSOLICIT_TLM_MSG_SETUP_CC",
-        "params": []
+        "params": [
+          {
+            "name": "TlmReturnIntervalByte0",
+            "type": "uint8",
+            "default": "0",
+            "description": "Packed nibble fields: bits0..3=UARTTlmReturnInterval, bits4..7=UART2TlmReturnInterval"
+          },
+          {
+            "name": "TlmReturnIntervalByte1",
+            "type": "uint8",
+            "default": "0",
+            "description": "Packed nibble fields: bits0..3=CANTlmRetrunInterval"
+          },
+          {
+            "name": "UARTTlmEDInclusionBitmask",
+            "type": "bytes",
+            "default": "0000000000",
+            "length": 5
+          },
+          {
+            "name": "UART2TlmEDInclusionBitmask",
+            "type": "bytes",
+            "default": "0000000000",
+            "length": 5
+          },
+          {
+            "name": "CANTlmEDInclusionBitmask",
+            "type": "bytes",
+            "default": "0000000000",
+            "length": 5
+          }
+        ]
       },
       {
         "name": "Set Unsolicit Event Msg Setup",
         "mid": "0x1865",
         "fc": 41,
         "description": "ADCS_SET_UNSOLICIT_EVENT_MSG_SETUP_CC",
-        "params": []
+        "params": [
+          {
+            "name": "Flag",
+            "type": "uint8",
+            "default": "0"
+          }
+        ]
       },
       {
         "name": "Set Initiate Event Log Transfer",
         "mid": "0x1865",
         "fc": 42,
         "description": "ADCS_SET_INITIATE_EVENT_LOG_TRANSFER_CC",
-        "params": []
+        "params": [
+          {
+            "name": "FilterType",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "UnixStartTime",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "UnixEndTime",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "NumberOfEntry",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "WriteCounter",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "EventLogFlags",
+            "type": "bytes",
+            "default": "000000",
+            "length": 3,
+            "description": "Packed flags: Critical/Major/Minor/Info/CubeCom/RWL/FSS/HSS/STR/MAG/Ext bits"
+          }
+        ]
       },
       {
         "name": "Set Commanded GNSS Measurements",
         "mid": "0x1865",
         "fc": 43,
-        "params": [],
+        "params": [
+          {
+            "name": "GNSSUnixTimeSeconds",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "GNSSUnixTimeNanoseconds",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "PositionX",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "PositionY",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "PositionZ",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "VelocityX",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "VelocityY",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "VelocityZ",
+            "type": "int32",
+            "default": "0"
+          },
+          {
+            "name": "SyncTime",
+            "type": "uint8",
+            "default": "0"
+          }
+        ],
         "description": "ADCS_SET_COMMANDED_GNSS_MEASUREMENTS_CC"
       },
       {
@@ -629,11 +1659,11 @@
         "params": []
       },
       {
-        "name": "Get Raw RWL Sensor",
+        "name": "Get Raw RWL RPM Sensor",
         "mid": "0x1865",
         "fc": 90,
         "params": [],
-        "description": "ADCS_GET_RAW_RWL_SENSOR_CC"
+        "description": "ADCS_GET_RAW_RWL_SENSOR_CC; measured RWL speeds in RPM"
       },
       {
         "name": "Set Interface Transport",

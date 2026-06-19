@@ -117,6 +117,9 @@ CFE_Status_t MISSION_Init(void) {
                               "MISSION: Error Subscribing to UTRX HK tlm, RC = 0x%08lX", (unsigned long)Status);
         }
     }
+    
+    OS_TaskDelay(10000);
+
     if (Status == CFE_SUCCESS && MISSION_ENABLE_LEOP_SEQUENCE) {
         MISSION_APP_printf("MISSION: creating LEOP child task\n");
         Status = CFE_ES_CreateChildTask(&MISSION_Data.LEOPTaskId, MISSION_LEOP_TASK_NAME, MISSION_LEOP_Task,

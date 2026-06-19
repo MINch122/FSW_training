@@ -38,6 +38,7 @@ static void MISSION_ProcessUtrxHkTlm(const CFE_SB_Buffer_t *SBBufPtr)
 {
     const UTRX_HkTlm_t *HkTlm = (const UTRX_HkTlm_t *)SBBufPtr;
     uint32 RxBytes = HkTlm->Payload.TotRxBytes;
+    bool SaveLeopState = false;
 
     if (MISSION_LEOP_Lock() != CFE_SUCCESS)
     {
@@ -58,8 +59,13 @@ static void MISSION_ProcessUtrxHkTlm(const CFE_SB_Buffer_t *SBBufPtr)
         MISSION_Data.LEOPUtrxRxData = RxBytes;
         MISSION_Data.LEOPUtrxRxBytesInitialized = true;
         MISSION_Data.LEOPUtrxRxBytesIncreased = false;
+        SaveLeopState = true;
         MISSION_APP_printf("MISSION LEOP: initial UTRX RxBytes=%lu\n", (unsigned long)RxBytes);
         MISSION_LEOP_Unlock();
+        if (SaveLeopState && MISSION_LEOP_SaveState() != CFE_SUCCESS)
+        {
+            MISSION_Data.ErrCounter++;
+        }
         return;
     }
 
