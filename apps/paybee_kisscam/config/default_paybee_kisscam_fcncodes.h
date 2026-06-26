@@ -19,6 +19,7 @@
 #define paybee_kisscam_READ_REGISTER_CC    8
 #define paybee_kisscam_WRITE_REGISTER_CC   9
 #define paybee_kisscam_DOWNLOAD_ALL_CC     10
+#define paybee_kisscam_IMAGE_COMPRESS_CC   11
 // #define paybee_kisscam_MOSAIC_CC           11
 // #define paybee_kisscam_DOWNLOAD_ALL_CHILD_CC   23
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6.4)
-project(CFS_FTP_LIB C)
+project(CFS_FTP_ORIGIN C)
 
 include_directories(fsw/inc)
 include_directories(${io_lib_MISSION_DIR}/public_inc)
@@ -28,15 +28,15 @@ include_directories(../../submodules/libgscsp/lib/libutil/include)
 include_directories(../../submodules/libgscsp/build/lib/libgscsp/lib/libcsp/include)
 
 # Create the app module
-add_cfe_app(ftp_lib ${APP_SRC_FILES})
-target_compile_options(ftp_lib PRIVATE -Wno-pedantic -Wno-error=pedantic)
+add_cfe_app(ftp_origin ${APP_SRC_FILES})
+target_compile_options(ftp_origin PRIVATE -Wno-pedantic -Wno-error=pedantic)
 
 if (CMAKE_SYSTEM_PROCESSOR	STREQUAL "arm")
     # For OBC (cross-compiled libgpiod)
     # link csp
-    target_link_libraries(ftp_lib ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/obc/lib/libcsp-client.a)
+    target_link_libraries(ftp_origin ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/obc/lib/libcsp-client.a)
 else ()
     # For local Linux host
     # link csp
-    target_link_libraries(ftp_lib ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/cpu1/lib/libcsp-client.a)
+    target_link_libraries(ftp_origin ${PROJECT_SOURCE_DIR}/../../submodules/libgscsp/build/cpu1/lib/libcsp-client.a)
 endif()

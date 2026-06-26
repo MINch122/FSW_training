@@ -1,5 +1,5 @@
 CFE_LIB, cfe_assert,  CFE_Assert_LibInit, ASSERT_LIB,    0,   0,     0x0, 0;
-CFE_APP, ftp_lib_new, ftp_server_start, FTP_NEW,      4,   16384, 0x0, 0;
+CFE_APP, ftp_origin,  FTP_ORIGIN_Main,  FTP_ORIGIN,   4,   16384, 0x0, 0;
 CFE_APP, eps,         EPS_Main,           EPS,           5,   16384, 0x0, 0;
 CFE_APP, mission,     MISSION_Main,       MISSION,       6,   8192,  0x0, 0;
 CFE_APP, ftp_client,  FTP_CLIENT_Main,    FTP_CLIENT,    7,   16384, 0x0, 0;

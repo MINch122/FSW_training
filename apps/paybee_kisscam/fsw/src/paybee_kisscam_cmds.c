@@ -24,7 +24,11 @@
 #include "paybee_kisscam_interface_cfg.h"
 #include "paybee_kisscam_utils.h"
 #include "cfe.h"
+#include <fcntl.h>
+#include <libaec.h>
 #include <unistd.h>
+#include <errno.h>
+#include <termios.h>
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
@@ -91,11 +95,9 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t paybee_kisscam_NoopCmd(const paybee_kisscam_NoopCmd_t *Msg) {
     paybee_kisscam_Data.CmdCounter++;
-    static const char NoopReport[] = "Yosi In Space";
+    uint8_t Cnts[2] = {paybee_kisscam_Data.CmdCounter, paybee_kisscam_Data.ErrCounter};
 
-    paybee_kisscam_APP_printf("paybee_kisscam: NOOP report requested\n");
-
-    paybee_kisscam_HandleSuccess(paybee_kisscam_NOOP_CC, (void *)NoopReport, sizeof(NoopReport));
+    paybee_kisscam_HandleSuccess(paybee_kisscam_NOOP_CC, Cnts, sizeof(Cnts));
 
     CFE_EVS_SendEvent(paybee_kisscam_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "paybee_kisscam Noop Command Received");
 
@@ -583,7 +585,9 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
         Params.RxData = &RxBuf;
         Params.RxSize = Msg->Payload.PRE ? paybee_kisscam_DOWNLOAD_THUMBNAIL_TLM_SIZE : paybee_kisscam_DOWNLOAD_TLM_SIZE;
         Params.Timeout = 200;
-        Params.Interval = 100000; // Empirical value 70ms, Margin for stability
+        Params.Interval = 100; // Empirical value 70ms, Margin for stability
+
+        tcflush(paybee_kisscam_Data.Handle->FD, TCIOFLUSH); 
 
         Status = CFE_SRL_ApiRead(paybee_kisscam_Data.Handle, &Params);
         if (Status != CFE_SUCCESS) {
@@ -615,7 +619,7 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
         paybee_kisscam_SetLineTrue(Msg->Payload.MEM, line);
 
         /* Debugging */
-        // OS_printf("Line %u Download done.\n", line);
+        OS_printf("Line %u Download done.\n", line);
 
     }
     /**
@@ -779,7 +783,7 @@ CFE_Status_t paybee_kisscam_ReadRegisterCmd(const paybee_kisscam_ReadRegisterCmd
 
     // else paybee_kisscam_HandleSuccess(paybee_kisscam_READ_REGISTER_CC, Params.RxData, Params.ReadBytes);
 
-    paybee_kisscam_Transaction(&Cmd, RxBuf, paybee_kisscam_WRITE_REGISTER_CC);
+    paybee_kisscam_Transaction(&Cmd, RxBuf, paybee_kisscam_READ_REGISTER_CC);
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
         OS_printf("0x%02X\t", RxBuf[i]);
@@ -827,5 +831,148 @@ CFE_Status_t paybee_kisscam_WriteRegisterCmd(const paybee_kisscam_WriteRegisterC
     }
     OS_printf("\n");
 
+    return CFE_SUCCESS;
+
+
+    
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* paybee_kisscam Image Compress commands                                     */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+static bool paybee_kisscam_ImageCompressWrite(int FD, const void *Data, size_t Size, uint16_t Line, const char *Tag, const char *Path) {
+    ssize_t Written = write(FD, Data, Size);
+    if (Written != (ssize_t)Size) {
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "[KissCAM] %s write failed line=%u path=%s ret=%zd errno=%d", Tag, Line, Path, Written, errno);
+        return false;
+    }
+    return true;
+}
+
+CFE_Status_t paybee_kisscam_ImageCompressCmd(const paybee_kisscam_ImageCompressCmd_t *Msg) {
+    paybee_kisscam_Data.CmdCounter++;
+
+    char InPath[128] = {0};
+    char OutPath[128] = {0};
+    int InFD = -1;
+    int OutFD = -1;
+    uint8_t MemSlot = Msg->Payload.MEM;
+    uint8_t TargetIdx = Msg->Payload.TargetIdx;
+    uint8_t line_buf[648];
+    uint8_t comp_buf[1024];
+    bool ResultOk = true;
+
+    if (MemSlot >= paybee_kisscam_MEMORY_SLOT) {
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "[KissCAM] ImageCompressCmd invalid memory slot %u", MemSlot);
+        paybee_kisscam_Data.ErrCounter++;
+        return CFE_SUCCESS;
+    }
+
+    uint8_t last_idx = paybee_kisscam_Data.MemSlotStatus.Entry[MemSlot].LastImgIdx;
+    if (TargetIdx >= last_idx) {
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "[KissCAM] ImageCompressCmd target idx %u is out of range. Last valid idx in slot %u is %d", 
+                          TargetIdx, MemSlot, last_idx > 0 ? last_idx - 1 : -1);
+        paybee_kisscam_Data.ErrCounter++;
+        return CFE_SUCCESS;
+    }
+
+    snprintf(InPath, sizeof(InPath), "%s%u_%u_%03u-%03u", paybee_kisscam_IMG_PATH,
+             MemSlot, TargetIdx, 0, 479);
+    snprintf(OutPath, sizeof(OutPath), "./cf/sdcard/compressed_image_%u_%u.bin", MemSlot, TargetIdx);
+    // snprintf(OutPath, sizeof(OutPath), "/root/0609_KISSCAM_COMP/obc/cf/sdcard/compressed_image_%u_%u.bin", MemSlot, target_idx);
+
+    
+    InFD = open(InPath, O_RDONLY);
+    if (InFD < 0) {
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "[KissCAM] Compress Error: Cannot open input file %s errno=%d", InPath, errno);
+        paybee_kisscam_Data.ErrCounter++;
+        return CFE_SUCCESS;
+    }
+
+    OutFD = open(OutPath, O_CREAT | O_TRUNC | O_WRONLY, 0666);
+    if (OutFD < 0) {
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "[KissCAM] Compress Error: Cannot open output file %s errno=%d", OutPath, errno);
+        close(InFD);
+        paybee_kisscam_Data.ErrCounter++;
+        return CFE_SUCCESS;
+    }
+
+    CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "[KissCAM] Image Compress Start. Target: %s Out: %s", InPath, OutPath);
+
+    for (uint16_t line = 0; line < 480; line++) {
+        int32 bytes_read = read(InFD, line_buf, sizeof(line_buf));
+        if (bytes_read != sizeof(line_buf)) {
+            CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "[KissCAM] Compress Error: Read error at line %u size=%d", line, bytes_read);
+            ResultOk = false;
+            break;
+        }
+
+        struct aec_stream strm;
+        memset(&strm, 0, sizeof(strm));
+
+        strm.bits_per_sample = 8;
+        strm.block_size = 16;
+        // strm.rsi = 128;
+        // strm.flags = 0;
+        strm.rsi = 40;
+        strm.flags = AEC_DATA_PREPROCESS;
+
+        strm.next_in = &line_buf[7];
+        strm.avail_in = 640;
+        strm.next_out = comp_buf;
+        strm.avail_out = sizeof(comp_buf);
+
+        if (aec_encode_init(&strm) != AEC_OK) {
+            CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "[KissCAM] Compress Error: aec_encode_init failed at line %u", line);
+            ResultOk = false;
+            break;
+        }
+
+        aec_encode(&strm, AEC_FLUSH);
+        size_t compressed_size = strm.total_out;
+        aec_encode_end(&strm);
+
+        uint16_t line_id = line;
+        if (!paybee_kisscam_ImageCompressWrite(OutFD, &line_id, sizeof(line_id), line, "header", OutPath)) {
+            ResultOk = false;
+            break;
+        }
+        if (!paybee_kisscam_ImageCompressWrite(OutFD, comp_buf, compressed_size, line, "compressed data", OutPath)) {
+            ResultOk = false;
+            break;
+        }
+    }
+
+    if (ResultOk) {
+        if (fsync(OutFD) != 0) {
+            CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "[KissCAM] Compress Error: fsync failed on %s errno=%d", OutPath, errno);
+            ResultOk = false;
+        }
+    }
+
+    close(InFD);
+    close(OutFD);
+
+    if (!ResultOk) {
+        unlink(OutPath);
+        paybee_kisscam_Data.ErrCounter++;
+        return CFE_SUCCESS;
+    }
+
+    paybee_kisscam_HandleSuccess(paybee_kisscam_IMAGE_COMPRESS_CC, NULL, 0);
+    CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "[KissCAM] Image Compress Done. Output: %s", OutPath);
     return CFE_SUCCESS;
 }

@@ -41,10 +41,12 @@ typedef struct GPIO_DigpiolayParam_Payload
 ** Type definition (Sample App housekeeping)
 */
 
-typedef struct GPIO_DepBurn90s_Payload
+typedef struct GPIO_DepBurn_Payload
 {
-    uint8 Channel;
-} GPIO_DepBurn90s_Payload_t;
+    uint8  Channel;
+    uint8  Reserved[3];
+    uint32 BurnTimeSeconds;
+} GPIO_DepBurn_Payload_t;
 
 typedef struct GPIO_HkTlm_Payload
 {
@@ -60,5 +62,9 @@ typedef struct GPIO_BcnTlm_Payload
     uint8 isDeployed;
 } __attribute__((packed)) GPIO_BcnTlm_Payload_t;
 
+typedef struct GPIO_SpInReadReport_Payload
+{
+    uint8 isDeployed;
+} GPIO_SpInReadReport_Payload_t;
 
 #endif

@@ -33,6 +33,17 @@
 
 #include <string.h>
 
+#define GPIO_DEP_BURN_MAX_SECONDS 4294967u
+
+typedef struct GPIO_DepBurnReport
+{
+    uint8  Channel;
+    uint8  Reserved[3];
+    uint32 BurnTimeSeconds;
+    int32  OnStatus;
+    int32  OffStatus;
+} GPIO_DepBurnReport_t;
+
 static void GPIO_SendReport(uint8 CC, int32 Status, const void *Data, uint16 DataSize, uint8 ReturnType)
 {
     CFE_SB_Buffer_t *BufPtr = CFE_SB_AllocateMessageBuffer(sizeof(GPIO_ReportTlm_t));
@@ -381,14 +392,21 @@ CFE_Status_t GPIO_Dep2EnOffCmd(const GPIO_Dep2EnOffCmd_t *Msg)
     return Status;
 }
 
-CFE_Status_t GPIO_Dep1Dep2En90sCmd(const GPIO_Dep1Dep2En90sCmd_t *Msg)
+CFE_Status_t GPIO_DepBurnCmd(const GPIO_DepBurnCmd_t *Msg)
 {
-    int32                     Statuses[2];
+    GPIO_DepBurnReport_t      Report;
     int32                     FinalStatus;
     const char               *Name;
     CFE_SRL_GPIO_Indexer_t    Index;
     uint8                     StateBit;
-    uint8                     Channel = Msg->Payload.Channel;
+    uint8                     Channel         = Msg->Payload.Channel;
+    uint32                    BurnTimeSeconds = Msg->Payload.BurnTimeSeconds;
+
+    memset(&Report, 0, sizeof(Report));
+    Report.Channel         = Channel;
+    Report.BurnTimeSeconds = BurnTimeSeconds;
+    Report.OnStatus        = CFE_SUCCESS;
+    Report.OffStatus       = CFE_SUCCESS;
 
     if (Channel == 1)
     {
@@ -408,31 +426,43 @@ CFE_Status_t GPIO_Dep1Dep2En90sCmd(const GPIO_Dep1Dep2En90sCmd_t *Msg)
         CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR,
                           "GPIO: invalid DEP burn channel %u, expected 1 or 2", (unsigned int)Channel);
         FinalStatus = CFE_STATUS_BAD_COMMAND_CODE;
-        GPIO_SendReport(GPIO_DEP1_DEP2_EN_90S_CC, FinalStatus, &Channel, sizeof(Channel),
+        GPIO_SendReport(GPIO_DEP_BURN_CC, FinalStatus, &Report, sizeof(Report),
+                        GPIO_StatusToReportType(FinalStatus));
+        return FinalStatus;
+    }
+
+    if (BurnTimeSeconds == 0 || BurnTimeSeconds > GPIO_DEP_BURN_MAX_SECONDS)
+    {
+        GPIO_Data.ErrCounter++;
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "GPIO: invalid DEP burn time %lu sec, expected 1..%lu sec",
+                          (unsigned long)BurnTimeSeconds, (unsigned long)GPIO_DEP_BURN_MAX_SECONDS);
+        FinalStatus = CFE_STATUS_BAD_COMMAND_CODE;
+        GPIO_SendReport(GPIO_DEP_BURN_CC, FinalStatus, &Report, sizeof(Report),
                         GPIO_StatusToReportType(FinalStatus));
         return FinalStatus;
     }
 
     CFE_EVS_SendEvent(GPIO_VALUE_INF_EID, CFE_EVS_EventType_INFORMATION,
-                      "GPIO: %s burn ON for 90s sequence started", Name);
+                      "GPIO: %s burn ON for %lu sec sequence started", Name, (unsigned long)BurnTimeSeconds);
 
-    Statuses[0] = GPIO_SetOutput(Name, Index, StateBit, true);
-    FinalStatus = Statuses[0];
+    Report.OnStatus = GPIO_SetOutput(Name, Index, StateBit, true);
+    FinalStatus     = Report.OnStatus;
 
-    if (Statuses[0] == CFE_SUCCESS)
+    if (Report.OnStatus == CFE_SUCCESS)
     {
-        OS_TaskDelay(90000);
+        OS_TaskDelay(BurnTimeSeconds * 1000u);
     }
 
-    Statuses[1] = GPIO_SetOutput(Name, Index, StateBit, false);
-    if (Statuses[1] != CFE_SUCCESS && FinalStatus == CFE_SUCCESS)
+    Report.OffStatus = GPIO_SetOutput(Name, Index, StateBit, false);
+    if (Report.OffStatus != CFE_SUCCESS && FinalStatus == CFE_SUCCESS)
     {
-        FinalStatus = Statuses[1];
+        FinalStatus = Report.OffStatus;
     }
 
     CFE_EVS_SendEvent(GPIO_VALUE_INF_EID, CFE_EVS_EventType_INFORMATION,
-                      "GPIO: %s burn 90s sequence finished", Name);
-    GPIO_SendReport(GPIO_DEP1_DEP2_EN_90S_CC, FinalStatus, Statuses, sizeof(Statuses),
+                      "GPIO: %s burn %lu sec sequence finished", Name, (unsigned long)BurnTimeSeconds);
+    GPIO_SendReport(GPIO_DEP_BURN_CC, FinalStatus, &Report, sizeof(Report),
                     GPIO_StatusToReportType(FinalStatus));
 
     return FinalStatus;
@@ -482,7 +512,18 @@ CFE_Status_t GPIO_AdcsBootOffCmd(const GPIO_AdcsBootOffCmd_t *Msg)
 
 CFE_Status_t GPIO_SpInRead5sCmd(const GPIO_SpInRead5sCmd_t *Msg)
 {
-    CFE_Status_t Status = GPIO_ReadInputFor1Second("SP_IN", CFE_SRL_SP_IN_GPIO_INDEXER, NULL, true);
-    GPIO_SendReport(GPIO_SP_IN_READ_5S_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    bool                         SawHigh = false;
+    GPIO_SpInReadReport_Payload_t Report;
+    CFE_Status_t                 Status;
+
+    memset(&Report, 0, sizeof(Report));
+
+    Status = GPIO_ReadInputFor1Second("SP_IN", CFE_SRL_SP_IN_GPIO_INDEXER, &SawHigh, true);
+    if (Status == CFE_SUCCESS)
+    {
+        Report.isDeployed = SawHigh ? 1 : 0;
+    }
+
+    GPIO_SendReport(GPIO_SP_IN_READ_5S_CC, Status, &Report, sizeof(Report), GPIO_StatusToReportType(Status));
     return Status;
 }

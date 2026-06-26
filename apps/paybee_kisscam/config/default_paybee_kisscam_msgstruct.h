@@ -119,6 +119,16 @@ typedef struct {
 } paybee_kisscam_DownloadAllCmd_t;
 
 /**
+ * Image Compress Command
+ */
+typedef struct {
+    CFE_MSG_CommandHeader_t                CommandHeader;
+    paybee_kisscam_ImageCompress_Payload_t Payload;
+} paybee_kisscam_ImageCompressCmd_t;
+
+
+
+/**
  * Mosaic Command
  */
 // typedef struct {

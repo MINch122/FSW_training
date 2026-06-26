@@ -6,11 +6,13 @@
 
 // #define IO_CSP_FTP_DEBUG
 
-#define CSP_PORT_FTP_NEW                    9
+#define CSP_PORT_FTP_ORIGIN                 9
 
 #define IO_CSP_FTP_RETCODE_LEN              5
 
 #define IO_CSP_FTP_READ_DEFAULT_TIMEOUT     60000
+
+#define IO_CSP_FTP_ACCEPT_TIMEOUT           1000
 
 #define IO_CSP_FTP_COPY_BUFSIZ              512
 

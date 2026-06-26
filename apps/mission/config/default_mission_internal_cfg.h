@@ -12,7 +12,7 @@
 /* Pipe Depth */
 #define MISSION_PIPE_DEPTH      8
 
-#define MISSION_LEOP_WAIT_DURATION_SEC        (1u * 60u)
+#define MISSION_LEOP_WAIT_DURATION_SEC        (45u * 60u)
 #define MISSION_LEOP_SAVE_INTERVAL_SEC        10u
 #define MISSION_LEOP_RETRY_DELAY_SEC          30u
 #define MISSION_LEOP_POST_BURN_WAIT_SEC       (1u * 40u)

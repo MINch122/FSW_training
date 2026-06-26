@@ -77,14 +77,38 @@ int32 paybee_kisscam_CloseFile(int ID) {
     return close(ID);
 }
 
+// 유실 발생하면 인덱스가 안오름
+// void paybee_kisscam_Inspection(uint8_t MemorySlot) {
+//     for (uint8_t i = 0; i < 60; i++) {
+//         if (paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].LineState[i] != 0xFF) {
+//             return;
+//         }
+//     }
+//     // OS_printf("Memory Slot %u Download Done.\n", MemorySlot);
+//     paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].MemoryState = paybee_kisscam_DOWNLOAD_DONE;
+//     paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].LastImgIdx ++;
+//     for (uint8_t i = 0; i < 60; i++) {
+//         paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].LineState[i] = 0;
+//     }
+//     젼
+//     return;
+// }
 
+// 완화 버젼
 void paybee_kisscam_Inspection(uint8_t MemorySlot) {
+    bool is_incomplete = false;
     for (uint8_t i = 0; i < 60; i++) {
         if (paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].LineState[i] != 0xFF) {
-            return;
+            is_incomplete = true;
+            break;
         }
     }
-    // OS_printf("Memory Slot %u Download Done.\n", MemorySlot);
+
+    if (is_incomplete) {
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
+                          "[KissCAM] Download for MemorySlot %u finished with missing lines.", MemorySlot);
+    }
+
     paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].MemoryState = paybee_kisscam_DOWNLOAD_DONE;
     paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].LastImgIdx ++;
     for (uint8_t i = 0; i < 60; i++) {
@@ -193,10 +217,9 @@ void paybee_kisscam_HandleErrorSerial(int32 Status, uint8 CC, void *ReadData, ss
     BufPtr->Report.CommandCode = CC;
     BufPtr->Report.ReturnType = RPT_RETTYPE_CFE;
     BufPtr->Report.ReturnCode = Status;
-    size_t CopySize = (ReadSize > 0 && (size_t)ReadSize < sizeof(BufPtr->Report.ReturnValue)) ? (size_t)ReadSize : sizeof(BufPtr->Report.ReturnValue);
-    if (ReadData == NULL || ReadSize <= 0) CopySize = 0;
-    BufPtr->Report.ReturnDataSize = (uint16_t)CopySize;
-    if (CopySize > 0) memcpy(BufPtr->Report.ReturnValue, ReadData, CopySize);
+    BufPtr->Report.ReturnDataSize = (uint16_t)ReadSize;
+    memcpy(BufPtr->Report.ReturnValue, ReadData, 
+            ReadSize > sizeof(BufPtr->Report.ReturnValue) ? sizeof(BufPtr->Report.ReturnValue) : ReadSize);
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
     if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
@@ -229,10 +252,9 @@ void paybee_kisscam_HandleSuccess(uint8_t CC, void *ReadData, ssize_t ReadSize) 
     BufPtr->Report.CommandCode = CC;
     BufPtr->Report.ReturnType = RPT_RETTYPE_SUCCESS;
     BufPtr->Report.ReturnCode = CFE_SUCCESS;
-    size_t CopySize = (ReadSize > 0 && (size_t)ReadSize < sizeof(BufPtr->Report.ReturnValue)) ? (size_t)ReadSize : sizeof(BufPtr->Report.ReturnValue);
-    if (ReadData == NULL || ReadSize <= 0) CopySize = 0;
-    BufPtr->Report.ReturnDataSize = (uint16_t)CopySize;
-    if (CopySize > 0) memcpy(BufPtr->Report.ReturnValue, ReadData, CopySize);
+    BufPtr->Report.ReturnDataSize = (uint16_t)ReadSize;
+    memcpy(BufPtr->Report.ReturnValue, ReadData, 
+            ReadSize > sizeof(BufPtr->Report.ReturnValue) ? sizeof(BufPtr->Report.ReturnValue) : ReadSize);
     
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
     if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {

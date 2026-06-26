@@ -152,6 +152,11 @@ void paybee_kisscam_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
             paybee_kisscam_DownloadAllCmd((const paybee_kisscam_DownloadAllCmd_t *)SBBufPtr);
         }
         break;
+    case paybee_kisscam_IMAGE_COMPRESS_CC:
+        if (paybee_kisscam_VerifyCmdLength(&SBBufPtr->Msg, sizeof(paybee_kisscam_ImageCompressCmd_t))) {
+            paybee_kisscam_ImageCompressCmd((const paybee_kisscam_ImageCompressCmd_t *)SBBufPtr);
+        }
+        break;
     // case paybee_kisscam_MOSAIC_CC:
     //     if (paybee_kisscam_VerifyCmdLength(&SBBufPtr->Msg, sizeof(paybee_kisscam_MosaicCmd_t))) {
     //         paybee_kisscam_MosaicCmd((const paybee_kisscam_MosaicCmd_t *)SBBufPtr);
@@ -170,7 +175,7 @@ void paybee_kisscam_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
         /* RPT */
         paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
         if (BufPtr == NULL) break;
-        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID), sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
+        if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID), sizeof(paybee_kisscam_ReportTlm_t) != CFE_SUCCESS)) {
             CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
             break;
         }
@@ -224,7 +229,7 @@ void paybee_kisscam_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
         /* RPT */
         paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
         if (BufPtr == NULL) break;
-        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID), sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
+        if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID), sizeof(paybee_kisscam_ReportTlm_t) != CFE_SUCCESS)) {
             CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
             break;
         }

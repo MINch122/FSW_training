@@ -17,6 +17,8 @@
 #include "io_csp_ftp_types.h"
 #include "io_csp_ftp_config.h"
 
+#include "cfe.h"
+
 #include <csp/csp.h>
 #include <gs/ftp/client.h>
 #include <csp/csp_endian.h>
@@ -28,7 +30,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <pthread.h>
 
 
 #ifndef IO_CSP_FTP_DEBUG
@@ -47,8 +48,9 @@ static bool ignore_length_check = false;
 
 
 /* Server task. */
-int32 io_csp_ftp_init_server(void);
-static void* io_csp_ftp_server_task_impl(void*);
+static int32 io_csp_ftp_init_server(csp_socket_t** server_sock);
+int32 io_csp_ftp_server_start(uint32* run_status);
+static void io_csp_ftp_server_loop(csp_socket_t* socket, uint32* run_status);
 
 
 /* GS FTP packet handlers. */
@@ -1363,11 +1365,15 @@ static gs_ftp_return_t ftp_helper_conn_timeout(void) {
 
 
 
-int32 io_csp_ftp_init_server(void) {
+static int32 io_csp_ftp_init_server(csp_socket_t** server_sock_out) {
 
-    int ret;
-    pthread_t tid;
     csp_socket_t* server_sock;
+
+    if (!server_sock_out) {
+        return -1;
+    }
+
+    *server_sock_out = NULL;
 
     memset(&tspec, 0, sizeof(tspec));
     tspec.transfer_status = IO_CSP_FTP_IDLE;
@@ -1380,20 +1386,42 @@ int32 io_csp_ftp_init_server(void) {
 
     if (csp_bind(server_sock, CSP_PORT_FTP) != 0) {
         ftp_debug_error("bind error for ftp port %d\n", CSP_PORT_FTP);
+        csp_close(server_sock);
         return -1;
     }
     
     if (csp_listen(server_sock, 10) < 0) {
         ftp_debug_error("listen error for ftp port %d\n", CSP_PORT_FTP);
+        csp_close(server_sock);
         return -1;
     }
 
-    if ((ret = pthread_create(&tid, NULL, io_csp_ftp_server_task_impl, server_sock)) != 0) {
-        ftp_debug_error("pthread_create error: %d\n", ret);
-        return -1;
+    *server_sock_out = server_sock;
+    ftp_debug_info("FTP server listening on port %d\n", CSP_PORT_FTP);
+    return 0;
+
+}
+
+int32 io_csp_ftp_server_start(uint32* run_status) {
+
+    csp_socket_t* server_sock;
+    int32 status;
+
+    status = io_csp_ftp_init_server(&server_sock);
+    if (status != 0) {
+        return status;
     }
 
-    ftp_debug_info("FTP task created with tid %lu\n", (unsigned) tid);
+    io_csp_ftp_server_loop(server_sock, run_status);
+
+    if (tspec.conn) {
+        csp_close(tspec.conn);
+        tspec.conn = NULL;
+    }
+
+    ftp_helper_filespec_cleanup();
+    csp_close(server_sock);
+
     return 0;
 
 }
@@ -1403,23 +1431,22 @@ int32 io_csp_ftp_init_server(void) {
 #define LENGTH_CHECK_SHORT(len)     (ignore_length_check || ((len) >= sizeof(((ftp_packet_t*)0)->type)))
 
 
-static void* io_csp_ftp_server_task_impl(void* server_sock) {
+static void io_csp_ftp_server_loop(csp_socket_t* socket, uint32* run_status) {
 
-    csp_socket_t* socket = server_sock;
     csp_packet_t*       packet;
     ftp_packet_t*       ftp_packet;
     io_csp_ftp_ret      ret;
     uint8_t type;
     bool out;
 
-    while (1) {
+    while (CFE_ES_RunLoop(run_status) == true) {
 
         /* Do we wait forever? */
-        if (!(tspec.conn = csp_accept(socket, CSP_MAX_DELAY)))
+        if (!(tspec.conn = csp_accept(socket, IO_CSP_FTP_ACCEPT_TIMEOUT)))
             continue;
 
         ftp_debug_normal("incoming connection from node %d\n", csp_conn_src(tspec.conn));
-        while (1) {
+        while (CFE_ES_RunLoop(run_status) == true) {
 
             /* The adjustable timeout applies only on read(). CSP does not support send timeout in this version. */
             if ((packet = csp_read(tspec.conn, tspec.timeout)) == NULL) {
@@ -1568,12 +1595,5 @@ no_read:
         ftp_helper_conn_timeout();
 
     }
-
-    /* Never should reach here. */
-    if (tspec.conn) {
-        csp_close(tspec.conn);
-        tspec.conn = NULL;
-    }
-    pthread_exit(NULL);
 
 }

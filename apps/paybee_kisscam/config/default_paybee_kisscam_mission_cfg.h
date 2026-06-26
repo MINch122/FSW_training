@@ -15,14 +15,4 @@
 
 #include "paybee_kisscam_interface_cfg.h"
 
-#ifndef DEBUG_PAYBEE_KISSCAM
-#define DEBUG_PAYBEE_KISSCAM false
-#endif
-
-#if DEBUG_PAYBEE_KISSCAM
-#define paybee_kisscam_APP_printf(...) OS_printf(__VA_ARGS__)
-#else
-#define paybee_kisscam_APP_printf(...) do { } while (0)
-#endif
-
 #endif

@@ -116,6 +116,16 @@ typedef struct paybee_kisscam_DownloadAll_Payload {
     uint16_t LineNum;
 } paybee_kisscam_DownloadAll_Payload_t;
 
+/**
+ * Image Compress Command
+ * @param MEM Memory Slot: Can be `0` ~ `3`
+ * @param TargetIdx Index of the image to compress
+ */
+typedef struct paybee_kisscam_ImageCompress_Payload {
+    uint8 MEM;
+    uint8 TargetIdx;
+} paybee_kisscam_ImageCompress_Payload_t;
+
 
 /**
  * MOSAIC Command

@@ -26,6 +26,7 @@ CFE_Status_t paybee_kisscam_DownloadCmd(const paybee_kisscam_DownloadCmd_t *Msg)
 CFE_Status_t paybee_kisscam_ReadRegisterCmd(const paybee_kisscam_ReadRegisterCmd_t *Msg);
 CFE_Status_t paybee_kisscam_WriteRegisterCmd(const paybee_kisscam_WriteRegisterCmd_t *Msg);
 CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t *Msg);
+CFE_Status_t paybee_kisscam_ImageCompressCmd(const paybee_kisscam_ImageCompressCmd_t *Msg);
 // CFE_Status_t paybee_kisscam_DownloadAll2Cmd(const paybee_kisscam_DownloadAllCmd_t *Msg);
 // CFE_Status_t paybee_kisscam_MosaicCmd(const paybee_kisscam_MosaicCmd_t *Msg);
 

@@ -87,7 +87,7 @@ list(APPEND MISSION_CORE_MODULES rf)
 # and must be loaded explicitly via startup script or command.
 # This list is effectively appended to every TGTx_APPLIST in targets.cmake.
 # Example:
-list(APPEND MISSION_GLOBAL_APPLIST  rpt ftp_lib mission gps)
+list(APPEND MISSION_GLOBAL_APPLIST  rpt ftp_origin mission gps)
 
 # The "MISSION_GLOBAL_STATIC_APPLIST" is similar to MISSION_GLOBAL_APPLIST
 # but the apps are statically linked.
@@ -103,7 +103,7 @@ SET(FT_INSTALL_SUBDIR "host/functional-test")
 SET(MISSION_CPUNAMES cpu1 obc)
 
 SET(cpu1_PROCESSORID 1)
-SET(cpu1_APPLIST ci_lab to_lab sch_lab hk ds fm stx utrx eps adcs ttc meow ltrx gpio pay_kisscam)
+SET(cpu1_APPLIST ci_lab to_lab sch_lab hk ds fm stx utrx eps adcs ttc meow ltrx gpio paybee_kisscam)
 SET(cpu1_FILELIST cfe_es_startup.scr)
 SET(cpu1_SYSTEM i686-linux-gnu)
 
@@ -111,6 +111,6 @@ SET(cpu1_SYSTEM i686-linux-gnu)
 # serves as an example of how one would configure multiple cpus.
 # Add for obc build 
 SET(obc_PROCESSORID 2)
-SET(obc_APPLIST ci_lab to_lab sch_lab hk ds fm stx utrx eps adcs ttc meow ltrx gpio pay_kisscam)
+SET(obc_APPLIST ci_lab to_lab sch_lab hk ds fm stx utrx eps adcs ttc meow ltrx gpio paybee_kisscam)
 SET(obc_FILELIST cfe_es_startup.scr)
 SET(obc_SYSTEM obc)
