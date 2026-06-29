@@ -130,7 +130,7 @@ CFE_Status_t ADCS_GetPortMapCmd(void);  // 239
 
 CFE_Status_t ADCS_SetErrorLogClearCmd(const ADCS_ErrorLogClearCmd_t *msg);
 CFE_Status_t ADCS_SequenceCmd_Detumbling(void);
-CFE_Status_t ADCS_SequenceCmd_Sunpointing(void);
+CFE_Status_t ADCS_SequenceCmd_GNDpointing(const ADCS_SequenceCmdGNDpointingCmd_t *msg);
 CFE_Status_t ADCS_SequenceCmd_Vpointing(void);
 CFE_Status_t ADCS_SequenceCmd_KSCpointing(void);
 CFE_Status_t ADCS_SequenceCmd_LGCpointing(void);

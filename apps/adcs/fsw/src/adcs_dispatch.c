@@ -691,12 +691,12 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
-		case ADCS_SEQ_SUNPT_CC:
-			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdSunpointingCmd_t))) {
-                ADCS_SequenceCmd_Sunpointing();
+		case ADCS_SEQ_GNDPT_CC:
+			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdGNDpointingCmd_t))) {
+                ADCS_SequenceCmd_GNDpointing((const ADCS_SequenceCmdGNDpointingCmd_t *)SBBufPtr);
             }
             break;
-		
+
 		case ADCS_SEQ_VELPT_CC:
 			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdVpointingCmd_t))) {
                 ADCS_SequenceCmd_Vpointing();

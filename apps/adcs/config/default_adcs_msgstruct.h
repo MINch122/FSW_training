@@ -223,7 +223,7 @@ typedef struct{
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    ADCS_Comm_COMM_FLAG_Payload_t Payload;
+    ADCS_Comm_COMM_10_CMD_Payload_t Payload;
 } ADCS_Comm10Cmd_t;
 
 typedef struct { // ID 56
@@ -521,10 +521,11 @@ typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_SequenceCmdDetumblingCmd_t;
 
-/* Sun Pointing */
+/* Ground Target Pointing */
 typedef struct { 
     CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_SequenceCmdSunpointingCmd_t;
+    ADCS_SequenceCmdGNDpointing_Payload_t Payload;
+} ADCS_SequenceCmdGNDpointingCmd_t;
 
 /* Velocity Pointing */
 typedef struct { 

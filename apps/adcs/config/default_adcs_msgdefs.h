@@ -261,6 +261,15 @@ typedef struct
 } __attribute__((packed)) ADCS_ReferenceLLHTargetCmd_Payload_t;
 
 typedef struct
+{
+    uint8 flag_estmode;        // 0: default EstGyroEkf(6), 5: EstGyro, 6: EstGyroEkf
+    float target_latitude;
+    float target_longitude;
+    float target_altitude;
+    uint16 target_duration;    // seconds, 0: default 600
+} __attribute__((packed)) ADCS_SequenceCmdGNDpointing_Payload_t;
+
+typedef struct
 { // ID 49
     uint32 GNSSUnixTimeSeconds;
     uint32 GNSSUnixTimeNanoseconds;
@@ -2110,6 +2119,20 @@ typedef struct
 } __attribute__((packed)) ADCS_Comm_COMM_FLAG_Payload_t;
 
 typedef struct
+{	// COMM 10 - Target tracking commissioning command
+
+	uint8	flag_tlmtype;
+	uint8	flag_estmode;		// 0: default EstGyroEkf(6), 5: EstGyro, 6: EstGyroEkf
+	uint8	flag_contmode;		// 14: ConTgtTrack, 16: ConGndTrack
+	float	target_latitude;
+	float	target_longitude;
+	float	target_altitude;
+	float	yaw;
+	uint16	target_duration;	// seconds, 0: default 600
+
+} __attribute__((packed)) ADCS_Comm_COMM_10_CMD_Payload_t;
+
+typedef struct
 {	// COMM 01 - Compact
 
 	// Simple Header
@@ -2415,6 +2438,26 @@ typedef struct
 
 
 } __attribute__((packed)) ADCS_Comm_COMM_08_Payload_t; /* Total ?? bytes */
+
+typedef struct
+{	// COMM 10
+
+	// Simple Header
+	uint16	sync_word;
+
+	// ID 210
+    ADCS_Comm_Estimator_Cmn_Payload_t	MainEst;
+
+	// ID 205
+    ADCS_Comm_RawRWLSensorTlm_Payload_t	RawRWL;
+
+	// ID 172
+    ADCS_Comm_ControllerTlm_Payload_t	Controller;
+
+	// ID 174
+    ADCS_Comm_ModelsTlm_Payload_t	Models;
+
+} __attribute__((packed)) ADCS_Comm_COMM_10_Payload_t; /* Total ?? bytes */
 
 /*************************************
  * CubeADCS Event Entry

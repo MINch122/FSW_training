@@ -1686,11 +1686,37 @@
         "params": []
       },
       {
-        "name": "Seq Sunpt",
+        "name": "Seq Gndpt",
         "mid": "0x1865",
         "fc": 101,
-        "description": "ADCS_SEQ_SUNPT_CC",
-        "params": []
+        "description": "ADCS_SEQ_GNDPT_CC",
+        "params": [
+          {
+            "name": "flag_estmode",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "target_latitude",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "target_longitude",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "target_altitude",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "target_duration",
+            "type": "uint16",
+            "default": "600"
+          }
+        ]
       },
       {
         "name": "Seq Velpt",
@@ -1941,7 +1967,7 @@
         ]
       },
       {
-        "name": "Commissioning 10",
+        "name": "Commissioning 10 Target Tracking",
         "mid": "0x1865",
         "fc": 129,
         "description": "ADCS_COMM_10_CC",
@@ -1959,7 +1985,32 @@
           {
             "name": "flag_contmode",
             "type": "uint8",
+            "default": "14"
+          },
+          {
+            "name": "target_latitude",
+            "type": "float",
             "default": "0"
+          },
+          {
+            "name": "target_longitude",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "target_altitude",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "yaw",
+            "type": "float",
+            "default": "0"
+          },
+          {
+            "name": "target_duration",
+            "type": "uint16",
+            "default": "600"
           }
         ]
       },

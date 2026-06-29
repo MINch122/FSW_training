@@ -127,7 +127,7 @@
 #define ADCS_GET_PORTMAP_CC	                    87 // 239
 
 #define ADCS_SEQ_DTUMB_CC						100
-#define ADCS_SEQ_SUNPT_CC						101
+#define ADCS_SEQ_GNDPT_CC						101
 #define ADCS_SEQ_VELPT_CC						102
 #define ADCS_SEQ_KSCPT_CC						103
 #define ADCS_SEQ_LGCPT_CC						104

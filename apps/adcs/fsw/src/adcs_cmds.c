@@ -2198,89 +2198,229 @@ CFE_Status_t ADCS_SequenceCmd_Detumbling(void) {	// Detumbling w/o Commissioning
 }
 
 
-/* CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) */
-// Simple Version
-CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {	// Sunpointing w/o Commissioning
-	CFE_Status_t status;
+/* Other Pointing Commands */
+CFE_Status_t ADCS_SequenceCmd_GNDpointing(const ADCS_SequenceCmdGNDpointingCmd_t *msg)
+{
+	CFE_Status_t status = CFE_SUCCESS;
+	int32 interstatus = CFE_SUCCESS;
+	uint8 cnt_try = 0;
+	uint8 estimator_mode = msg->Payload.flag_estmode;
+	uint16 target_duration = msg->Payload.target_duration;
+
+	if (estimator_mode == 0)
+	{
+		estimator_mode = 6;
+	}
+
+	if ((estimator_mode != 5) && (estimator_mode != 6))
+	{
+		status = -1;
+		ADCS_HandleReport(status, ADCS_SEQ_GNDPT_CC, (void *)&msg->Payload, sizeof(msg->Payload));
+		return status;
+	}
+
+	if (target_duration == 0)
+	{
+		target_duration = 600;
+	}
 
 	FILE *fp;
-	fp = fopen("./cf/adcs_contmode.txt","w");
-	fprintf(fp,"%d",ADCS_SEQ_SUNPT_CC);
-	fclose(fp);
+	fp = fopen("./cf/adcs_contmode.txt", "w");
+	if (fp != NULL)
+	{
+		fprintf(fp, "%d", ADCS_SEQ_GNDPT_CC);
+		fclose(fp);
+	}
 
-    // Power ON: Whole H/W
-	ADCS_PowerStateCmd_Payload_t SetVal_56 = {0,};
+	ADCS_Comm_PowerState_Cmn_Payload_t SetVal_056 = {0,};
+	ADCS_Comm_PowerState_Cmn_Payload_t RetVal_183 = {0,};
+	SetVal_056.MAG0 = 1;
+	SetVal_056.GYR0 = 1;
+	SetVal_056.RWL0 = 1;
+	SetVal_056.RWL1 = 1;
+	SetVal_056.RWL2 = 1;
+	SetVal_056.RWL3 = 1;
 
-	SetVal_56.GYR0 = 1;
-	SetVal_56.MAG0 = 1;
-	SetVal_56.FSS0 = 1;
-	SetVal_56.HSS0 = 1;
-	SetVal_56.RWL0 = 1;
-	SetVal_56.RWL1 = 1;
-	SetVal_56.RWL2 = 1;
-	SetVal_56.RWL3 = 1;
-	status = ADCS_SetPowerState(&SetVal_56);
-    // ADCS_HandleReport(status, ADCS_SET_POWER_STATE_CC, NULL, 0);
-    if (status != CFE_SUCCESS)
-    {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Set Power State: 0x%08lx", (unsigned long)status);
-        return status;
-    }
-
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+	OS_TaskDelay(500);
+	interstatus = interstatus + ADCS_Comm_GetPowerState(&RetVal_183);
 	OS_TaskDelay(5000);
 
-	// Estimation & Control Mode: EstGyroEkf (EstFullEkf) & ConSunTrack
-	ADCS_ControllerConfig_Payload_t SetVal_62 = {0,};
-	ADCS_ControllerConfigTlm_Payload_t RetVal_190 = {0,};
-	ADCS_ControlEstimationModeCmd_Payload_t SetVal_42 = {0,};
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_183.MAG0 == 1) && (RetVal_183.GYR0 == 1) &&
+			(RetVal_183.RWL0 == 1) && (RetVal_183.RWL1 == 1) && (RetVal_183.RWL2 == 1) && (RetVal_183.RWL3 == 1)) break;
 
-	status = ADCS_GetControllerConfig(&RetVal_190);
-	if (status != CFE_SUCCESS)
-    {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Get Control Config: 0x%08lx", (unsigned long)status);
-        return status;
-    }
-	memcpy(&SetVal_62, &RetVal_190, sizeof(ADCS_ControllerConfigTlm_Payload_t));
-	SetVal_62.DefaultControlMode = 13;
-	SetVal_62.flags.EnableSunTrackingInEclipse = 1;
-	SetVal_62.flags.EnableSunAvoidance = 0;
-	SetVal_42.MainEstimatorMode = 6;
-	SetVal_42.BackupEstimatorMode = 5;
-	SetVal_42.ControlMode = 13;
-	SetVal_42.ControlTimeout = 0;
-	status = ADCS_SetControllerConfig(&SetVal_62);
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+		OS_TaskDelay(500);
+		interstatus = interstatus + ADCS_Comm_GetPowerState(&RetVal_183);
+		OS_TaskDelay(500);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_183);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_183.MAG0 != 1) || (RetVal_183.GYR0 != 1) ||
+		(RetVal_183.RWL0 != 1) || (RetVal_183.RWL1 != 1) || (RetVal_183.RWL2 != 1) || (RetVal_183.RWL3 != 1))
+	{
+		status = -2;
+		ADCS_HandleReport(status, ADCS_SEQ_GNDPT_CC, &RetVal_183, sizeof(RetVal_183));
+		return status;
+	}
+
+	ADCS_Comm_RawMAGSensorTlm_Paylaod_t RetVal_180 = {0,};
+	ADCS_Comm_RawGYRSensorTlm_Payload_t RetVal_204 = {0,};
+	ADCS_Comm_RawRWLSensorTlm_Payload_t RetVal_205 = {0,};
+
+	OS_TaskDelay(2000);
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
 	OS_TaskDelay(100);
-	status = ADCS_SetControlEstimationMode(&SetVal_42);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);
 	OS_TaskDelay(100);
-	// ADCS_HandleReport(status, ADCS_SET_CONTROL_ESTIMATION_MODE_CC, NULL, 0);
+	interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);
 
-    if (status != CFE_SUCCESS)
-    {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to Operate  Sun Pointing: 0x%08lx", (unsigned long)status);
-        return status;
-    }
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1) &&
+			(RetVal_205.RWL0ValidFlag == 1) && (RetVal_205.RWL1ValidFlag == 1) && (RetVal_205.RWL2ValidFlag == 1) && (RetVal_205.RWL3ValidFlag == 1)) break;
 
-	ADCS_HandleReport(status, ADCS_SEQ_SUNPT_CC, NULL, 0);
+		OS_TaskDelay(500);
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(100);
+		interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);
+		OS_TaskDelay(100);
+		interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);
+		cnt_try++;
+	}
 
-    OS_printf("ADCS cmd Success.");
-    return CFE_SUCCESS;
+	if ((interstatus != CFE_SUCCESS) || (RetVal_180.MAG0ValidFlag != 1) || (RetVal_204.GYR0ValidFlag != 1) ||
+		(RetVal_205.RWL0ValidFlag != 1) || (RetVal_205.RWL1ValidFlag != 1) || (RetVal_205.RWL2ValidFlag != 1) || (RetVal_205.RWL3ValidFlag != 1))
+	{
+		status = -3;
+		ADCS_HandleReport(status, ADCS_SEQ_GNDPT_CC, &RetVal_205, sizeof(RetVal_205));
+		return status;
+	}
+
+	ADCS_ReferenceLLHTargetCmd_Payload_t SetVal_048 = {0,};
+	SetVal_048.TargetLatitude = msg->Payload.target_latitude;
+	SetVal_048.TargetLongiTude = msg->Payload.target_longitude;
+	SetVal_048.TargetAltitude = msg->Payload.target_altitude;
+	interstatus = ADCS_SetReferenceLLHTarget(&SetVal_048);
+	OS_TaskDelay(500);
+	if (interstatus != CFE_SUCCESS)
+	{
+		status = -4;
+		ADCS_HandleReport(status, ADCS_SEQ_GNDPT_CC, &SetVal_048, sizeof(SetVal_048));
+		return status;
+	}
+
+	interstatus = ADCS_SetPersistConfig();
+	OS_TaskDelay(500);
+	if (interstatus != CFE_SUCCESS)
+	{
+		status = -5;
+		ADCS_HandleReport(status, ADCS_SEQ_GNDPT_CC, NULL, 0);
+		return status;
+	}
+
+	ADCS_SatelliteConfigTlm_Payload_t RetVal_189 = {0,};
+	interstatus = ADCS_GetSatelliteConfig(&RetVal_189);
+	OS_TaskDelay(500);
+	if (interstatus != CFE_SUCCESS)
+	{
+		status = -6;
+		ADCS_HandleReport(status, ADCS_SEQ_GNDPT_CC, &RetVal_189, sizeof(RetVal_189));
+		return status;
+	}
+
+	if ((RetVal_189.TargetTrackingBodyVectorX == 0) && (RetVal_189.TargetTrackingBodyVectorY == 0) && (RetVal_189.TargetTrackingBodyVectorZ == 0))
+	{
+		status = -7;
+		ADCS_HandleReport(status, ADCS_SEQ_GNDPT_CC, &RetVal_189, sizeof(RetVal_189));
+		return status;
+	}
+
+	ADCS_Comm_OpenLoopCmdHxyzRWCmd_Payload_t SetVal_076 = {0,};
+	SetVal_076.cmdHx = 0.0;
+	SetVal_076.cmdHy = 0.0;
+	SetVal_076.cmdHz = 0.0;
+	interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+	OS_TaskDelay(500);
+	if (interstatus != CFE_SUCCESS)
+	{
+		status = -8;
+		ADCS_HandleReport(status, ADCS_SEQ_GNDPT_CC, &SetVal_076, sizeof(SetVal_076));
+		return status;
+	}
+
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t SetVal_042 = {0,};
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t RetVal_150 = {0,};
+	SetVal_042.MainEstimatorMode = estimator_mode;
+	SetVal_042.BackupEstimatorMode = 5;
+	SetVal_042.ControlMode = 3;
+	SetVal_042.ControlTimeout = 0;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	OS_TaskDelay(1000);
+	interstatus = interstatus + ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != estimator_mode) || (RetVal_150.ControlMode != 3))
+	{
+		status = -12;
+		ADCS_HandleReport(status, ADCS_SEQ_GNDPT_CC, &RetVal_150, sizeof(RetVal_150));
+		return status;
+	}
+
+	SetVal_042.ControlMode = 51;
+	SetVal_042.ControlTimeout = 125;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	OS_TaskDelay(1000);
+	interstatus = interstatus + ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != estimator_mode) || (RetVal_150.ControlMode != 51))
+	{
+		status = -9;
+		ADCS_HandleReport(status, ADCS_SEQ_GNDPT_CC, &RetVal_150, sizeof(RetVal_150));
+		SetVal_042.ControlMode = 3;
+		SetVal_042.ControlTimeout = 0;
+		ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		return status;
+	}
+	OS_TaskDelay(120000);
+
+	SetVal_042.ControlMode = 12;
+	SetVal_042.ControlTimeout = 305;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	OS_TaskDelay(1000);
+	interstatus = interstatus + ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != estimator_mode) || (RetVal_150.ControlMode != 12))
+	{
+		status = -10;
+		ADCS_HandleReport(status, ADCS_SEQ_GNDPT_CC, &RetVal_150, sizeof(RetVal_150));
+		SetVal_042.ControlMode = 3;
+		SetVal_042.ControlTimeout = 0;
+		ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		return status;
+	}
+	OS_TaskDelay(300000);
+
+	SetVal_042.ControlMode = 16;
+	SetVal_042.ControlTimeout = target_duration;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	OS_TaskDelay(1000);
+	interstatus = interstatus + ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != estimator_mode) || (RetVal_150.ControlMode != 16))
+	{
+		status = -11;
+		ADCS_HandleReport(status, ADCS_SEQ_GNDPT_CC, &RetVal_150, sizeof(RetVal_150));
+		SetVal_042.ControlMode = 3;
+		SetVal_042.ControlTimeout = 0;
+		ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		return status;
+	}
+
+	ADCS_HandleReport(CFE_SUCCESS, ADCS_SEQ_GNDPT_CC, NULL, 0);
+	return CFE_SUCCESS;
 }
 
-// Complex Version
-/*
-CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {
-	CFE_Status_t status;
-    status = ADCS_COMM_InitAngRateEst();
-	if (status != CFE_SUCCESS)
-    {
-        CFE_ES_WriteToSysLog("Adcs App: Fail to COMMISSIONING: 0x%08lx", (unsigned long)status);
-        return status;
-    }
-    return CFE_SUCCESS;
-}
-*/
-
-/* Other Pointing Commands */
 CFE_Status_t ADCS_SequenceCmd_Vpointing(void) {	// Velocity vector pointing w/o Commissioning
 	CFE_Status_t status;
 
@@ -2506,7 +2646,6 @@ CFE_Status_t ADCS_SequenceCmd_LGCpointing(void) {	// LG CAM EARTH pointing w/o C
     return CFE_SUCCESS;
 }
 
-
 CFE_Status_t ADCS_SequenceCmd_RPYpointing(const ADCS_SequenceCmdRPYpointingCmd_t *msg) {	// Required RPY pointing based on GS CMD
 	CFE_Status_t status;
 
@@ -2577,6 +2716,7 @@ CFE_Status_t ADCS_SequenceCmd_RPYpointing(const ADCS_SequenceCmdRPYpointingCmd_t
     OS_printf("ADCS cmd Success.");
     return CFE_SUCCESS;
 }
+
 
 /********************************************************
  * 
@@ -5163,7 +5303,253 @@ CFE_Status_t ADCS_Comm09Cmd(const ADCS_Comm09Cmd_t *msg) {
 
 CFE_Status_t ADCS_Comm10Cmd(const ADCS_Comm10Cmd_t *msg)
 {
-	ADCS_HandleReport(CFE_SUCCESS, ADCS_COMM_10_CC, (void *)&msg->Payload, sizeof(msg->Payload));
+	CFE_Status_t status = CFE_SUCCESS;
+	int32 interstatus = CFE_SUCCESS;
+	uint8 cnt_try = 0;
+	uint8 estimator_mode = msg->Payload.flag_estmode;
+	uint8 control_mode = msg->Payload.flag_contmode;
+	uint16 target_duration = msg->Payload.target_duration;
+
+	if ((control_mode != 14) && (control_mode != 16))
+	{
+		status = -1;
+		ADCS_HandleReport(status, ADCS_COMM_10_CC, (void *)&msg->Payload, sizeof(msg->Payload));
+		return status;
+	}
+
+	if (estimator_mode == 0)
+	{
+		estimator_mode = 6;
+	}
+
+	if ((estimator_mode != 5) && (estimator_mode != 6))
+	{
+		status = -2;
+		ADCS_HandleReport(status, ADCS_COMM_10_CC, (void *)&msg->Payload, sizeof(msg->Payload));
+		return status;
+	}
+
+	if (target_duration == 0)
+	{
+		target_duration = 600;
+	}
+
+	// 1) Power on the sensors and actuators required for target tracking.
+	ADCS_Comm_PowerState_Cmn_Payload_t SetVal_056 = {0,};
+	ADCS_Comm_PowerState_Cmn_Payload_t RetVal_151 = {0,};
+	SetVal_056.MAG0 = 1;
+	SetVal_056.GYR0 = 1;
+	SetVal_056.RWL0 = 1;
+	SetVal_056.RWL1 = 1;
+	SetVal_056.RWL2 = 1;
+	SetVal_056.RWL3 = 1;
+
+	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetPowerState(&RetVal_151);
+	OS_TaskDelay(5000);
+
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_151.MAG0 == 1) && (RetVal_151.GYR0 == 1) &&
+			(RetVal_151.RWL0 == 1) && (RetVal_151.RWL1 == 1) && (RetVal_151.RWL2 == 1) && (RetVal_151.RWL3 == 1)) break;
+
+		OS_TaskDelay(100);
+		interstatus = ADCS_Comm_SetPowerState(&SetVal_056);
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetPowerState(&RetVal_151);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetPowerState(&RetVal_151);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_151.MAG0 != 1) || (RetVal_151.GYR0 != 1) ||
+		(RetVal_151.RWL0 != 1) || (RetVal_151.RWL1 != 1) || (RetVal_151.RWL2 != 1) || (RetVal_151.RWL3 != 1))
+	{
+		status = -3;
+		ADCS_HandleReport(status, ADCS_COMM_10_CC, &RetVal_151, sizeof(RetVal_151));
+		return status;
+	}
+
+	// 2) Check target tracking prerequisite sensors.
+	ADCS_Comm_RawMAGSensorTlm_Paylaod_t RetVal_180 = {0,};
+	ADCS_Comm_RawGYRSensorTlm_Payload_t RetVal_204 = {0,};
+	ADCS_Comm_RawRWLSensorTlm_Payload_t RetVal_205 = {0,};
+
+	OS_TaskDelay(2000);
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);
+
+	cnt_try = 0;
+	while (cnt_try < 3)
+	{
+		if ((interstatus == CFE_SUCCESS) && (RetVal_180.MAG0ValidFlag == 1) && (RetVal_204.GYR0ValidFlag == 1) &&
+			(RetVal_205.RWL0ValidFlag == 1) && (RetVal_205.RWL1ValidFlag == 1) && (RetVal_205.RWL2ValidFlag == 1) && (RetVal_205.RWL3ValidFlag == 1)) break;
+
+		OS_TaskDelay(100);
+		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);
+		OS_TaskDelay(10);
+		interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);
+		cnt_try++;
+	}
+
+	interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawGYRSensor(&RetVal_204);
+	OS_TaskDelay(10);
+	interstatus = interstatus + ADCS_Comm_GetRawRWLSensor(&RetVal_205);
+
+	if ((interstatus != CFE_SUCCESS) || (RetVal_180.MAG0ValidFlag != 1) || (RetVal_204.GYR0ValidFlag != 1) ||
+		(RetVal_205.RWL0ValidFlag != 1) || (RetVal_205.RWL1ValidFlag != 1) || (RetVal_205.RWL2ValidFlag != 1) || (RetVal_205.RWL3ValidFlag != 1))
+	{
+		status = -4;
+		ADCS_HandleReport(status, ADCS_COMM_10_CC, &RetVal_205, sizeof(RetVal_205));
+		return status;
+	}
+
+	// 3) Set the target LLH before entering ConTgtTrack/ConGndTrack.
+	ADCS_ReferenceLLHTargetCmd_Payload_t SetVal_048 = {0,};
+	SetVal_048.TargetLatitude = msg->Payload.target_latitude;
+	SetVal_048.TargetLongiTude = msg->Payload.target_longitude;
+	SetVal_048.TargetAltitude = msg->Payload.target_altitude;
+	interstatus = ADCS_SetReferenceLLHTarget(&SetVal_048);
+	if (interstatus != CFE_SUCCESS)
+	{
+		status = -5;
+		ADCS_HandleReport(status, ADCS_COMM_10_CC, &SetVal_048, sizeof(SetVal_048));
+		return status;
+	}
+
+	interstatus = ADCS_SetPersistConfig();
+	if (interstatus != CFE_SUCCESS)
+	{
+		status = -6;
+		ADCS_HandleReport(status, ADCS_COMM_10_CC, NULL, 0);
+		return status;
+	}
+
+	if (control_mode == 14)
+	{
+		ADCS_Comm_ReferenceRPYvaluesCmd_Payload_t SetVal_054 = {0,};
+		SetVal_054.Roll = 0.0;
+		SetVal_054.Pitch = 0.0;
+		SetVal_054.Yaw = msg->Payload.yaw;
+		interstatus = ADCS_Comm_SetReferenceRPYValues(&SetVal_054);
+		if (interstatus != CFE_SUCCESS)
+		{
+			status = -7;
+			ADCS_HandleReport(status, ADCS_COMM_10_CC, &SetVal_054, sizeof(SetVal_054));
+			return status;
+		}
+	}
+
+	// 4) Bias and settle the wheels, then switch to target tracking.
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t SetVal_042 = {0,};
+	ADCS_Comm_ControlEstimationMode_Cmn_Payload_t RetVal_150 = {0,};
+
+	SetVal_042.MainEstimatorMode = estimator_mode;
+	SetVal_042.BackupEstimatorMode = 5;
+	SetVal_042.ControlMode = 51;
+	SetVal_042.ControlTimeout = 125;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	OS_TaskDelay(100);
+	interstatus = interstatus + ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != estimator_mode) || (RetVal_150.ControlMode != 51))
+	{
+		status = -8;
+		ADCS_HandleReport(status, ADCS_COMM_10_CC, &RetVal_150, sizeof(RetVal_150));
+		SetVal_042.ControlMode = 3;
+		SetVal_042.ControlTimeout = 0;
+		ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		return status;
+	}
+	OS_TaskDelay(120000);
+
+	SetVal_042.ControlMode = 12;
+	SetVal_042.ControlTimeout = 305;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	OS_TaskDelay(100);
+	interstatus = interstatus + ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != estimator_mode) || (RetVal_150.ControlMode != 12))
+	{
+		status = -9;
+		ADCS_HandleReport(status, ADCS_COMM_10_CC, &RetVal_150, sizeof(RetVal_150));
+		SetVal_042.ControlMode = 3;
+		SetVal_042.ControlTimeout = 0;
+		ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		return status;
+	}
+	OS_TaskDelay(300000);
+
+	// 5) Log target tracking response at 5 s intervals for target_duration seconds.
+	FILE *fp = fopen("./cf/adcs_comm_10.bin", "wb");
+	if (fp == NULL)
+	{
+		status = -11;
+		ADCS_HandleReport(status, ADCS_COMM_10_CC, NULL, 0);
+		SetVal_042.ControlMode = 3;
+		SetVal_042.ControlTimeout = 0;
+		ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		return status;
+	}
+
+	SetVal_042.ControlMode = control_mode;
+	SetVal_042.ControlTimeout = target_duration;
+	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	OS_TaskDelay(100);
+	interstatus = interstatus + ADCS_Comm_GetControlEstimationMode(&RetVal_150);
+	if ((interstatus != CFE_SUCCESS) || (RetVal_150.MainEstimatorMode != estimator_mode) || (RetVal_150.ControlMode != control_mode))
+	{
+		status = -10;
+		ADCS_HandleReport(status, ADCS_COMM_10_CC, &RetVal_150, sizeof(RetVal_150));
+		SetVal_042.ControlMode = 3;
+		SetVal_042.ControlTimeout = 0;
+		ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+		return status;
+	}
+
+	ADCS_Comm_COMM_10_Payload_t Comm_10_Tlm_Set = {0,};
+	Comm_10_Tlm_Set.sync_word = 0xADC5;
+
+	CFE_TIME_SysTime_t t_start = CFE_TIME_GetTime();
+	CFE_TIME_SysTime_t t_now = t_start;
+	uint32 dt = 0;
+	while (dt < target_duration)
+	{
+		ADCS_Comm_GetMainEstTlm(&Comm_10_Tlm_Set.MainEst);
+		OS_TaskDelay(10);
+		ADCS_Comm_GetRawRWLSensor(&Comm_10_Tlm_Set.RawRWL);
+		OS_TaskDelay(10);
+		ADCS_Comm_GetControllerTlm(&Comm_10_Tlm_Set.Controller);
+		OS_TaskDelay(10);
+		ADCS_Comm_GetModelsTlm(&Comm_10_Tlm_Set.Models);
+
+		if (fwrite(&Comm_10_Tlm_Set, sizeof(Comm_10_Tlm_Set), 1, fp) != 1)
+		{
+			fclose(fp);
+			status = -12;
+			ADCS_HandleReport(status, ADCS_COMM_10_CC, NULL, 0);
+			SetVal_042.ControlMode = 3;
+			SetVal_042.ControlTimeout = 0;
+			ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+			return status;
+		}
+
+		OS_TaskDelay(5000);
+		t_now = CFE_TIME_GetTime();
+		dt = t_now.Seconds - t_start.Seconds;
+	}
+
+	fclose(fp);
+	SetVal_042.ControlMode = 3;
+	SetVal_042.ControlTimeout = 0;
+	ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	ADCS_HandleReport(CFE_SUCCESS, ADCS_COMM_10_CC, NULL, 0);
 	return CFE_SUCCESS;
 }
 
