@@ -68,7 +68,7 @@ void paybee_kisscam_Main(void) {
         }
     }
     Status = paybee_kisscam_CloseFile(paybee_kisscam_Data.TblHandle);
-    // if (Status != 0) OS_printf("Close Fail App close.\n");
+    // if (Status != 0) PAYBEE_KISSCAM_APP_printf("Close Fail App close.\n");
 
     /**
      * Performance Log Exit Stamp
@@ -174,13 +174,13 @@ CFE_Status_t paybee_kisscam_Init(void) {
      */
     paybee_kisscam_Data.TblHandle = paybee_kisscam_OpenTblFile();
     if (paybee_kisscam_Data.TblHandle < 0) {
-        // OS_printf("paybee_kisscam Table Open Fail.\n");
+        // PAYBEE_KISSCAM_APP_printf("paybee_kisscam Table Open Fail.\n");
         Status = -1;
         return Status;
     }
     Status = paybee_kisscam_ReadFile(paybee_kisscam_Data.TblHandle, &paybee_kisscam_Data.MemSlotStatus, sizeof(paybee_kisscam_Memory_Status_t));
     if (Status < 0) {
-        // OS_printf("Read Error.\n");
+        // PAYBEE_KISSCAM_APP_printf("Read Error.\n");
     }
     else if (Status == sizeof(paybee_kisscam_Memory_Status_t)) Status = CFE_SUCCESS;
 

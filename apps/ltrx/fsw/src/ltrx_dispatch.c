@@ -142,12 +142,6 @@ void LTRX_DispatchCommand(const CFE_SB_Buffer_t *SBBufPtr)
             if (!LTRX_VerifyCmdLength(SBBufPtr, ExpectedNoArgsSize, CC)) return;
             (void)LTRX_ResetDeviceCmdCountersCmd((const LTRX_ResetDeviceCmdCountersCmd_t *)SBBufPtr);
             break;
-        
-        case LTRX_SEND_STATUS_CC:
-            if (!LTRX_VerifyCmdLength(SBBufPtr, ExpectedNoArgsSize, CC)) return;
-            status = LTRX_SendStatusCmd(SBBufPtr);
-            LTRX_CountCmdResult(status);
-            break;
 
         /* ---- Session triggers (dispatch counts result) ---- */
         case LTRX_SESSION_START_DOWNLINK_CC:
@@ -183,29 +177,6 @@ void LTRX_DispatchCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
-        /* ---- Queries (dispatch counts result) ---- */
-        case LTRX_QUERY_BEACON_STATUS_CC:
-            if (!LTRX_VerifyCmdLength(SBBufPtr, ExpectedNoArgsSize, CC)) return;
-            status = LTRX_QueryBeaconStatusCmd((const LTRX_QueryBeaconStatusCmd_t *)SBBufPtr);
-            LTRX_CountCmdResult(status);
-            if (status != CFE_SUCCESS)
-            {
-                CFE_EVS_SendEvent(LTRX_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                                  "LTRX: QUERY_BEACON_STATUS failed (RC=0x%08lX)", (unsigned long)status);
-            }
-            break;
-
-        case LTRX_QUERY_GNSS_INFO_CC:
-            if (!LTRX_VerifyCmdLength(SBBufPtr, ExpectedNoArgsSize, CC)) return;
-            status = LTRX_QueryGnssInfoCmd((const LTRX_QueryGnssInfoCmd_t *)SBBufPtr);
-            LTRX_CountCmdResult(status);
-            if (status != CFE_SUCCESS)
-            {
-                CFE_EVS_SendEvent(LTRX_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                                  "LTRX: QUERY_GNSS_INFO failed (RC=0x%08lX)", (unsigned long)status);
-            }
-            break;
-
         /* ---- Downstream gating (dispatch counts result) ---- */
         case LTRX_DOWNSTREAM_ENABLE_CC:
             if (!LTRX_VerifyCmdLength(SBBufPtr, ExpectedNoArgsSize, CC)) return;
@@ -227,12 +198,6 @@ void LTRX_DispatchCommand(const CFE_SB_Buffer_t *SBBufPtr)
                 CFE_EVS_SendEvent(LTRX_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                                   "LTRX: DOWNSTREAM_DISABLE failed (RC=0x%08lX)", (unsigned long)status);
             }
-            break;
-
-        case LTRX_TEST_CSP_PING_CC:
-            if (!LTRX_VerifyCmdLength(SBBufPtr, ExpectedNoArgsSize, CC)) return;
-            status = LTRX_TestCspPingCmd((const LTRX_TestCspPingCmd_t *)SBBufPtr);
-            LTRX_CountCmdResult(status);
             break;
 
         default:

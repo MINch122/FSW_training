@@ -28,10 +28,7 @@
 
 #include "common_types.h"
 #include "stx_fcncodes.h"
-
-#ifndef ESUP_MAX_DATA_LENGTH
-#define ESUP_MAX_DATA_LENGTH  1472
-#endif
+#include "esup.h"
 
 
 typedef struct {
@@ -120,7 +117,7 @@ typedef struct __attribute__((__packed__)){        // __attribute__((__packed__)
     uint16_t data_length;                           // 2-byte
     int32_t  file_handle;                           // 4-byte
     uint32_t packet_number;                         // 4-byte
-    uint8_t  packet_data[ESUP_MAX_DATA_LENGTH];
+    uint8_t  packet_data[ESUP_MAX_WRITE_LENGTH];
 } STX_ESUP_WRITEFILE_Payload_t;
 
 typedef struct __attribute__((__packed__)){
@@ -176,7 +173,7 @@ typedef struct __attribute__((__packed__))
     uint8_t  commad_status;
     uint16_t  Packet_length;
     uint32_t  Packet_number; 
-    uint8_t  file_data[ESUP_MAX_DATA_LENGTH]; 
+    uint8_t  file_data[ESUP_MAX_WRITE_LENGTH]; 
 } STX_FILE_READ_t;
 
 typedef struct STX_GET_U8
@@ -213,6 +210,7 @@ typedef struct STX_FILE_Tlm_Payload
 
 typedef struct STX_GET_ALLPRAM
 {
+    uint8_t command_status;
     uint8  symbol_rate;
     uint8  transmit_power;
     uint8  modcod;
@@ -225,6 +223,7 @@ typedef struct STX_GET_ALLPRAM
 
 typedef struct STX_GET_Report
 {
+    uint8_t command_status;
     uint8 SystemState;  
     uint8 StatusFlags;  
     uint16 Reserved;   

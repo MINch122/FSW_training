@@ -35,6 +35,8 @@
 /***********************************************************************/
 #define EPS_PIPE_DEPTH 32 /* Depth of the Command Pipe for Application */
 
+#define EPS_BCN_MSG_LIMIT 8 /* Per-MID queue limit for scheduled beacon requests */
+
 #define EPS_PIPE_NAME  "EPS_PIPE"
 
 #define EPS_NUMBER_OF_TABLES 1 /* Number of Example Table(s) */

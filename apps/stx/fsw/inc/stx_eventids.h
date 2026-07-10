@@ -106,4 +106,6 @@ STK_rpt_tpye_ACK_ERROR
 #define STX_rpt_type_ACK_ERROR                           58
 #define STX_rpt_type_FINAL_ACK_ERROR                     59
 
+#define STX_MODULEID_INIT_EID                            60
+
 #endif /* STX_EVENTS_H */

@@ -73,9 +73,12 @@ void GPS_Device_Task(void)
              * Returning from the main level indicates a read error.
              */
             DeviceData.counters.readErrorCount++;
+            if (ret == OEM_ERR_IO_IFACE_INDEX)
+                return;
             break;
 
         case TASK_RESPONSE:
+            /* The current response handler does not define response-layer errors. */
             DeviceData.counters.responseCount++;
             DeviceData.counters.lastResponseMessageId = ctx.message_id;
             DeviceData.counters.lastResponseEnum = ctx.response_id;
@@ -155,9 +158,9 @@ int GPS_Device_Init(void)
                                       115200);
 
     status = oem_io_init_interface(GPS_PORT_INDEX_COM1,
-                             0,
-                             oem_io_driver_serial_write,
-                             oem_io_driver_serial_read);
+                                   0, /* use OEM_IO_DEFAULT_READBUF_SIZE */
+                                   oem_io_driver_serial_write,
+                                   oem_io_driver_serial_read);
     if (status != OEM_OK) {
         CFE_EVS_SendEvent(GPS_DEV_HANDLER_INIT_ERR_EID,
                           CFE_EVS_EventType_ERROR,

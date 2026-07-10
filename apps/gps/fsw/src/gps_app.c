@@ -31,11 +31,17 @@
 #include "gps_version.h"
 
 #include "gps_dev_oem.h"
+#include "rpt_interface_cfg.h"
 
 /*
 ** global data
 */
 GPS_AppData_t GPS_AppData;
+
+static uint8 GPS_NormalizeReportType(int32 retCode, uint8 retType)
+{
+    return (retCode == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : retType;
+}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * *  * * * * **/
 /*                                                                            */
@@ -192,24 +198,37 @@ void GPS_SendReport(const void* cmd,
                     int32 retCode,
                     uint8 retType)
 {
-    CFE_SB_MsgId_t cmdMid;
+    CFE_SB_MsgId_t    cmdMid;
     CFE_MSG_FcnCode_t cmdCode;
+    uint16            copySize = 0;
 
     CFE_MSG_GetMsgId(cmd, &cmdMid);
     CFE_MSG_GetFcnCode(cmd, &cmdCode);
+    if (data != NULL && dataSize > 0)
+    {
+        copySize = (dataSize > sizeof(GPS_AppData.Report.Payload.ReturnValue))
+                       ? sizeof(GPS_AppData.Report.Payload.ReturnValue)
+                       : dataSize;
+    }
 
+    /* Fixed size: RPT requires exactly sizeof(RPT_ReportTlm_t) (== sizeof of
+     * GPS_AppData.Report) or it drops the message. The actual data length is
+     * carried in Payload.ReturnDataSize, not in the message length. */
     CFE_MSG_Init(CFE_MSG_PTR(GPS_AppData.Report.TelemetryHeader),
                  CFE_SB_ValueToMsgId(GPS_REPORT_TLM_MID),
                  sizeof(GPS_AppData.Report));
     GPS_AppData.Report.Payload.MsgID = CFE_SB_MsgIdToValue(cmdMid);
     GPS_AppData.Report.Payload.CommandCode = cmdCode;
-    GPS_AppData.Report.Payload.ReturnType = retType;
+    GPS_AppData.Report.Payload.ReturnType = GPS_NormalizeReportType(retCode, retType);
     GPS_AppData.Report.Payload.ReturnCode = retCode;
-    uint16 CopySize = dataSize > RPT_RET_VALUE_BUF_SIZE ? RPT_RET_VALUE_BUF_SIZE : dataSize;
-    GPS_AppData.Report.Payload.ReturnDataSize = CopySize;
-    if (data && dataSize)
+    GPS_AppData.Report.Payload.ReturnDataSize = copySize;
+    memset(GPS_AppData.Report.Payload.ReturnValue, 0, sizeof(GPS_AppData.Report.Payload.ReturnValue));
+    if (copySize > 0)
+    {
         memcpy(GPS_AppData.Report.Payload.ReturnValue,
                data,
-               CopySize);
-   CFE_SB_TransmitMsg(CFE_MSG_PTR(GPS_AppData.Report.TelemetryHeader), true);
+               copySize);
+    }
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(GPS_AppData.Report.TelemetryHeader));
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(GPS_AppData.Report.TelemetryHeader), true);
 }

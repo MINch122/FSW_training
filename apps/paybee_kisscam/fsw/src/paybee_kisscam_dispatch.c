@@ -175,7 +175,8 @@ void paybee_kisscam_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
         /* RPT */
         paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
         if (BufPtr == NULL) break;
-        if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID), sizeof(paybee_kisscam_ReportTlm_t) != CFE_SUCCESS)) {
+        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
+                         sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
             CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
             break;
         }
@@ -229,7 +230,8 @@ void paybee_kisscam_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
         /* RPT */
         paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
         if (BufPtr == NULL) break;
-        if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID), sizeof(paybee_kisscam_ReportTlm_t) != CFE_SUCCESS)) {
+        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
+                         sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
             CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
             break;
         }

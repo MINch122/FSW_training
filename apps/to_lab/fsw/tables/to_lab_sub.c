@@ -48,14 +48,15 @@
 
 #include "rpt_msgids.h"
 #include "eps_msgids.h"
-
+#include "pay_slt_msgids.h"
 #include "hk_msgids.h"
 
 TO_LAB_Subs_t TO_LAB_Subs = {.Subs = {/* CFS App Subscriptions */
                                       {CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID), {0, 0}, 4}, // Beacon packet
                                       {CFE_SB_MSGID_WRAP_VALUE(RPT_REPORT_TLM_MID), {0, 0}, 10},
                                       {CFE_SB_MSGID_WRAP_VALUE(RPT_CRITICAL_TLM_MID), {0, 0}, 10},
-                                    //   {CFE_SB_MSGID_WRAP_VALUE(EPS_REPORT_MID), {0, 0}, 10},
+                                      {CFE_SB_MSGID_WRAP_VALUE(PAY_SLT_RPT_TLM_MID), {0, 0}, 10},
+
                                       {CFE_SB_MSGID_WRAP_VALUE(FM_FILE_INFO_TLM_MID), {0, 0}, 4},
                                       {CFE_SB_MSGID_WRAP_VALUE(FM_DIR_LIST_TLM_MID), {0, 0}, 4},
                                       {CFE_SB_MSGID_WRAP_VALUE(FM_OPEN_FILES_TLM_MID), {0, 0}, 4},

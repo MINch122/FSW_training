@@ -58,7 +58,8 @@ bool GPS_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
 
         GPS_AppData.Counters.ErrCounter++;
     
-        GPS_SendReport(MsgPtr, &ActualLength, sizeof(ActualLength), -1, GPS_MISSION_REPORT_RETTYPE_APP); // TODO: define invalid length error.
+        GPS_SendReport(MsgPtr, &ActualLength, sizeof(ActualLength), CFE_STATUS_WRONG_MSG_LENGTH,
+                       GPS_MISSION_REPORT_RETTYPE_APP);
     }
 
     return result;
@@ -314,7 +315,8 @@ void GPS_ProcessDeviceCommand(const CFE_SB_Buffer_t* SBBufPtr)
             GPS_AppData.Counters.ErrCounter++;
             CFE_EVS_SendEvent(GPS_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid device command code: CC = %d",
                               CommandCode);
-            GPS_SendReport(SBBufPtr, &CommandCode, sizeof(CommandCode), -1, GPS_MISSION_REPORT_RETTYPE_APP); // TODO: define invalid cc error.
+            GPS_SendReport(SBBufPtr, &CommandCode, sizeof(CommandCode), CFE_STATUS_BAD_COMMAND_CODE,
+                           GPS_MISSION_REPORT_RETTYPE_APP);
             break;
     }
 }

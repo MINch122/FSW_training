@@ -14,16 +14,11 @@
 extern CFE_SRL_IO_Handle_t *Handle;
 uint32_t open_file_size = 0;
 CFE_SRL_IO_Param_t Params = {0,};
-uint16_t STX_timeout = 1000; //[ms]
+uint16_t STX_timeout = 30; //[ms]
 static uint16_t ESUP_ModuleId = MODULE_ID;
 
 int32_t ESUP_SetModuleId(uint16_t module_id)
 {
-    if (module_id != STX_MODULE_ID_A && module_id != STX_MODULE_ID_B)
-    {
-        return STX_ESUP_MODULE_ID_ERR;
-    }
-
     ESUP_ModuleId = module_id;
     return 0;
 }
@@ -47,7 +42,7 @@ static uint16_t ESUP_Encoder(uint16_t comm_stt, uint16_t comm, uint16_t type, vo
     memcpy(packet->DCP, data, length);                                // 인자로 받은 data를 ESUP packet의 데이터 영역인 DCP로 data length만큼 복사
     uint32_t c32 = crc32(0, packet, sizeof(ESUP_Header_t) + length);  // CRC32 계산
     memcpy(packet->DCP + length, &c32, sizeof(c32));                  // CRC32 bit 추가
-    memset(packet->DCP + length + sizeof(c32), 0, sizeof(padlen));    // zero padding
+    memset(packet->DCP + length + sizeof(c32), 0, padlen);            // zero padding
     // ESUP packet 완성
 
     return length + padlen + sizeof(c32) + sizeof(ESUP_Header_t);                   // ESUP packet의 전체 길이 return
@@ -173,7 +168,7 @@ int32_t ESUP_Receive(ESUP_Packet_t* packet, uint16_t timeout) {
      */
     // packetSize = sizeof(*packet) + packet->header.length;
     packetSize = packet->header.length + 4;
-    packetSize += 16 - (sizeof(ESUP_Header_t)+ packetSize) % 16;
+    packetSize += ((sizeof(ESUP_Header_t) + packetSize) % 16) ? 16 - ((sizeof(ESUP_Header_t)+ packetSize) % 16) : 0;
     
     if (packetSize > ESUP_MAX_PACKET_LENGTH) {
         return STX_ESUP_DATAS_ERR;
@@ -187,7 +182,7 @@ int32_t ESUP_Receive(ESUP_Packet_t* packet, uint16_t timeout) {
     Params.Timeout = STX_timeout;
     ret = CFE_SRL_ApiRead(Handle, &Params);
 
-    if (ret <= 0) {
+    if (ret < 0) {
         return ret;
     }
     return 0;
@@ -200,7 +195,7 @@ int32_t ESUP_ACK_CMD(uint16_t comm_stt, uint16_t comm, uint16_t type)
     int32_t retu_status = 0;
 
     uint16_t lencal = sizeof(ESUP_Header_t) + 4;
-    int padlen = 16 - lencal % 16;            
+    int padlen = (lencal % 16) ? (16 - lencal % 16) : 0;            
     lencal += padlen;
 
     char temppacket[lencal];
@@ -231,13 +226,13 @@ int32_t ESUP_ACK_CMD(uint16_t comm_stt, uint16_t comm, uint16_t type)
     return retu_status;
 }
 
-int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * txdata, uint16_t txlength, void * rxdata, uint16_t rxlength)
+int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * txdata, uint16_t txlength, ESUP_Packet_t * rxdata, uint16_t rxlength)
 {   
     uint16_t retu_len = 0;
     int32_t retu_status = 0;
 
     uint16_t lencal = sizeof(ESUP_Header_t) + txlength + 4;
-    int padlen = 16 - lencal % 16;            
+    int padlen = (lencal % 16) ? (16 - lencal % 16) : 0;            
     lencal += padlen;
 
     char temppacket[lencal];
@@ -250,7 +245,7 @@ int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * txdata, uin
 
     char readbuf[rx_lencal];           
     memset(readbuf, 0, sizeof(readbuf));  
-    ESUP_Packet_t * reply = (ESUP_Packet_t *)readbuf;
+    ESUP_Packet_t *rxbuf = (ESUP_Packet_t *)readbuf;
   
     OS_printf("Write data Bytes: %u\n", txlength);
     OS_printf("Write Bytes : %u\n", lencal);
@@ -279,17 +274,19 @@ int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * txdata, uin
     
     usleep(50000); //[micro s] 
 
-    retu_status = ESUP_Receive(reply, STX_timeout);
+    retu_status = ESUP_Receive(rxbuf, STX_timeout);
 
     if(retu_status < 0)
-    {   
+    {
         OS_printf("ESUP receive fail\n");
         OS_printf("RS485 has no reply.\n");
         OS_printf("%d\n", retu_status); 
         return STX_ESUP_READ_ERR;
     }
 
-    retu_len = ESUP_Decoder(reply);
+    memcpy(rxdata, rxbuf, sizeof(ESUP_Packet_t) + rxbuf->header.length);
+
+    retu_len = ESUP_Decoder(rxdata);
     if(retu_len <= 0)
     {
         OS_printf("ESUP Read Failed!\n");
@@ -301,24 +298,17 @@ int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * txdata, uin
         return STX_ESUP_MODULE_ID_ERR;
     }
     /********************************************************************************* */
-    if (reply->header.command == 0x0108 && reply->header.length != 0x0000 && reply->DCP[0] == 0x00){
-        memcpy(&open_file_size, &(reply->DCP[5]), sizeof(uint32_t));
+    if (rxdata->header.command == 0x0108 && rxdata->header.length != 0x0000 && rxdata->DCP[0] == 0x00){
+        memcpy(&open_file_size, &(rxdata->DCP[5]), sizeof(uint32_t));
         OS_printf("open file size : %d\n", open_file_size);
     }
     /********************************************************************************* */
 
-    OS_printf("ESUP_read success via RS485.\n");
+    if (rxdata->header.length != rxlength){
+        OS_printf("data length mismatch \n");
+    }
 
-    if(rxlength == 0) 
-        memcpy(rxdata, &reply->header.com_stt,2);
-    else if (rxlength>0 && rxlength >= reply->header.length)
-    {
-        memcpy(rxdata, reply->DCP,reply->header.length);
-    }
-    else
-    {
-        OS_printf("Return data length error. \n");
-    }
+    OS_printf("ESUP_read success via RS485.\n");
 
     return retu_status;
 }

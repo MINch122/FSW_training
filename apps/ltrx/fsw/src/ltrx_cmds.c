@@ -26,39 +26,45 @@
 
 #include <string.h>
 
-/* Report helpers */
-
-static void LTRX_ReportBegin(uint8 cc)
+void LTRX_HandleReport(CFE_Status_t Status, uint8 CC, const void *Data, uint16 DataSize)
 {
-    memset(&LTRX_AppData.RptPkt, 0, sizeof(LTRX_AppData.RptPkt));
+    CFE_SB_Buffer_t *BufPtr = CFE_SB_AllocateMessageBuffer(sizeof(LTRX_ReportTlm_t));
+    LTRX_ReportTlm_t *Report;
+    uint16 CopySize;
 
-    (void)CFE_MSG_Init(CFE_MSG_PTR(LTRX_AppData.RptPkt.TelemetryHeader),
-                       CFE_SB_ValueToMsgId(LTRX_RPT_TLM_MID),
-                       sizeof(LTRX_AppData.RptPkt));
-
-    LTRX_AppData.RptPkt.Report.MsgID          = LTRX_CMD_MID;
-    LTRX_AppData.RptPkt.Report.CommandCode    = cc;
-    LTRX_AppData.RptPkt.Report.ReturnDataSize = 0;
-}
-
-static void LTRX_ReportSetAppStatus(CFE_Status_t status)
-{
-    if (status == CFE_SUCCESS)
+    if (BufPtr == NULL)
     {
-        LTRX_AppData.RptPkt.Report.ReturnType = RPT_RETTYPE_SUCCESS;
-        LTRX_AppData.RptPkt.Report.ReturnCode = (uint32)CFE_SUCCESS;
+        return;
     }
-    else
-    {
-        LTRX_AppData.RptPkt.Report.ReturnType = RPT_RETTYPE_APP;
-        LTRX_AppData.RptPkt.Report.ReturnCode = (uint32)status;
-    }
-}
 
-static void LTRX_ReportEnd(void)
-{
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(LTRX_AppData.RptPkt.TelemetryHeader));
-    (void)CFE_SB_TransmitMsg(CFE_MSG_PTR(LTRX_AppData.RptPkt.TelemetryHeader), true);
+    Report = (LTRX_ReportTlm_t *)BufPtr;
+    memset(Report, 0, sizeof(*Report));
+
+    if (CFE_MSG_Init(CFE_MSG_PTR(Report->TelemetryHeader), CFE_SB_ValueToMsgId(LTRX_RPT_TLM_MID),
+                     sizeof(LTRX_ReportTlm_t)) != CFE_SUCCESS)
+    {
+        CFE_SB_ReleaseMessageBuffer(BufPtr);
+        return;
+    }
+
+    CopySize = (DataSize > RPT_RET_VALUE_BUF_SIZE) ? RPT_RET_VALUE_BUF_SIZE : DataSize;
+
+    Report->Report.MsgID          = LTRX_CMD_MID;
+    Report->Report.CommandCode    = CC;
+    Report->Report.ReturnType     = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_APP;
+    Report->Report.ReturnCode     = (uint32)Status;
+    Report->Report.ReturnDataSize = CopySize;
+
+    if (CopySize > 0 && Data != NULL)
+    {
+        memcpy(Report->Report.ReturnValue, Data, CopySize);
+    }
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report->TelemetryHeader));
+    if (CFE_SB_TransmitBuffer(BufPtr, true) != CFE_SUCCESS)
+    {
+        CFE_SB_ReleaseMessageBuffer(BufPtr);
+    }
 }
 
 /* Helpers */
@@ -73,7 +79,6 @@ static uint8 LTRX_SatU32ToU8(uint32 v)
 static void LTRX_ReportHousekeeping(void)
 {
     LTRX_HkTlm_Payload_t Payload;
-    uint16 CopySize;
 
     memset(&Payload, 0, sizeof(Payload));
 
@@ -94,12 +99,7 @@ static void LTRX_ReportHousekeeping(void)
     }
 
     LTRX_APP_printf("LTRX: HK report requested\n");
-    LTRX_ReportBegin(0);
-    LTRX_ReportSetAppStatus(CFE_SUCCESS);
-    CopySize = sizeof(Payload) > RPT_RET_VALUE_BUF_SIZE ? RPT_RET_VALUE_BUF_SIZE : (uint16)sizeof(Payload);
-    LTRX_AppData.RptPkt.Report.ReturnDataSize = CopySize;
-    memcpy(LTRX_AppData.RptPkt.Report.ReturnValue, &Payload, CopySize);
-    LTRX_ReportEnd();
+    LTRX_HandleReport(CFE_SUCCESS, 0, &Payload, sizeof(Payload));
 }
 
 /* BCN/Status telemetry sender */
@@ -155,19 +155,6 @@ CFE_Status_t LTRX_SendHkCmd(const CFE_SB_Buffer_t *SBBufPtr)
     return CFE_SUCCESS;
 }
 
-CFE_Status_t LTRX_SendStatusCmd(const CFE_SB_Buffer_t *SBBufPtr)
-{
-    (void)SBBufPtr;
-
-    LTRX_ReportBegin(0xFEu);
-    LTRX_ReportSetAppStatus(CFE_SUCCESS);
-    LTRX_ReportEnd();
-
-    LTRX_SendBcnTlm();
-
-    return CFE_SUCCESS;
-}
-
 /* ---- Basic app CC ---- */
 
 CFE_Status_t LTRX_NoopCmd(const LTRX_NoopCmd_t *Msg)
@@ -183,11 +170,7 @@ CFE_Status_t LTRX_NoopCmd(const LTRX_NoopCmd_t *Msg)
                       (unsigned)LTRX_AppData.DeviceErrCounter);
 
     static const char NoopReport[] = "Yosi In Space";
-    LTRX_ReportBegin(LTRX_NOOP_CC);
-    LTRX_ReportSetAppStatus(CFE_SUCCESS);
-    LTRX_AppData.RptPkt.Report.ReturnDataSize = sizeof(NoopReport);
-    memcpy(LTRX_AppData.RptPkt.Report.ReturnValue, NoopReport, sizeof(NoopReport));
-    LTRX_ReportEnd();
+    LTRX_HandleReport(CFE_SUCCESS, LTRX_NOOP_CC, NoopReport, sizeof(NoopReport));
 
     return CFE_SUCCESS;
 }
@@ -256,20 +239,6 @@ CFE_Status_t LTRX_SessionResetStateCmd(const LTRX_SessionResetStateCmd_t *Msg)
     return LTRX_SessionRequestReset();
 }
 
-CFE_Status_t LTRX_QueryBeaconStatusCmd(const LTRX_QueryBeaconStatusCmd_t *Msg)
-{
-    (void)Msg;
-    LTRX_SendBcnTlm();
-    return CFE_SUCCESS;
-}
-
-CFE_Status_t LTRX_QueryGnssInfoCmd(const LTRX_QueryGnssInfoCmd_t *Msg)
-{
-    (void)Msg;
-    LTRX_SendBcnTlm();
-    return CFE_SUCCESS;
-}
-
 /* ---- Downstream gating ---- */
 
 CFE_Status_t LTRX_DownstreamEnableCmd(const LTRX_DownstreamEnableCmd_t *Msg)
@@ -292,68 +261,4 @@ CFE_Status_t LTRX_DownstreamDisableCmd(const LTRX_DownstreamDisableCmd_t *Msg)
     CFE_EVS_SendEvent(LTRX_DOWNSTREAM_DISABLE_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "LTRX: DOWNSTREAM_DISABLE");
     return CFE_SUCCESS;
-}
-
-/* can test */
-CFE_Status_t LTRX_TestCspPingCmd(const LTRX_TestCspPingCmd_t *Msg)
-{
-    (void)Msg;
-
-    int32_t rc;
-
-    rc = LTRX_SendMessageHeader(0, 0, 0);
-    if (rc != LTRX_SUCCESS)
-    {
-        CFE_EVS_SendEvent(LTRX_TEST_CSP_PING_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "LTRX CSP_PING: TX failed rc=%d (node=%d)",
-                          (int)rc, (int)CSP_NODE_LTRX);
-        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-    }
-
-    CFE_EVS_SendEvent(LTRX_TEST_CSP_PING_INF_EID, CFE_EVS_EventType_INFORMATION,
-                      "LTRX CSP_PING: Type5 sent (node=%d), waiting...",
-                      (int)CSP_NODE_LTRX);
-
-    LTRX_BeaconCmdHeader_t hdr;
-    uint8_t  rx_payload[64];
-    uint16_t actual_len = 0;
-
-    rc = LTRX_ReceiveCommand(&hdr, rx_payload, sizeof(rx_payload),
-                             &actual_len, LTRX_CMD_TIMEOUT_MS);
-
-    if (rc == LTRX_ERROR_TIMEOUT)
-    {
-        CFE_EVS_SendEvent(LTRX_TEST_CSP_PING_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "LTRX CSP_PING: TIMEOUT (node=%d port=%d)",
-                          (int)CSP_NODE_LTRX, (int)LTRX_CSP_RX_PORT);
-        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-    }
-
-    if (rc != LTRX_SUCCESS)
-    {
-        CFE_EVS_SendEvent(LTRX_TEST_CSP_PING_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "LTRX CSP_PING: RX failed rc=%d", (int)rc);
-        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-    }
-
-    if (hdr.TypeID == LTRX_BEACON_CMD_PREV_CMD_ACK)
-    {
-        uint8_t ack_status = 0;
-        if (actual_len >= 10)
-        {
-            ack_status = rx_payload[9];
-        }
-
-        CFE_EVS_SendEvent(LTRX_TEST_CSP_PING_INF_EID, CFE_EVS_EventType_INFORMATION,
-                          "LTRX CSP_PING: OK Type15 ACK (From=%d st=%d) CAN link UP",
-                          (int)hdr.FromID, (int)ack_status);
-        return CFE_SUCCESS;
-    }
-    else
-    {
-        CFE_EVS_SendEvent(LTRX_TEST_CSP_PING_INF_EID, CFE_EVS_EventType_INFORMATION,
-                          "LTRX CSP_PING: got TypeID=%d (expected 15) From=%d len=%u - link UP",
-                          (int)hdr.TypeID, (int)hdr.FromID, (unsigned)actual_len);
-        return CFE_SUCCESS;
-    }
 }

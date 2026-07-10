@@ -57,6 +57,8 @@ void SCH_LAB_AppMain(void)
         RunStatus = CFE_ES_RunStatus_APP_ERROR;
     }
 
+    OS_TaskDelay(5000);
+
     /* Loop Forever */
     while (CFE_ES_RunLoop(&RunStatus) == true)
     {

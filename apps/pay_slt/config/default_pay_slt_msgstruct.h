@@ -1,0 +1,109 @@
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ ************************************************************************/
+
+#ifndef SLT_IFB_MSGSTRUCT_H
+#define SLT_IFB_MSGSTRUCT_H
+
+#include "pay_slt_mission_cfg.h"
+#include "pay_slt_msgdefs.h"
+#include "cfe_msg_hdr.h"
+#include "rpt_interface_cfg.h"
+
+typedef struct __attribute__((__packed__))
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+} PAY_SLT_NoArgsCmd_t;
+
+typedef struct __attribute__((__packed__))
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    uint8 Arg;
+} PAY_SLT_U8Cmd_t;
+
+typedef struct __attribute__((__packed__))
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    uint16 Arg;
+} PAY_SLT_U16Cmd_t;
+
+typedef struct __attribute__((__packed__))
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    uint32 Arg;
+} PAY_SLT_U32Cmd_t;
+
+typedef struct __attribute__((__packed__))
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    char Arg[PAY_SLT_RTABLE_STR_SIZE];
+} PAY_SLT_StrCmd_t;
+
+typedef PAY_SLT_NoArgsCmd_t SLT_IFB_NoopCmd_t;
+typedef PAY_SLT_NoArgsCmd_t SLT_IFB_ResetCountersCmd_t;
+typedef PAY_SLT_NoArgsCmd_t SLT_IFB_SendHkCmd_t;
+typedef PAY_SLT_NoArgsCmd_t SLT_IFB_SendBcnCmd_t;
+typedef PAY_SLT_U8Cmd_t     PAY_SLT_SetBcnEnabledCmd_t;
+
+typedef PAY_SLT_NoArgsCmd_t PAY_SLT_IFB_CSP_CMP_Cmd_t;
+typedef PAY_SLT_NoArgsCmd_t PAY_SLT_IFB_CSP_PING_Cmd_t;
+typedef PAY_SLT_NoArgsCmd_t PAY_SLT_IFB_CSP_PS_Cmd_t;
+typedef PAY_SLT_NoArgsCmd_t PAY_SLT_IFB_CSP_MEM_FREE_Cmd_t;
+typedef PAY_SLT_NoArgsCmd_t PAY_SLT_IFB_CSP_REBOOT_Cmd_t;
+typedef PAY_SLT_NoArgsCmd_t PAY_SLT_IFB_CSP_BUF_FREE_Cmd_t;
+typedef PAY_SLT_NoArgsCmd_t PAY_SLT_IFB_CSP_UPTIME_Cmd_t;
+typedef PAY_SLT_NoArgsCmd_t PAY_SLT_IFB_CSP_GNDWDT_Cmd_t;
+
+
+typedef struct __attribute__((__packed__))
+{
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    SLT_IFB_HkTlm_Payload_t Payload;
+} SLT_IFB_HkTlm_t;
+
+typedef struct __attribute__((__packed__))
+{
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    SLT_IFB_BcnTlm_Payload_t Payload;
+} SLT_IFB_BcnTlm_t;
+
+typedef struct __attribute__((__packed__))
+{
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    RPT_Report_t Report;
+} SLT_IFB_RPT_t;
+
+
+/* 만들어 보아요 */
+
+typedef struct __attribute__((packed))
+{
+    CFE_MSG_CommandHeader_t       CommandHeader;
+    PAY_SLT_ParGet_Payload_t      Payload;
+} PAY_SLT_ParGetCmd_t;
+
+typedef struct __attribute__((packed))
+{
+    CFE_MSG_CommandHeader_t       CommandHeader;
+    PAY_SLT_ParSet_Payload_t      Payload;
+} PAY_SLT_ParSetCmd_t;
+
+typedef struct __attribute__((packed))
+{
+    CFE_MSG_CommandHeader_t       CommandHeader;
+    PAY_SLT_ScanFiles_Payload_t   Payload;
+} PAY_SLT_ScanFilesCmd_t;
+
+typedef struct __attribute__((packed))
+{
+    CFE_MSG_CommandHeader_t        CommandHeader;
+    PAY_SLT_DownloadFile_Payload_t Payload;
+} PAY_SLT_DownloadFileCmd_t;
+
+typedef struct __attribute__((packed))
+{
+    CFE_MSG_CommandHeader_t        CommandHeader;
+    PAY_SLT_GetFullTable_Payload_t Payload;
+} PAY_SLT_GetFullTableCmd_t;
+
+#endif

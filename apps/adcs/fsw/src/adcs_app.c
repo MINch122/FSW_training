@@ -63,6 +63,8 @@ void ADCS_AppMain(void)
         ADCS_AppData.RunStatus = CFE_ES_RunStatus_APP_ERROR;
     }
 
+    OS_TaskDelay(5000);
+
     /*
     ** Adcs App Runloop
     */

@@ -286,6 +286,8 @@ void EPS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
         default:
             CFE_EVS_SendEvent(EPS_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                               "EPS: invalid command packet");
+            EPS_SendReport(&SBBufPtr->Msg, &CommandCode, sizeof(CommandCode), CFE_STATUS_BAD_COMMAND_CODE,
+                           RPT_RETTYPE_APP);
             break;
     }
 }

@@ -14,7 +14,7 @@
 /**
  * @brief Assemble an OEM Command packet and send it. The binary header and
  *        the CRC are automatically appended. Uses oem_io_write() to send.
- * 
+ *
  * @param iface_idx  I/O interface to send the command over.
  * @param msg_id      Command Message ID.
  * @param body       Message body (header and CRC not inclusive).
@@ -31,7 +31,7 @@ int oem_cmd_publish(int iface_idx,
 
 /**
  * @brief Send the LOG command. See the Reference Manual for details.
- * 
+ *
  * @param iface_idx I/O interface to send the command over.
  * @param msg_id    Log Message ID to request.
  * @param port      OEM port to route the Log. See oem_port_t.
@@ -49,14 +49,14 @@ int oem_cmd_LOG(int iface_idx,
                 oem_enum trigger,
                 oem_double period,
                 oem_double offset,
-                oem_enum hold);  
+                oem_enum hold);
 
 /**
  * @brief Send the LOG command with the ONCE trigger. See oem_cmd_LOG().
- * 
+ *
  * @NOTE: If the requested log is currently unavailable, the next one will be
  *        output upon generation.
- * 
+ *
  * @return See oem_cmd_publish().
  */
 static inline int oem_cmd_LOG_once(int iface_idx,
@@ -75,7 +75,7 @@ static inline int oem_cmd_LOG_once(int iface_idx,
 
 /**
  * @brief Send the LOG command with the ONTIME trigger. See oem_cmd_LOG().
- * 
+ *
  * @return See oem_cmd_publish().
  */
 static inline int oem_cmd_LOG_ontime(int iface_idx,
@@ -96,7 +96,7 @@ static inline int oem_cmd_LOG_ontime(int iface_idx,
 
 /**
  * @brief Send the LOG command with the ONCHANGED trigger. See oem_cmd_LOG().
- * 
+ *
  * @return See oem_cmd_publish().
  */
 static inline int oem_cmd_LOG_onchanged(int iface_idx,
@@ -115,7 +115,7 @@ static inline int oem_cmd_LOG_onchanged(int iface_idx,
 
 /**
  * @brief Send the LOG command with the ONNEW trigger. See oem_cmd_LOG().
- * 
+ *
  * @return See oem_cmd_publish().
  */
 static inline int oem_cmd_LOG_onnew(int iface_idx,
@@ -134,12 +134,12 @@ static inline int oem_cmd_LOG_onnew(int iface_idx,
 
 /**
  * @brief Send the UNLOG command. See the Reference Manual for details.
- * 
+ *
  * @param iface_idx I/O interface to send the command over.
  * @param port      OEM port where the Log is being sent on.
  * @param msg_id    Log Message ID to unlog.
- * @param msg_type   
- * @return See oem_cmd_publish(). 
+ * @param msg_type
+ * @return See oem_cmd_publish().
  */
 int oem_cmd_UNLOG(int iface_idx,
                   oem_enum port,
@@ -148,26 +148,26 @@ int oem_cmd_UNLOG(int iface_idx,
 
 /**
  * @brief Send the UNLOGALL command. See the Reference Manual for details.
- * 
+ *
  * @return See oem_cmd_publish().
  */
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  * @param iface_idx  I/O interface to send the command over.
  * @param port       OEM port where the Log is being sent on.
- * @param held       
- * @return See oem_cmd_publish(). 
+ * @param held
+ * @return See oem_cmd_publish().
  */
 int oem_cmd_UNLOGALL(int iface_idx,
                      oem_enum port,
                      oem_bool held);
 
 /**
- * @brief Send the ELEVATIONCUTOFF command. See the Reference Manual for 
+ * @brief Send the ELEVATIONCUTOFF command. See the Reference Manual for
  *        details.
- * 
+ *
  * @return See oem_cmd_publish().
  */
 int oem_cmd_ELEVATIONCUTOFF(int iface_idx,
@@ -175,9 +175,9 @@ int oem_cmd_ELEVATIONCUTOFF(int iface_idx,
                             oem_float cutoff);
 
 /**
- * @brief Send the INTERFACEMODE command. See the Reference Manual for 
+ * @brief Send the INTERFACEMODE command. See the Reference Manual for
  *        details.
- * 
+ *
  * @return See oem_cmd_publish().
  */
 int oem_cmd_INTERFACEMODE(int iface_idx,
@@ -190,14 +190,14 @@ int oem_cmd_INTERFACEMODE(int iface_idx,
  * @brief Send the SERIALCONFIG command. See the Reference Manual for details.
  *
  * @param iface_idx  I/O interface to send the command over.
- * @param port      
- * @param baud      
- * @param parity    
- * @param databits  
- * @param stopbits  
- * @param handshake 
- * @param _break    
- * @return See oem_cmd_publish(). 
+ * @param port
+ * @param baud
+ * @param parity
+ * @param databits
+ * @param stopbits
+ * @param handshake
+ * @param _break
+ * @return See oem_cmd_publish().
  */
 int oem_cmd_SERIALCONFIG(int iface_idx,
                          oem_enum port,

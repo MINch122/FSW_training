@@ -68,6 +68,7 @@ typedef struct {
 #define STX_ESUP_HEADF_ERR   -104
 #define STX_ESUP_DATAS_ERR   -105
 #define STX_ESUP_MODULE_ID_ERR -106
+#define STX_ESUP_DATALENGTH_MISMATCH_ERR -107
 
 // Command
 #define CONFIG_CUSTOM_SCAN          0xffff
@@ -121,7 +122,7 @@ typedef struct {
 #define GETRES_TP_NA                0X0000
 
 
-int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * data, uint16_t length, void * rxdata, uint16_t rxlength);
+int32_t ESUP(uint16_t comm_stt, uint16_t comm, uint16_t type, void * txdata, uint16_t txlength, ESUP_Packet_t * rxdata, uint16_t rxlength);
 long latch_ms(void);
 int32_t ESUP_ACK_CMD(uint16_t comm_stt, uint16_t comm, uint16_t type);
 int32_t ESUP_SetModuleId(uint16_t module_id);

@@ -169,18 +169,18 @@ CFE_Status_t paybee_kisscam_PingCmd(const paybee_kisscam_PingCmd_t *Msg) {
     paybee_kisscam_Transaction(&Cmd, RxBuf, paybee_kisscam_PING_CC);
 
     /* for test - CMD Packet을 OBC에서 출력  */
-    OS_printf("[KissCAM] Tx Cmd: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Tx Cmd: ");
     for (int i = 0; i < paybee_kisscam_CMD_PKT_SIZE; i++) {
-        OS_printf("0x%02X ", Cmd.Bytes[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", Cmd.Bytes[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     /* for test - TLM Packet을 OBC에서 출력 */
-    OS_printf("[KissCAM] Rx Tlm: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Rx Tlm: ");
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X ", RxBuf[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", RxBuf[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
     
     return CFE_SUCCESS;
 }
@@ -222,26 +222,26 @@ CFE_Status_t paybee_kisscam_SetModeCmd(const paybee_kisscam_SetModeCmd_t *Msg) {
     paybee_kisscam_Transaction(&Cmd, RxBuf, paybee_kisscam_SET_MODE_CC);
 
     // for (int i = 0; i < sizeof(RxBuf); i++) {
-    //     OS_printf("0x%02X\t", RxBuf[i]);
+    //     PAYBEE_KISSCAM_APP_printf("0x%02X\t", RxBuf[i]);
     // }
-    // OS_printf("\n");
+    // PAYBEE_KISSCAM_APP_printf("\n");
 
     // CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "Set Mode");
 
     
     /* for test - CMD Packet을 OBC에서 출력  */
-    OS_printf("[KissCAM] Tx Cmd: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Tx Cmd: ");
     for (int i = 0; i < paybee_kisscam_CMD_PKT_SIZE; i++) {
-        OS_printf("0x%02X ", Cmd.Bytes[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", Cmd.Bytes[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     /* for test - TLM Packet을 OBC에서 출력 */
-    OS_printf("[KissCAM] Rx Tlm: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Rx Tlm: ");
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X ", RxBuf[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", RxBuf[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     return CFE_SUCCESS;
 }
@@ -278,24 +278,24 @@ CFE_Status_t paybee_kisscam_MemoryStatusCmd(const paybee_kisscam_MemoryStatusCmd
     paybee_kisscam_Transaction(&Cmd, RxBuf, paybee_kisscam_MEMORY_STATUS_CC);
 
     // for (int i = 0; i < sizeof(RxBuf); i++) {
-    //     OS_printf("0x%02X\t", RxBuf[i]);
+    //     PAYBEE_KISSCAM_APP_printf("0x%02X\t", RxBuf[i]);
     // }
-    // OS_printf("\n");
+    // PAYBEE_KISSCAM_APP_printf("\n");
 
     
     /* for test - CMD Packet을 OBC에서 출력  */
-    OS_printf("[KissCAM] Tx Cmd: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Tx Cmd: ");
     for (int i = 0; i < paybee_kisscam_CMD_PKT_SIZE; i++) {
-        OS_printf("0x%02X ", Cmd.Bytes[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", Cmd.Bytes[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     /* for test - TLM Packet을 OBC에서 출력 */
-    OS_printf("[KissCAM] Rx Tlm: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Rx Tlm: ");
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X ", RxBuf[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", RxBuf[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     return CFE_SUCCESS;
 }
@@ -335,24 +335,24 @@ CFE_Status_t paybee_kisscam_SetExposureCmd(const paybee_kisscam_SetExposureCmd_t
     paybee_kisscam_Transaction(&Cmd, RxBuf, paybee_kisscam_SET_EXPOSURE_CC);
 
     // for (int i = 0; i < sizeof(RxBuf); i++) {
-    //     OS_printf("0x%02X\t", RxBuf[i]);
+    //     PAYBEE_KISSCAM_APP_printf("0x%02X\t", RxBuf[i]);
     // }
-    // OS_printf("\n");
+    // PAYBEE_KISSCAM_APP_printf("\n");
 
     
     /* for test - CMD Packet을 OBC에서 출력  */
-    OS_printf("[KissCAM] Tx Cmd: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Tx Cmd: ");
     for (int i = 0; i < paybee_kisscam_CMD_PKT_SIZE; i++) {
-        OS_printf("0x%02X ", Cmd.Bytes[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", Cmd.Bytes[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     /* for test - TLM Packet을 OBC에서 출력 */
-    OS_printf("[KissCAM] Rx Tlm: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Rx Tlm: ");
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X ", RxBuf[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", RxBuf[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     return CFE_SUCCESS;
 }
@@ -401,26 +401,26 @@ CFE_Status_t paybee_kisscam_CaptureCmd(const paybee_kisscam_CaptureCmd_t *Msg) {
     }
        
     // for (int i = 0; i < sizeof(RxBuf); i++) {
-    //     OS_printf("0x%02X\t", RxBuf[i]);
+    //     PAYBEE_KISSCAM_APP_printf("0x%02X\t", RxBuf[i]);
     // }
-    // OS_printf("\n");
+    // PAYBEE_KISSCAM_APP_printf("\n");
 
     // CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "Capture");
 
     
     /* for test - CMD Packet을 OBC에서 출력  */
-    OS_printf("[KissCAM] Tx Cmd: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Tx Cmd: ");
     for (int i = 0; i < paybee_kisscam_CMD_PKT_SIZE; i++) {
-        OS_printf("0x%02X ", Cmd.Bytes[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", Cmd.Bytes[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     /* for test - TLM Packet을 OBC에서 출력 */
-    OS_printf("[KissCAM] Rx Tlm: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Rx Tlm: ");
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X ", RxBuf[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", RxBuf[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
     
     return CFE_SUCCESS;
 }
@@ -474,15 +474,15 @@ CFE_Status_t paybee_kisscam_DownloadCmd(const paybee_kisscam_DownloadCmd_t *Msg)
      */
     int FD = paybee_kisscam_OpenFile(Msg->Payload.MEM, Line, 0);
     if (FD < 0) {
-        OS_printf("Open error.\n");
+        PAYBEE_KISSCAM_APP_printf("Open error.\n");
     }
 
     Status = paybee_kisscam_WriteToFile(FD, RxBuf, Msg->Payload.PRE ? paybee_kisscam_DOWNLOAD_THUMBNAIL_TLM_SIZE : paybee_kisscam_DOWNLOAD_TLM_SIZE, false);
     if (Status == CFE_SUCCESS) paybee_kisscam_SetLineTrue(Msg->Payload.MEM, Line);
-    else OS_printf("Write Error. RC = %d\n", Status);
+    else PAYBEE_KISSCAM_APP_printf("Write Error. RC = %d\n", Status);
 
     Status = paybee_kisscam_CloseFile(FD);
-    if (Status < 0) OS_printf("Close Error.\n");
+    if (Status < 0) PAYBEE_KISSCAM_APP_printf("Close Error.\n");
 
     /**
      * Update Memory State
@@ -496,15 +496,15 @@ CFE_Status_t paybee_kisscam_DownloadCmd(const paybee_kisscam_DownloadCmd_t *Msg)
 
     /* Rx Data Debugging */
     // for (int i = 0; i < sizeof(RxBuf); i++) {
-    //     OS_printf("0x%02X\t", RxBuf[i]);
-    //     if (i%10 == 9) OS_printf("\n");
+    //     PAYBEE_KISSCAM_APP_printf("0x%02X\t", RxBuf[i]);
+    //     if (i%10 == 9) PAYBEE_KISSCAM_APP_printf("\n");
     // }
     
     /* State Debugging */
-    // OS_printf("Line Status\n");
+    // PAYBEE_KISSCAM_APP_printf("Line Status\n");
     // for (uint8_t i=0; i<60; i++) {
-    //     OS_printf("0x%02X\t",paybee_kisscam_Data.MemSlotStatus.Entry[Msg->Payload.MEM].LineState[i]);
-    //     if (i%10 == 9) OS_printf("\n");
+    //     PAYBEE_KISSCAM_APP_printf("0x%02X\t",paybee_kisscam_Data.MemSlotStatus.Entry[Msg->Payload.MEM].LineState[i]);
+    //     if (i%10 == 9) PAYBEE_KISSCAM_APP_printf("\n");
     // }
 
     /**
@@ -512,23 +512,23 @@ CFE_Status_t paybee_kisscam_DownloadCmd(const paybee_kisscam_DownloadCmd_t *Msg)
      */
     Status = paybee_kisscam_WriteToFile(paybee_kisscam_Data.TblHandle, &paybee_kisscam_Data.MemSlotStatus, sizeof(paybee_kisscam_Memory_Status_t), true);
     if (Status != CFE_SUCCESS) {
-        OS_printf("Write Fail.\n");
+        PAYBEE_KISSCAM_APP_printf("Write Fail.\n");
     }
 
     
     /* for test - CMD Packet을 OBC에서 출력  */
-    OS_printf("[KissCAM] Tx Cmd: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Tx Cmd: ");
     for (int i = 0; i < paybee_kisscam_CMD_PKT_SIZE; i++) {
-        OS_printf("0x%02X ", Cmd.Bytes[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", Cmd.Bytes[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     /* for test - TLM Packet을 OBC에서 출력 */
-    OS_printf("[KissCAM] Rx Tlm: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Rx Tlm: ");
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X ", RxBuf[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", RxBuf[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     return CFE_SUCCESS;
 }
@@ -607,7 +607,7 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
          */
         Status  = paybee_kisscam_WriteToFile(FD, RxBuf, Msg->Payload.PRE ? paybee_kisscam_DOWNLOAD_THUMBNAIL_TLM_SIZE : paybee_kisscam_DOWNLOAD_TLM_SIZE, false);
         if (Status != CFE_SUCCESS) {
-            // OS_printf("Write Error. RC = %d\n", Status);
+            // PAYBEE_KISSCAM_APP_printf("Write Error. RC = %d\n", Status);
             ErrCnt ++;
             break;
         }
@@ -619,7 +619,7 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
         paybee_kisscam_SetLineTrue(Msg->Payload.MEM, line);
 
         /* Debugging */
-        OS_printf("Line %u Download done.\n", line);
+        PAYBEE_KISSCAM_APP_printf("Line %u Download done.\n", line);
 
     }
     /**
@@ -638,10 +638,10 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
     paybee_kisscam_Inspection(Msg->Payload.MEM);
     
     /* Debugging */
-    // OS_printf("Line Status\n");
+    // PAYBEE_KISSCAM_APP_printf("Line Status\n");
     // for (uint8_t i=0; i<60; i++) {
-    //     OS_printf("0x%02X\t",paybee_kisscam_Data.MemSlotStatus.Entry[Msg->Payload.MEM].LineState[i]);
-    //     if (i%10 == 9) OS_printf("\n");
+    //     PAYBEE_KISSCAM_APP_printf("0x%02X\t",paybee_kisscam_Data.MemSlotStatus.Entry[Msg->Payload.MEM].LineState[i]);
+    //     if (i%10 == 9) PAYBEE_KISSCAM_APP_printf("\n");
     // }
 
     if (Status != CFE_SUCCESS) {
@@ -656,7 +656,7 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
     Status = paybee_kisscam_WriteToFile(paybee_kisscam_Data.TblHandle, &paybee_kisscam_Data.MemSlotStatus, sizeof(paybee_kisscam_Memory_Status_t), true);
     if (Status != CFE_SUCCESS) {
         ErrCnt ++;
-        // OS_printf("Write Fail!.\n");
+        // PAYBEE_KISSCAM_APP_printf("Write Fail!.\n");
         // goto report;
     }
 
@@ -676,18 +676,18 @@ report: {
 
 
     /* for test - CMD Packet을 OBC에서 출력  */
-    OS_printf("[KissCAM] Tx Cmd: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Tx Cmd: ");
     for (int i = 0; i < paybee_kisscam_CMD_PKT_SIZE; i++) {
-        OS_printf("0x%02X ", Cmd.Bytes[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", Cmd.Bytes[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     /* for test - TLM Packet을 OBC에서 출력 */
-    OS_printf("[KissCAM] Rx Tlm: ");
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Rx Tlm: ");
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X ", RxBuf[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X ", RxBuf[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
     
     return CFE_SUCCESS;
 }
@@ -742,9 +742,9 @@ report: {
 //     paybee_kisscam_Transaction(&Cmd, RxBuf, paybee_kisscam_READ_REGISTER_CC);
 
 //     for (uint8_t i = 0; i < sizeof(RxBuf); i++) {
-//         OS_printf("0x%02X\t", RxBuf[i]);
+//         PAYBEE_KISSCAM_APP_printf("0x%02X\t", RxBuf[i]);
 //     }
-//     OS_printf("\n");
+//     PAYBEE_KISSCAM_APP_printf("\n");
 
 //     CFE_EVS_SendEvent(488, CFE_EVS_EventType_INFORMATION, "Mosaic");
 //     return CFE_SUCCESS;
@@ -786,9 +786,9 @@ CFE_Status_t paybee_kisscam_ReadRegisterCmd(const paybee_kisscam_ReadRegisterCmd
     paybee_kisscam_Transaction(&Cmd, RxBuf, paybee_kisscam_READ_REGISTER_CC);
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X\t", RxBuf[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X\t", RxBuf[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     return CFE_SUCCESS;
 }
@@ -827,9 +827,9 @@ CFE_Status_t paybee_kisscam_WriteRegisterCmd(const paybee_kisscam_WriteRegisterC
     else paybee_kisscam_HandleSuccess(paybee_kisscam_WRITE_REGISTER_CC, Params.RxData, Params.ReadBytes);
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
-        OS_printf("0x%02X\t", RxBuf[i]);
+        PAYBEE_KISSCAM_APP_printf("0x%02X\t", RxBuf[i]);
     }
-    OS_printf("\n");
+    PAYBEE_KISSCAM_APP_printf("\n");
 
     return CFE_SUCCESS;
 

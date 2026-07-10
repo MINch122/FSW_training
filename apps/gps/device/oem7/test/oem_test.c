@@ -113,7 +113,7 @@ void task_init(void)
 
     oem_log_init();
     oem_io_driver_serial_init(0, "/dev/ttyS0", 115200);
-    ret = oem_io_init_interface(0, 0, oem_io_driver_serial_write, oem_io_driver_serial_read);
+    ret = oem_io_init_interface(0, oem_io_driver_serial_write, oem_io_driver_serial_read);
     if (ret != OEM_OK) {
         printf("failed to initialize serial ports: returned %d\n",
                 ret);

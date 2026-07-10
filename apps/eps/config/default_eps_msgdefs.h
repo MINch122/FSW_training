@@ -434,7 +434,7 @@ typedef struct EPS_PACK {
     int16  batt_i;             /* PMU addr 0x50 */
     uint16 batt_v;             /* PMU addr 0x52 */
     uint8  sm_en_mask;         /* PMU addr 0x54, bit0..7 = submodule enable 0..7 */
-    uint16 gnd_wdt_cnt;        /* PMU addr 0x72 */
+    uint16 gnd_wdt_cnt;        /* PDU addr 0x110, clamped into legacy uint16 beacon slot */
     uint16 bus_wdt_cnt;        /* PMU addr 0x74 */
     uint32 gnd_wdt_left;       /* PMU addr 0x90 */
     uint32 bus_wdt_left;       /* PMU addr 0x94 */

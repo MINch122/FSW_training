@@ -1,9 +1,8 @@
 CFE_LIB, cfe_assert,  CFE_Assert_LibInit, ASSERT_LIB,    0,   0,     0x0, 0;
-CFE_APP, ftp_origin,  FTP_ORIGIN_Main,  FTP_ORIGIN,   4,   16384, 0x0, 0;
+CFE_APP, ftp_origin,  FTP_ORIGIN_Main,  FTP_ORIGIN,      3,   16384, 0x0, 0;
 CFE_APP, ftp_new_server, ftp_server_start, FTP_NEW,      4,   16384, 0x0, 0;
 CFE_APP, eps,         EPS_Main,           EPS,           5,   16384, 0x0, 0;
 CFE_APP, mission,     MISSION_Main,       MISSION,       6,   8192,  0x0, 0;
-CFE_APP, ftp_client,  FTP_CLIENT_Main,    FTP_CLIENT,    7,   16384, 0x0, 0;
 CFE_APP, rpt,         RPT_Main,           RPT,          10,   16384, 0x0, 0;
 CFE_APP, ci_lab,      CI_LAB_AppMain,     CI_LAB_APP,   11,   16384, 0x0, 0;
 CFE_APP, to_lab,      TO_LAB_AppMain,     TO_LAB_APP,   12,   16384, 0x0, 0;
@@ -20,7 +19,7 @@ CFE_APP, meow,        MEOW_Main,          MEOW,         70,   16384, 0x0, 0;
 CFE_APP, ltrx,        LTRX_AppMain,       LTRX,         75,   16384, 0x0, 0;
 CFE_APP, gpio,        GPIO_Main,          GPIO,         85,   16384, 0x0, 0;
 CFE_APP, paybee_kisscam, paybee_kisscam_Main, PAY_KISSCAM, 90,   16384, 0x0, 0;
-!CFE_APP, SLT_IFB,     SLT_IFB_Main,       SLT_IFB,      80,   16384, 0x0, 0;
+!CFE_APP, pay_slt,     PAY_SLT_Main,       PAY_SLT,      80,   16384, 0x0, 0;
 !CFE_APP, sample_app,  SAMPLE_APP_Main,    SAMPLE_APP,   70,   16384, 0x0, 0;
 !
 ! Startup script fields:

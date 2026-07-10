@@ -97,13 +97,13 @@ typedef struct EPS_P80_DRV_PACK {
     int16_t  batt_i;
     uint16_t batt_v;
     uint8_t  sm_en_mask; /* bit0..7 = submodule enable 0..7 */
-    uint16_t gnd_wdt_cnt;
     uint16_t bus_wdt_cnt;
     uint32_t gnd_wdt_left;
     uint32_t bus_wdt_left;
 } EPS_P80_Drv_PMU_BcnTlm_t;
 
 typedef struct EPS_P80_DRV_PACK {
+    uint32_t gnd_wdt_cnt;
     uint8_t out_en[EPS_P80_DRV_PDU_BCN_USED_CH_COUNT];
     int16_t out_i[EPS_P80_DRV_PDU_BCN_USED_CH_COUNT];
 } EPS_P80_Drv_PDU_BcnTlm_t;

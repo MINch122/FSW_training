@@ -20,8 +20,8 @@ typedef struct {
     uint16 strayLogCount;
     uint16 responseCount;
     uint16 responseErrorCount;
-    uint16 lastResponseEnum;
     uint16 lastResponseMessageId;
+    uint32 lastResponseEnum;
 } GPS_DeviceData_Counters_t;
 
 /**

@@ -424,7 +424,6 @@ gs_error_t EPS_P80_Drv_PMU_GetBcn(uint8_t csp_node, EPS_P80_Drv_PMU_BcnTlm_t *bc
     EPS_P80_RPARAM_GET_UINT8 (table_id, GS_P80_PMU_TELEMETRY_BATT_MODE, next_bcn.batt_mode);
     EPS_P80_RPARAM_GET_INT16 (table_id, GS_P80_PMU_TELEMETRY_BATT_I,    next_bcn.batt_i);
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_PMU_TELEMETRY_BATT_V,    next_bcn.batt_v);
-    EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_PMU_TELEMETRY_GND_WDT_CNT,  next_bcn.gnd_wdt_cnt);
     EPS_P80_RPARAM_GET_UINT16(table_id, GS_P80_PMU_TELEMETRY_BUS_WDT_CNT,  next_bcn.bus_wdt_cnt);
     EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_PMU_TELEMETRY_GND_WDT_LEFT, next_bcn.gnd_wdt_left);
     EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_PMU_TELEMETRY_BUS_WDT_LEFT, next_bcn.bus_wdt_left);
@@ -453,6 +452,7 @@ gs_error_t EPS_P80_Drv_PDU_GetBcn(uint8_t csp_node, EPS_P80_Drv_PDU_BcnTlm_t *bc
     if (bcn == NULL)
         return GS_ERROR_ARG;
 
+    EPS_P80_RPARAM_GET_UINT32(table_id, GS_P80_PDU_TELEMETRY_GND_WDT_CNT, next_bcn.gnd_wdt_cnt);
     EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PDU_TELEMETRY_OUT_EN(0), GS_PARAM_BOOL, out_en,
                              GS_P80_PDU_TELEMETRY_OUT_EN_ARRAY_SIZE);
     EPS_P80_RPARAM_GET_ARRAY(table_id, GS_P80_PDU_TELEMETRY_OUT_I(0), GS_PARAM_INT16, out_i,

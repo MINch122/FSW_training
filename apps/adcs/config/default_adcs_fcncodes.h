@@ -138,16 +138,16 @@
 #define ADCS_GET_CURRENT_UNIX_TIME_INTERNAL_CC  114 // 133
 
 /* Commissioning Sequence */
-#define ADCS_COMM_01_CC                        120
-#define ADCS_COMM_02_CC                        121
-#define ADCS_COMM_03_CC                        122
-#define ADCS_COMM_04_CC                        123
-#define ADCS_COMM_05_CC                        124
-#define ADCS_COMM_06_CC                        125
-#define ADCS_COMM_07_CC                        126
-#define ADCS_COMM_08_CC                        127
-#define ADCS_COMM_09_CC                        128
-#define ADCS_COMM_10_CC                        129
+#define ADCS_COMM_01_CC                        118
+#define ADCS_COMM_02_CC                        119
+#define ADCS_COMM_03_CC                        120
+#define ADCS_COMM_04_CC                        121
+#define ADCS_COMM_05_CC                        122
+#define ADCS_COMM_06_CC                        123
+#define ADCS_COMM_07_CC                        124
+#define ADCS_COMM_08_CC                        125
+#define ADCS_COMM_09_CC                        126
+#define ADCS_COMM_10_CC                        127
 
 
 #endif

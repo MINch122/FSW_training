@@ -6,8 +6,8 @@
 
 /* HK / STATUS request handlers */
 CFE_Status_t LTRX_SendHkCmd(const CFE_SB_Buffer_t *SBBufPtr);
-CFE_Status_t LTRX_SendStatusCmd(const CFE_SB_Buffer_t *SBBufPtr);
 void LTRX_SendBcnTlm(void);
+void LTRX_HandleReport(CFE_Status_t Status, uint8 CC, const void *Data, uint16 DataSize);
 
 /* Basic app management commands */
 CFE_Status_t LTRX_NoopCmd(const LTRX_NoopCmd_t *Msg);
@@ -19,9 +19,6 @@ CFE_Status_t LTRX_ResetDeviceCmdCountersCmd(const LTRX_ResetDeviceCmdCountersCmd
 CFE_Status_t LTRX_SessionStartDownlinkCmd(const LTRX_SessionStartDownlinkCmd_t *Msg);
 CFE_Status_t LTRX_SessionAbortCmd(const LTRX_SessionAbortCmd_t *Msg);
 CFE_Status_t LTRX_SessionResetStateCmd(const LTRX_SessionResetStateCmd_t *Msg);
-
-CFE_Status_t LTRX_QueryBeaconStatusCmd(const LTRX_QueryBeaconStatusCmd_t *Msg);
-CFE_Status_t LTRX_QueryGnssInfoCmd(const LTRX_QueryGnssInfoCmd_t *Msg);
 
 /* Downstream gating commands */
 CFE_Status_t LTRX_DownstreamEnableCmd(const LTRX_DownstreamEnableCmd_t *Msg);

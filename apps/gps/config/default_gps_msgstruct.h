@@ -246,6 +246,10 @@ typedef struct {
 ** Type definition (GPS housekeeping)
 */
 
+/* Report telemetry forwarded to the RPT app. The payload MUST be RPT_Report_t
+ * so that sizeof(GPS_ReportTlm_t) == sizeof(RPT_ReportTlm_t); RPT drops any
+ * subscribed message whose size differs (see RPT_VerifyReportLength). GPS still
+ * caps the data it copies into ReturnValue at GPS_MISSION_REPORT_DATA_SIZE. */
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     RPT_Report_t Payload;

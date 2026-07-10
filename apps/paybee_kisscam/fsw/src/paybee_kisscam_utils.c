@@ -22,7 +22,7 @@ int paybee_kisscam_OpenTblFile(void) {
     int ID;
 
     ID = open(paybee_kisscam_TBL_PATH, O_CREAT | O_RDWR, 0666);
-    // OS_printf("ID: %d\n",ID);
+    // PAYBEE_KISSCAM_APP_printf("ID: %d\n",ID);
     return ID;
 }
 
@@ -41,7 +41,7 @@ int paybee_kisscam_OpenFile(uint8_t MemorySlot, uint16_t StartLine, uint16_t Lin
     else sprintf(Path, "%s%u_%u_%03u-%03u", paybee_kisscam_IMG_PATH, MemorySlot, 
                 paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].LastImgIdx, StartLine, StartLine + LineNum - 1);
     
-    // OS_printf("Path: %s\n", Path);
+    // PAYBEE_KISSCAM_APP_printf("Path: %s\n", Path);
     
     ID = open(Path, O_CREAT| O_TRUNC | O_WRONLY, 0666);
     return ID;
@@ -84,7 +84,7 @@ int32 paybee_kisscam_CloseFile(int ID) {
 //             return;
 //         }
 //     }
-//     // OS_printf("Memory Slot %u Download Done.\n", MemorySlot);
+//     // PAYBEE_KISSCAM_APP_printf("Memory Slot %u Download Done.\n", MemorySlot);
 //     paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].MemoryState = paybee_kisscam_DOWNLOAD_DONE;
 //     paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].LastImgIdx ++;
 //     for (uint8_t i = 0; i < 60; i++) {
@@ -163,7 +163,7 @@ void paybee_kisscam_HandleErrorPacket(void *ErrPkt, ssize_t Size, uint8_t CC) {
     // CMD = ((uint8_t *)ErrPkt)[5];
     // ERR = ((uint8_t *)ErrPkt)[6];
     // RXF = ((uint8_t *)ErrPkt)[7];
-    // OS_printf("MD: 0x%02X CMD: 0x%02X ERR: 0x%02X RXF: 0x%02X\n", MD, CMD, ERR, RXF);
+    // PAYBEE_KISSCAM_APP_printf("MD: 0x%02X CMD: 0x%02X ERR: 0x%02X RXF: 0x%02X\n", MD, CMD, ERR, RXF);
 
     /**
      * Configure Report for RPT
@@ -192,7 +192,7 @@ void paybee_kisscam_HandleErrorPacket(void *ErrPkt, ssize_t Size, uint8_t CC) {
     CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
                       "KissCAM HW Error: CC = 0x%02X", CC);
                       
-    OS_printf("[KissCAM] HW Error Packet Received! CC: 0x%02X\n", CC);
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] HW Error Packet Received! CC: 0x%02X\n", CC);
 
     return;
 }
@@ -229,7 +229,7 @@ void paybee_kisscam_HandleErrorSerial(int32 Status, uint8 CC, void *ReadData, ss
     CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
                       "KissCAM Serial Error: CC = 0x%02X, Status = %d", CC, Status);
                       
-    OS_printf("[KissCAM] Serial Comm Error! CC: 0x%02X, Status: %d\n", CC, Status);
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Serial Comm Error! CC: 0x%02X, Status: %d\n", CC, Status);
 
     return;
 }
@@ -265,7 +265,7 @@ void paybee_kisscam_HandleSuccess(uint8_t CC, void *ReadData, ssize_t ReadSize) 
     CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "KissCAM Command Success: CC = 0x%02X", CC);
                       
-    OS_printf("[KissCAM] Command Success! CC: 0x%02X\n", CC);
+    PAYBEE_KISSCAM_APP_printf("[KissCAM] Command Success! CC: 0x%02X\n", CC);
 
     return;
 }
@@ -362,7 +362,7 @@ void paybee_kisscam_ConfigurePacket(const void *Payload, void *Packet, uint8 Par
 //          */
 //         Status  = paybee_kisscam_WriteToFile(FD, RxBuf, DownLoadInfo.PRE ? paybee_kisscam_DOWNLOAD_THUMBNAIL_TLM_SIZE : paybee_kisscam_DOWNLOAD_TLM_SIZE, false);
 //         if (Status != CFE_SUCCESS) {
-//             // OS_printf("Write Error. RC = %d\n", Status);
+//             // PAYBEE_KISSCAM_APP_printf("Write Error. RC = %d\n", Status);
 //             ErrCnt ++;
 //             continue;
 //         }
@@ -374,7 +374,7 @@ void paybee_kisscam_ConfigurePacket(const void *Payload, void *Packet, uint8 Par
 //         paybee_kisscam_SetLineTrue(DownLoadInfo.MEM, line);
 
 //         /* Debugging */
-//         // OS_printf("%s:Line %u Download done.\n", __func__, line);
+//         // PAYBEE_KISSCAM_APP_printf("%s:Line %u Download done.\n", __func__, line);
 
 //     }
 //     /**
@@ -403,7 +403,7 @@ void paybee_kisscam_ConfigurePacket(const void *Payload, void *Packet, uint8 Par
 //     Status = paybee_kisscam_WriteToFile(paybee_kisscam_Data.TblHandle, &paybee_kisscam_Data.MemSlotStatus, sizeof(paybee_kisscam_Memory_Status_t), true);
 //     if (Status != CFE_SUCCESS) {
 //         ErrCnt ++;
-//         // OS_printf("Write Fail!.\n");
+//         // PAYBEE_KISSCAM_APP_printf("Write Fail!.\n");
 //         goto report;
 //     }
 

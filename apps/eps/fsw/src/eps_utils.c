@@ -65,6 +65,11 @@ static double EPS_SocRatioToPercent(float soc)
     return (double)soc * 100.0;
 }
 
+static uint16 EPS_PduGndWdtCntToBeacon(uint32_t cnt)
+{
+    return (cnt > 0xFFFFu) ? 0xFFFFu : (uint16)cnt;
+}
+
 static void EPS_FillBcnNodeInvalid(EPS_BcnTlm_Full_Payload_t *Bcn, uint8 NodeIndex)
 {
     switch (NodeIndex)
@@ -213,7 +218,7 @@ void EPS_PrintBcnReport(const EPS_BcnTlm_Full_Payload_t *bcn)
     OS_printf("\n");
     OS_printf("[PMU] SmEnMask: 0x%02X (bit0..7=submodule enable 0..7, 1=enabled)\n",
               bcn->PMU.sm_en_mask);
-    OS_printf("[PMU] WDT GND: %u (Left: %u s) | BUS: %u (Left: %u s)\n",
+    OS_printf("[WDT] PDU GND cnt: %u | PMU GND left: %u s | PMU BUS: %u (Left: %u s)\n",
               bcn->PMU.gnd_wdt_cnt, bcn->PMU.gnd_wdt_left,
               bcn->PMU.bus_wdt_cnt, bcn->PMU.bus_wdt_left);
     OS_printf("[PDU] Used channel OutI(mA)/OutEn: ");
@@ -675,7 +680,6 @@ CFE_Status_t EPS_UpdateBcnTlmFromHw(void)
         bcn->PMU.batt_i       = pmu_bcn.batt_i;
         bcn->PMU.batt_v       = pmu_bcn.batt_v;
         bcn->PMU.sm_en_mask   = pmu_bcn.sm_en_mask;
-        bcn->PMU.gnd_wdt_cnt  = pmu_bcn.gnd_wdt_cnt;
         bcn->PMU.bus_wdt_cnt  = pmu_bcn.bus_wdt_cnt;
         bcn->PMU.gnd_wdt_left = pmu_bcn.gnd_wdt_left;
         bcn->PMU.bus_wdt_left = pmu_bcn.bus_wdt_left;
@@ -696,6 +700,7 @@ CFE_Status_t EPS_UpdateBcnTlmFromHw(void)
             bcn->PDU.out_i[i] = pdu_bcn.out_i[i];
             bcn->PDU.out_en[i] = pdu_bcn.out_en[i];
         }
+        bcn->PMU.gnd_wdt_cnt = EPS_PduGndWdtCntToBeacon(pdu_bcn.gnd_wdt_cnt);
     }
 
     /* --- ACU Beacon --- */

@@ -165,7 +165,8 @@ CFE_Status_t EPS_Init(void)
         /*
         ** Subscribe to beacon request commands
         */
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(EPS_SEND_BCN_MID), EPS_AppData.CommandPipe);
+        status = CFE_SB_SubscribeEx(CFE_SB_ValueToMsgId(EPS_SEND_BCN_MID), EPS_AppData.CommandPipe,
+                                    CFE_SB_DEFAULT_QOS, EPS_BCN_MSG_LIMIT);
         if (status != CFE_SUCCESS)
         {
             CFE_EVS_SendEvent(EPS_SUB_BCN_ERR_EID, CFE_EVS_EventType_ERROR,
