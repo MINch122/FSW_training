@@ -5,11 +5,11 @@
 #include "mission_internal_cfg.h"
 
 #ifndef MISSION_ENABLE_LEOP_SEQUENCE
-#define MISSION_ENABLE_LEOP_SEQUENCE true
+#define MISSION_ENABLE_LEOP_SEQUENCE false
 #endif
 
 #ifndef DEBUG_MISSION
-#define DEBUG_MISSION true
+#define DEBUG_MISSION false
 #endif
 
 #if DEBUG_MISSION

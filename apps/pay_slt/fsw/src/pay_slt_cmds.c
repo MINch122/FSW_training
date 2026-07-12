@@ -126,6 +126,10 @@ CFE_Status_t SLT_IFB_SendHkCmd(const SLT_IFB_SendHkCmd_t *Msg) {
 
 CFE_Status_t PAY_SLT_SendBeaconCmd(const SLT_IFB_SendBcnCmd_t *Msg) {
     (void)Msg;
+    
+    if (SLT_IFB_Data.BcnSbEnabled)
+    {
+        
     SLT_IFB_Data.CmdCounter++;
     SLT_IFB_BcnTlm_Payload_t *BcnPkt = &SLT_IFB_Data.BcnTlm.Payload;
 
@@ -251,9 +255,6 @@ CFE_Status_t PAY_SLT_SendBeaconCmd(const SLT_IFB_SendBcnCmd_t *Msg) {
     // 단일 변수 (부호 있는 정수 I16)
     PAY_SLT_APP_printf("Bcn: sys_status_a7: %d\n", BcnPkt->sys_status_a7);
 
-
-    if (SLT_IFB_Data.BcnSbEnabled)
-    {
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(SLT_IFB_Data.BcnTlm.TelemetryHeader));
         CFE_SB_TransmitMsg(CFE_MSG_PTR(SLT_IFB_Data.BcnTlm.TelemetryHeader), true);
     }

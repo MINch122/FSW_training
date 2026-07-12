@@ -162,8 +162,6 @@ int32 PAY_SLT_FetchParam(PAY_SLT_Params_t *Payload) {
         return -1;
     }
 
-    PAY_SLT_APP_printf("Before getRparam\n"); 
-
     // get Rparam csp에 string이 정의되지 않았음
     // 아니 애초에 CFE_SRL_ApiGetRparamCSP는 배열 데이터를 받을 수 없음
     // 직접 gs library 함수 호출해서 사용
@@ -203,9 +201,6 @@ int32 PAY_SLT_FetchParam(PAY_SLT_Params_t *Payload) {
         Status = CFE_SRL_ApiGetRparamCSP(Payload->type, Payload->node, Payload->table,
                                      Payload->addr, (void *)&(Payload->param));
     }
-
-    PAY_SLT_APP_printf("After getRparam\n");
-
     
     if (Status != CFE_SUCCESS) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "PAY_SLT_FetchParam err: %d", Status);

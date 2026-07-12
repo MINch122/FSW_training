@@ -7708,7 +7708,7 @@
       }
     ]
   },
-  {
+    {
     "app": "PAY_SLT",
     "description": "BEE1012 payload service layer test interface",
     "commands": [
@@ -7731,189 +7731,9 @@
         "params": []
       },
       {
-        "name": "IFB CSP CMP",
+        "name": "Set Beacon Enabled",
         "mid": "0x1830",
-        "fc": 10,
-        "params": []
-      },
-      {
-        "name": "IFB CSP Ping",
-        "mid": "0x1830",
-        "fc": 11,
-        "params": []
-      },
-      {
-        "name": "IFB CSP PS",
-        "mid": "0x1830",
-        "fc": 12,
-        "params": []
-      },
-      {
-        "name": "IFB CSP Mem Free",
-        "mid": "0x1830",
-        "fc": 13,
-        "params": []
-      },
-      {
-        "name": "IFB CSP Reboot",
-        "mid": "0x1830",
-        "fc": 14,
-        "params": []
-      },
-      {
-        "name": "IFB CSP Buf Free",
-        "mid": "0x1830",
-        "fc": 15,
-        "params": []
-      },
-      {
-        "name": "IFB CSP Uptime",
-        "mid": "0x1830",
-        "fc": 16,
-        "params": []
-      },
-      {
-        "name": "IFB CSP GndWdt",
-        "mid": "0x1830",
-        "fc": 17,
-        "params": []
-      },
-      {
-        "name": "IFB Get Board UID",
-        "mid": "0x1830",
-        "fc": 18,
-        "params": []
-      },
-      {
-        "name": "IFB Get Board Rev",
-        "mid": "0x1830",
-        "fc": 19,
-        "params": []
-      },
-      {
-        "name": "IFB Get CSP Addr",
-        "mid": "0x1830",
-        "fc": 20,
-        "params": []
-      },
-      {
-        "name": "IFB Get CAN Speed",
-        "mid": "0x1830",
-        "fc": 21,
-        "params": []
-      },
-      {
-        "name": "IFB Get I2C Addr",
-        "mid": "0x1830",
-        "fc": 22,
-        "params": []
-      },
-      {
-        "name": "IFB Get I2C Speed",
-        "mid": "0x1830",
-        "fc": 23,
-        "params": []
-      },
-      {
-        "name": "IFB Get WDT Val",
-        "mid": "0x1830",
-        "fc": 24,
-        "params": []
-      },
-      {
-        "name": "IFB Get CSP Rtable",
-        "mid": "0x1830",
-        "fc": 25,
-        "params": []
-      },
-      {
-        "name": "IFB Get Sys Status",
-        "mid": "0x1830",
-        "fc": 26,
-        "params": []
-      },
-      {
-        "name": "IFB Get Sys Uptime",
-        "mid": "0x1830",
-        "fc": 27,
-        "params": []
-      },
-      {
-        "name": "IFB Get Boot Cnt",
-        "mid": "0x1830",
-        "fc": 28,
-        "params": []
-      },
-      {
-        "name": "IFB Get Boot Cause",
-        "mid": "0x1830",
-        "fc": 29,
-        "params": []
-      },
-      {
-        "name": "IFB Get Reboot Cause",
-        "mid": "0x1830",
-        "fc": 30,
-        "params": []
-      },
-      {
-        "name": "IFB Get WDT Left",
-        "mid": "0x1830",
-        "fc": 31,
-        "params": []
-      },
-      {
-        "name": "IFB Get Board Temp",
-        "mid": "0x1830",
-        "fc": 32,
-        "params": []
-      },
-      {
-        "name": "IFB Get Power Current",
-        "mid": "0x1830",
-        "fc": 33,
-        "params": []
-      },
-      {
-        "name": "IFB Get IMU Data",
-        "mid": "0x1830",
-        "fc": 34,
-        "params": []
-      },
-      {
-        "name": "IFB Get NTC Data",
-        "mid": "0x1830",
-        "fc": 35,
-        "params": []
-      },
-      {
-        "name": "IFB Save Table0",
-        "mid": "0x1830",
-        "fc": 36,
-        "params": []
-      },
-      {
-        "name": "IFB Save Table1",
-        "mid": "0x1830",
-        "fc": 37,
-        "params": []
-      },
-      {
-        "name": "IFB Save Table4",
-        "mid": "0x1830",
-        "fc": 38,
-        "params": []
-      },
-      {
-        "name": "IFB Save All Table",
-        "mid": "0x1830",
-        "fc": 39,
-        "params": []
-      },
-      {
-        "name": "IFB Set CSP Addr",
-        "mid": "0x1830",
-        "fc": 40,
+        "fc": 3,
         "params": [
           {
             "name": "Arg",
@@ -7923,328 +7743,119 @@
         ]
       },
       {
-        "name": "IFB Set CAN Speed",
+        "name": "Param Get",
         "mid": "0x1830",
-        "fc": 41,
+        "fc": 87,
         "params": [
           {
-            "name": "Arg",
-            "type": "uint16",
-            "default": "0"
-          }
-        ]
-      },
-      {
-        "name": "IFB Set I2C Addr",
-        "mid": "0x1830",
-        "fc": 42,
-        "params": [
-          {
-            "name": "Arg",
+            "name": "node",
             "type": "uint8",
-            "default": "0"
-          }
-        ]
-      },
-      {
-        "name": "IFB Set I2C Speed",
-        "mid": "0x1830",
-        "fc": 43,
-        "params": [
+            "default": "11"
+          },
           {
-            "name": "Arg",
+            "name": "table",
+            "type": "uint8",
+            "default": "3"
+          },
+          {
+            "name": "addr",
             "type": "uint16",
             "default": "0"
+          },
+          {
+            "name": "type",
+            "type": "uint8",
+            "default": "2"
+          },
+          {
+            "name": "len",
+            "type": "uint8",
+            "default": "1"
           }
         ]
       },
       {
-        "name": "IFB Set WDT Val",
+        "name": "Param Set",
         "mid": "0x1830",
-        "fc": 44,
+        "fc": 88,
         "params": [
           {
-            "name": "Arg",
+            "name": "node",
+            "type": "uint8",
+            "default": "11"
+          },
+          {
+            "name": "table",
+            "type": "uint8",
+            "default": "3"
+          },
+          {
+            "name": "addr",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "type",
+            "type": "uint8",
+            "default": "2"
+          },
+          {
+            "name": "padding",
+            "type": "bytes",
+            "length": 3,
+            "default": "",
+            "hidden": true
+          },
+          {
+            "name": "value",
             "type": "uint32",
             "default": "0"
           }
         ]
       },
       {
-        "name": "IFB Set CSP Rtable",
+        "name": "Scan Files",
         "mid": "0x1830",
-        "fc": 45,
+        "fc": 89,
         "params": [
           {
-            "name": "Arg",
-            "type": "string",
-            "length": 96,
-            "default": ""
-          }
-        ]
-      },
-      {
-        "name": "EXP CSP CMP",
-        "mid": "0x1830",
-        "fc": 50,
-        "params": []
-      },
-      {
-        "name": "EXP CSP Ping",
-        "mid": "0x1830",
-        "fc": 51,
-        "params": []
-      },
-      {
-        "name": "EXP CSP PS",
-        "mid": "0x1830",
-        "fc": 52,
-        "params": []
-      },
-      {
-        "name": "EXP CSP Mem Free",
-        "mid": "0x1830",
-        "fc": 53,
-        "params": []
-      },
-      {
-        "name": "EXP CSP Reboot",
-        "mid": "0x1830",
-        "fc": 54,
-        "params": []
-      },
-      {
-        "name": "EXP CSP Buf Free",
-        "mid": "0x1830",
-        "fc": 55,
-        "params": []
-      },
-      {
-        "name": "EXP CSP Uptime",
-        "mid": "0x1830",
-        "fc": 56,
-        "params": []
-      },
-      {
-        "name": "EXP CSP GndWdt",
-        "mid": "0x1830",
-        "fc": 57,
-        "params": []
-      },
-      {
-        "name": "EXP Get Board UID",
-        "mid": "0x1830",
-        "fc": 58,
-        "params": []
-      },
-      {
-        "name": "EXP Get Board Rev",
-        "mid": "0x1830",
-        "fc": 59,
-        "params": []
-      },
-      {
-        "name": "EXP Get CSP Addr",
-        "mid": "0x1830",
-        "fc": 60,
-        "params": []
-      },
-      {
-        "name": "EXP Get CAN Speed",
-        "mid": "0x1830",
-        "fc": 61,
-        "params": []
-      },
-      {
-        "name": "EXP Get I2C Addr",
-        "mid": "0x1830",
-        "fc": 62,
-        "params": []
-      },
-      {
-        "name": "EXP Get I2C Speed",
-        "mid": "0x1830",
-        "fc": 63,
-        "params": []
-      },
-      {
-        "name": "EXP Get WDT Val",
-        "mid": "0x1830",
-        "fc": 64,
-        "params": []
-      },
-      {
-        "name": "EXP Get CSP Rtable",
-        "mid": "0x1830",
-        "fc": 65,
-        "params": []
-      },
-      {
-        "name": "EXP Get Sys Status",
-        "mid": "0x1830",
-        "fc": 66,
-        "params": []
-      },
-      {
-        "name": "EXP Get Sys Uptime",
-        "mid": "0x1830",
-        "fc": 67,
-        "params": []
-      },
-      {
-        "name": "EXP Get Boot Cnt",
-        "mid": "0x1830",
-        "fc": 68,
-        "params": []
-      },
-      {
-        "name": "EXP Get Boot Cause",
-        "mid": "0x1830",
-        "fc": 69,
-        "params": []
-      },
-      {
-        "name": "EXP Get Reboot Cause",
-        "mid": "0x1830",
-        "fc": 70,
-        "params": []
-      },
-      {
-        "name": "EXP Get WDT Left",
-        "mid": "0x1830",
-        "fc": 71,
-        "params": []
-      },
-      {
-        "name": "EXP Get Board Temp",
-        "mid": "0x1830",
-        "fc": 72,
-        "params": []
-      },
-      {
-        "name": "EXP Get Power Current",
-        "mid": "0x1830",
-        "fc": 73,
-        "params": []
-      },
-      {
-        "name": "EXP Get IMU Data",
-        "mid": "0x1830",
-        "fc": 74,
-        "params": []
-      },
-      {
-        "name": "EXP Get NTC Data",
-        "mid": "0x1830",
-        "fc": 75,
-        "params": []
-      },
-      {
-        "name": "EXP Save Table0",
-        "mid": "0x1830",
-        "fc": 76,
-        "params": []
-      },
-      {
-        "name": "EXP Save Table1",
-        "mid": "0x1830",
-        "fc": 77,
-        "params": []
-      },
-      {
-        "name": "EXP Save Table4",
-        "mid": "0x1830",
-        "fc": 78,
-        "params": []
-      },
-      {
-        "name": "EXP Save All Table",
-        "mid": "0x1830",
-        "fc": 79,
-        "params": []
-      },
-      {
-        "name": "EXP Set CSP Addr",
-        "mid": "0x1830",
-        "fc": 80,
-        "params": [
-          {
-            "name": "Arg",
+            "name": "node",
             "type": "uint8",
-            "default": "0"
+            "default": "11"
           }
         ]
       },
       {
-        "name": "EXP Set CAN Speed",
+        "name": "Download File",
         "mid": "0x1830",
-        "fc": 81,
+        "fc": 90,
         "params": [
           {
-            "name": "Arg",
-            "type": "uint16",
+            "name": "file_index",
+            "type": "uint32",
             "default": "0"
-          }
-        ]
-      },
-      {
-        "name": "EXP Set I2C Addr",
-        "mid": "0x1830",
-        "fc": 82,
-        "params": [
+          },
           {
-            "name": "Arg",
-            "type": "uint8",
-            "default": "0"
-          }
-        ]
-      },
-      {
-        "name": "EXP Set I2C Speed",
-        "mid": "0x1830",
-        "fc": 83,
-        "params": [
-          {
-            "name": "Arg",
-            "type": "uint16",
-            "default": "0"
-          }
-        ]
-      },
-      {
-        "name": "EXP Set WDT Val",
-        "mid": "0x1830",
-        "fc": 84,
-        "params": [
-          {
-            "name": "Arg",
+            "name": "start_chunk",
             "type": "uint32",
             "default": "0"
           }
         ]
       },
       {
-        "name": "EXP Set CSP Rtable",
+        "name": "Get Full Table",
         "mid": "0x1830",
-        "fc": 85,
+        "fc": 91,
         "params": [
           {
-            "name": "Arg",
-            "type": "string",
-            "length": 96,
-            "default": ""
-          }
-        ]
-      },
-      {
-        "name": "EXP I2C Read Chunk",
-        "mid": "0x1830",
-        "fc": 86,
-        "params": [
+            "name": "node",
+            "type": "uint8",
+            "default": "11"
+          },
           {
-            "name": "Arg",
-            "type": "uint32",
-            "default": "0"
+            "name": "table",
+            "type": "uint8",
+            "default": "3"
           }
         ]
       },
