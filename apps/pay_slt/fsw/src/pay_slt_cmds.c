@@ -254,6 +254,8 @@ CFE_Status_t PAY_SLT_SendBeaconCmd(const SLT_IFB_SendBcnCmd_t *Msg) {
             BcnPkt->pwr_current[4], BcnPkt->pwr_current[5], BcnPkt->pwr_current[6], BcnPkt->pwr_current[7]);
     // 단일 변수 (부호 있는 정수 I16)
     PAY_SLT_APP_printf("Bcn: sys_status_a7: %d\n", BcnPkt->sys_status_a7);
+    
+    PAY_SLT_APP_printf("Bcn: att_q [%f, %f, %f, %f]\n", BcnPkt->att_q[0],BcnPkt->att_q[1],BcnPkt->att_q[2],BcnPkt->att_q[3]);
 
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(SLT_IFB_Data.BcnTlm.TelemetryHeader));
         CFE_SB_TransmitMsg(CFE_MSG_PTR(SLT_IFB_Data.BcnTlm.TelemetryHeader), true);
@@ -439,6 +441,29 @@ CFE_Status_t PAY_SLT_ParGetCmd(const PAY_SLT_ParGetCmd_t *Msg) {
                     snprintf(ValBuf, sizeof(ValBuf), "%d", ReqPayload.param.i16[0]);
                 }
                 break;
+
+            case GS_PARAM_FLOAT:
+                if (ReqPayload.len > 1) {
+                    offset += snprintf(ValBuf + offset, sizeof(ValBuf) - offset, "[");
+
+                    for (int i = 0; i < ReqPayload.len; i++) {
+                        if (i == ReqPayload.len - 1) {
+                            offset += snprintf(ValBuf + offset, sizeof(ValBuf) - offset, "%f]", ReqPayload.param.flt[i]);
+                        } else {
+                            offset += snprintf(ValBuf + offset, sizeof(ValBuf) - offset, "%f ", ReqPayload.param.flt[i]);
+                        }
+
+                        // prevent overflow
+                        if (offset >= sizeof(ValBuf) - 1) {
+                            break;
+                        }
+                    }
+                }
+                else {
+                    snprintf(ValBuf, sizeof(ValBuf), "%f", ReqPayload.param.flt[0]);
+                }
+                break;
+
             case GS_PARAM_STRING:
                 // null 삽입
                 if (ReqPayload.len < sizeof(ReqPayload.param.str))

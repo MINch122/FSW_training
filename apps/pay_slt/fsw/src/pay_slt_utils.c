@@ -136,6 +136,7 @@ int32 PAY_SLT_FetchParam_Simple(uint8 type, uint8 node, uint8 table, uint16 addr
             case GS_PARAM_UINT32:  element_size = 4; break;
             case GS_PARAM_INT16:   element_size = 2; break;
             case GS_PARAM_STRING:  element_size = 1; break;
+            case GS_PARAM_FLOAT:   element_size = 4; break;
             default:               element_size = 1; break;
         }
         

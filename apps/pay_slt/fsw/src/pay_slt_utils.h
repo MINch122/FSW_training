@@ -59,6 +59,7 @@ typedef struct __attribute__((packed)) {
         uint32 u32[64];
         int16  i16[128];
         char   str[256];
+        float  flt[64];
     } param;
 } PAY_SLT_Params_t;
 
