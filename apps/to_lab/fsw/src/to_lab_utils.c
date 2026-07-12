@@ -10,7 +10,13 @@
 #include "to_lab_tbl.h"
 
 #include "rpt_msgids.h"
+#include "rpt_msg.h"
 #include "eps_msgids.h"
+#include "eps_msg.h"
+#include "utrx_msg.h"
+#include "ltrx_msg.h"
+#include "gpio_msg.h"
+#include "adcs_msg.h"
 #include "hk_msgids.h"
 #include "fm_msgids.h"
 #include "cfe_evs_msgids.h"
@@ -20,6 +26,40 @@
 static const uint8 TO_LAB_HK_COMBINED_PKT1_RF_PREFIX[] = "BEE1012";
 #define TO_LAB_HK_COMBINED_PKT1_RF_PREFIX_SIZE (sizeof(TO_LAB_HK_COMBINED_PKT1_RF_PREFIX) - 1)
 #define TO_LAB_RF_MAX_AVAILABLE_BYTES 250
+#define TO_LAB_HK_COMBINED_PKT1_PAYLOAD_OFFSET \
+    (sizeof(CFE_MSG_TelemetryHeader_t) - sizeof(((CFE_MSG_TelemetryHeader_t *)0)->Spare))
+
+static const uint8 TO_LAB_EPS_PDU_BCN_CHANNELS[EPS_PDU_BCN_USED_CH_COUNT] = EPS_PDU_BCN_USED_CH_LIST;
+
+static const char *TO_LAB_OnOffString(uint8 Value)
+{
+    return (Value != 0U) ? "ON" : "OFF";
+}
+
+static const char *TO_LAB_BitOnOffString(uint8 Value, uint8 Bit)
+{
+    return ((Value & (uint8)(1U << Bit)) != 0U) ? "ON" : "OFF";
+}
+
+static const char *TO_LAB_BitHighLowString(uint8 Value, uint8 Bit)
+{
+    return ((Value & (uint8)(1U << Bit)) != 0U) ? "HIGH" : "LOW";
+}
+
+static const char *TO_LAB_AdcsControlModeName(uint8 Mode)
+{
+    switch (Mode)
+    {
+        case 0:
+            return " (OFF)";
+        case 1:
+            return " (DETUMBLE)";
+        case 2:
+            return " (POINTING)";
+        default:
+            return "";
+    }
+}
 
 static void TO_LAB_PrintOutgoing(const char *Path, const CFE_SB_Buffer_t *SBBufPtr, const void *NetBufPtr, size_t NetBufSize, int32 Status, uint16 Port)
 {
@@ -89,96 +129,138 @@ static void TO_LAB_PrintReportPayload(const char *Name, const CFE_SB_Buffer_t *S
 }
 
 
-static void TO_LAB_PrintHardcodedBcnField(const char *Name, const uint8 *Bytes, size_t PacketSize, size_t Offset,
-                                          size_t FieldSize)
-{
-    if ((Offset + FieldSize) > PacketSize)
-    {
-        TO_LAB_APP_printf("TO_LAB RF BCN %-24s: out_of_range offset=%lu len=%lu packet_len=%lu\n", Name,
-                          (unsigned long)Offset, (unsigned long)FieldSize, (unsigned long)PacketSize);
-        return;
-    }
-
-    TO_LAB_APP_printf("TO_LAB RF BCN %-24s:", Name);
-    for (size_t i = 0; i < FieldSize; i++)
-    {
-        TO_LAB_APP_printf(" %02X", (unsigned int)Bytes[Offset + i]);
-    }
-    TO_LAB_APP_printf("\n");
-}
-
-static void TO_LAB_PrintHkCombinedPkt1Hardcoded(const CFE_SB_Buffer_t *SBBufPtr, CFE_MSG_Size_t SourceSize)
+static void TO_LAB_PrintHkCombinedPkt1Hardcoded(const char *Path, const CFE_SB_Buffer_t *SBBufPtr,
+                                                CFE_MSG_Size_t SourceSize)
 {
     const uint8 *Bytes = (const uint8 *)SBBufPtr;
+    RPT_BcnTlm_Payload_t      Rpt;
+    UTRX_BcnTlm_Payload_t     Utrx;
+    LTRX_BcnTlm_Payload_t     Ltrx;
+    EPS_BcnTlm_Full_Payload_t Eps;
+    GPIO_BcnTlm_Payload_t     Gpio;
+    ADCS_BcnTlm_Payload_t     Adcs;
 
     enum
     {
-        BCN_RPT_OFFSET  = 12,
-        BCN_UTRX_OFFSET = 19,
-        BCN_LTRX_OFFSET = 28,
-        BCN_EPS_OFFSET  = 33,
-        BCN_GPIO_OFFSET = 177,
-        BCN_ADCS_OFFSET = 180
+        BCN_RPT_OFFSET  = TO_LAB_HK_COMBINED_PKT1_PAYLOAD_OFFSET,
+        BCN_UTRX_OFFSET = BCN_RPT_OFFSET + sizeof(RPT_BcnTlm_Payload_t),
+        BCN_LTRX_OFFSET = BCN_UTRX_OFFSET + sizeof(UTRX_BcnTlm_Payload_t),
+        BCN_EPS_OFFSET  = BCN_LTRX_OFFSET + sizeof(LTRX_BcnTlm_Payload_t),
+        BCN_GPIO_OFFSET = BCN_EPS_OFFSET + sizeof(EPS_BcnTlm_Full_Payload_t),
+        BCN_ADCS_OFFSET = BCN_GPIO_OFFSET + sizeof(GPIO_BcnTlm_Payload_t),
+        BCN_MIN_SIZE    = BCN_ADCS_OFFSET + sizeof(ADCS_BcnTlm_Payload_t)
     };
 
-    TO_LAB_APP_printf("TO_LAB RF BCN hardcoded parse: src_len=%lu\n", (unsigned long)SourceSize);
+    if (SBBufPtr == NULL)
+    {
+        return;
+    }
 
-    TO_LAB_PrintHardcodedBcnField("RPT.BootCount", Bytes, SourceSize, BCN_RPT_OFFSET + 0, 2);
-    TO_LAB_PrintHardcodedBcnField("RPT.Sequence", Bytes, SourceSize, BCN_RPT_OFFSET + 2, 4);
-    TO_LAB_PrintHardcodedBcnField("RPT.ResetCause", Bytes, SourceSize, BCN_RPT_OFFSET + 6, 1);
+    TO_LAB_APP_printf("TO_LAB %s HKPKT1 hardcoded parse: src_len=%lu\n", Path, (unsigned long)SourceSize);
 
-    TO_LAB_PrintHardcodedBcnField("UTRX.ActiveConf", Bytes, SourceSize, BCN_UTRX_OFFSET + 0, 1);
-    TO_LAB_PrintHardcodedBcnField("UTRX.BootCount", Bytes, SourceSize, BCN_UTRX_OFFSET + 1, 2);
-    TO_LAB_PrintHardcodedBcnField("UTRX.BootCause", Bytes, SourceSize, BCN_UTRX_OFFSET + 3, 4);
-    TO_LAB_PrintHardcodedBcnField("UTRX.TempBrd", Bytes, SourceSize, BCN_UTRX_OFFSET + 7, 2);
+    if (SourceSize < BCN_MIN_SIZE)
+    {
+        TO_LAB_APP_printf("TO_LAB %s HKPKT1 parse: packet too short src_len=%lu min=%lu\n",
+                          Path, (unsigned long)SourceSize, (unsigned long)BCN_MIN_SIZE);
+        return;
+    }
 
-    TO_LAB_PrintHardcodedBcnField("LTRX.Temperature", Bytes, SourceSize, BCN_LTRX_OFFSET + 0, 2);
-    TO_LAB_PrintHardcodedBcnField("LTRX.ConnectionQuality", Bytes, SourceSize, BCN_LTRX_OFFSET + 2, 1);
-    TO_LAB_PrintHardcodedBcnField("LTRX.BatteryCapacity", Bytes, SourceSize, BCN_LTRX_OFFSET + 3, 2);
+    memcpy(&Rpt, &Bytes[BCN_RPT_OFFSET], sizeof(Rpt));
+    memcpy(&Utrx, &Bytes[BCN_UTRX_OFFSET], sizeof(Utrx));
+    memcpy(&Ltrx, &Bytes[BCN_LTRX_OFFSET], sizeof(Ltrx));
+    memcpy(&Eps, &Bytes[BCN_EPS_OFFSET], sizeof(Eps));
+    memcpy(&Gpio, &Bytes[BCN_GPIO_OFFSET], sizeof(Gpio));
+    memcpy(&Adcs, &Bytes[BCN_ADCS_OFFSET], sizeof(Adcs));
 
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.bootcause", Bytes, SourceSize, BCN_EPS_OFFSET + 0, 4);
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.resetcause", Bytes, SourceSize, BCN_EPS_OFFSET + 4, 2);
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.bootcount", Bytes, SourceSize, BCN_EPS_OFFSET + 6, 2);
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.out_en", Bytes, SourceSize, BCN_EPS_OFFSET + 8, 6);
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.temp", Bytes, SourceSize, BCN_EPS_OFFSET + 14, 4);
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.batt_mode", Bytes, SourceSize, BCN_EPS_OFFSET + 18, 1);
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.batt_i", Bytes, SourceSize, BCN_EPS_OFFSET + 19, 2);
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.batt_v", Bytes, SourceSize, BCN_EPS_OFFSET + 21, 2);
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.sm_en_mask", Bytes, SourceSize, BCN_EPS_OFFSET + 23, 1);
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.gnd_wdt_cnt", Bytes, SourceSize, BCN_EPS_OFFSET + 24, 2);
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.bus_wdt_cnt", Bytes, SourceSize, BCN_EPS_OFFSET + 26, 2);
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.gnd_wdt_left", Bytes, SourceSize, BCN_EPS_OFFSET + 28, 4);
-    TO_LAB_PrintHardcodedBcnField("EPS.PMU.bus_wdt_left", Bytes, SourceSize, BCN_EPS_OFFSET + 32, 4);
-
-    TO_LAB_PrintHardcodedBcnField("EPS.PDU.out_i", Bytes, SourceSize, BCN_EPS_OFFSET + 36, 24);
-    TO_LAB_PrintHardcodedBcnField("EPS.PDU.out_en", Bytes, SourceSize, BCN_EPS_OFFSET + 60, 12);
-
-    TO_LAB_PrintHardcodedBcnField("EPS.ACU0.input_i", Bytes, SourceSize, BCN_EPS_OFFSET + 72, 12);
-    TO_LAB_PrintHardcodedBcnField("EPS.ACU0.input_v", Bytes, SourceSize, BCN_EPS_OFFSET + 84, 12);
-    TO_LAB_PrintHardcodedBcnField("EPS.ACU0.mppt_mode", Bytes, SourceSize, BCN_EPS_OFFSET + 96, 1);
-    TO_LAB_PrintHardcodedBcnField("EPS.ACU1.input_i", Bytes, SourceSize, BCN_EPS_OFFSET + 97, 12);
-    TO_LAB_PrintHardcodedBcnField("EPS.ACU1.input_v", Bytes, SourceSize, BCN_EPS_OFFSET + 109, 12);
-    TO_LAB_PrintHardcodedBcnField("EPS.ACU1.mppt_mode", Bytes, SourceSize, BCN_EPS_OFFSET + 121, 1);
-
-    TO_LAB_PrintHardcodedBcnField("EPS.BP8.bootcount", Bytes, SourceSize, BCN_EPS_OFFSET + 122, 2);
-    TO_LAB_PrintHardcodedBcnField("EPS.BP8.bootcause", Bytes, SourceSize, BCN_EPS_OFFSET + 124, 2);
-    TO_LAB_PrintHardcodedBcnField("EPS.BP8.resetcause", Bytes, SourceSize, BCN_EPS_OFFSET + 126, 2);
-    TO_LAB_PrintHardcodedBcnField("EPS.BP8.soc", Bytes, SourceSize, BCN_EPS_OFFSET + 128, 4);
-    TO_LAB_PrintHardcodedBcnField("EPS.BP8.bat_avr_temp", Bytes, SourceSize, BCN_EPS_OFFSET + 132, 4);
-    TO_LAB_PrintHardcodedBcnField("EPS.BP8.vbat", Bytes, SourceSize, BCN_EPS_OFFSET + 136, 2);
-    TO_LAB_PrintHardcodedBcnField("EPS.BP8.current", Bytes, SourceSize, BCN_EPS_OFFSET + 138, 4);
-    TO_LAB_PrintHardcodedBcnField("EPS.BP8.heater_i", Bytes, SourceSize, BCN_EPS_OFFSET + 142, 2);
-
-    TO_LAB_PrintHardcodedBcnField("GPIO.GpioState", Bytes, SourceSize, BCN_GPIO_OFFSET + 0, 1);
-    TO_LAB_PrintHardcodedBcnField("GPIO.Padding", Bytes, SourceSize, BCN_GPIO_OFFSET + 1, 1);
-    TO_LAB_PrintHardcodedBcnField("GPIO.isDeployed", Bytes, SourceSize, BCN_GPIO_OFFSET + 2, 1);
-
-    TO_LAB_PrintHardcodedBcnField("ADCS.PowerState", Bytes, SourceSize, BCN_ADCS_OFFSET + 0, 1);
-    TO_LAB_PrintHardcodedBcnField("ADCS.ControlMode", Bytes, SourceSize, BCN_ADCS_OFFSET + 1, 1);
-    TO_LAB_PrintHardcodedBcnField("ADCS.GYR0CalRateX", Bytes, SourceSize, BCN_ADCS_OFFSET + 2, 4);
-    TO_LAB_PrintHardcodedBcnField("ADCS.GYR0CalRateY", Bytes, SourceSize, BCN_ADCS_OFFSET + 6, 4);
-    TO_LAB_PrintHardcodedBcnField("ADCS.GYR0CalRateZ", Bytes, SourceSize, BCN_ADCS_OFFSET + 10, 4);
-    TO_LAB_PrintHardcodedBcnField("ADCS.CSS", Bytes, SourceSize, BCN_ADCS_OFFSET + 14, 6);
+    TO_LAB_APP_printf("\n============[ TO_LAB %s HK COMBINED BCN ]============\n", Path);
+    TO_LAB_APP_printf("[RPT]  reset_cause=%u | boot_count=%u | seq=%lu\n",
+                      (unsigned int)Rpt.ResetCause, (unsigned int)Rpt.BootCount,
+                      (unsigned long)Rpt.Sequence);
+    TO_LAB_APP_printf("[UTRX] active=%u | boot_count=%u\n",
+                      (unsigned int)Utrx.ActiveConf, (unsigned int)Utrx.BootCount);
+    TO_LAB_APP_printf("       boot_cause=0x%08lX | temp=%d\n",
+                      (unsigned long)Utrx.BootCause, (int)Utrx.TempBrd);
+    TO_LAB_APP_printf("[LTRX] temp=%d | conn_quality=%u | batt_capacity=%u\n",
+                      (int)Ltrx.Temperature, (unsigned int)Ltrx.ConnectionQuality,
+                      (unsigned int)Ltrx.BatteryCapacity);
+    TO_LAB_APP_printf("------------------[ EPS ]------------------\n");
+    TO_LAB_APP_printf("[PMU]  bootcause=0x%08lX reset=%u boot=%u\n",
+                      (unsigned long)Eps.PMU.bootcause, (unsigned int)Eps.PMU.resetcause,
+                      (unsigned int)Eps.PMU.bootcount);
+    TO_LAB_APP_printf("       out_en=[%s,%s,%s,%s,%s,%s]\n",
+                      TO_LAB_OnOffString(Eps.PMU.out_en[0]), TO_LAB_OnOffString(Eps.PMU.out_en[1]),
+                      TO_LAB_OnOffString(Eps.PMU.out_en[2]), TO_LAB_OnOffString(Eps.PMU.out_en[3]),
+                      TO_LAB_OnOffString(Eps.PMU.out_en[4]), TO_LAB_OnOffString(Eps.PMU.out_en[5]));
+    TO_LAB_APP_printf("       temp=[%d,%d] batt_mode=%u sm=0x%02X\n",
+                      (int)Eps.PMU.temp[0], (int)Eps.PMU.temp[1],
+                      (unsigned int)Eps.PMU.batt_mode, (unsigned int)Eps.PMU.sm_en_mask);
+    TO_LAB_APP_printf("       sm_en: SM0=%s SM1=%s SM2=%s SM3=%s SM4=%s SM5=%s SM6=%s SM7=%s\n",
+                      TO_LAB_BitOnOffString(Eps.PMU.sm_en_mask, 0),
+                      TO_LAB_BitOnOffString(Eps.PMU.sm_en_mask, 1),
+                      TO_LAB_BitOnOffString(Eps.PMU.sm_en_mask, 2),
+                      TO_LAB_BitOnOffString(Eps.PMU.sm_en_mask, 3),
+                      TO_LAB_BitOnOffString(Eps.PMU.sm_en_mask, 4),
+                      TO_LAB_BitOnOffString(Eps.PMU.sm_en_mask, 5),
+                      TO_LAB_BitOnOffString(Eps.PMU.sm_en_mask, 6),
+                      TO_LAB_BitOnOffString(Eps.PMU.sm_en_mask, 7));
+    TO_LAB_APP_printf("       batt: i=%d mA  v=%u mV\n",
+                      (int)Eps.PMU.batt_i, (unsigned int)Eps.PMU.batt_v);
+    TO_LAB_APP_printf("       wdt: gnd_cnt=%u  gnd_left=%lu s  bus_cnt=%u  bus_left=%lu s\n",
+                      (unsigned int)Eps.PMU.gnd_wdt_cnt, (unsigned long)Eps.PMU.gnd_wdt_left,
+                      (unsigned int)Eps.PMU.bus_wdt_cnt, (unsigned long)Eps.PMU.bus_wdt_left);
+    TO_LAB_APP_printf("[PDU]  ch | I(mA) | EN\n");
+    for (size_t i = 0; i < EPS_PDU_BCN_USED_CH_COUNT; i++)
+    {
+        TO_LAB_APP_printf("       %02u | %6d | %3s\n", (unsigned int)TO_LAB_EPS_PDU_BCN_CHANNELS[i],
+                          (int)Eps.PDU.out_i[i], TO_LAB_OnOffString(Eps.PDU.out_en[i]));
+    }
+    TO_LAB_APP_printf("[ACU1] in_i(mA)=[%d,%d,%d,%d,%d,%d]\n",
+                      (int)Eps.ACU[0].input_i[0], (int)Eps.ACU[0].input_i[1],
+                      (int)Eps.ACU[0].input_i[2], (int)Eps.ACU[0].input_i[3],
+                      (int)Eps.ACU[0].input_i[4], (int)Eps.ACU[0].input_i[5]);
+    TO_LAB_APP_printf("       in_v(mV)=[%u,%u,%u,%u,%u,%u] mppt=%u\n",
+                      (unsigned int)Eps.ACU[0].input_v[0], (unsigned int)Eps.ACU[0].input_v[1],
+                      (unsigned int)Eps.ACU[0].input_v[2], (unsigned int)Eps.ACU[0].input_v[3],
+                      (unsigned int)Eps.ACU[0].input_v[4], (unsigned int)Eps.ACU[0].input_v[5],
+                      (unsigned int)Eps.ACU[0].mppt_mode);
+    TO_LAB_APP_printf("[ACU2] in_i(mA)=[%d,%d,%d,%d,%d,%d]\n",
+                      (int)Eps.ACU[1].input_i[0], (int)Eps.ACU[1].input_i[1],
+                      (int)Eps.ACU[1].input_i[2], (int)Eps.ACU[1].input_i[3],
+                      (int)Eps.ACU[1].input_i[4], (int)Eps.ACU[1].input_i[5]);
+    TO_LAB_APP_printf("       in_v(mV)=[%u,%u,%u,%u,%u,%u] mppt=%u\n",
+                      (unsigned int)Eps.ACU[1].input_v[0], (unsigned int)Eps.ACU[1].input_v[1],
+                      (unsigned int)Eps.ACU[1].input_v[2], (unsigned int)Eps.ACU[1].input_v[3],
+                      (unsigned int)Eps.ACU[1].input_v[4], (unsigned int)Eps.ACU[1].input_v[5],
+                      (unsigned int)Eps.ACU[1].mppt_mode);
+    TO_LAB_APP_printf("[BP8]  boot=%u cause=0x%04X reset=%u\n",
+                      (unsigned int)Eps.BP8.bootcount, (unsigned int)Eps.BP8.bootcause,
+                      (unsigned int)Eps.BP8.resetcause);
+    TO_LAB_APP_printf("       soc=%.1f %%  temp=%.1f degC\n",
+                      (double)Eps.BP8.soc * 100.0, (double)Eps.BP8.bat_avr_temp);
+    TO_LAB_APP_printf("       vbat=%u mV  current=%.3f A  heater_i=%u mA\n",
+                      (unsigned int)Eps.BP8.vbat, (double)Eps.BP8.current,
+                      (unsigned int)Eps.BP8.heater_i);
+    TO_LAB_APP_printf("-------------------------------------------\n");
+    TO_LAB_APP_printf("[GPIO] state=0x%02X padding=%u deployed=%u | bits: B0=%s B1=%s B2=%s B3=%s B4=%s B5=%s B6=%s B7=%s\n",
+                      (unsigned int)Gpio.GpioState, (unsigned int)Gpio.Padding, (unsigned int)Gpio.isDeployed,
+                      TO_LAB_BitHighLowString(Gpio.GpioState, 0), TO_LAB_BitHighLowString(Gpio.GpioState, 1),
+                      TO_LAB_BitHighLowString(Gpio.GpioState, 2), TO_LAB_BitHighLowString(Gpio.GpioState, 3),
+                      TO_LAB_BitHighLowString(Gpio.GpioState, 4), TO_LAB_BitHighLowString(Gpio.GpioState, 5),
+                      TO_LAB_BitHighLowString(Gpio.GpioState, 6), TO_LAB_BitHighLowString(Gpio.GpioState, 7));
+    TO_LAB_APP_printf("[ADCS] power: RWL0=%s RWL1=%s RWL2=%s MAG0=%s GYR0=%s FSS0=%s HSS0=%s | mode=%u%s\n",
+                      TO_LAB_BitOnOffString(Adcs.PowerState, 6), TO_LAB_BitOnOffString(Adcs.PowerState, 5),
+                      TO_LAB_BitOnOffString(Adcs.PowerState, 4), TO_LAB_BitOnOffString(Adcs.PowerState, 3),
+                      TO_LAB_BitOnOffString(Adcs.PowerState, 2), TO_LAB_BitOnOffString(Adcs.PowerState, 1),
+                      TO_LAB_BitOnOffString(Adcs.PowerState, 0), (unsigned int)Adcs.ControlMode,
+                      TO_LAB_AdcsControlModeName(Adcs.ControlMode));
+    TO_LAB_APP_printf("       gyr(deg/s)=[%.6f, %.6f, %.6f]\n",
+                      (double)Adcs.GYR0CalibratedRateXComponent,
+                      (double)Adcs.GYR0CalibratedRateYComponent,
+                      (double)Adcs.GYR0CalibratedRateZComponent);
+    TO_LAB_APP_printf("       css: CSS0=%u CSS1=%u CSS2=%u CSS3=%u CSS4=%u CSS5=%u\n",
+                      (unsigned int)Adcs.CSS[0], (unsigned int)Adcs.CSS[1], (unsigned int)Adcs.CSS[2],
+                      (unsigned int)Adcs.CSS[3], (unsigned int)Adcs.CSS[4], (unsigned int)Adcs.CSS[5]);
+    TO_LAB_APP_printf("===========================================\n");
 }
 
 static void TO_LAB_PrintRfPayloadDetail(CFE_SB_MsgId_t MsgId, const CFE_SB_Buffer_t *SBBufPtr, const void *NetBufPtr,
@@ -216,7 +298,7 @@ static void TO_LAB_PrintRfPayloadDetail(CFE_SB_MsgId_t MsgId, const CFE_SB_Buffe
                               TO_LAB_HK_COMBINED_PKT1_RF_PREFIX,
                               (unsigned long)TO_LAB_HK_COMBINED_PKT1_RF_PREFIX_SIZE,
                               (unsigned long)SourceSize, (unsigned long)NetBufSize);
-            TO_LAB_PrintHkCombinedPkt1Hardcoded(SBBufPtr, SourceSize);
+            TO_LAB_PrintHkCombinedPkt1Hardcoded("RF", SBBufPtr, SourceSize);
             break;
         default:
             TO_LAB_APP_printf("TO_LAB RF DEFAULT: unparsed payload\n");
@@ -374,6 +456,7 @@ void TO_LAB_ForwardTelemetryUDP(void)
                     CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
                     if (CFE_SB_MsgIdToValue(MsgId) == (CFE_SB_MsgId_Atom_t)HK_COMBINED_PKT1_MID)
                     {
+                        CFE_MSG_Size_t SourceSize = 0;
                         uint32_t beacon_slot = BCN_PktCount % 20;
                         BCN_PktCount++;
 
@@ -384,6 +467,13 @@ void TO_LAB_ForwardTelemetryUDP(void)
                         {
                             continue;
                         }
+
+                        (void)CFE_MSG_GetSize(&SBBufPtr->Msg, &SourceSize);
+                        TO_LAB_APP_printf("TO_LAB UDP HK_COMBINED_PKT1: src_len=%lu net_len=%lu slot=%lu dest=%s:%u\n",
+                                          (unsigned long)SourceSize, (unsigned long)NetBufSize,
+                                          (unsigned long)beacon_slot, TO_LAB_Global.tlm_dest_IP,
+                                          (unsigned int)TO_LAB_TLM_PORT);
+                        TO_LAB_PrintHkCombinedPkt1Hardcoded("UDP", SBBufPtr, SourceSize);
                         
                     }
                     

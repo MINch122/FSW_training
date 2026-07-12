@@ -256,7 +256,7 @@ void UTRX_AX100_RXCONF_GetBaudCmd(const UTRX_AX100_GetRxBaudCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_RXCONF_GET_BAUD_CC, status);
     } else {
-        OS_printf("[UTRX] RX Baud: %u\n", (unsigned)baud);
+        UTRX_APP_printf("[UTRX] RX Baud: %u\n", (unsigned)baud);
     }
     UTRX_RptEnd();
 }
@@ -278,7 +278,7 @@ void UTRX_AX100_RXCONF_GetGuardCmd(const UTRX_AX100_GetRxGuardCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_RXCONF_GET_GUARD_CC, status);
     } else {
-        OS_printf("[UTRX] RX GUARD: %u\n", (unsigned)val);
+        UTRX_APP_printf("[UTRX] RX GUARD: %u\n", (unsigned)val);
     }
     UTRX_RptEnd();
 }
@@ -300,7 +300,7 @@ void UTRX_AX100_RXCONF_GetFreqCmd(const UTRX_AX100_GetRxFreqCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_RXCONF_GET_FREQ_CC, status);
     } else {
-        OS_printf("[UTRX] RX Freq: %u\n", (unsigned)val);
+        UTRX_APP_printf("[UTRX] RX Freq: %u\n", (unsigned)val);
     }
     UTRX_RptEnd();
 }
@@ -324,7 +324,7 @@ void UTRX_AX100_TXCONF_GetBaudCmd(const UTRX_AX100_GetTxBaudCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_TXCONF_GET_BAUD_CC, status);
     } else {
-        OS_printf("[UTRX] TX Baud: %u\n", (unsigned)val);
+        UTRX_APP_printf("[UTRX] TX Baud: %u\n", (unsigned)val);
     }
     UTRX_RptEnd();
 }
@@ -346,7 +346,7 @@ void UTRX_AX100_TXCONF_GetFreqCmd(const UTRX_AX100_GetTxFreqCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_TXCONF_GET_FREQ_CC, status);
     } else {
-        OS_printf("[UTRX] TX Freq: %u\n", (unsigned)val);
+        UTRX_APP_printf("[UTRX] TX Freq: %u\n", (unsigned)val);
     }
     UTRX_RptEnd();
 }
@@ -370,7 +370,7 @@ void UTRX_AX100_TLM_GetTempBrdCmd(const UTRX_AX100_GetTempBrdCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_TLM_GET_TEMP_BRD_CC, status);
     } else {
-        OS_printf("[UTRX] TEMPERATURE: %d\n", (int)val);
+        UTRX_APP_printf("[UTRX] TEMPERATURE: %d\n", (int)val);
     }
     UTRX_RptEnd();
 }
@@ -392,7 +392,7 @@ void UTRX_AX100_TLM_GetLastRssiCmd(const UTRX_AX100_GetLastRssiCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_TLM_GET_LAST_RSSI_CC, status);
     } else {
-        OS_printf("[UTRX] LAST RSSI: %d\n", (int)val);
+        UTRX_APP_printf("[UTRX] LAST RSSI: %d\n", (int)val);
     }
     UTRX_RptEnd();
 }
@@ -414,7 +414,7 @@ void UTRX_AX100_TLM_GetLastRferrCmd(const UTRX_AX100_GetLastRferrCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_TLM_GET_LAST_RFERR_CC, status);
     } else {
-        OS_printf("[UTRX] LAST RFERR: %d\n", (int)val);
+        UTRX_APP_printf("[UTRX] LAST RFERR: %d\n", (int)val);
     }
     UTRX_RptEnd();
 }
@@ -436,7 +436,7 @@ void UTRX_AX100_TLM_GetActiveConfCmd(const UTRX_AX100_GetActiveConfCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_TLM_GET_ACTIVE_CONF_CC, status);
     } else {
-        OS_printf("[UTRX] ACTIVE CONF: %u\n", (unsigned)val);
+        UTRX_APP_printf("[UTRX] ACTIVE CONF: %u\n", (unsigned)val);
     }
     UTRX_RptEnd();
 }
@@ -458,7 +458,7 @@ void UTRX_AX100_TLM_GetBootCountCmd(const UTRX_AX100_GetBootCountCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_TLM_GET_BOOT_COUNT_CC, status);
     } else {
-        OS_printf("[UTRX] BOOT COUNT: %u\n", (unsigned)val);
+        UTRX_APP_printf("[UTRX] BOOT COUNT: %u\n", (unsigned)val);
     }
     UTRX_RptEnd();
 }
@@ -480,7 +480,7 @@ void UTRX_AX100_TLM_GetBootCauseCmd(const UTRX_AX100_GetBootCauseCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_TLM_GET_BOOT_CAUSE_CC, status);
     } else {
-        OS_printf("[UTRX] BOOT CAUSE: %u\n", (unsigned)val);
+        UTRX_APP_printf("[UTRX] BOOT CAUSE: %u\n", (unsigned)val);
     }
     UTRX_RptEnd();
 }
@@ -502,7 +502,7 @@ void UTRX_AX100_TLM_GetLastContactCmd(const UTRX_AX100_GetLastContactCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_TLM_GET_LAST_CONTACT_CC, status);
     } else {
-        OS_printf("[UTRX] LAST CONTACT: %u\n", (unsigned)val);
+        UTRX_APP_printf("[UTRX] LAST CONTACT: %u\n", (unsigned)val);
     }
     UTRX_RptEnd();
 }
@@ -524,7 +524,7 @@ void UTRX_AX100_TLM_GetTotTxBytesCmd(const UTRX_AX100_GetTotTxBytesCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_TLM_GET_TOT_TX_BYTES_CC, status);
     } else {
-        OS_printf("[UTRX] TOTAL TX BYTES: %u\n", (unsigned)val);
+        UTRX_APP_printf("[UTRX] TOTAL TX BYTES: %u\n", (unsigned)val);
     }
     UTRX_RptEnd();
 }
@@ -546,7 +546,7 @@ void UTRX_AX100_TLM_GetTotRxBytesCmd(const UTRX_AX100_GetTotRxBytesCmd_t *Msg)
                           "UTRX AX100: CC=%u failed, Status=%" PRId32,
                           UTRX_TLM_GET_TOT_RX_BYTES_CC, status);
     } else {
-        OS_printf("[UTRX] TOTAL RX BYTES: %u\n", (unsigned)val);
+        UTRX_APP_printf("[UTRX] TOTAL RX BYTES: %u\n", (unsigned)val);
     }
     UTRX_RptEnd();
 }

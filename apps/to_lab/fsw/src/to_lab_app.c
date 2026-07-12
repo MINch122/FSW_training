@@ -99,9 +99,10 @@ void TO_LAB_AppMain(void)
 void TO_LAB_delete_callback(void)
 {
     OS_printf("TO delete callback -- Closing TO Network socket.\n");
-    if (TO_LAB_Global.downlink_on)
+    if (OS_ObjectIdDefined(TO_LAB_Global.TLMsockid))
     {
         OS_close(TO_LAB_Global.TLMsockid);
+        TO_LAB_Global.TLMsockid = OS_OBJECT_ID_UNDEFINED;
     }
 }
 
@@ -125,6 +126,7 @@ CFE_Status_t TO_LAB_init(void)
     /* Zero out the global data structure */
     memset(&TO_LAB_Global, 0, sizeof(TO_LAB_Global));
 
+    TO_LAB_Global.TLMsockid   = OS_OBJECT_ID_UNDEFINED;
     TO_LAB_Global.downlink_on = false;
     PipeDepth                 = TO_LAB_CMD_PIPE_DEPTH;
     strcpy(PipeName, "TO_LAB_CMD_PIPE");
@@ -250,7 +252,7 @@ CFE_Status_t TO_LAB_init(void)
     
     if (OsStatus == OS_SUCCESS) {
         /* Create Child Task */
-        status = CFE_ES_CreateChildTask(&TO_LAB_Global.ChildId, TO_CHILD_NAME, TO_LAB_ForwardTelemetryRF,
+        status = CFE_ES_CreateChildTask(&TO_LAB_Global.ChildId, TO_CHILD_NAME, TO_LAB_ForwardTelemetryUDP,
                                         CFE_ES_TASK_STACK_ALLOCATE, TO_CHILD_STACK_SIZE(3),
                                         TO_CHILD_PRIORITY, 0);
         OS_printf("%s: TO child Created Status: 0x%08X\n", __func__, status);
@@ -268,9 +270,15 @@ void TO_LAB_openTLM(void)
 {
     int32 status;
 
+    if (OS_ObjectIdDefined(TO_LAB_Global.TLMsockid))
+    {
+        return;
+    }
+
     status = OS_SocketOpen(&TO_LAB_Global.TLMsockid, OS_SocketDomain_INET, OS_SocketType_DATAGRAM);
     if (status != OS_SUCCESS)
     {
+        TO_LAB_Global.TLMsockid = OS_OBJECT_ID_UNDEFINED;
         CFE_EVS_SendEvent(TO_LAB_TLMOUTSOCKET_ERR_EID, CFE_EVS_EventType_ERROR, "L%d, TO TLM socket error: %d",
                           __LINE__, (int)status);
     }

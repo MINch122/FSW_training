@@ -332,11 +332,11 @@ int32 csp_checkstate_ping(uint8_t node) {
     int rtt = CFE_SRL_ApiPingCSP(node, 1000, 4, CSP_O_CRC32);
 
     if (rtt > 0) {
-        OS_printf("[CSP] Ping to node %d successful, RTT = %d ms\n", node, rtt);
+        UTRX_APP_printf("[CSP] Ping to node %d successful, RTT = %d ms\n", node, rtt);
         return DEVICE_SUCCESS;
     } 
     else {
-        OS_printf("[CSP] Ping to node %d failed\n", node);
+        UTRX_APP_printf("[CSP] Ping to node %d failed\n", node);
         return DEVICE_ERROR;
     }
 }

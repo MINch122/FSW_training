@@ -38,9 +38,15 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 CFE_Status_t TO_LAB_EnableOutputCmd(const TO_LAB_EnableOutputCmd_t *data)
 {
-    (void)data;
+    const TO_LAB_EnableOutput_Payload_t *pCmd = &data->Payload;
 
-    CFE_EVS_SendEvent(TO_LAB_TLMOUTENA_INF_EID, CFE_EVS_EventType_INFORMATION, "TO telemetry output enabled.");
+    (void)CFE_SB_MessageStringGet(TO_LAB_Global.tlm_dest_IP, pCmd->dest_IP, "127.0.0.1",
+                                  sizeof(TO_LAB_Global.tlm_dest_IP), sizeof(pCmd->dest_IP));
+    TO_LAB_Global.suppress_sendto = false;
+    TO_LAB_openTLM();
+
+    CFE_EVS_SendEvent(TO_LAB_TLMOUTENA_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "TO telemetry output enabled. UDP dest=%s", TO_LAB_Global.tlm_dest_IP);
 
     if (!TO_LAB_Global.downlink_on) /* Then turn it on, otherwise we will just switch destination addresses*/
     {
@@ -249,7 +255,7 @@ CFE_Status_t TO_LAB_RemoveAllCmd(const TO_LAB_RemoveAllCmd_t *data)
 CFE_Status_t TO_CreateChildCmd(const TO_CreateChildCmd_t *Msg) {
     CFE_Status_t Status;
 
-    Status = CFE_ES_CreateChildTask(&TO_LAB_Global.ChildId, TO_CHILD_NAME, TO_LAB_ForwardTelemetryRF,
+    Status = CFE_ES_CreateChildTask(&TO_LAB_Global.ChildId, TO_CHILD_NAME, TO_LAB_ForwardTelemetryUDP,
                                     CFE_ES_TASK_STACK_ALLOCATE, TO_CHILD_STACK_SIZE(3),
                                     TO_CHILD_PRIORITY, 0);
     TO_HandleReport(Status, TO_CREATE_CHILD_CC, NULL, 0);

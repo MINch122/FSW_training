@@ -82,12 +82,10 @@ void RPT_Enqueue(const RPT_Report_t *Report, bool IsCritical) {
         RPT_Data.RptQueue.Entry[RPT_Data.RptQueue.Head] = *Report;
         RPT_Data.RptQueue.Head = (RPT_Data.RptQueue.Head +1) % RPT_REPORT_QUEUE_LEN;
         if (RPT_Data.RptQueue.Count < RPT_REPORT_QUEUE_LEN) RPT_Data.RptQueue.Count ++;
-        OS_printf("Report Q Head: %u || Count:%u\n", RPT_Data.RptQueue.Head, RPT_Data.RptQueue.Count);
         
         OS_MutSemGive(RPT_Data.ReportMutexID);
     }
-    CFE_ES_WriteToSysLog("%s: Report Enqueued. MID: 0x%04X || CC: %u\n", __func__, Report->MsgID, Report->CommandCode);
-
+ 
 }
 
 int32 RPT_Report(const RPT_Report_t *Report, bool IsCritical) {

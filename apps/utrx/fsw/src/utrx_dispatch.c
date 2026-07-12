@@ -321,20 +321,14 @@ void UTRX_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
     switch (CFE_SB_MsgIdToValue(MsgId))
     {
         case UTRX_CMD_MID:
-            CFE_EVS_SendEvent(UTRX_MID_ERR_EID, CFE_EVS_EventType_ERROR, "UTRX: Call ProcessGround Telemetery MID = 0x%x",
-                              (unsigned int)CFE_SB_MsgIdToValue(MsgId));
             UTRX_ProcessGroundCommand(SBBufPtr);
             break;
 
         case UTRX_SEND_HK_MID:
-            CFE_EVS_SendEvent(UTRX_MID_ERR_EID, CFE_EVS_EventType_ERROR, "UTRX: Call Send HK MID = 0x%x",
-                              (unsigned int)CFE_SB_MsgIdToValue(MsgId));
             UTRX_ReportHousekeeping();
             break;
 
         case UTRX_SEND_BCN_MID:
-            CFE_EVS_SendEvent(UTRX_MID_ERR_EID, CFE_EVS_EventType_ERROR, "UTRX: Call Sendbcn Mid = 0x%x",
-                              (unsigned int)CFE_SB_MsgIdToValue(MsgId));
             UTRX_ReportBeacon();
             break;
         

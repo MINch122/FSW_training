@@ -33,14 +33,18 @@
 
 #include "utrx_interface_cfg.h"
 
+#ifndef UTRX_DEBUG
+#define UTRX_DEBUG true
+#endif
+
 #ifndef DEBUG_UTRX
-#define DEBUG_UTRX false
+#define DEBUG_UTRX UTRX_DEBUG
 #endif
 
 #if DEBUG_UTRX
 #define UTRX_APP_printf(...) OS_printf(__VA_ARGS__)
 #else
-#define UTRX_APP_printf(...) do { } while (0)
+#define UTRX_APP_printf(...) do { if (false) { OS_printf(__VA_ARGS__); } } while (0)
 #endif
 
 #endif

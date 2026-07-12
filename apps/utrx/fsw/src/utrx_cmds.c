@@ -227,16 +227,8 @@ void UTRX_ReportHousekeeping(void)
     if (UTRX_TLM_GetTotRxBytes(&hk->TotRxBytes) != DEVICE_SUCCESS) errmask |= (1u << 8);
 
     if (errmask != 0u) {
-        OS_printf("[UTRX][HK] collected with errors mask=0x%08X\n", (unsigned)errmask);
+        UTRX_APP_printf("[UTRX][HK] collected with errors mask=0x%08X\n", (unsigned)errmask);
     }
-
-    UTRX_APP_printf("UTRX: HK report requested\n");
-    OS_printf("[UTRX][HK] temp=%d, rssi=%d, rferr=%d, act=%u, boot_cnt=%u, cause=0x%08X, "
-              "last=%u, tx=%u, rx=%u\n",
-              (int)hk->TempBrd, (int)hk->LastRssi, (int)hk->LastRferr,
-              (unsigned)hk->ActiveConf, (unsigned)hk->BootCount,
-              (unsigned)hk->BootCause, (unsigned)hk->LastContact,
-              (unsigned)hk->TotTxBytes, (unsigned)hk->TotRxBytes);
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
     Status = CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true);
@@ -278,7 +270,7 @@ void UTRX_ReportBeacon(void)
     }
 
   if (errmask != 0u) {
-    OS_printf("[UTRX][BCN] collected with errors mask=0x%02X\n",
+    UTRX_APP_printf("[UTRX][BCN] collected with errors mask=0x%02X\n",
               (unsigned)errmask);
     }
 
@@ -289,8 +281,8 @@ void UTRX_ReportBeacon(void)
         return;
     }
 
-    OS_printf("[UTRX][BCN] act=%u, boot_cnt=%u, cause=0x%08X\n",
-            bcn->ActiveConf, bcn->BootCount, 
-            bcn->BootCause);
+    // UTRX_APP_printf("[UTRX][BCN] act=%u, boot_cnt=%u, cause=0x%08X\n",
+    //         bcn->ActiveConf, bcn->BootCount, 
+    //         bcn->BootCause);
 
 }
