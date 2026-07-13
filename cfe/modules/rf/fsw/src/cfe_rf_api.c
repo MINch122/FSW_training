@@ -10,6 +10,9 @@
 #include "cfe_rf_typedef.h"
 #include "cfe_rf_extern_typedefs.h"
 #include "cfe_rf_msgids.h"
+#include "cfe_msg.h"
+#include "cfe_sb.h"
+#include "rpt_msgids.h"
 #include "osapi.h"
 /**
  * Global data
@@ -175,9 +178,20 @@ int32 CFE_RF_TelemetryEmit(void *BufPtr, size_t Size, uint8_t Port) {
     int32 Status;
     uint16_t TotSendByte = 0;
     uint16_t SendByte = 0;
+    uint16_t MaxMtu = RF_MAX_MTU;
+
+    if (BufPtr != NULL) {
+        CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
+        if (CFE_MSG_GetMsgId((CFE_MSG_Message_t *)BufPtr, &MsgId) == CFE_SUCCESS) {
+            CFE_SB_MsgId_Atom_t MsgIdValue = CFE_SB_MsgIdToValue(MsgId);
+            if (MsgIdValue == (CFE_SB_MsgId_Atom_t)RPT_REPORT_TLM_MID || MsgIdValue == (CFE_SB_MsgId_Atom_t)RPT_CRITICAL_TLM_MID) {
+                MaxMtu = RF_RPT_MAX_MTU;
+            }
+        }
+    }
 
     while (TotSendByte < Size) {
-        SendByte = (Size - TotSendByte > RF_MAX_MTU) ? RF_MAX_MTU : (Size - TotSendByte);
+        SendByte = (Size - TotSendByte > MaxMtu) ? MaxMtu : (Size - TotSendByte);
         Status = CFE_SRL_ApiTransactionCSP(CSP_NODE_GS_KISS, Port, (void *)(((uint8_t *)BufPtr) + TotSendByte), SendByte, NULL, 0);
         if (Status <= 0) {
             return Status;

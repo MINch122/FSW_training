@@ -17,10 +17,13 @@
 #include "ltrx_msg.h"
 #include "gpio_msg.h"
 #include "adcs_msg.h"
+#include "pay_slt_msgids.h"
+#include "pay_slt_msg.h"
 #include "hk_msgids.h"
 #include "fm_msgids.h"
 #include "cfe_evs_msgids.h"
 
+#include <stddef.h>
 #include <string.h>
 
 static const uint8 TO_LAB_HK_COMBINED_PKT1_RF_PREFIX[] = "BEE1012";
@@ -102,6 +105,85 @@ static void TO_LAB_PrintBytes(const char *Label, const uint8 *Bytes, size_t Size
     TO_LAB_APP_printf("\n");
 }
 
+static void TO_LAB_PrintU8Array(const char *Label, const uint8 *Values, size_t Count)
+{
+    TO_LAB_APP_printf("%s[", Label);
+    for (size_t i = 0; i < Count; i++)
+    {
+        TO_LAB_APP_printf("%s%u", (i == 0) ? "" : ",", (unsigned int)Values[i]);
+    }
+    TO_LAB_APP_printf("]\n");
+}
+
+static void TO_LAB_PrintU16Array(const char *Label, const uint16 *Values, size_t Count)
+{
+    TO_LAB_APP_printf("%s[", Label);
+    for (size_t i = 0; i < Count; i++)
+    {
+        TO_LAB_APP_printf("%s%u", (i == 0) ? "" : ",", (unsigned int)Values[i]);
+    }
+    TO_LAB_APP_printf("]\n");
+}
+
+static void TO_LAB_PrintI16Array(const char *Label, const int16 *Values, size_t Count)
+{
+    TO_LAB_APP_printf("%s[", Label);
+    for (size_t i = 0; i < Count; i++)
+    {
+        TO_LAB_APP_printf("%s%d", (i == 0) ? "" : ",", (int)Values[i]);
+    }
+    TO_LAB_APP_printf("]\n");
+}
+
+static void TO_LAB_PrintFloatArray(const char *Label, const float *Values, size_t Count)
+{
+    TO_LAB_APP_printf("%s[", Label);
+    for (size_t i = 0; i < Count; i++)
+    {
+        TO_LAB_APP_printf("%s%.6f", (i == 0) ? "" : ",", (double)Values[i]);
+    }
+    TO_LAB_APP_printf("]\n");
+}
+
+#define TO_LAB_PAY_SLT_ARRAY_COUNT(member) \
+    (sizeof(((SLT_IFB_BcnTlm_Payload_t *)0)->member) / sizeof(((SLT_IFB_BcnTlm_Payload_t *)0)->member[0]))
+
+#define TO_LAB_PRINT_PAY_SLT_U8_ARRAY(label, payload_ptr, member)                   \
+    do                                                                             \
+    {                                                                              \
+        uint8 Values[TO_LAB_PAY_SLT_ARRAY_COUNT(member)];                          \
+        memcpy(Values, &(payload_ptr)[offsetof(SLT_IFB_BcnTlm_Payload_t, member)], \
+               sizeof(Values));                                                    \
+        TO_LAB_PrintU8Array((label), Values, TO_LAB_PAY_SLT_ARRAY_COUNT(member));  \
+    } while (0)
+
+#define TO_LAB_PRINT_PAY_SLT_U16_ARRAY(label, payload_ptr, member)                  \
+    do                                                                             \
+    {                                                                              \
+        uint16 Values[TO_LAB_PAY_SLT_ARRAY_COUNT(member)];                         \
+        memcpy(Values, &(payload_ptr)[offsetof(SLT_IFB_BcnTlm_Payload_t, member)], \
+               sizeof(Values));                                                    \
+        TO_LAB_PrintU16Array((label), Values, TO_LAB_PAY_SLT_ARRAY_COUNT(member)); \
+    } while (0)
+
+#define TO_LAB_PRINT_PAY_SLT_I16_ARRAY(label, payload_ptr, member)                  \
+    do                                                                             \
+    {                                                                              \
+        int16 Values[TO_LAB_PAY_SLT_ARRAY_COUNT(member)];                          \
+        memcpy(Values, &(payload_ptr)[offsetof(SLT_IFB_BcnTlm_Payload_t, member)], \
+               sizeof(Values));                                                    \
+        TO_LAB_PrintI16Array((label), Values, TO_LAB_PAY_SLT_ARRAY_COUNT(member)); \
+    } while (0)
+
+#define TO_LAB_PRINT_PAY_SLT_FLOAT_ARRAY(label, payload_ptr, member)                  \
+    do                                                                               \
+    {                                                                                \
+        float Values[TO_LAB_PAY_SLT_ARRAY_COUNT(member)];                            \
+        memcpy(Values, &(payload_ptr)[offsetof(SLT_IFB_BcnTlm_Payload_t, member)],   \
+               sizeof(Values));                                                      \
+        TO_LAB_PrintFloatArray((label), Values, TO_LAB_PAY_SLT_ARRAY_COUNT(member)); \
+    } while (0)
+
 static void TO_LAB_PrintReportPayload(const char *Name, const CFE_SB_Buffer_t *SBBufPtr, CFE_MSG_Size_t SourceSize,
                                       bool IsCritical)
 {
@@ -128,6 +210,57 @@ static void TO_LAB_PrintReportPayload(const char *Name, const CFE_SB_Buffer_t *S
     TO_LAB_PrintBytes("TO_LAB RF report_data_head=", Report->ReturnValue, Report->ReturnDataSize, 16);
 }
 
+static void TO_LAB_PrintPaySltBcnPayload(const char *Path, const CFE_SB_Buffer_t *SBBufPtr,
+                                         CFE_MSG_Size_t SourceSize)
+{
+    const size_t HeaderSize = sizeof(CFE_MSG_TelemetryHeader_t);
+    const uint8 *Bytes = (const uint8 *)SBBufPtr;
+    const uint8 *PayloadPtr = &Bytes[HeaderSize];
+    SLT_IFB_BcnTlm_Payload_t Bcn;
+
+    if (SourceSize < (HeaderSize + sizeof(Bcn)))
+    {
+        TO_LAB_APP_printf("TO_LAB %s PAY_SLT_BCN parse: packet too short src_len=%lu min=%lu\n",
+                          Path, (unsigned long)SourceSize, (unsigned long)(HeaderSize + sizeof(Bcn)));
+        return;
+    }
+
+    memcpy(&Bcn, PayloadPtr, sizeof(Bcn));
+
+    TO_LAB_APP_printf("\n============[ TO_LAB %s PAY-SLT BCN ]============\n", Path);
+    TO_LAB_APP_printf("[CNT] cmd=%u err=%u\n", (unsigned int)Bcn.CmdCounter, (unsigned int)Bcn.ErrCounter);
+    TO_LAB_APP_printf("[PAY-EXP-A7] uptime=%lu now=%lu wdt_left=%lu boot_p=%u boot_c=%u brd_temp=%d sys_status=%d\n",
+                      (unsigned long)Bcn.sys_uptime_a7, (unsigned long)Bcn.sys_now_a7,
+                      (unsigned long)Bcn.wdt_left_a7, (unsigned int)Bcn.boot_cnt_p,
+                      (unsigned int)Bcn.boot_cnt_c, (int)Bcn.brd_temp_a7, (int)Bcn.sys_status_a7);
+    TO_LAB_PRINT_PAY_SLT_U8_ARRAY("       boot_his_p=", PayloadPtr, boot_his_p);
+    TO_LAB_PRINT_PAY_SLT_U8_ARRAY("       boot_his_c=", PayloadPtr, boot_his_c);
+    TO_LAB_PRINT_PAY_SLT_U16_ARRAY("       slf_data=", PayloadPtr, slf_data);
+    TO_LAB_PRINT_PAY_SLT_U16_ARRAY("       brm_data=", PayloadPtr, brm_data);
+    TO_LAB_PRINT_PAY_SLT_U16_ARRAY("       imu_data=", PayloadPtr, imu_data);
+    TO_LAB_PRINT_PAY_SLT_I16_ARRAY("       ntc_data_a7=", PayloadPtr, ntc_data_a7);
+    TO_LAB_PRINT_PAY_SLT_U16_ARRAY("       pwr_volt=", PayloadPtr, pwr_volt);
+    TO_LAB_PRINT_PAY_SLT_U16_ARRAY("       pwr_current=", PayloadPtr, pwr_current);
+
+    TO_LAB_APP_printf("[PAY-IFB] uptime=%lu now=%lu boot=%u sys_status=%d wdt_left=%lu brd_temp=%d sen_rst=%u\n",
+                      (unsigned long)Bcn.sys_uptime_ifb, (unsigned long)Bcn.sys_now_ifb,
+                      (unsigned int)Bcn.boot_cnt, (int)Bcn.sys_status_ifb,
+                      (unsigned long)Bcn.wdt_left_ifb, (int)Bcn.brd_temp_ifb,
+                      (unsigned int)Bcn.sen_rst);
+    TO_LAB_APP_printf("          sen_online=%u sen_qlvl=%u att_ql=%u\n",
+                      (unsigned int)Bcn.sen_online, (unsigned int)Bcn.sen_qlvl,
+                      (unsigned int)Bcn.att_ql);
+    TO_LAB_PRINT_PAY_SLT_U8_ARRAY("       boot_his=", PayloadPtr, boot_his);
+    TO_LAB_PRINT_PAY_SLT_I16_ARRAY("       ntc_data_ifb=", PayloadPtr, ntc_data_ifb);
+    TO_LAB_PRINT_PAY_SLT_U16_ARRAY("       pw_cur=", PayloadPtr, pw_cur);
+    TO_LAB_PRINT_PAY_SLT_U16_ARRAY("       pw_vol=", PayloadPtr, pw_vol);
+    TO_LAB_PRINT_PAY_SLT_FLOAT_ARRAY("       att_q=", PayloadPtr, att_q);
+    TO_LAB_PRINT_PAY_SLT_FLOAT_ARRAY("       rot_r=", PayloadPtr, rot_r);
+    TO_LAB_PRINT_PAY_SLT_FLOAT_ARRAY("       lin_acc=", PayloadPtr, lin_acc);
+    TO_LAB_PRINT_PAY_SLT_FLOAT_ARRAY("       fld_vec=", PayloadPtr, fld_vec);
+    TO_LAB_APP_printf("===========================================\n");
+}
+
 
 static void TO_LAB_PrintHkCombinedPkt1Hardcoded(const char *Path, const CFE_SB_Buffer_t *SBBufPtr,
                                                 CFE_MSG_Size_t SourceSize)
@@ -148,7 +281,7 @@ static void TO_LAB_PrintHkCombinedPkt1Hardcoded(const char *Path, const CFE_SB_B
         BCN_EPS_OFFSET  = BCN_LTRX_OFFSET + sizeof(LTRX_BcnTlm_Payload_t),
         BCN_GPIO_OFFSET = BCN_EPS_OFFSET + sizeof(EPS_BcnTlm_Full_Payload_t),
         BCN_ADCS_OFFSET = BCN_GPIO_OFFSET + sizeof(GPIO_BcnTlm_Payload_t),
-        BCN_MIN_SIZE    = BCN_ADCS_OFFSET + sizeof(ADCS_BcnTlm_Payload_t)
+        BCN_TOTAL_SIZE  = BCN_ADCS_OFFSET + sizeof(ADCS_BcnTlm_Payload_t)
     };
 
     if (SBBufPtr == NULL)
@@ -156,13 +289,26 @@ static void TO_LAB_PrintHkCombinedPkt1Hardcoded(const char *Path, const CFE_SB_B
         return;
     }
 
-    TO_LAB_APP_printf("TO_LAB %s HKPKT1 hardcoded parse: src_len=%lu\n", Path, (unsigned long)SourceSize);
-
-    if (SourceSize < BCN_MIN_SIZE)
+    if (SourceSize < BCN_TOTAL_SIZE)
     {
         TO_LAB_APP_printf("TO_LAB %s HKPKT1 parse: packet too short src_len=%lu min=%lu\n",
-                          Path, (unsigned long)SourceSize, (unsigned long)BCN_MIN_SIZE);
+                          Path, (unsigned long)SourceSize, (unsigned long)BCN_TOTAL_SIZE);
         return;
+    }
+
+    TO_LAB_APP_printf("TO_LAB %s HKPKT1 layout: src_len=%lu payload_offset=%u payload_len=%lu total_struct_len=%u\n",
+                      Path, (unsigned long)SourceSize, (unsigned int)BCN_RPT_OFFSET,
+                      (unsigned long)(SourceSize - BCN_RPT_OFFSET),
+                      (unsigned int)(BCN_TOTAL_SIZE - BCN_RPT_OFFSET));
+    TO_LAB_APP_printf("TO_LAB %s HKPKT1 offsets: RPT=%u UTRX=%u LTRX=%u EPS=%u GPIO=%u ADCS=%u\n",
+                      Path, (unsigned int)BCN_RPT_OFFSET, (unsigned int)BCN_UTRX_OFFSET,
+                      (unsigned int)BCN_LTRX_OFFSET, (unsigned int)BCN_EPS_OFFSET,
+                      (unsigned int)BCN_GPIO_OFFSET, (unsigned int)BCN_ADCS_OFFSET);
+
+    if (SourceSize > BCN_TOTAL_SIZE)
+    {
+        TO_LAB_APP_printf("TO_LAB %s HKPKT1 parse: extra_bytes=%lu\n",
+                          Path, (unsigned long)(SourceSize - BCN_TOTAL_SIZE));
     }
 
     memcpy(&Rpt, &Bytes[BCN_RPT_OFFSET], sizeof(Rpt));
@@ -173,9 +319,9 @@ static void TO_LAB_PrintHkCombinedPkt1Hardcoded(const char *Path, const CFE_SB_B
     memcpy(&Adcs, &Bytes[BCN_ADCS_OFFSET], sizeof(Adcs));
 
     TO_LAB_APP_printf("\n============[ TO_LAB %s HK COMBINED BCN ]============\n", Path);
-    TO_LAB_APP_printf("[RPT]  reset_cause=%u | boot_count=%u | seq=%lu\n",
-                      (unsigned int)Rpt.ResetCause, (unsigned int)Rpt.BootCount,
-                      (unsigned long)Rpt.Sequence);
+    TO_LAB_APP_printf("[RPT]  boot_count=%u | seq=%lu | reset_cause=0x%02X\n",
+                      (unsigned int)Rpt.BootCount, (unsigned long)Rpt.Sequence,
+                      (unsigned int)Rpt.ResetCause);
     TO_LAB_APP_printf("[UTRX] active=%u | boot_count=%u\n",
                       (unsigned int)Utrx.ActiveConf, (unsigned int)Utrx.BootCount);
     TO_LAB_APP_printf("       boot_cause=0x%08lX | temp=%d\n",
@@ -300,6 +446,9 @@ static void TO_LAB_PrintRfPayloadDetail(CFE_SB_MsgId_t MsgId, const CFE_SB_Buffe
                               (unsigned long)SourceSize, (unsigned long)NetBufSize);
             TO_LAB_PrintHkCombinedPkt1Hardcoded("RF", SBBufPtr, SourceSize);
             break;
+        case (CFE_SB_MsgId_Atom_t)PAY_SLT_BCN_TLM_MID:
+            TO_LAB_PrintPaySltBcnPayload("RF", SBBufPtr, SourceSize);
+            break;
         default:
             TO_LAB_APP_printf("TO_LAB RF DEFAULT: unparsed payload\n");
             break;
@@ -386,6 +535,10 @@ void TO_LAB_ForwardTelemetryRF(void) {
                     memcpy(&HkCombinedPkt1RfBuf[TO_LAB_HK_COMBINED_PKT1_RF_PREFIX_SIZE], NetBufPtr, NetBufSize);
                     NetBufPtr  = HkCombinedPkt1RfBuf;
                     NetBufSize += TO_LAB_HK_COMBINED_PKT1_RF_PREFIX_SIZE;
+                    break;
+
+                case (CFE_SB_MsgId_Atom_t)PAY_SLT_BCN_TLM_MID:
+                    Port = CFE_RF_DPORT_BCN;
                     break;
 
                 default:
@@ -475,6 +628,16 @@ void TO_LAB_ForwardTelemetryUDP(void)
                                           (unsigned int)TO_LAB_TLM_PORT);
                         TO_LAB_PrintHkCombinedPkt1Hardcoded("UDP", SBBufPtr, SourceSize);
                         
+                    }
+                    else if (CFE_SB_MsgIdToValue(MsgId) == (CFE_SB_MsgId_Atom_t)PAY_SLT_BCN_TLM_MID)
+                    {
+                        CFE_MSG_Size_t SourceSize = 0;
+
+                        (void)CFE_MSG_GetSize(&SBBufPtr->Msg, &SourceSize);
+                        TO_LAB_APP_printf("TO_LAB UDP PAY_SLT_BCN: src_len=%lu net_len=%lu dest=%s:%u\n",
+                                          (unsigned long)SourceSize, (unsigned long)NetBufSize,
+                                          TO_LAB_Global.tlm_dest_IP, (unsigned int)TO_LAB_TLM_PORT);
+                        TO_LAB_PrintPaySltBcnPayload("UDP", SBBufPtr, SourceSize);
                     }
                     
                     OsStatus = OS_SocketAddrFromString(&d_addr, TO_LAB_Global.tlm_dest_IP);

@@ -252,10 +252,17 @@ CFE_Status_t TO_LAB_init(void)
     
     if (OsStatus == OS_SUCCESS) {
         /* Create Child Task */
+        // status = CFE_ES_CreateChildTask(&TO_LAB_Global.ChildId, TO_CHILD_NAME, TO_LAB_ForwardTelemetryRF,
+        //                                 CFE_ES_TASK_STACK_ALLOCATE, TO_CHILD_STACK_SIZE(3),
+        //                                 TO_CHILD_PRIORITY, 0);
+        // OS_printf("%s: TO child Created Status: 0x%08X\n", __func__, status);
+
         status = CFE_ES_CreateChildTask(&TO_LAB_Global.ChildId, TO_CHILD_NAME, TO_LAB_ForwardTelemetryUDP,
                                         CFE_ES_TASK_STACK_ALLOCATE, TO_CHILD_STACK_SIZE(3),
                                         TO_CHILD_PRIORITY, 0);
         OS_printf("%s: TO child Created Status: 0x%08X\n", __func__, status);
+
+
     }
 
     return status;

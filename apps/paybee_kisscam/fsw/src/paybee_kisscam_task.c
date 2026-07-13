@@ -174,15 +174,19 @@ CFE_Status_t paybee_kisscam_Init(void) {
      */
     paybee_kisscam_Data.TblHandle = paybee_kisscam_OpenTblFile();
     if (paybee_kisscam_Data.TblHandle < 0) {
-        // PAYBEE_KISSCAM_APP_printf("paybee_kisscam Table Open Fail.\n");
-        Status = -1;
-        return Status;
+        CFE_EVS_SendEvent(paybee_kisscam_INIT_INF_EID, CFE_EVS_EventType_ERROR,
+                          "%s: table file open failed; continuing without sdcard table", __func__);
+        return CFE_SUCCESS;
     }
+
     Status = paybee_kisscam_ReadFile(paybee_kisscam_Data.TblHandle, &paybee_kisscam_Data.MemSlotStatus, sizeof(paybee_kisscam_Memory_Status_t));
     if (Status < 0) {
-        // PAYBEE_KISSCAM_APP_printf("Read Error.\n");
+        CFE_EVS_SendEvent(paybee_kisscam_INIT_INF_EID, CFE_EVS_EventType_ERROR,
+                          "%s: table file read failed; using empty memory status", __func__);
+        Status = CFE_SUCCESS;
     }
     else if (Status == sizeof(paybee_kisscam_Memory_Status_t)) Status = CFE_SUCCESS;
+    else Status = CFE_SUCCESS;
 
     // OS_MutSemCreate(&paybee_kisscam_Data.MutId, paybee_kisscam_MUTEX_NAME, 0);
 

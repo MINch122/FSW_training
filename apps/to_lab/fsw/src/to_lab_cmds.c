@@ -255,6 +255,10 @@ CFE_Status_t TO_LAB_RemoveAllCmd(const TO_LAB_RemoveAllCmd_t *data)
 CFE_Status_t TO_CreateChildCmd(const TO_CreateChildCmd_t *Msg) {
     CFE_Status_t Status;
 
+    // Status = CFE_ES_CreateChildTask(&TO_LAB_Global.ChildId, TO_CHILD_NAME, TO_LAB_ForwardTelemetryRF,
+    //                                 CFE_ES_TASK_STACK_ALLOCATE, TO_CHILD_STACK_SIZE(3),
+    //                                 TO_CHILD_PRIORITY, 0);
+
     Status = CFE_ES_CreateChildTask(&TO_LAB_Global.ChildId, TO_CHILD_NAME, TO_LAB_ForwardTelemetryUDP,
                                     CFE_ES_TASK_STACK_ALLOCATE, TO_CHILD_STACK_SIZE(3),
                                     TO_CHILD_PRIORITY, 0);

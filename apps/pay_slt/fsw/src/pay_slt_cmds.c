@@ -3,6 +3,7 @@
  ************************************************************************/
 
 #include <string.h>
+#include <stddef.h>
 #include <gs/param/rparam.h>
 #include <gs/param/table.h>
 #include <gs/param/internal/types.h>
@@ -22,6 +23,40 @@
 #define TABLE_DATA_CONTROL_PARAM   3
 #define TABLE_TELEMETRY            4
 #define PAY_SLT_DOWNLOAD_FLUSH_INTERVAL 20U
+
+static uint16 PAY_SLT_GetParamElementSize(uint8 type)
+{
+    switch (type)
+    {
+        case GS_PARAM_UINT8:
+        case GS_PARAM_STRING:
+            return sizeof(uint8);
+        case GS_PARAM_UINT16:
+            return sizeof(uint16);
+        case GS_PARAM_UINT32:
+            return sizeof(uint32);
+        case GS_PARAM_INT16:
+            return sizeof(int16);
+        case GS_PARAM_FLOAT:
+            return sizeof(float);
+        default:
+            return 0;
+    }
+}
+
+static uint16 PAY_SLT_GetParamReportSize(const PAY_SLT_Params_t *param)
+{
+    size_t report_size;
+    uint16 element_size = PAY_SLT_GetParamElementSize(param->type);
+
+    report_size = offsetof(PAY_SLT_Params_t, param) + ((size_t)param->len * element_size);
+    if (report_size > sizeof(*param))
+    {
+        report_size = sizeof(*param);
+    }
+
+    return (uint16)report_size;
+}
 
 /* template */
 typedef struct
@@ -121,6 +156,8 @@ CFE_Status_t SLT_IFB_SendHkCmd(const SLT_IFB_SendHkCmd_t *Msg) {
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(SLT_IFB_Data.HkTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(SLT_IFB_Data.HkTlm.TelemetryHeader), true);
 
+    (void)PAY_SLT_HandleReport(CFE_SUCCESS, 0, false, HkPkt, sizeof(*HkPkt));
+
     return CFE_SUCCESS;
 }
 
@@ -208,54 +245,6 @@ CFE_Status_t PAY_SLT_SendBeaconCmd(const SLT_IFB_SendBcnCmd_t *Msg) {
     // Sensor data: sen_rst (U16, Addr: 0x0061)
     PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_IFB_NODE, TABLE_TELEMETRY, 0x0061, 1, &BcnPkt->sen_rst);
 
-
-    // debug
-    // -------------------------------------------------------------------------
-    // PAY_SLT_APP_printf: PAY-EXP-A7 Telemetry Data Check
-    // -------------------------------------------------------------------------
-    PAY_SLT_APP_printf("Bcn: ----- PAY-EXP-A7 Telemetry -----\n");
-    // 단일 변수 (부호 없는 정수는 %u)
-    PAY_SLT_APP_printf("Bcn: sys_uptime_a7: %u\n", BcnPkt->sys_uptime_a7);
-    PAY_SLT_APP_printf("Bcn: sys_now_a7: %u\n", BcnPkt->sys_now_a7);
-    PAY_SLT_APP_printf("Bcn: boot_cnt_p: %u\n", BcnPkt->boot_cnt_p);
-    // 배열 [8]
-    PAY_SLT_APP_printf("Bcn: boot_his_p: [%u, %u, %u, %u, %u, %u, %u, %u]\n", 
-            BcnPkt->boot_his_p[0], BcnPkt->boot_his_p[1], BcnPkt->boot_his_p[2], BcnPkt->boot_his_p[3], 
-            BcnPkt->boot_his_p[4], BcnPkt->boot_his_p[5], BcnPkt->boot_his_p[6], BcnPkt->boot_his_p[7]);
-    PAY_SLT_APP_printf("Bcn: boot_cnt_c: %u\n", BcnPkt->boot_cnt_c);
-    // 배열 [8]
-    PAY_SLT_APP_printf("Bcn: boot_his_c: [%u, %u, %u, %u, %u, %u, %u, %u]\n", 
-            BcnPkt->boot_his_c[0], BcnPkt->boot_his_c[1], BcnPkt->boot_his_c[2], BcnPkt->boot_his_c[3], 
-            BcnPkt->boot_his_c[4], BcnPkt->boot_his_c[5], BcnPkt->boot_his_c[6], BcnPkt->boot_his_c[7]);
-    PAY_SLT_APP_printf("Bcn: wdt_left_a7: %u\n", BcnPkt->wdt_left_a7);
-    // 단일 변수 (부호 있는 정수 I16은 %d)
-    PAY_SLT_APP_printf("Bcn: brd_temp_a7: %d\n", BcnPkt->brd_temp_a7);
-    // 배열 [4]
-    PAY_SLT_APP_printf("Bcn: slf_data: [%u, %u, %u, %u]\n", 
-           BcnPkt->slf_data[0], BcnPkt->slf_data[1], BcnPkt->slf_data[2], BcnPkt->slf_data[3]);
-    // 배열 [3]
-    PAY_SLT_APP_printf("Bcn: brm_data: [%u, %u, %u]\n", 
-            BcnPkt->brm_data[0], BcnPkt->brm_data[1], BcnPkt->brm_data[2]);
-    // 배열 [8]
-    PAY_SLT_APP_printf("Bcn: imu_data: [%u, %u, %u, %u, %u, %u, %u, %u]\n", 
-            BcnPkt->imu_data[0], BcnPkt->imu_data[1], BcnPkt->imu_data[2], BcnPkt->imu_data[3], 
-            BcnPkt->imu_data[4], BcnPkt->imu_data[5], BcnPkt->imu_data[6], BcnPkt->imu_data[7]);
-    // 부호 있는 I16 배열 [8] 이므로 %d 사용
-    PAY_SLT_APP_printf("Bcn: ntc_data_a7: [%d, %d, %d, %d, %d, %d, %d, %d]\n", 
-            BcnPkt->ntc_data_a7[0], BcnPkt->ntc_data_a7[1], BcnPkt->ntc_data_a7[2], BcnPkt->ntc_data_a7[3], 
-            BcnPkt->ntc_data_a7[4], BcnPkt->ntc_data_a7[5], BcnPkt->ntc_data_a7[6], BcnPkt->ntc_data_a7[7]);
-    // 배열 [8]
-    PAY_SLT_APP_printf("Bcn: pwr_volt: [%u, %u, %u, %u, %u, %u, %u, %u]\n", 
-            BcnPkt->pwr_volt[0], BcnPkt->pwr_volt[1], BcnPkt->pwr_volt[2], BcnPkt->pwr_volt[3], 
-            BcnPkt->pwr_volt[4], BcnPkt->pwr_volt[5], BcnPkt->pwr_volt[6], BcnPkt->pwr_volt[7]);
-    // 배열 [8]
-    PAY_SLT_APP_printf("Bcn: pwr_current: [%u, %u, %u, %u, %u, %u, %u, %u]\n", 
-            BcnPkt->pwr_current[0], BcnPkt->pwr_current[1], BcnPkt->pwr_current[2], BcnPkt->pwr_current[3], 
-            BcnPkt->pwr_current[4], BcnPkt->pwr_current[5], BcnPkt->pwr_current[6], BcnPkt->pwr_current[7]);
-    // 단일 변수 (부호 있는 정수 I16)
-    PAY_SLT_APP_printf("Bcn: sys_status_a7: %d\n", BcnPkt->sys_status_a7);
-    
-    PAY_SLT_APP_printf("Bcn: att_q [%f, %f, %f, %f]\n", BcnPkt->att_q[0],BcnPkt->att_q[1],BcnPkt->att_q[2],BcnPkt->att_q[3]);
 
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(SLT_IFB_Data.BcnTlm.TelemetryHeader));
         CFE_SB_TransmitMsg(CFE_MSG_PTR(SLT_IFB_Data.BcnTlm.TelemetryHeader), true);
@@ -495,18 +484,8 @@ CFE_Status_t PAY_SLT_ParGetCmd(const PAY_SLT_ParGetCmd_t *Msg) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "PAR_GET: CSP transaction failed: %d", (int)Status);
     }
 
-    // 지상으로 쏠 때는 ReqPayload 잘라서 보냄
-    uint16 elements_size = 0;
-    switch (ReqPayload.type) {
-        case GS_PARAM_UINT8:   elements_size = 1;  break;
-        case GS_PARAM_UINT16:  elements_size = 2;  break;
-        case GS_PARAM_UINT32:  elements_size = 4;  break;
-        case GS_PARAM_INT16:   elements_size = 2;  break;
-        case GS_PARAM_STRING:  elements_size = 1;  break;
-        default:                   elements_size = 0;  break;
-    }
-
-    uint16 total_size = 8 + ReqPayload.len * elements_size; // 헤더 8 byte(node, table, addr, type, len, padding) + 요소 개수 * 개당 byte
+    // 지상으로 쏠 때는 ReqPayload 중 유효한 응답 데이터까지만 잘라서 보냄
+    uint16 total_size = PAY_SLT_GetParamReportSize(&ReqPayload);
 
     PAY_SLT_HandleReport(Status, PAY_SLT_PAR_GET_CC, true, &ReqPayload, total_size);
 

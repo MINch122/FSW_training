@@ -7586,15 +7586,27 @@
         "params": []
       },
       {
-        "name": "DEP Burn 90s",
+        "name": "GPIO DEP Burn",
         "mid": "0x182B",
         "fc": 17,
-        "description": "Channel 1 burns DEP1_EN for 90 seconds; channel 2 burns DEP2_EN for 90 seconds",
+        "description": "DEP burn command: channel 1 burns DEP1_EN, channel 2 burns DEP2_EN",
         "params": [
           {
             "name": "Channel",
             "type": "uint8",
             "default": "1"
+          },
+          {
+            "name": "spare",
+            "type": "bytes",
+            "length": 3,
+            "default": "",
+            "hidden": true
+          },
+          {
+            "name": "BurnTimeSeconds",
+            "type": "uint32",
+            "default": "90"
           }
         ]
       },

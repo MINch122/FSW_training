@@ -47,9 +47,8 @@ typedef struct {
 #define ESUP_MAX_WRITE_LENGTH  1200
 
 #define ESUP_HEADER     0x50555345  // header
-#define STX_MODULE_ID_A 0x1212
-#define STX_MODULE_ID_B 0x1213
-#define MODULE_ID       STX_MODULE_ID_A         // default module ID
+
+#define MODULE_ID       0x1219         // default module ID
 
 // Command Status
 #define ESUP_ACK        0x0005

@@ -50,6 +50,10 @@ int paybee_kisscam_OpenFile(uint8_t MemorySlot, uint16_t StartLine, uint16_t Lin
 
 int32 paybee_kisscam_WriteToFile(int ID, void *Data, size_t Size, bool IsTbl) {
     int32 Status;
+    if (ID < 0 || Data == NULL) {
+        return -1;
+    }
+
     if (IsTbl) {
         lseek(ID, 0, SEEK_SET);
         Status = write(ID, Data, Size);
@@ -69,11 +73,19 @@ int32 paybee_kisscam_WriteToFile(int ID, void *Data, size_t Size, bool IsTbl) {
 
 
 int32 paybee_kisscam_ReadFile(int ID, void *Data, size_t Size) {
+    if (ID < 0 || Data == NULL) {
+        return -1;
+    }
+
     return read(ID, Data, Size);
 }
 
 
 int32 paybee_kisscam_CloseFile(int ID) {
+    if (ID < 0) {
+        return CFE_SUCCESS;
+    }
+
     return close(ID);
 }
 

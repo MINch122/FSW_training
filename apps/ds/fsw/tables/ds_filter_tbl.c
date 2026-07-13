@@ -56,6 +56,7 @@
 /* #include "mm_msgids.h"  */
 /* #include "sch_msgids.h" */
 #include "hk_msgids.h"
+#include "pay_slt_msgids.h"
 /*
 ** Note: It is suggested that missions pre-define their file table
 **       index numbers in a public header file to be included by
@@ -85,10 +86,10 @@ DS_FilterTable_t DS_FilterTable = {
 
        
      /* Packet Index 001 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(PAY_SLT_BCN_TLM_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {FILE_ALL_APP_BCN_PKTS, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},

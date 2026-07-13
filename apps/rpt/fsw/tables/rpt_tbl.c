@@ -21,6 +21,7 @@
 
 #include "utrx_msgids.h"
 #include "ltrx_msgids.h"
+#include "pay_slt_msgids.h"
 
 
 RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
@@ -105,8 +106,8 @@ RPT_Table_t RPT_Subs[RPT_MAX_TBL_ENTRY] = {
         .Entry.IsCritical = RPT_NOT_CRITICAL},
 
     /* Entry 16 */
-    {.UsedState = RPT_DISABLED,
-        .Entry.MessageID = CFE_SB_MSGID_RESERVED,
+    {.UsedState = RPT_ENABLED,
+        .Entry.MessageID = CFE_SB_MSGID_WRAP_VALUE(PAY_SLT_RPT_TLM_MID),
         .Entry.IsCritical = RPT_NOT_CRITICAL},
     
     /* Entry 17 */
