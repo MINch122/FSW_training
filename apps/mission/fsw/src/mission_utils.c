@@ -399,7 +399,7 @@ static CFE_Status_t MISSION_LEOP_GpioHigh(void)
         return Status;
     }
 
-    OS_TaskDelay(10000);
+    OS_TaskDelay(30000);
 
     Status = MISSION_LEOP_SendGpioDeployCmd(GPIO_DEP1_EN_OFF_CC);
     if (Status != CFE_SUCCESS)
