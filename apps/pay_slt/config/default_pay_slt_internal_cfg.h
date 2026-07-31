@@ -29,16 +29,16 @@
  * either by overriding this header or by generating definitions from a command/data
  * dictionary tool.
  */
-#ifndef SLT_IFB_INTERNAL_CFG_H
-#define SLT_IFB_INTERNAL_CFG_H
+#ifndef PAY_SLT_INTERNAL_CFG_H
+#define PAY_SLT_INTERNAL_CFG_H
 
 /***********************************************************************/
-#define SLT_IFB_PIPE_DEPTH 32 /* Depth of the Command Pipe for Application */
+#define PAY_SLT_PIPE_DEPTH 32 /* Depth of the Command Pipe for Application */
 
-#define SLT_IFB_NUMBER_OF_TABLES 1 /* Number of Example Table(s) */
+#define PAY_SLT_NUMBER_OF_TABLES 1 /* Number of Example Table(s) */
 
-#define SLT_IFB_TABLE_OUT_OF_RANGE_ERR_CODE -1
+#define PAY_SLT_TABLE_OUT_OF_RANGE_ERR_CODE -1
 
-#define SLT_IFB_TBL_ELEMENT_1_MAX 10
+#define PAY_SLT_TBL_ELEMENT_1_MAX 10
 
 #endif

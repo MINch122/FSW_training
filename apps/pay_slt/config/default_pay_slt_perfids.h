@@ -20,9 +20,9 @@
  * @file
  *   Define TO Lab Performance IDs
  */
-#ifndef SLT_IFB_PERFIDS_H
-#define SLT_IFB_PERFIDS_H
+#ifndef PAY_SLT_PERFIDS_H
+#define PAY_SLT_PERFIDS_H
 
-#define SLT_IFB_PERF_ID 91
+#define PAY_SLT_PERF_ID 91
 
 #endif

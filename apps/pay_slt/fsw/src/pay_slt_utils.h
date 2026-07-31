@@ -65,100 +65,146 @@ typedef struct __attribute__((packed)) {
 
 
 /**
- * @brief Perform a CSP transaction with the Payload.
- *        Perform the same function as gs_rparam_get.
- * 
- * @param payload   struct: PAY_SLT_Params_t
- * @return Only CFE_SUCCESS(which is 0) is success
+ * @brief Fetch one or more remote parameters into a parameter request structure.
+ *
+ * Uses the PAY_SLT-compatible RParam GET transaction. On success, @p Payload
+ * contains the received values and its len field is updated to the element count
+ * actually returned.
+ *
+ * @param Payload  Request and response parameter structure.
+ * @return CFE_SUCCESS on success; otherwise an RParam or argument error code.
  */
 int32 PAY_SLT_FetchParam(PAY_SLT_Params_t *Payload);
 
-
 /**
- * @brief Perform a CSP transaction with the Payload.
- *        Perform the same function as gs_rparam_get.
- *        PAY_SLT_FetchParam 구조체를 풀어놓은 버전.
- * 
- * @param type     type of parameter. GS_PARAM
- * @param node     CSP destination node
- * @param table    GS table index
- * @param addr     Parameter address in table
- * @param len      Length of parameter. Default 1
- * @param out_ptr  Pointer for the address to which reply data will be placed
- * @return Only CFE_SUCCESS(which is 0) is success
+ * @brief Fetch remote parameters into a caller-provided buffer.
+ *
+ * This is a convenience wrapper around PAY_SLT_FetchParam(). For scalar and
+ * array types, @p len is the requested element count. For strings, it is the
+ * maximum destination buffer size in bytes.
+ *
+ * @param type     GS parameter type.
+ * @param node     CSP destination node.
+ * @param table    Remote parameter table ID.
+ * @param addr     Starting parameter address in the table.
+ * @param len      Requested element count or string buffer size.
+ * @param out_ptr  Destination buffer for the received value or values.
+ * @return CFE_SUCCESS on success; otherwise an RParam or argument error code.
  */
 int32 PAY_SLT_FetchParam_Simple(uint8 type, uint8 node, uint8 table, uint16 addr, uint8 len, void *out_ptr);
 
-
 /**
- * @brief Perform a CSP transaction with the Payload.
- *        Perform the same function as gs_rparam_set.
- *        This function only Set parameter for Table 0 (SLT, Board Parameters)
- *        and uint8, uint16, uint32
- * 
- * @param node     CSP destination node
- * @param table    GS table index
- * @param addr     Parameter address in table
- * @param type     type of parameter. GS_PARAM
- * @param value    Pointer of the desiring parameter value
- * @return Only CFE_SUCCESS(which is 0) is success
+ * @brief Set a remote parameter with an RParam SET transaction.
+ *
+ * Supported types are GS_PARAM_UINT8, GS_PARAM_UINT16, GS_PARAM_UINT32, and
+ * GS_PARAM_STRING. Numeric values are encoded in big-endian byte order.
+ *
+ * @param node   CSP destination node.
+ * @param table  Remote parameter table ID.
+ * @param addr   Parameter address in the table.
+ * @param type   GS parameter type to write.
+ * @param value  Pointer to the value to send.
+ * @return CFE_SUCCESS on success; otherwise an RParam or argument error code.
  */
 int32 PAY_SLT_SetParam(uint8 node, uint8 table, uint16 addr, uint8 type, void *value);
 
 /**
- * @brief Read a chunk of payload experiment data via I2C interface.
- *        This function dynamically fetches the Payload I2C address, 
- *        writes a 4-byte initial memory address (Big-Endian), and 
- *        then reads the specified size of data into the buffer.
+ * @brief Read a payload data chunk through the configured I2C interface.
  *
- * @param handle      Pointer to the SRL I2C IO handle
- * @param start_addr  The 32-bit starting memory address to read from (usually 0x00000000)
- * @param data        Pointer to the buffer where the read data will be stored
- * @param size        The number of bytes to read (e.g., chunk size, typically 512)
- * @return CFE_SUCCESS on success, SLT_IFB_DEVICE_BAD_ARG on invalid inputs, or error code
+ * Fetches the payload I2C address from the board parameter table, sends
+ * @p start_addr as a 4-byte big-endian address, then reads @p size bytes.
+ *
+ * @param handle      I2C handle to validate; the configured I2C1 handle performs the transfer.
+ * @param start_addr  Starting payload memory address.
+ * @param data        Destination buffer for received bytes.
+ * @param size        Number of bytes to read.
+ * @return CFE_SUCCESS on success; SLT_IFB_DEVICE_BAD_ARG for invalid input;
+ *         otherwise a parameter-fetch or serial I/O error code.
  */
 int32 PAY_SLT_ReadExpI2CChunk(CFE_SRL_IO_Handle_t *handle, uint32 start_addr, void *data, size_t size);
 
+/**
+ * @brief Request and read a payload data frame through the RS422 interface.
+ *
+ * Sends the RS422 DOWNLOAD command and stores the complete received frame,
+ * including its 7-byte header, in @p data. The response payload length controls
+ * how many additional bytes are read.
+ *
+ * @param handle  RS422 serial I/O handle.
+ * @param data    Destination buffer for the frame header and payload.
+ * @param size    Capacity of @p data; must include the 7-byte frame header.
+ * @return CFE_SUCCESS on success; SLT_IFB_DEVICE_BAD_ARG for invalid input;
+ *         CFE_SRL_PARTIAL_READ_ERR for an oversized or malformed length;
+ *         otherwise a serial I/O error code.
+ */
+int32 PAY_SLT_ReadExpRS422Chunk(CFE_SRL_IO_Handle_t *handle, void *data, size_t size);
 
+/**
+ * @brief Continue a CRC-32/ISO-HDLC calculation over a data block.
+ *
+ * The caller supplies the current, non-finalized CRC state. Use an initial
+ * value of 0xFFFFFFFF and apply the final XOR of 0xFFFFFFFF after the last
+ * block when calculating a complete CRC.
+ *
+ * @param current_crc  CRC state before processing @p data.
+ * @param data         Data block to include in the CRC.
+ * @param length       Number of bytes in @p data.
+ * @return Updated, non-finalized CRC state.
+ */
 uint32 PAY_SLT_UpdateCRC32(uint32 current_crc, const uint8 *data, uint32 length);
 
 /**
- * @brief Calculate the CRC-32 value for a given data block.
- *        Implements the CRC-32 ISO HDLC algorithm (zlib compatible).
- *        Uses Polynomial: 0xEDB88320 (Reversed 0x04C11DB7) and 
- *        Initialization/XorOut: 0xFFFFFFFF.
- * 
- * @param data      Pointer to the base of the memory block (e.g., chunk buffer)
- * @param length    The number of bytes in the memory block
- * @return The 32-bit calculated CRC value
+ * @brief Calculate the finalized CRC-32/ISO-HDLC value for a data block.
+ *
+ * Uses the reversed polynomial 0xEDB88320, initial value 0xFFFFFFFF, and
+ * final XOR value 0xFFFFFFFF. The result is compatible with zlib CRC-32.
+ *
+ * @param data    Data block to calculate.
+ * @param length  Number of bytes in @p data.
+ * @return Finalized CRC-32 value.
  */
 uint32 PAY_SLT_CalculateCRC32(const uint8 *data, uint32 length);
 
-
 /**
- * @brief Perform a CSP transaction with the Payload.
- *        Perform the same function as gs_rparam_get_full_table.
- * 
- * @param node     CSP destination node
- * @param table    GS table index
- * @param tinst    Table instance
- * @param timeout_ms timeout
- * @return gs_error_t, Only GS_OK=0 success
+ * @brief Download a remote table specification and all of its parameter values.
+ *
+ * Allocates the rows and value memory owned by @p tinst. Call
+ * gs_param_table_free() when the returned table instance is no longer needed.
+ *
+ * @param node        CSP destination node.
+ * @param table       Remote parameter table ID.
+ * @param tinst       Destination table instance.
+ * @param timeout_ms  Timeout for each RParam operation, in milliseconds.
+ * @return GS_OK on success; otherwise a GomSpace parameter-library error code.
  */
 gs_error_t PAY_SLT_GetFullTable(uint8_t node, uint8_t table, gs_param_table_instance_t *tinst, uint32_t timeout_ms);
 
-
 /**
- * @brief Display Full Table in the terminal by PAY_SLT_APP_printf
- * 
- * @param node     CSP destination node
- * @param table    GS table index
- * @param tinst    Table instance
- * @return gs_error_t, Only GS_OK=0 success
+ * @brief Print a decoded remote parameter table to the application console.
+ *
+ * Fetches the board device name for display and prints each table row whose
+ * address and size are valid for @p tinst.
+ *
+ * @param node   CSP destination node used to fetch the display name.
+ * @param table  Remote parameter table ID displayed in the heading.
+ * @param tinst  Downloaded table instance to print; may be NULL.
  */
 void PAY_SLT_PrintParamTable(uint8 node, uint8 table, const gs_param_table_instance_t *tinst);
 
-
+/**
+ * @brief Build and publish a PAY_SLT command result report.
+ *
+ * Updates command/error counters, copies up to the RPT return-value capacity
+ * from @p read_data, and transmits the report telemetry packet.
+ *
+ * @param status        Command or device operation status.
+ * @param command_code  PAY_SLT command code being reported.
+ * @param device_error  True when a failure originated from the external device.
+ * @param read_data     Optional response data to include in the report.
+ * @param read_size     Number of bytes available at @p read_data.
+ * @return CFE_SUCCESS for a successful command report; otherwise the command
+ *         status or a message-buffer/transmit error.
+ */
 CFE_Status_t PAY_SLT_HandleReport(int32 status, uint8 command_code, bool device_error, const void *read_data, uint16 read_size);
 
 #endif

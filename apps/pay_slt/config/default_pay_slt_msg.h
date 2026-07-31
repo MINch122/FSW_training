@@ -28,8 +28,8 @@
  * either by overriding this header or by generating definitions from a command/data
  * dictionary tool.
  */
-#ifndef SLT_IFB_MSG_H
-#define SLT_IFB_MSG_H
+#ifndef PAY_SLT_MSG_H
+#define PAY_SLT_MSG_H
 
 #include "pay_slt_mission_cfg.h"
 #include "pay_slt_msgdefs.h"

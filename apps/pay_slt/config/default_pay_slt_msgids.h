@@ -20,8 +20,8 @@
  * @file
  *   SAMPLE_APP Application Message IDs
  */
-#ifndef SLT_IFB_MSGIDS_H
-#define SLT_IFB_MSGIDS_H
+#ifndef PAY_SLT_MSGIDS_H
+#define PAY_SLT_MSGIDS_H
 
 #include "cfe_core_api_base_msgids.h"
 #include "pay_slt_topicids.h"
@@ -33,13 +33,5 @@
 #define PAY_SLT_HK_TLM_MID             CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_PAY_SLT_HK_TLM_TOPICID)
 #define PAY_SLT_BCN_TLM_MID            CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_PAY_SLT_BCN_TLM_TOPICID)
 #define PAY_SLT_RPT_TLM_MID            CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_PAY_SLT_RPT_TLM_TOPICID)
-
-#define SLT_IFB_CMD_MID                PAY_SLT_CMD_MID
-#define SLT_IFB_SEND_HK_MID            PAY_SLT_SEND_HK_MID
-#define SLT_IFB_SEND_BCN_MID           PAY_SLT_SEND_BCN_MID
-#define SLT_IFB_HK_TLM_MID             PAY_SLT_HK_TLM_MID
-#define SLT_IFB_BCN_TLM_MID            PAY_SLT_BCN_TLM_MID
-#define SLT_IFB_RPT_TLM_MID            PAY_SLT_RPT_TLM_MID
-
 
 #endif

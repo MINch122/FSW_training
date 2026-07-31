@@ -53,6 +53,7 @@ typedef struct GPIO_HkTlm_Payload
     uint8 CommandErrorCounter;
     uint8 CommandCounter;
     uint8 GpioState[6];
+    uint8 isDeployed;
 } GPIO_HkTlm_Payload_t;
 
 typedef struct GPIO_BcnTlm_Payload

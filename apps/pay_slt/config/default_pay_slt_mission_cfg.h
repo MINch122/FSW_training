@@ -28,8 +28,8 @@
  * either by overriding this header or by generating definitions from a command/data
  * dictionary tool.
  */
-#ifndef SLT_IFB_MISSION_CFG_H
-#define SLT_IFB_MISSION_CFG_H
+#ifndef PAY_SLT_MISSION_CFG_H
+#define PAY_SLT_MISSION_CFG_H
 
 #include "pay_slt_interface_cfg.h"
 
@@ -47,12 +47,21 @@
 #define PAY_SLT_APP_printf(...) do { if (false) { OS_printf(__VA_ARGS__); } } while (0)
 #endif
 
-#ifndef PAY_SLT_SB_BCN_ENABLED
-#define PAY_SLT_SB_BCN_ENABLED false
+#ifndef PAY_SLT_BCN_ENABLED
+#define PAY_SLT_BCN_ENABLED 0
+#endif
+
+#ifndef PAY_SLT_HK_ENABLED
+#define PAY_SLT_HK_ENABLED 0
 #endif
 
 #if defined(CFE_SRL_I2C1_HANDLE_INDEXER) && !defined(PAY_SLT_I2C_HANDLE_INDEXER)
 #define PAY_SLT_I2C_HANDLE_INDEXER CFE_SRL_I2C1_HANDLE_INDEXER
 #endif
+
+#if defined(CFE_SRL_RS422_HANDLE_INDEXER)
+#define PAY_SLT_RS422_HANDLE_INDEXER CFE_SRL_RS422_HANDLE_INDEXER
+#endif
+
 
 #endif

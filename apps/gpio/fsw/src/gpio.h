@@ -60,6 +60,7 @@ typedef struct
     GPIO_BcnTlm_t BcnTlm;
     uint16        OutputStateBits;
     uint16        OutputCommandedBits;
+    uint8         IsDeployed;
 
     /*
     ** Run Status variable used in the main processing loop

@@ -6,7 +6,49 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 #include "rpt_interface_cfg.h"
+
+static void paybee_kisscam_SendReport(uint8_t CC, uint8 ReturnType, int32 ReturnCode, const void *Data, ssize_t DataSize)
+{
+    paybee_kisscam_ReportTlm_t *BufPtr =
+        (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
+    uint16_t CopySize = 0;
+
+    if (BufPtr == NULL)
+    {
+        return;
+    }
+
+    memset(BufPtr, 0, sizeof(*BufPtr));
+
+    if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
+                     CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
+                     sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS)
+    {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        return;
+    }
+
+    BufPtr->Report.MsgID       = paybee_kisscam_CMD_MID;
+    BufPtr->Report.CommandCode = CC;
+    BufPtr->Report.ReturnType  = ReturnType;
+    BufPtr->Report.ReturnCode  = ReturnCode;
+
+    if (CC != paybee_kisscam_DOWNLOAD_CC && CC != paybee_kisscam_DOWNLOAD_ALL_CC &&
+        Data != NULL && DataSize > 0)
+    {
+        CopySize = (DataSize > RPT_RET_VALUE_BUF_SIZE) ? RPT_RET_VALUE_BUF_SIZE : (uint16_t)DataSize;
+        memcpy(BufPtr->Report.ReturnValue, Data, CopySize);
+    }
+    BufPtr->Report.ReturnDataSize = CopySize;
+
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
+    if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS)
+    {
+        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+    }
+}
 
 void paybee_kisscam_SetLineTrue(uint8_t MemSlot, uint16_t Line) {
     if(paybee_kisscam_Data.MemSlotStatus.Entry[MemSlot].MemoryState == paybee_kisscam_DOWNLOAD_DONE) return;
@@ -162,7 +204,8 @@ void paybee_kisscam_HandleErrorPacket(void *ErrPkt, ssize_t Size, uint8_t CC) {
         Status = CFE_SRL_ApiRead(paybee_kisscam_Data.Handle, &Params);
         if (Status != CFE_SUCCESS || Params.ReadBytes != Residual) {
             paybee_kisscam_Data.DeviceErrCounter ++;
-            paybee_kisscam_Data.ErrCounter ++;
+            Status = (Status != CFE_SUCCESS) ? Status : CFE_SRL_PARTIAL_READ_ERR;
+            paybee_kisscam_HandleErrorSerial(Status, CC, ErrPkt, Size + Params.ReadBytes);
             return;
         }
     }
@@ -177,29 +220,7 @@ void paybee_kisscam_HandleErrorPacket(void *ErrPkt, ssize_t Size, uint8_t CC) {
     // RXF = ((uint8_t *)ErrPkt)[7];
     // PAYBEE_KISSCAM_APP_printf("MD: 0x%02X CMD: 0x%02X ERR: 0x%02X RXF: 0x%02X\n", MD, CMD, ERR, RXF);
 
-    /**
-     * Configure Report for RPT
-     */
-    paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
-    if (BufPtr == NULL) return;
-
-    if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
-        CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
-        sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
-        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-        return;
-    }
-    BufPtr->Report.MsgID = paybee_kisscam_CMD_MID;
-    BufPtr->Report.CommandCode = CC;
-    BufPtr->Report.ReturnType = RPT_RETTYPE_HW;
-    BufPtr->Report.ReturnCode = 0x23;
-    BufPtr->Report.ReturnDataSize = paybee_kisscam_ERROR_TLM_SIZE;
-    memcpy(BufPtr->Report.ReturnValue, ErrPkt, paybee_kisscam_ERROR_TLM_SIZE);
-
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
-    if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
-        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-    }
+    paybee_kisscam_SendReport(CC, RPT_RETTYPE_HW, 0x23, ErrPkt, paybee_kisscam_ERROR_TLM_SIZE);
     
     CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
                       "KissCAM HW Error: CC = 0x%02X", CC);
@@ -216,27 +237,7 @@ void paybee_kisscam_HandleErrorSerial(int32 Status, uint8 CC, void *ReadData, ss
     
     paybee_kisscam_Data.ErrCounter ++;
 
-    paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
-    if (BufPtr == NULL) return;
-
-    if(CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader),
-        CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
-        sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
-        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-        return;
-    }
-    BufPtr->Report.MsgID = paybee_kisscam_CMD_MID;
-    BufPtr->Report.CommandCode = CC;
-    BufPtr->Report.ReturnType = RPT_RETTYPE_CFE;
-    BufPtr->Report.ReturnCode = Status;
-    BufPtr->Report.ReturnDataSize = (uint16_t)ReadSize;
-    memcpy(BufPtr->Report.ReturnValue, ReadData, 
-            ReadSize > sizeof(BufPtr->Report.ReturnValue) ? sizeof(BufPtr->Report.ReturnValue) : ReadSize);
-
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
-    if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
-        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-    }
+    paybee_kisscam_SendReport(CC, RPT_RETTYPE_CFE, Status, ReadData, ReadSize);
     
     CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
                       "KissCAM Serial Error: CC = 0x%02X, Status = %d", CC, Status);
@@ -252,26 +253,7 @@ void paybee_kisscam_HandleErrorSerial(int32 Status, uint8 CC, void *ReadData, ss
  * Noop cmd report the **CmdCounter & ErrCounter**
  ************************************************/
 void paybee_kisscam_HandleSuccess(uint8_t CC, void *ReadData, ssize_t ReadSize) {
-    paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
-    if (BufPtr == NULL) return;
-
-    if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
-        sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
-        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-        return;
-    }
-    BufPtr->Report.MsgID = paybee_kisscam_CMD_MID;
-    BufPtr->Report.CommandCode = CC;
-    BufPtr->Report.ReturnType = RPT_RETTYPE_SUCCESS;
-    BufPtr->Report.ReturnCode = CFE_SUCCESS;
-    BufPtr->Report.ReturnDataSize = (uint16_t)ReadSize;
-    memcpy(BufPtr->Report.ReturnValue, ReadData, 
-            ReadSize > sizeof(BufPtr->Report.ReturnValue) ? sizeof(BufPtr->Report.ReturnValue) : ReadSize);
-    
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
-    if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
-        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-    }
+    paybee_kisscam_SendReport(CC, RPT_RETTYPE_SUCCESS, CFE_SUCCESS, ReadData, ReadSize);
     
     /* 지상국에 텍스트 로그 형태로 성공했음을 알림 */
     CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
@@ -464,6 +446,10 @@ void paybee_kisscam_Transaction(void *Tx, void *Rx, uint8_t CC) {
         paybee_kisscam_HandleErrorSerial(Status, CC, Rx, ReadByte);
         return;
     }
+    if (Params.ReadBytes != 3) {
+        paybee_kisscam_HandleErrorSerial(CFE_SRL_PARTIAL_READ_ERR, CC, Rx, ReadByte);
+        return;
+    }
 
     if (((uint8_t *)Rx)[1] == paybee_kisscam_TLM_ERR_FLAG) {
         paybee_kisscam_HandleErrorPacket(Rx, ReadByte, CC);
@@ -481,7 +467,11 @@ void paybee_kisscam_Transaction(void *Tx, void *Rx, uint8_t CC) {
     Status = CFE_SRL_ApiRead(paybee_kisscam_Data.Handle, &Params);
     ReadByte += Params.ReadBytes;
     if (Status != CFE_SUCCESS) {
-        paybee_kisscam_HandleErrorSerial(Status, CC, Rx, Params.ReadBytes);
+        paybee_kisscam_HandleErrorSerial(Status, CC, Rx, ReadByte);
+        return;
+    }
+    if (Params.ReadBytes != 2) {
+        paybee_kisscam_HandleErrorSerial(CFE_SRL_PARTIAL_READ_ERR, CC, Rx, ReadByte);
         return;
     }
     uint16_t Len = ((uint8_t *)Params.RxData)[0] << 8 | ((uint8_t *)Params.RxData)[1];
@@ -497,12 +487,17 @@ void paybee_kisscam_Transaction(void *Tx, void *Rx, uint8_t CC) {
         Params.Interval = 1000 * 70;
     }
     Status = CFE_SRL_ApiRead(paybee_kisscam_Data.Handle, &Params);
+    ReadByte += Params.ReadBytes;
     if (Status != CFE_SUCCESS) {
-        paybee_kisscam_HandleErrorSerial(Status, CC, Rx, Params.ReadBytes);
+        paybee_kisscam_HandleErrorSerial(Status, CC, Rx, ReadByte);
+        return;
+    }
+    if (Params.ReadBytes != (ssize_t)(Len + 1)) {
+        paybee_kisscam_HandleErrorSerial(CFE_SRL_PARTIAL_READ_ERR, CC, Rx, ReadByte);
         return;
     }
 
-    paybee_kisscam_HandleSuccess(CC, Rx, paybee_kisscam_HDR_TAIL_SIZE + Len);
+    paybee_kisscam_HandleSuccess(CC, Rx, ReadByte);
 
     return;
 }

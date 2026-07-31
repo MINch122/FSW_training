@@ -37,6 +37,33 @@
 #include <gs/param/table.h>
 #include <string.h>
 
+#define EPS_BCN_NODE_RETRY_DELAY_MS 25u
+
+#define EPS_BCN_FETCH_WITH_RETRY(device_name, node_id, storage, fetch_call) \
+    do \
+    { \
+        err = (fetch_call); \
+        if (err != GS_OK) \
+        { \
+            OS_printf("[EPS][BCN] RETRY node=%u device=%s delay=%u ms first_err=%d\n", \
+                      (unsigned int)(node_id), (device_name), \
+                      (unsigned int)EPS_BCN_NODE_RETRY_DELAY_MS, (int)err); \
+            OS_TaskDelay(EPS_BCN_NODE_RETRY_DELAY_MS); \
+            memset(&(storage), 0, sizeof(storage)); \
+            err = (fetch_call); \
+            if (err == GS_OK) \
+            { \
+                OS_printf("[EPS][BCN] RETRY OK node=%u device=%s\n", \
+                          (unsigned int)(node_id), (device_name)); \
+            } \
+            else \
+            { \
+                OS_printf("[EPS][BCN] RETRY FAIL node=%u device=%s final_err=%d\n", \
+                          (unsigned int)(node_id), (device_name), (int)err); \
+            } \
+        } \
+    } while (0)
+
 void EPS_CopyCmdString(char *dst, size_t dst_size, const char *src, size_t src_size)
 {
     size_t copy_size = src_size;
@@ -656,13 +683,19 @@ CFE_Status_t EPS_UpdateBcnTlmFromHw(void)
 {
     EPS_BcnTlm_Full_Payload_t next_bcn = {0};
     EPS_BcnTlm_Full_Payload_t *bcn = &next_bcn;
+    OS_time_t collection_start;
+    OS_time_t collection_end;
+    bool timing_valid;
     gs_error_t err;
     uint8_t fail_count = 0;
     uint8 invalid_mask = 0;
 
+    timing_valid = (OS_GetLocalTime(&collection_start) == OS_SUCCESS);
+
     /* --- PMU Beacon (node 1) --- */
     EPS_P80_Drv_PMU_BcnTlm_t pmu_bcn = {0};
-    err = EPS_P80_Drv_PMU_GetBcn(EPS_P80_PMU_CSP_NODE, &pmu_bcn, CSP_TIMEOUT(1));
+    EPS_BCN_FETCH_WITH_RETRY("PMU", EPS_P80_PMU_CSP_NODE, pmu_bcn,
+                             EPS_P80_Drv_PMU_GetBcn(EPS_P80_PMU_CSP_NODE, &pmu_bcn, CSP_TIMEOUT(2)));
     if (err != GS_OK)
     {
         fail_count++;
@@ -687,7 +720,8 @@ CFE_Status_t EPS_UpdateBcnTlmFromHw(void)
 
     /* --- PDU Beacon --- */
     EPS_P80_Drv_PDU_BcnTlm_t pdu_bcn = {0};
-    err = EPS_P80_Drv_PDU_GetBcn(EPS_P80_PDU_CSP_NODE, &pdu_bcn, CSP_TIMEOUT(1));
+    EPS_BCN_FETCH_WITH_RETRY("PDU", EPS_P80_PDU_CSP_NODE, pdu_bcn,
+                             EPS_P80_Drv_PDU_GetBcn(EPS_P80_PDU_CSP_NODE, &pdu_bcn, CSP_TIMEOUT(2)));
     if (err != GS_OK)
     {
         fail_count++;
@@ -709,12 +743,14 @@ CFE_Status_t EPS_UpdateBcnTlmFromHw(void)
     {
         EPS_P80_Drv_ACU_BcnTlm_t acu_bcn = {0};
         uint8 node_index = EPS_BCN_NODE_ACU1_INDEX + acu;
+        const char *device_name = EPS_GetCspNodeDeviceName(AcuNodes[acu]);
 
-        err = EPS_P80_Drv_ACU_GetBcn(AcuNodes[acu], &acu_bcn, CSP_TIMEOUT(1));
+        EPS_BCN_FETCH_WITH_RETRY(device_name, AcuNodes[acu], acu_bcn,
+                                 EPS_P80_Drv_ACU_GetBcn(AcuNodes[acu], &acu_bcn, CSP_TIMEOUT(2)));
         if (err != GS_OK)
         {
             fail_count++;
-            invalid_mask |= EPS_MarkBcnNodeFailure(bcn, node_index, err, EPS_GetCspNodeDeviceName(AcuNodes[acu]));
+            invalid_mask |= EPS_MarkBcnNodeFailure(bcn, node_index, err, device_name);
         }
         else
         {
@@ -725,8 +761,9 @@ CFE_Status_t EPS_UpdateBcnTlmFromHw(void)
     }
 
     /* --- BP8 Beacon (node 7) --- */
-    EPS_BP8_Drv_HkTlm_t bp8_hk = {0};
-    err = EPS_BP8_Drv_GetHk(EPS_BP8_CSP_NODE, &bp8_hk, CSP_TIMEOUT(1));
+    EPS_BP8_Drv_BcnTlm_t bp8_bcn = {0};
+    EPS_BCN_FETCH_WITH_RETRY("BP8", EPS_BP8_CSP_NODE, bp8_bcn,
+                             EPS_BP8_Drv_GetBcn(EPS_BP8_CSP_NODE, &bp8_bcn, CSP_TIMEOUT(2)));
     if (err != GS_OK)
     {
         fail_count++;
@@ -734,14 +771,14 @@ CFE_Status_t EPS_UpdateBcnTlmFromHw(void)
     }
     else
     {
-        bcn->BP8.bootcount    = bp8_hk.BootCount;
-        bcn->BP8.bootcause    = bp8_hk.BootCause;
-        bcn->BP8.resetcause   = bp8_hk.ResetCause;
-        bcn->BP8.soc          = bp8_hk.Soc;
-        bcn->BP8.bat_avr_temp = bp8_hk.BatAvrTemp;
-        bcn->BP8.vbat         = bp8_hk.Vbat;
-        bcn->BP8.current      = bp8_hk.Current;
-        bcn->BP8.heater_i     = bp8_hk.HeaterCurrent;
+        bcn->BP8.bootcount    = bp8_bcn.BootCount;
+        bcn->BP8.bootcause    = bp8_bcn.BootCause;
+        bcn->BP8.resetcause   = bp8_bcn.ResetCause;
+        bcn->BP8.soc          = bp8_bcn.Soc;
+        bcn->BP8.bat_avr_temp = bp8_bcn.BatAvrTemp;
+        bcn->BP8.vbat         = bp8_bcn.Vbat;
+        bcn->BP8.current      = bp8_bcn.Current;
+        bcn->BP8.heater_i     = bp8_bcn.HeaterCurrent;
     }
 
     if (fail_count > 0)
@@ -753,5 +790,20 @@ CFE_Status_t EPS_UpdateBcnTlmFromHw(void)
     }
 
     EPS_AppData.BcnTlm.Payload = next_bcn;
+
+    if (timing_valid && OS_GetLocalTime(&collection_end) == OS_SUCCESS)
+    {
+        int64 elapsed_ms =
+            OS_TimeGetTotalMilliseconds(OS_TimeSubtract(collection_end, collection_start));
+
+        OS_printf("[EPS][BCN] collection done elapsed=%ld ms failed=%u zeroed=0x%02X\n",
+                  (long)elapsed_ms, (unsigned int)fail_count, (unsigned int)invalid_mask);
+    }
+    else
+    {
+        OS_printf("[EPS][BCN] collection done elapsed=unavailable failed=%u zeroed=0x%02X\n",
+                  (unsigned int)fail_count, (unsigned int)invalid_mask);
+    }
+
     return CFE_SUCCESS;
 }

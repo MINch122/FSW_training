@@ -326,10 +326,10 @@ CFE_Status_t LTRX_AppInit(void)
     if (status == CFE_SUCCESS)
     {
         /*
-        ** Subscribe to HK Combined Packet 1 (Bus Beacon)
+        ** Subscribe to HK Combined Packet 2 (Bus Beacon + PAY_SLT HK)
         ** cache latest snapshot for downlink
         */
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(HK_COMBINED_PKT1_MID), LTRX_AppData.CommandPipe);
+        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(HK_COMBINED_PKT2_MID), LTRX_AppData.CommandPipe);
         if (status != CFE_SUCCESS)
         {
             CFE_EVS_SendEvent(LTRX_SUB_BUS_BCN_ERR_EID, CFE_EVS_EventType_ERROR,

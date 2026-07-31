@@ -20,8 +20,8 @@
  * @file
  *   SAMPLE_APP Application Topic IDs
  */
-#ifndef SLT_IFB_TOPICIDS_H
-#define SLT_IFB_TOPICIDS_H
+#ifndef PAY_SLT_TOPICIDS_H
+#define PAY_SLT_TOPICIDS_H
 
 #define CFE_MISSION_PAY_SLT_CMD_TOPICID                  0x30
 #define CFE_MISSION_PAY_SLT_SEND_HK_TOPICID              0x31

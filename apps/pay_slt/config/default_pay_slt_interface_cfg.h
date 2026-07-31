@@ -29,8 +29,8 @@
  * either by overriding this header or by generating definitions from a command/data
  * dictionary tool.
  */
-#ifndef SLT_IFB_INTERFACE_CFG_H
-#define SLT_IFB_INTERFACE_CFG_H
+#ifndef PAY_SLT_INTERFACE_CFG_H
+#define PAY_SLT_INTERFACE_CFG_H
 
 /**
  * \brief Length of string buffer in the Display Value command
@@ -39,7 +39,7 @@
  * parameters of different types.  This macro controls the length
  * of the string parameter.
  */
-#define SLT_IFB_BRD_UID_STRING_VAL_LEN 16
-#define SLT_IFB_CSP_RTABLE_STRING_VAL_LEN 96
+#define PAY_SLT_BRD_UID_STRING_VAL_LEN 16
+#define PAY_SLT_CSP_RTABLE_STRING_VAL_LEN 96
 
 #endif

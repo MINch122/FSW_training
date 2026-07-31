@@ -9,16 +9,19 @@
 #include <string.h>
 
 #ifndef LTRX_DOWNLINK_MAX_LEN
-#define LTRX_DOWNLINK_MAX_LEN 180
+#define LTRX_DOWNLINK_MAX_LEN 240
 #endif
 
 #ifndef LTRX_UPLINK_MAX_LEN
-#define LTRX_UPLINK_MAX_LEN 180
+#define LTRX_UPLINK_MAX_LEN 240
 #endif
 
 #ifndef LTRX_UPLINK_PART_REQ_LEN
-#define LTRX_UPLINK_PART_REQ_LEN 180
+#define LTRX_UPLINK_PART_REQ_LEN 240
 #endif
+
+#define LTRX_HK_COMBINED_PAYLOAD_OFFSET \
+    (sizeof(CFE_MSG_TelemetryHeader_t) - sizeof(((CFE_MSG_TelemetryHeader_t *)0)->Spare))
 
 /* Uplink part retry (CRC mismatch etc.) */
 #ifndef LTRX_UPLINK_MAX_PART_RETRY
@@ -896,13 +899,13 @@ void LTRX_OnBusBeaconReceived(const CFE_SB_Buffer_t *SBBufPtr)
     }
 
     if (CFE_MSG_GetSize(&SBBufPtr->Msg, &msg_size) != CFE_SUCCESS ||
-        msg_size <= sizeof(CFE_MSG_TelemetryHeader_t))
+        msg_size <= LTRX_HK_COMBINED_PAYLOAD_OFFSET)
     {
         return;
     }
  
-    const uint8_t *payload = ((const uint8_t *)SBBufPtr) + sizeof(CFE_MSG_TelemetryHeader_t);
-    uint16_t payload_len = (uint16_t)(msg_size - sizeof(CFE_MSG_TelemetryHeader_t));
+    const uint8_t *payload = ((const uint8_t *)SBBufPtr) + LTRX_HK_COMBINED_PAYLOAD_OFFSET;
+    uint16_t payload_len = (uint16_t)(msg_size - LTRX_HK_COMBINED_PAYLOAD_OFFSET);
  
     if (payload_len > LTRX_DOWNLINK_MAX_LEN)
     {

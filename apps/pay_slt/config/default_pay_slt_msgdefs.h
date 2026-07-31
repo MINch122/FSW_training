@@ -23,42 +23,25 @@
  *
  *  For SAMPLE_APP this is only the function/command code definitions
  */
-#ifndef SLT_IFB_MSGDEFS_H
-#define SLT_IFB_MSGDEFS_H
+#ifndef PAY_SLT_MSGDEFS_H
+#define PAY_SLT_MSGDEFS_H
 
 #include "common_types.h"
 #include "pay_slt_fcncodes.h"
 
-#define PAY_SLT_BRD_UID_SIZE      16
-#define PAY_SLT_RTABLE_STR_SIZE   96
 
-typedef struct __attribute__((__packed__))
-{
+typedef struct __attribute__((__packed__)) {
     // 4 byte 데이터의 alignment를 위해서 순서를 재배치 하였음
-    uint32 sys_uptime;
-    uint32 sys_now;
-    uint32 wdt_left;
-    float att_q[4];
-    float rot_r[3];
-    float lin_acc[3];
-    float fld_vec[3];
 
-    int16 sys_status;
-    uint16 boot_cnt;
-    int16 brd_temp;
-    int16 ntc_data[4];
-    uint16 pw_cur[2];
-    uint16 pw_vol[2];
-    uint16 sen_rst;
+    // PAY-EXP
+    int8 sys_status[2];
+    int16 brm_data[3];
+    int16 ntc_data[8];
 
-    uint8 boot_his[8];
-    uint8 sen_online;
-    uint8 sen_qlvl;
-    uint8 att_ql; 
+    // PAY-IFB
+    int16 ntc_data_ifb[4];
     
-    uint8 BcnSbEnabled;
-    
-}SLT_IFB_HkTlm_Payload_t;
+}PAY_SLT_HkTlm_Payload_t;
 
 typedef struct __attribute__((__packed__)) {
     // RPT
@@ -109,15 +92,19 @@ typedef struct __attribute__((__packed__)) {
     uint8         sen_online;
     uint8         sen_qlvl;
     uint8         att_ql;
-    
 
-} SLT_IFB_BcnTlm_Payload_t;
+} PAY_SLT_BcnTlm_Payload_t;
 
 
 
 /* 만들어 보아요 */
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((__packed__)) {
+    uint8 HkEnabled;      // 0: disable, 1: enable
+    uint8 BcnEnabled;     // 0: disable, 1: enable
+} PAY_SLT_OutputEnabled_Payload_t;
+
+typedef struct __attribute__((__packed__)) {
     uint8  node;      // 11(PAY-EXP-A7), 12(PAY-EXP-M7), 13(PAY-IFB) 중 하나
     uint8  table;     // 0, 3, 4 중 하나
     uint16 addr;      // table의 address, 0xNNNN 형식
@@ -126,7 +113,7 @@ typedef struct __attribute__((packed)) {
     uint8  len;       // 유효 데이터 길이 (배열 요소 개수)
 } PAY_SLT_ParGet_Payload_t;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((__packed__)) {
     uint8  node;         // 11(PAY-EXP-A7), 12(PAY-EXP-M7), 13(PAY-IFB) 중 하나
     uint8  table;        // 0, 3 중 하나
     uint16 addr;         // table의 address, 0xNNNN 형식
@@ -134,25 +121,33 @@ typedef struct __attribute__((packed)) {
     uint8  type;         // GS_PARAM 참조
     uint8  padding[3];
 
-    uint32  value;       // 바꾸려고 하는 값
+    union {
+        uint32 value;    // type이 uint8, uint16, uint32일때 사용
+        char str[96];    // typoe이 string일때 사용
+    }data;    // 바꾸려고 하는 값
+    
 } PAY_SLT_ParSet_Payload_t;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((__packed__)) {
     uint8 node;          // file scan을 진행할 payload node: 11(PAY-EXP-A7) or 12(PAY-EXP-M7)
 } PAY_SLT_ScanFiles_Payload_t;
 
-typedef struct __attribute__((packed)) {
-    // uint8  node;          // file scan을 진행할 payload node: 11(PAY-EXP-A7) or 12(PAY-EXP-M7) // 일단 11 고정
+typedef struct __attribute__((__packed__)) {
     uint32 file_index;
     uint32 start_chunk;
 } PAY_SLT_DownloadFile_Payload_t;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((__packed__)) {
     uint32 snap_id;
     uint32 file_count;
 } PAY_SLT_ScanFileRpl_t;
 
-typedef struct __attribute((packed)) {
+typedef struct __attribute__((__packed__)) {
+    char file_path[128];
+    uint32 expected_file_size;
+} PAY_SLT_DownloadFile_RPT_t;
+
+typedef struct __attribute__((__packed__)) {
     uint8 node;
     uint8 table;
 } PAY_SLT_GetFullTable_Payload_t;

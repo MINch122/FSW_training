@@ -16,7 +16,7 @@ typedef enum
     SLT_IFB_DEVICE_SUCCESS  = 0,
     SLT_IFB_DEVICE_ERROR    = -1,
     SLT_IFB_DEVICE_BAD_ARG  = -2
-} SLT_IFB_DeviceRetcode_t;
+} PAY_SLT_DeviceRetcode_t;
 
 int32 PAY_SLT_CSP_CMP(uint8 node);
 int32 PAY_SLT_CSP_PING(uint8 node);
@@ -29,7 +29,7 @@ int32 PAY_SLT_CSP_GNDWDT(uint8 node);
 int32 PAY_SLT_GetRparam(uint8 type, uint8 node, uint8 table_id, uint16 addr, void *param);
 int32 PAY_SLT_SetRparam(uint8 type, uint8 node, uint8 table_id, uint16 addr, void *param);
 int32 PAY_SLT_SaveTable(uint8 node, uint8 table_id);
-int32 PAY_SLT_ReadExpI2CChunk(CFE_SRL_IO_Handle_t *handle, uint32 start_addr, void *data, size_t size);
+
 
 int32 SLT_IFB_CSP_CMP(void);
 int32 SLT_IFB_CSP_PING(void);

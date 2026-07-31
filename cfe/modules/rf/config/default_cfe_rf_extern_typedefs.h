@@ -28,7 +28,6 @@ typedef enum {
 
     CFE_RF_UPORT_PING = 1,
     CFE_RF_UPORT_TC = 13,
-    CFE_RF_UPORT_FTP = 14,
     
 } CFE_RF_Uplink_Port_t;
 

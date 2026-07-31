@@ -71,10 +71,6 @@
 #include "gpio_msg.h"
 /* End of EPS Header */
 
-/*********************
- * SP Header
- ********************/
-/* End of SP Header */
 
 /*********************
  * ADCS Header 
@@ -82,6 +78,13 @@
 #include "adcs_msgids.h"
 #include "adcs_msg.h"
 /* End of ADCS Header */
+
+/*********************
+ * PAYLOAD Header
+ ********************/
+#include "pay_slt_msgids.h"
+#include "pay_slt_msg.h"
+/* End of PAYLOAD Header */
 
 /************************************************************************
 ** Define
@@ -104,6 +107,8 @@
 #define BCN_OFFSET_12           BCN_OFFSET_11
 #define BCN_OFFSET_13           BCN_OFFSET_12
 
+#define HK2_OFFSET_0            (CFE_MSG_TLM_HDR_SIZE - sizeof(((CFE_MSG_TelemetryHeader_t *)0)->Spare))
+#define HK2_OFFSET_1            (HK2_OFFSET_0 + BCN_OFFSET_6)
 
 hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
 
@@ -206,21 +211,22 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
 /*********************************************************************/
 /*                  Start of Conbined Housekeeping                   */
 /*********************************************************************/
+    /* HK_COMBINED_PKT1 full packet (203 bytes) + PAY_SLT HK payload (32 bytes) */
     /*  15 */
     {
-        CFE_SB_MSGID_RESERVED,
+        CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
         0,
-        CFE_SB_MSGID_RESERVED,
-        0,
-        0,
+        CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT2_MID),
+        HK2_OFFSET_0,
+        BCN_OFFSET_6,
     },
     /*  16 */
     {
-        CFE_SB_MSGID_RESERVED,
-        0,
-        CFE_SB_MSGID_RESERVED,
-        0,
-        0,
+        CFE_SB_MSGID_WRAP_VALUE(PAY_SLT_HK_TLM_MID),
+        CFE_MSG_TLM_HDR_SIZE,
+        CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT2_MID),
+        HK2_OFFSET_1,
+        sizeof(PAY_SLT_HkTlm_Payload_t),
     },
     /*  17 */
     {

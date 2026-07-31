@@ -8,55 +8,55 @@
 #include "pay_slt_eventids.h"
 #include "pay_slt_version.h"
 
-SLT_IFB_Data_t SLT_IFB_Data;
+PAY_SLT_Data_t PAY_SLT_Data;
 
 void PAY_SLT_Main(void)
 {
     CFE_Status_t status;
     CFE_SB_Buffer_t *SBBufPtr;
 
-    CFE_ES_PerfLogEntry(SLT_IFB_PERF_ID);
+    CFE_ES_PerfLogEntry(PAY_SLT_PERF_ID);
 
-    status = SLT_IFB_Init();
+    status = PAY_SLT_Init();
     if (status != CFE_SUCCESS)
     {
-        SLT_IFB_Data.RunStatus = CFE_ES_RunStatus_APP_ERROR;
+        PAY_SLT_Data.RunStatus = CFE_ES_RunStatus_APP_ERROR;
     }
 
-    while (CFE_ES_RunLoop(&SLT_IFB_Data.RunStatus) == true)
+    while (CFE_ES_RunLoop(&PAY_SLT_Data.RunStatus) == true)
     {
-        CFE_ES_PerfLogExit(SLT_IFB_PERF_ID);
-        status = CFE_SB_ReceiveBuffer(&SBBufPtr, SLT_IFB_Data.CommandPipe, CFE_SB_PEND_FOREVER);
-        CFE_ES_PerfLogEntry(SLT_IFB_PERF_ID);
+        CFE_ES_PerfLogExit(PAY_SLT_PERF_ID);
+        status = CFE_SB_ReceiveBuffer(&SBBufPtr, PAY_SLT_Data.CommandPipe, CFE_SB_PEND_FOREVER);
+        CFE_ES_PerfLogEntry(PAY_SLT_PERF_ID);
 
         if (status == CFE_SUCCESS)
         {
-            SLT_IFB_TaskPipe(SBBufPtr);
+            PAY_SLT_TaskPipe(SBBufPtr);
         }
         else
         {
-            CFE_EVS_SendEvent(SLT_IFB_PIPE_ERR_EID, CFE_EVS_EventType_ERROR,
+            CFE_EVS_SendEvent(PAY_SLT_APP_PIPE_ERR_EID, CFE_EVS_EventType_ERROR,
                               "PAY_SLT: SB Pipe Read Error, App Will Exit");
-            SLT_IFB_Data.RunStatus = CFE_ES_RunStatus_APP_ERROR;
+            PAY_SLT_Data.RunStatus = CFE_ES_RunStatus_APP_ERROR;
         }
     }
 
-    CFE_ES_PerfLogExit(SLT_IFB_PERF_ID);
-    CFE_ES_ExitApp(SLT_IFB_Data.RunStatus);
+    CFE_ES_PerfLogExit(PAY_SLT_PERF_ID);
+    CFE_ES_ExitApp(PAY_SLT_Data.RunStatus);
 }
 
-CFE_Status_t SLT_IFB_Init(void)
+CFE_Status_t PAY_SLT_Init(void)
 {
     CFE_Status_t status;
-    char VersionString[SLT_IFB_CFG_MAX_VERSION_STR_LEN];
 
-    memset(&SLT_IFB_Data, 0, sizeof(SLT_IFB_Data));
-    SLT_IFB_Data.RunStatus = CFE_ES_RunStatus_APP_RUN;
-    SLT_IFB_Data.PipeDepth = SLT_IFB_PIPE_DEPTH;
-    SLT_IFB_Data.BcnSbEnabled = PAY_SLT_SB_BCN_ENABLED;
+    memset(&PAY_SLT_Data, 0, sizeof(PAY_SLT_Data));
+    PAY_SLT_Data.RunStatus = CFE_ES_RunStatus_APP_RUN;
+    PAY_SLT_Data.PipeDepth = PAY_SLT_PIPE_DEPTH;
+    PAY_SLT_Data.BcnEnabled = PAY_SLT_BCN_ENABLED;
+    PAY_SLT_Data.HkEnabled = PAY_SLT_HK_ENABLED;
 
-    strncpy(SLT_IFB_Data.PipeName, "PAY_SLT_CMD_PIPE", sizeof(SLT_IFB_Data.PipeName));
-    SLT_IFB_Data.PipeName[sizeof(SLT_IFB_Data.PipeName) - 1] = 0;
+    strncpy(PAY_SLT_Data.PipeName, "PAY_SLT_CMD_PIPE", sizeof(PAY_SLT_Data.PipeName));
+    PAY_SLT_Data.PipeName[sizeof(PAY_SLT_Data.PipeName) - 1] = 0;
 
     status = CFE_EVS_Register(NULL, 0, CFE_EVS_EventFilter_BINARY);
     if (status != CFE_SUCCESS)
@@ -65,62 +65,60 @@ CFE_Status_t SLT_IFB_Init(void)
         return status;
     }
 
-    CFE_MSG_Init(CFE_MSG_PTR(SLT_IFB_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAY_SLT_HK_TLM_MID),
-                 sizeof(SLT_IFB_Data.HkTlm));
-    CFE_MSG_Init(CFE_MSG_PTR(SLT_IFB_Data.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAY_SLT_BCN_TLM_MID),
-                 sizeof(SLT_IFB_Data.BcnTlm));
-    CFE_MSG_Init(CFE_MSG_PTR(SLT_IFB_Data.RptPkt.TelemetryHeader), CFE_SB_ValueToMsgId(PAY_SLT_RPT_TLM_MID),
-                 sizeof(SLT_IFB_Data.RptPkt));
+    CFE_MSG_Init(CFE_MSG_PTR(PAY_SLT_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAY_SLT_HK_TLM_MID),
+                 sizeof(PAY_SLT_Data.HkTlm));
+    CFE_MSG_Init(CFE_MSG_PTR(PAY_SLT_Data.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAY_SLT_BCN_TLM_MID),
+                 sizeof(PAY_SLT_Data.BcnTlm));
+    CFE_MSG_Init(CFE_MSG_PTR(PAY_SLT_Data.RptPkt.TelemetryHeader), CFE_SB_ValueToMsgId(PAY_SLT_RPT_TLM_MID),
+                 sizeof(PAY_SLT_Data.RptPkt));
 
-    status = CFE_SB_CreatePipe(&SLT_IFB_Data.CommandPipe, SLT_IFB_Data.PipeDepth, SLT_IFB_Data.PipeName);
+    status = CFE_SB_CreatePipe(&PAY_SLT_Data.CommandPipe, PAY_SLT_Data.PipeDepth, PAY_SLT_Data.PipeName);
     if (status != CFE_SUCCESS)
     {
-        CFE_EVS_SendEvent(SLT_IFB_CR_PIPE_ERR_EID, CFE_EVS_EventType_ERROR,
+        CFE_EVS_SendEvent(PAY_SLT_APP_CR_PIPE_ERR_EID, CFE_EVS_EventType_ERROR,
                           "PAY_SLT: Error creating SB Command Pipe, RC = 0x%08lX", (unsigned long)status);
         return status;
     }
 
-    status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(PAY_SLT_SEND_HK_MID), SLT_IFB_Data.CommandPipe);
+    status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(PAY_SLT_SEND_HK_MID), PAY_SLT_Data.CommandPipe);
     if (status != CFE_SUCCESS)
     {
-        CFE_EVS_SendEvent(SLT_IFB_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
+        CFE_EVS_SendEvent(PAY_SLT_APP_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
                           "PAY_SLT: Error Subscribing to HK request, RC = 0x%08lX", (unsigned long)status);
         return status;
     }
 
-    status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(PAY_SLT_SEND_BCN_MID), SLT_IFB_Data.CommandPipe);
+    status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(PAY_SLT_SEND_BCN_MID), PAY_SLT_Data.CommandPipe);
     if (status != CFE_SUCCESS)
     {
-        CFE_EVS_SendEvent(SLT_IFB_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+        CFE_EVS_SendEvent(PAY_SLT_APP_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "PAY_SLT: Error Subscribing to BCN request, RC = 0x%08lX", (unsigned long)status);
         return status;
     }
 
-    status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(PAY_SLT_CMD_MID), SLT_IFB_Data.CommandPipe);
+    status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(PAY_SLT_CMD_MID), PAY_SLT_Data.CommandPipe);
     if (status != CFE_SUCCESS)
     {
-        CFE_EVS_SendEvent(SLT_IFB_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+        CFE_EVS_SendEvent(PAY_SLT_APP_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "PAY_SLT: Error Subscribing to CMD MID, RC = 0x%08lX", (unsigned long)status);
         return status;
     }
 
+
+    PAY_SLT_Data.RS422Handle = CFE_SRL_ApiGetHandle(CFE_SRL_RS422_HANDLE_INDEXER);
     
-#ifdef PAY_SLT_I2C_HANDLE_INDEXER
-    SLT_IFB_Data.I2c1Handle = CFE_SRL_ApiGetHandle(PAY_SLT_I2C_HANDLE_INDEXER);
-    if (SLT_IFB_Data.I2c1Handle == NULL)
-    {
-        CFE_EVS_SendEvent(SLT_IFB_INIT_INF_EID, CFE_EVS_EventType_ERROR, "PAY_SLT: Failed to get I2C1 handle");
+    if (PAY_SLT_Data.RS422Handle == NULL) {
+        CFE_EVS_SendEvent(PAY_SLT_APP_INIT_INF_EID, CFE_EVS_EventType_ERROR, "PAY_SLT: Failed to get RS422 handle");
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
-#else
-    SLT_IFB_Data.I2c1Handle = NULL;
-    CFE_EVS_SendEvent(SLT_IFB_INIT_INF_EID, CFE_EVS_EventType_INFORMATION,
-                      "PAY_SLT: I2C1 handle is not configured; I2C download is disabled");
-#endif
 
-    CFE_Config_GetVersionString(VersionString, SLT_IFB_CFG_MAX_VERSION_STR_LEN, "PAY_SLT App", SLT_IFB_VERSION,
-                                SLT_IFB_BUILD_CODENAME, SLT_IFB_LAST_OFFICIAL);
-    CFE_EVS_SendEvent(SLT_IFB_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "PAY_SLT Initialized.%s", VersionString);
+    PAY_SLT_Data.I2c1Handle = CFE_SRL_ApiGetHandle(CFE_SRL_I2C1_HANDLE_INDEXER);
+    if (PAY_SLT_Data.I2c1Handle == NULL) {
+        CFE_EVS_SendEvent(PAY_SLT_APP_INIT_INF_EID, CFE_EVS_EventType_ERROR, "PAY_SLT: Failed to get I2C1 handle");
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    CFE_EVS_SendEvent(PAY_SLT_APP_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "PAY_SLT Initialized");
 
     return CFE_SUCCESS;
 }

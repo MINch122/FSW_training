@@ -82,17 +82,23 @@ CFE_Status_t RPT_ClearQueueCmd(const RPT_ClearQueueCmd_t *Msg) {
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t RPT_GetOpsDataCmd(const RPT_GetOpsDataCmd_t *Msg) {
+    RPT_Report_t Report = {0,};
+
     RPT_Data.CmdCounter ++;
 
-    RPT_OpsTlm_t Tlm;
-    CFE_MSG_Init(CFE_MSG_PTR(Tlm.TelemetryHeader), CFE_SB_ValueToMsgId(RPT_OPS_TLM_MID), sizeof(Tlm));
-    
+    Report.MsgID = RPT_CMD_MID;
+    Report.CommandCode = RPT_GET_OPS_DATA_CC;
+    Report.ReturnType = RPT_RETTYPE_SUCCESS;
+    Report.ReturnCode = CFE_SUCCESS;
+    Report.ReturnDataSize = (uint16)sizeof(RPT_Data.OpsData);
+
     OS_MutSemTake(RPT_Data.OpsMutexID);
-    Tlm.Payload = RPT_Data.OpsData;
+    memcpy(Report.ReturnValue, &RPT_Data.OpsData, sizeof(RPT_Data.OpsData));
     OS_MutSemGive(RPT_Data.OpsMutexID);
 
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(Tlm.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Tlm.TelemetryHeader), true);
+    if (RPT_Report(&Report, false) != CFE_SUCCESS) {
+        RPT_Data.ErrCounter ++;
+    }
 
     return CFE_SUCCESS;
 }

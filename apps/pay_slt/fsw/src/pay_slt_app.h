@@ -22,8 +22,8 @@
  * Main header file for the Sample application
  */
 
-#ifndef SLT_PAY_APP_H
-#define SLT_PAY_APP_H
+#ifndef PAY_SLT_APP_H
+#define PAY_SLT_APP_H
 
 /*
 ** Required header files.
@@ -61,11 +61,13 @@ typedef struct
     
     uint16 boot_cnt;
     uint8 boot_his[8];
-    bool BcnSbEnabled;
 
-    SLT_IFB_HkTlm_t HkTlm;
-    SLT_IFB_BcnTlm_t BcnTlm;
-    SLT_IFB_RPT_t RptPkt;
+    uint8 HkEnabled;
+    uint8 BcnEnabled;
+
+    PAY_SLT_HkTlm_t HkTlm;
+    PAY_SLT_BcnTlm_t BcnTlm;
+    PAY_SLT_RPT_t RptPkt;
 
     /*
     ** Run Status variable used in the main processing loop
@@ -77,6 +79,7 @@ typedef struct
     */
     CFE_SB_PipeId_t CommandPipe;
     CFE_SRL_IO_Handle_t *I2c1Handle;
+    CFE_SRL_IO_Handle_t *RS422Handle;
 
     /*
     ** Initialization data (not reported in housekeeping)...
@@ -84,22 +87,21 @@ typedef struct
     char   PipeName[CFE_MISSION_MAX_API_LEN];
     uint16 PipeDepth;
 
-} SLT_IFB_Data_t;
+} PAY_SLT_Data_t;
 
 /*
 ** Global data structure
 */
-extern SLT_IFB_Data_t SLT_IFB_Data;
+extern PAY_SLT_Data_t PAY_SLT_Data;
 
-/****************************************************************************/
-/*
-** Local function prototypes.
+/************************************************************************
+** Application function prototypes
 **
-** Note: Except for the entry point (SAMPLE_APP_Main), these
-**       functions are not called from any other source module.
-*/
+** PAY_SLT_Main is the cFS application entry point. PAY_SLT_Init
+** initializes application state, telemetry messages, and the command pipe.
+************************************************************************/
 void         PAY_SLT_Main(void);
-#define SLT_IFB_Main PAY_SLT_Main
-CFE_Status_t SLT_IFB_Init(void);
 
-#endif /* SAMPLE_APP_H */
+CFE_Status_t PAY_SLT_Init(void);
+
+#endif /* PAY_SLT_APP_H */

@@ -79,6 +79,20 @@ typedef struct EPS_BP8_DRV_PACK {
 } EPS_BP8_Drv_HkTlm_t;
 
 /**
+ * BP8 beacon telemetry structure (only fields used by the combined beacon).
+ */
+typedef struct EPS_BP8_DRV_PACK {
+    uint16_t BootCount;
+    uint16_t BootCause;
+    uint16_t ResetCause;
+    float    Soc;
+    float    BatAvrTemp;
+    uint16_t Vbat;
+    float    Current;
+    uint16_t HeaterCurrent;
+} EPS_BP8_Drv_BcnTlm_t;
+
+/**
  * Get BP8 housekeeping telemetry data.
  * @param csp_node   CSP node address of the BP8
  * @param hk         Output: parsed telemetry data
@@ -86,6 +100,11 @@ typedef struct EPS_BP8_DRV_PACK {
  * @return GS_OK on success, error code on failure
  */
 gs_error_t EPS_BP8_Drv_GetHk(uint8_t csp_node, EPS_BP8_Drv_HkTlm_t *hk, uint32_t timeout_ms);
+
+/**
+ * Get only the BP8 fields used by the combined beacon.
+ */
+gs_error_t EPS_BP8_Drv_GetBcn(uint8_t csp_node, EPS_BP8_Drv_BcnTlm_t *bcn, uint32_t timeout_ms);
 
 /**
  * Remote Parameter Commands

@@ -22,27 +22,27 @@
  *  The Sample App header file containing version information
  */
 
-#ifndef SLT_IFB_VERSION_H
-#define SLT_IFB_VERSION_H
+#ifndef PAY_SLT_VERSION_H
+#define PAY_SLT_VERSION_H
 
 /* Development Build Macro Definitions */
 
-#define SLT_IFB_BUILD_NUMBER    1 /*!< Development Build: Number of commits since baseline */
-#define SLT_IFB_BUILD_BASELINE  "equuleus-rc1" /*!< Development Build: git tag that is the base for the current development */
-#define SLT_IFB_BUILD_DEV_CYCLE "equuleus-rc2" /**< @brief Development: Release name for current development cycle */
-#define SLT_IFB_BUILD_CODENAME  "Equuleus" /**< @brief: Development: Code name for the current build */
+#define PAY_SLT_BUILD_NUMBER    1 /*!< Development Build: Number of commits since baseline */
+#define PAY_SLT_BUILD_BASELINE  "equuleus-rc1" /*!< Development Build: git tag that is the base for the current development */
+#define PAY_SLT_BUILD_DEV_CYCLE "equuleus-rc2" /**< @brief Development: Release name for current development cycle */
+#define PAY_SLT_BUILD_CODENAME  "Equuleus" /**< @brief: Development: Code name for the current build */
 
 /*
  * Version Macros, see \ref cfsversions for definitions.
  */
-#define SLT_IFB_MAJOR_VERSION 1  /*!< @brief Major version number. */
-#define SLT_IFB_MINOR_VERSION 1  /*!< @brief Minor version number. */
-#define SLT_IFB_REVISION      0  /*!< @brief Revision version number. Value of 0 indicates a development version.*/
+#define PAY_SLT_MAJOR_VERSION 1  /*!< @brief Major version number. */
+#define PAY_SLT_MINOR_VERSION 1  /*!< @brief Minor version number. */
+#define PAY_SLT_REVISION      0  /*!< @brief Revision version number. Value of 0 indicates a development version.*/
 
 /**
  * @brief Last official release.
  */
-#define SLT_IFB_LAST_OFFICIAL "v1.1.0"
+#define PAY_SLT_LAST_OFFICIAL "v1.1.0"
 
 /*!
  * @brief Mission revision.
@@ -51,17 +51,17 @@
  * Values 1-254 are reserved for mission use to denote patches/customizations as needed. NOTE: Reserving 0 and 0xFF for
  * cFS open-source development use (pending resolution of nasa/cFS#440)
  */
-#define SLT_IFB_MISSION_REV 0xFF
+#define PAY_SLT_MISSION_REV 0xFF
 
-#define SLT_IFB_STR_HELPER(x) #x /*!< @brief Helper function to concatenate strings from integer macros */
-#define SLT_IFB_STR(x) \
-    SLT_IFB_STR_HELPER(x) /*!< @brief Helper function to concatenate strings from integer macros */
+#define PAY_SLT_STR_HELPER(x) #x /*!< @brief Helper function to concatenate strings from integer macros */
+#define PAY_SLT_STR(x) \
+    PAY_SLT_STR_HELPER(x) /*!< @brief Helper function to concatenate strings from integer macros */
 
 /*! @brief Development Build Version Number.
  * @details Baseline git tag + Number of commits since baseline. @n
  * See @ref cfsversions for format differences between development and release versions.
  */
-#define SLT_IFB_VERSION SLT_IFB_BUILD_BASELINE "+dev" SLT_IFB_STR(SLT_IFB_BUILD_NUMBER)
+#define PAY_SLT_VERSION PAY_SLT_BUILD_BASELINE "+dev" PAY_SLT_STR(PAY_SLT_BUILD_NUMBER)
 
 /**
  * @brief Max Version String length.
@@ -69,6 +69,6 @@
  * Maximum length that an OSAL version string can be.
  * 
  */
-#define SLT_IFB_CFG_MAX_VERSION_STR_LEN 256
+#define PAY_SLT_CFG_MAX_VERSION_STR_LEN 256
 
-#endif /* SLT_PAY_VERSION_H */
+#endif /* PAY_SLT_VERSION_H */

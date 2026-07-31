@@ -6,12 +6,114 @@
 #include "eps_bp8_drv.h"
 
 #include <gs/param/internal/types.h>
+#include <gs/param/internal/rparam.h>
 #include <gs/param/rparam.h>
+#include <gs/param/serialize.h>
 #include <gs/param/table.h>
+#include <gs/csp/csp.h>
+#include <csp/csp_endian.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "common_types.h"
+#include "osapi.h"
+
+#define EPS_BP8_RPARAM_LIST_MAX_COUNT 5u
+#define EPS_BP8_RPARAM_LIST_MAX_ELEMENT_SIZE sizeof(float)
+#define EPS_BP8_RPARAM_LIST_MAX_REPLY_PAYLOAD \
+    ((sizeof(uint16_t) + EPS_BP8_RPARAM_LIST_MAX_ELEMENT_SIZE) * EPS_BP8_RPARAM_LIST_MAX_COUNT)
+
+static gs_error_t EPS_BP8_DrvRparamGetList(uint8_t csp_node, const uint16_t *addresses,
+                                           gs_param_type_t type, void *values,
+                                           size_t value_element_size, size_t count,
+                                           uint32_t timeout_ms)
+{
+    uint16_t transaction_words[(sizeof(gs_rparam_query_t) + EPS_BP8_RPARAM_LIST_MAX_REPLY_PAYLOAD +
+                                sizeof(uint16_t) - 1u) /
+                               sizeof(uint16_t)] = {0};
+    gs_rparam_query_t *query = (gs_rparam_query_t *)transaction_words;
+    const size_t query_payload_size = sizeof(query->payload.addr[0]) * count;
+    const size_t query_size = RPARAM_QUERY_LENGTH(query, query_payload_size);
+    const size_t reply_payload_element_size = sizeof(query->payload.addr[0]) + value_element_size;
+    const size_t reply_payload_size = reply_payload_element_size * count;
+    const size_t reply_size = RPARAM_QUERY_LENGTH(query, reply_payload_size);
+
+    if (addresses == NULL || values == NULL || count == 0 ||
+        count > EPS_BP8_RPARAM_LIST_MAX_COUNT || value_element_size == 0 ||
+        value_element_size > EPS_BP8_RPARAM_LIST_MAX_ELEMENT_SIZE)
+    {
+        return GS_ERROR_ARG;
+    }
+
+    query->action   = RPARAM_GET;
+    query->table_id = EPS_BP8_TABLE_TELEMETRY;
+    query->checksum = csp_hton16(GS_RPARAM_MAGIC_CHECKSUM);
+    query->seq      = 0;
+    query->total    = 0;
+    query->length   = csp_hton16(query_payload_size);
+
+    for (size_t i = 0; i < count; i++)
+    {
+        query->payload.addr[i] = csp_hton16(addresses[i]);
+    }
+
+    if (csp_transaction2(CSP_PRIO_HIGH, csp_node, GS_CSP_PORT_RPARAM, timeout_ms,
+                         query, query_size, query, reply_size, CSP_O_CRC32) <= 0)
+    {
+        return GS_ERROR_IO;
+    }
+
+    query->length = csp_ntoh16(query->length);
+    if (query->action != RPARAM_REPLY ||
+        query->table_id != EPS_BP8_TABLE_TELEMETRY ||
+        query->length != reply_payload_size)
+    {
+        return GS_ERROR_DATA;
+    }
+
+    for (size_t i = 0; i < count; i++)
+    {
+        const size_t item_offset = i * reply_payload_element_size;
+        uint16_t reply_addr;
+
+        memcpy(&reply_addr, &query->payload.packed[item_offset], sizeof(reply_addr));
+        reply_addr = csp_betoh16(reply_addr);
+        if (reply_addr != addresses[i])
+        {
+            return GS_ERROR_DATA;
+        }
+
+        memcpy((uint8_t *)values + (i * value_element_size),
+               &query->payload.packed[item_offset + sizeof(reply_addr)],
+               value_element_size);
+        gs_param_betoh(type, (uint8_t *)values + (i * value_element_size));
+    }
+
+    return GS_OK;
+}
+
+static gs_error_t EPS_BP8_DrvRparamGetListChecked(uint8_t csp_node, const char *field,
+                                                  const uint16_t *addresses,
+                                                  gs_param_type_t type, void *values,
+                                                  size_t value_element_size, size_t count,
+                                                  uint32_t timeout_ms)
+{
+    gs_error_t err;
+
+    err = EPS_BP8_DrvRparamGetList(csp_node, addresses, type, values,
+                                   value_element_size, count, timeout_ms);
+    if (err != GS_OK)
+    {
+        OS_printf("[EPS][BP8][RPARAM] FAIL node=%u table=%u op=GET_LIST field=%s "
+                  "addr=%u type=%u count=%lu err=%d timeout=%lu ms\n",
+                  (unsigned int)csp_node, (unsigned int)EPS_BP8_TABLE_TELEMETRY, field,
+                  (unsigned int)((addresses != NULL && count > 0) ? addresses[0] : 0),
+                  (unsigned int)type, (unsigned long)count, (int)err,
+                  (unsigned long)timeout_ms);
+    }
+
+    return err;
+}
 
 #define EPS_BP8_RPARAM_GET_UINT32(addr, dst) \
     do \
@@ -96,6 +198,56 @@ gs_error_t EPS_BP8_Drv_GetHk(uint8_t csp_node, EPS_BP8_Drv_HkTlm_t *hk, uint32_t
     next_hk.BatFault = (uint8_t)(bat_fault != 0);
 
     *hk = next_hk;
+
+    return GS_OK;
+}
+
+gs_error_t EPS_BP8_Drv_GetBcn(uint8_t csp_node, EPS_BP8_Drv_BcnTlm_t *bcn, uint32_t timeout_ms)
+{
+    EPS_BP8_Drv_BcnTlm_t next_bcn = {0};
+    const uint16_t uint16_addresses[] = {
+        EPS_BP8_TLM_BOOTCOUNT,
+        EPS_BP8_TLM_BOOTCAUSE,
+        EPS_BP8_TLM_RESETCAUSE,
+        EPS_BP8_TLM_VBAT,
+        EPS_BP8_TLM_HEATER_I,
+    };
+    const uint16_t float_addresses[] = {
+        EPS_BP8_TLM_SOC,
+        EPS_BP8_TLM_BAT_AVR_TEMP,
+        EPS_BP8_TLM_I,
+    };
+    uint16_t uint16_values[5] = {0};
+    float    float_values[3]  = {0.0F};
+    gs_error_t err;
+
+    if (bcn == NULL)
+        return GS_ERROR_ARG;
+
+    err = EPS_BP8_DrvRparamGetListChecked(csp_node, "BP8_BCN_UINT16",
+                                          uint16_addresses, GS_PARAM_UINT16,
+                                          uint16_values, sizeof(uint16_values[0]), 5,
+                                          timeout_ms);
+    if (err != GS_OK)
+        return err;
+
+    err = EPS_BP8_DrvRparamGetListChecked(csp_node, "BP8_BCN_FLOAT",
+                                          float_addresses, GS_PARAM_FLOAT,
+                                          float_values, sizeof(float_values[0]), 3,
+                                          timeout_ms);
+    if (err != GS_OK)
+        return err;
+
+    next_bcn.BootCount     = uint16_values[0];
+    next_bcn.BootCause     = uint16_values[1];
+    next_bcn.ResetCause    = uint16_values[2];
+    next_bcn.Vbat          = uint16_values[3];
+    next_bcn.HeaterCurrent = uint16_values[4];
+    next_bcn.Soc           = float_values[0];
+    next_bcn.BatAvrTemp    = float_values[1];
+    next_bcn.Current       = float_values[2];
+
+    *bcn = next_bcn;
 
     return GS_OK;
 }

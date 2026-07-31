@@ -60,12 +60,6 @@ int32 CFE_RF_CommandIngestInit(CFE_ES_TaskId_t *TaskIdPtr) {
         return Status;
     }
 
-    Status = csp_bind(Socket, CFE_RF_UPORT_FTP);
-    if (Status != CSP_ERR_NONE && Status != CSP_ERR_USED) {
-        CFE_ES_WriteToSysLog("%s: csp_bind failed at Port: %d RC=%d\n", __func__, CFE_RF_UPORT_FTP, Status);
-        return Status;
-    }
-
     Status = csp_listen(Socket, 10);
     if (Status != CSP_ERR_NONE) {
         CFE_ES_WriteToSysLog("%s: csp_listen failed! RC=%d\n", __func__, Status);
@@ -107,6 +101,7 @@ void CFE_RF_CommandIngestTask(void) {
             switch (Port) {
                 case CFE_RF_UPORT_PING: {
                     csp_service_handler(Connection, Packet);
+                    Packet = NULL;
                     break;
                 }
                 case CFE_RF_UPORT_TC: {
@@ -123,18 +118,28 @@ void CFE_RF_CommandIngestTask(void) {
                      * Allocate & Transmit Message buffer
                      */
                     BufPtr = CFE_SB_AllocateMessageBuffer(Packet->length);
-                    memcpy(BufPtr, Packet->data, Packet->length);
+                    if (BufPtr != NULL) {
+                        memcpy(BufPtr, Packet->data, Packet->length);
 
-                    /**
-                     * Zero-copy transmit function
-                     */
-                    Status = CFE_SB_TransmitBuffer(BufPtr, false);
+                        /**
+                         * Zero-copy transmit function
+                         */
+                        Status = CFE_SB_TransmitBuffer(BufPtr, false);
 
-                    /**
-                     * If failed, Release buffer and Transmit again via other function
-                     */
+                        /**
+                         * If failed, Release buffer and Transmit again via other function
+                         */
+                        if (Status != CFE_SUCCESS) {
+                            CFE_SB_ReleaseMessageBuffer(BufPtr);
+                        }
+                    }
+                    else {
+                        CFE_ES_WriteToSysLog("%s: Allocate message buffer failed, len=%u\n",
+                                             __func__, (unsigned int)Packet->length);
+                        Status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+                    }
+
                     if (Status != CFE_SUCCESS) {
-                        CFE_SB_ReleaseMessageBuffer(BufPtr);
                         
                         /**
                          * Alternative Transmit function
@@ -142,7 +147,6 @@ void CFE_RF_CommandIngestTask(void) {
                         Status = CFE_SB_TransmitMsg((CFE_MSG_Message_t *)Packet->data, false);
                         if (Status != CFE_SUCCESS) {
                             CFE_ES_WriteToSysLog("%s: Transmit message failed! RC=%d\n", __func__, Status);
-                            continue;
                         }
                     }
                     /* Free buffer & Remove dangled pointer */
@@ -150,12 +154,15 @@ void CFE_RF_CommandIngestTask(void) {
                     Packet = NULL;
                     break;
                 }
-                case CFE_RF_UPORT_FTP:
-                    break;
 
+                default:
+                    CFE_ES_WriteToSysLog("%s: Unknown RF uplink port: %d\n", __func__, Port);
+                    csp_buffer_free(Packet);
+                    Packet = NULL;
+                    break;
             }
-            csp_close(Connection);
         }
+        csp_close(Connection);
     } /* End of loop */
 
     /* This area should never be reached */

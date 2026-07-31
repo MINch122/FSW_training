@@ -22,8 +22,8 @@
  * Main header file for the SAMPLE application
  */
 
-#ifndef SLT_IFB_DISPATCH_H
-#define SLT_IFB_DISPATCH_H
+#ifndef PAY_SLT_DISPATCH_H
+#define PAY_SLT_DISPATCH_H
 
 /*
 ** Required header files.
@@ -31,8 +31,8 @@
 #include "cfe.h"
 #include "pay_slt_msg.h"
 
-void SLT_IFB_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr);
-void SLT_IFB_ProcessCommand(const CFE_SB_Buffer_t *SBBufPtr);
-bool SLT_IFB_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength);
+void PAY_SLT_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr);
+void PAY_SLT_ProcessCommand(const CFE_SB_Buffer_t *SBBufPtr);
+bool PAY_SLT_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength);
 
-#endif /* SLT_IFB_DISPATCH_H */
+#endif /* PAY_SLT_DISPATCH_H */

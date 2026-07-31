@@ -662,16 +662,21 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
 
 report: {
     paybee_kisscam_ReportTlm_t Report = {0, };
-    CFE_MSG_Init(CFE_MSG_PTR(Report.TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
-                    sizeof(paybee_kisscam_ReportTlm_t));
+    if (CFE_MSG_Init(CFE_MSG_PTR(Report.TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
+                    sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
+        return CFE_SUCCESS;
+    }
     Report.Report.MsgID = paybee_kisscam_CMD_MID;
     Report.Report.CommandCode = paybee_kisscam_DOWNLOAD_ALL_CC;
     Report.Report.ReturnType = (ErrCnt == 0) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_APP;
     Report.Report.ReturnCode = Status;
-    Report.Report.ReturnDataSize = sizeof(ErrCnt);
-    memcpy(Report.Report.ReturnValue, &ErrCnt, sizeof(ErrCnt));
+    Report.Report.ReturnDataSize = 0;
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
+    CFE_Status_t ReportStatus = CFE_SB_TransmitMsg(CFE_MSG_PTR(Report.TelemetryHeader), true);
+    if (ReportStatus != CFE_SUCCESS) {
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "KissCAM DownloadAll RPT transmit failed, RC=0x%08lX", (unsigned long)ReportStatus);
+    }
 }
 
 

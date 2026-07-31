@@ -13,6 +13,8 @@
 #include "paybee_kisscam_msgids.h"
 #include "paybee_kisscam_msg.h"
 
+#include <string.h>
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
 /* Verify command packet length                                               */
@@ -45,6 +47,7 @@ bool paybee_kisscam_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t Expe
         /* RPT */
         paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
         if (BufPtr == NULL) goto cleanup;
+        memset(BufPtr, 0, sizeof(*BufPtr));
 
         if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
         sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
@@ -175,6 +178,7 @@ void paybee_kisscam_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
         /* RPT */
         paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
         if (BufPtr == NULL) break;
+        memset(BufPtr, 0, sizeof(*BufPtr));
         if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
                          sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
             CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
@@ -230,6 +234,7 @@ void paybee_kisscam_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
         /* RPT */
         paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
         if (BufPtr == NULL) break;
+        memset(BufPtr, 0, sizeof(*BufPtr));
         if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
                          sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
             CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);

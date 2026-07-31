@@ -90,7 +90,7 @@ void LTRX_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
     {
         LTRX_SendBcnTlm();
     }
-    else if (mid == HK_COMBINED_PKT1_MID)
+    else if (mid == HK_COMBINED_PKT2_MID)
     {
         LTRX_OnBusBeaconReceived(SBBufPtr);
     }

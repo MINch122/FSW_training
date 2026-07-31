@@ -35,46 +35,6 @@ int32 PAY_SLT_SaveTable(uint8 node, uint8 table_id)
     return CFE_SRL_ApiRparamSaveCSP(node, SLT_IFB_RPARAM_TIMEOUT_MS, table_id, table_id);
 }
 
-// I2C 읽는 함수는 pay_slt_utils.c에 구현되어 있음
-/*
-int32 PAY_SLT_ReadExpI2CChunk(CFE_SRL_IO_Handle_t *handle, uint32 start_addr, void *data, size_t size)
-{
-    int32 status;
-    uint8 exp_i2c_addr = 0;
-    uint8 addr_buf[PAY_SLT_I2C_ADDR_BYTES];
-    CFE_SRL_IO_Param_t params = {0};
-
-    if ((handle == NULL) || (data == NULL) || (size == 0U)) {
-        return SLT_IFB_DEVICE_BAD_ARG;
-    }
-
-    status = PAY_SLT_GetRparam(GS_PARAM_UINT8, CSP_NODE_PAY_EXP, BOARD_PARAMETER_TABLE, EXP_I2C_ADDR_ADDRESS,
-                               &exp_i2c_addr);
-    if (status != CFE_SUCCESS) {
-        return status;
-    }
-
-    addr_buf[0] = (uint8)((start_addr >> 24) & 0xFFU);
-    addr_buf[1] = (uint8)((start_addr >> 16) & 0xFFU);
-    addr_buf[2] = (uint8)((start_addr >> 8) & 0xFFU);
-    addr_buf[3] = (uint8)(start_addr & 0xFFU);
-
-    params.TxData = addr_buf;
-    params.TxSize = sizeof(addr_buf);
-    params.Addr = exp_i2c_addr;
-    status = CFE_SRL_ApiWrite(handle, &params);
-    if (status != CFE_SUCCESS) {
-        return status;
-    }
-
-    memset(&params, 0, sizeof(params));
-    params.RxData = data;
-    params.RxSize = size;
-    params.Timeout = SLT_IFB_RPARAM_TIMEOUT_MS;
-    params.Addr = exp_i2c_addr;
-
-    return CFE_SRL_ApiRead(handle, &params);
-} */
 
 int32 PAY_SLT_CSP_CMP(uint8 node)
 {

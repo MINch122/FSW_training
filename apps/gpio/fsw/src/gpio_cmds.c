@@ -90,6 +90,11 @@ static uint8 GPIO_StatusToReportType(int32 Status)
     return (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_HW;
 }
 
+static void GPIO_UpdateDeployState(bool IsDeployed)
+{
+    GPIO_Data.IsDeployed = IsDeployed ? 1u : 0u;
+}
+
 static CFE_Status_t GPIO_SetOutput(const char *Name, CFE_SRL_GPIO_Indexer_t Index, uint8 StateBit, bool Value)
 {
     CFE_SRL_GPIO_Handle_t *Out = CFE_SRL_ApiGetGpioHandle(Index);
@@ -247,6 +252,7 @@ CFE_Status_t GPIO_SendHkCmd(const GPIO_SendHkCmd_t *Msg)
     GPIO_Data.HkTlm.Payload.GpioState[3] = (uint8)((GPIO_Data.OutputStateBits >> GPIO_OUTPUT_STX_EN_BIT) & 1u);
     GPIO_Data.HkTlm.Payload.GpioState[4] = (uint8)((GPIO_Data.OutputStateBits >> GPIO_OUTPUT_ADCS_EN_BIT) & 1u);
     GPIO_Data.HkTlm.Payload.GpioState[5] = (uint8)((GPIO_Data.OutputStateBits >> GPIO_OUTPUT_ADCS_BOOT_BIT) & 1u);
+    GPIO_Data.HkTlm.Payload.isDeployed  = GPIO_Data.IsDeployed;
 
     /*
     ** Send housekeeping telemetry packet...
@@ -269,9 +275,11 @@ CFE_Status_t GPIO_SendBcnCmd(const GPIO_SendBcnCmd_t *Msg)
     GPIO_Data.BcnTlm.Payload.GpioState = (uint8)(GPIO_Data.OutputStateBits & GPIO_BCN_OUTPUT_STATE_MASK);
     GPIO_Data.BcnTlm.Payload.Padding = 0;
     GPIO_Data.BcnTlm.Payload.isDeployed = 0;
+    GPIO_UpdateDeployState(false);
 
     if (GPIO_ReadInputFor1Second("SP_IN", CFE_SRL_SP_IN_GPIO_INDEXER, &IsDeployed, false) == CFE_SUCCESS)
     {
+        GPIO_UpdateDeployState(IsDeployed);
         GPIO_Data.BcnTlm.Payload.isDeployed = IsDeployed ? 1 : 0;
     }
 
@@ -519,8 +527,10 @@ CFE_Status_t GPIO_SpInRead5sCmd(const GPIO_SpInRead5sCmd_t *Msg)
     memset(&Report, 0, sizeof(Report));
 
     Status = GPIO_ReadInputFor1Second("SP_IN", CFE_SRL_SP_IN_GPIO_INDEXER, &SawHigh, true);
+    GPIO_UpdateDeployState(false);
     if (Status == CFE_SUCCESS)
     {
+        GPIO_UpdateDeployState(SawHigh);
         Report.isDeployed = SawHigh ? 1 : 0;
     }
 

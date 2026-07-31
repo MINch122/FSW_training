@@ -24,11 +24,12 @@
 #include "pay_slt.h"
 #include <gs/param/rparam.h>
 
-CFE_Status_t SLT_IFB_SendHkCmd(const SLT_IFB_SendHkCmd_t *Msg);
-CFE_Status_t PAY_SLT_SendBeaconCmd(const SLT_IFB_SendBcnCmd_t *Msg);
-CFE_Status_t SLT_IFB_NoopCmd(const SLT_IFB_NoopCmd_t *Msg);
-CFE_Status_t SLT_IFB_ResetCountersCmd(const SLT_IFB_ResetCountersCmd_t *Msg);
-CFE_Status_t PAY_SLT_SetBcnEnabledCmd(const PAY_SLT_SetBcnEnabledCmd_t *Msg);
+CFE_Status_t PAY_SLT_SendHkCmd(const PAY_SLT_SendHkCmd_t *Msg);
+CFE_Status_t PAY_SLT_SendBeaconCmd(const PAY_SLT_SendBcnCmd_t *Msg);
+CFE_Status_t PAY_SLT_NoopCmd(const PAY_SLT_NoopCmd_t *Msg);
+CFE_Status_t PAY_SLT_ResetCountersCmd(const PAY_SLT_ResetCountersCmd_t *Msg);
+CFE_Status_t PAY_SLT_OutputEnabledCmd(const PAY_SLT_OutputEnabledCmd_t *Msg);
+CFE_Status_t PAY_SLT_RS422PingCmd(const PAY_SLT_RS422PingCmd_t *Msg);
 
 CFE_Status_t PAY_SLT_IFB_CSP_CMP_Cmd(const PAY_SLT_IFB_CSP_CMP_Cmd_t *Msg);
 CFE_Status_t PAY_SLT_IFB_CSP_PING_Cmd(const PAY_SLT_IFB_CSP_PING_Cmd_t *Msg);
@@ -39,11 +40,11 @@ CFE_Status_t PAY_SLT_IFB_CSP_BUF_FREE_Cmd(const PAY_SLT_IFB_CSP_BUF_FREE_Cmd_t *
 CFE_Status_t PAY_SLT_IFB_CSP_UPTIME_Cmd(const PAY_SLT_IFB_CSP_UPTIME_Cmd_t *Msg);
 CFE_Status_t PAY_SLT_IFB_CSP_GNDWDT_Cmd(const PAY_SLT_IFB_CSP_GNDWDT_Cmd_t *Msg);
 
-
 CFE_Status_t PAY_SLT_ParGetCmd(const PAY_SLT_ParGetCmd_t *Msg);
 CFE_Status_t PAY_SLT_ParSetCmd(const PAY_SLT_ParSetCmd_t *Msg);
 CFE_Status_t PAY_SLT_ScanFilesCmd(const PAY_SLT_ScanFilesCmd_t *Msg);
-CFE_Status_t PAY_SLT_DownloadFileCmd(const PAY_SLT_DownloadFileCmd_t *Msg);
+CFE_Status_t PAY_SLT_DownloadFileI2CCmd(const PAY_SLT_DownloadFileCmd_t *Msg);
+CFE_Status_t PAY_SLT_DownloadFileRS422Cmd(const PAY_SLT_DownloadFileCmd_t *Msg);
 
 CFE_Status_t PAY_SLT_GetFullTableCmd(const PAY_SLT_GetFullTableCmd_t *Msg);
 
