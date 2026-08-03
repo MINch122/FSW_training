@@ -5,6 +5,7 @@
 #include "cfe_srl_interface_cfg.h"
 
 typedef enum {
+	CFE_SRL_I2C1_HANDLE_INDEXER,
 	CFE_SRL_RS485_HANDLE_INDEXER,
 	CFE_SRL_CAN0_HANDLE_INDEXER,
 	CFE_SRL_RS422_HANDLE_INDEXER,
@@ -42,6 +43,7 @@ typedef enum {
 	CSP_NODE_LTRX = 30,
 	CSP_NODE_PAY_IFB = 13,
 	CSP_NODE_PAY_EXP = 11,
+	CSP_NODE_AIOBC = 14,
 } CFE_SRL_CSP_Node_t;
 
 #endif /* CFE_SRL_MISSION_CFG_H */

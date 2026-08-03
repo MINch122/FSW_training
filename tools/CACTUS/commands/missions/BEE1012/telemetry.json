@@ -933,7 +933,12 @@
       "mid": "0x0830",
       "description": "PAY_SLT Housekeeping telemetry",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
+      "fields": [
+        { "name": "sys_status", "type": "int8", "count": 2 },
+        { "name": "brm_data", "type": "int16", "count": 3 },
+        { "name": "ntc_data", "type": "int16", "count": 8 },
+        { "name": "ntc_data_ifb", "type": "int16", "count": 4 }
+      ]
     },
     {
       "app": "PAY_SLT",
@@ -941,7 +946,43 @@
       "mid": "0x0831",
       "description": "PAY_SLT Beacon telemetry",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
+      "fields": [
+        { "name": "CmdCounter", "type": "uint8" },
+        { "name": "ErrCounter", "type": "uint8" },
+        { "name": "boot_cnt_p", "type": "uint16" },
+        { "name": "sys_uptime_a7", "type": "uint32" },
+        { "name": "sys_now_a7", "type": "uint32" },
+        { "name": "wdt_left_a7", "type": "uint32" },
+        { "name": "slf_data", "type": "uint16", "count": 4 },
+        { "name": "imu_data", "type": "uint16", "count": 8 },
+        { "name": "ntc_data_a7", "type": "int16", "count": 8 },
+        { "name": "pwr_volt", "type": "uint16", "count": 8 },
+        { "name": "pwr_current", "type": "uint16", "count": 8 },
+        { "name": "brd_temp_a7", "type": "int16" },
+        { "name": "sys_status_a7", "type": "int16" },
+        { "name": "boot_cnt_c", "type": "uint16" },
+        { "name": "brm_data", "type": "uint16", "count": 3 },
+        { "name": "boot_his_c", "type": "uint8", "count": 8 },
+        { "name": "boot_his_p", "type": "uint8", "count": 8 },
+        { "name": "sys_uptime_ifb", "type": "uint32" },
+        { "name": "sys_now_ifb", "type": "uint32" },
+        { "name": "boot_cnt", "type": "uint16" },
+        { "name": "sys_status_ifb", "type": "int16" },
+        { "name": "boot_his", "type": "uint8", "count": 8 },
+        { "name": "wdt_left_ifb", "type": "uint32" },
+        { "name": "brd_temp_ifb", "type": "int16" },
+        { "name": "sen_rst", "type": "uint16" },
+        { "name": "ntc_data_ifb", "type": "int16", "count": 4 },
+        { "name": "pw_cur", "type": "uint16", "count": 2 },
+        { "name": "pw_vol", "type": "uint16", "count": 2 },
+        { "name": "att_q", "type": "float", "count": 4 },
+        { "name": "rot_r", "type": "float", "count": 3 },
+        { "name": "lin_acc", "type": "float", "count": 3 },
+        { "name": "fld_vec", "type": "float", "count": 3 },
+        { "name": "sen_online", "type": "uint8" },
+        { "name": "sen_qlvl", "type": "uint8" },
+        { "name": "att_ql", "type": "uint8" }
+      ]
     },
     {
       "app": "PAY_SLT",
@@ -949,7 +990,31 @@
       "mid": "0x0832",
       "description": "PAY_SLT Report telemetry",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
+      "fields": [
+        { "name": "MsgID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "CommandCode", "type": "uint8" },
+        {
+          "name": "ReturnType",
+          "type": "enum",
+          "storage": "uint8",
+          "values": {
+            "SUCCESS": 0,
+            "OSAL": 1,
+            "CFE": 2,
+            "LIB": 3,
+            "APP": 4,
+            "HW": 5
+          }
+        },
+        { "name": "ReturnCode", "type": "int32", "format": "hex", "hex_digits": 8 },
+        { "name": "ReturnDataSize", "type": "uint16" },
+        {
+          "name": "ReturnValue",
+          "type": "bytes",
+          "length": 512,
+          "display_length_from": "ReturnDataSize"
+        }
+      ]
     },
     {
       "app": "PAY_KISSCAM",

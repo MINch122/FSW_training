@@ -42,6 +42,7 @@ static size_t PAY_SLT_ParamElementSize(uint8 type)
 {
     switch (type) {
         case GS_PARAM_UINT8:
+        case GS_PARAM_INT8:
         case GS_PARAM_STRING:
             return 1U;
         case GS_PARAM_UINT16:
@@ -59,6 +60,7 @@ static size_t PAY_SLT_ParamElementCapacity(uint8 type)
 {
     switch (type) {
         case GS_PARAM_UINT8:
+        case GS_PARAM_INT8:
             return sizeof(((PAY_SLT_Params_t *)0)->param.u8) / sizeof(((PAY_SLT_Params_t *)0)->param.u8[0]);
         case GS_PARAM_UINT16:
             return sizeof(((PAY_SLT_Params_t *)0)->param.u16) / sizeof(((PAY_SLT_Params_t *)0)->param.u16[0]);
@@ -79,6 +81,7 @@ static void PAY_SLT_CopyParamValueFromBe(uint8 type, uint8 *dst, const uint8 *sr
 {
     switch (type) {
         case GS_PARAM_UINT8:
+        case GS_PARAM_INT8:
         case GS_PARAM_STRING:
             *dst = *src;
             break;
@@ -396,7 +399,10 @@ int32 PAY_SLT_FetchParam(PAY_SLT_Params_t *Payload) {
     Status = PAY_SLT_FetchParamCompat(Payload);
     
     if (Status != CFE_SUCCESS) {
-        CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "PAY_SLT_FetchParam err: %d", Status);
+        CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAY_SLT_FetchParam err: %d node=%u table=%u addr=0x%04X type=%u len=%u",
+                          (int)Status, (unsigned int)Payload->node, (unsigned int)Payload->table,
+                          (unsigned int)Payload->addr, (unsigned int)Payload->type, (unsigned int)Payload->len);
     }
 
     return Status;

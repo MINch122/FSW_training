@@ -15,10 +15,11 @@
 CFE_SRL_IO_Handle_t *Handles[CFE_SRL_GNRL_DEVICE_NUM];
 /**************************************************
  * Index of Each device
- * 0 : RS485 Handle
- * 1 : CAN0 Handle
- * 2 : RS422 Handle
- * 3 : UART Handle
+ * 0 : I2C1 Handle
+ * 1 : RS485 Handle
+ * 2 : CAN0 Handle
+ * 3 : RS422 Handle
+ * 4 : UART Handle
  **************************************************/
 
 CFE_SRL_GPIO_Handle_t GPIO[CFE_SRL_TOT_GPIO_NUM];
@@ -43,6 +44,16 @@ int32 CFE_SRL_EarlyInit(void) {
 	 * Serial Comm. Init
  	 * Only `ready == true` interface is initialized
 	 **************************************************/
+	/* I2C1 Init */
+	Config.cfg.i2c = (CFE_PSP_I2C_cfg_t) {.tenbit = false,
+            							  .pec_en = false,
+            							  .retries = 3};
+	Status = CFE_SRL_HandleInit(&Handles[CFE_SRL_I2C1_HANDLE_INDEXER], "I2C1", "/dev/i2c-1", SRL_DEVTYPE_I2C, CFE_SRL_I2C1_HANDLE_INDEXER, &Config);
+	if (Status != CFE_SUCCESS) {
+		CFE_ES_WriteToSysLog("%s: I2C1 Initialization failed! RC=%d\n", __func__, Status);
+	}
+	else CFE_ES_WriteToSysLog("%s: I2C1 Initialized. FD=%d || DevName=%s\n", __func__, Handles[CFE_SRL_I2C1_HANDLE_INDEXER]->FD, ((CFE_SRL_Global_Handle_t *)Handles[CFE_SRL_I2C1_HANDLE_INDEXER])->DevName);
+
 	/* RS485 Init */
 	Config.cfg.uart = (CFE_PSP_UART_cfg_t) {.baud = 250000,
             							    .databits = 8,

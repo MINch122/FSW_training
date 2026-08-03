@@ -2,7 +2,7 @@
     "interfaces" : [
         {
             "type": "i2c",
-            "ready": false,
+            "ready": true,
             "name": "I2C1",
             "DevName": "/dev/i2c-1",
 
@@ -53,18 +53,6 @@
             "loopback_en": false,
             "recv_own_msgs": false,
             "recv_err_frame": false
-        },
-
-
-        {
-            "type": "i2c",
-            "ready": false,
-            "name": "I2C1",
-            "DevName": "/dev/i2c-14",
-
-            "tenbit": false,
-            "pec_en": false,
-            "retries": 3
         },
         {
             "type": "i2c",

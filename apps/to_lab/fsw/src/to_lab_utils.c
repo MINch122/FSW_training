@@ -146,13 +146,13 @@ static void TO_LAB_PrintFloatArray(const char *Label, const float *Values, size_
 }
 
 #define TO_LAB_PAY_SLT_ARRAY_COUNT(member) \
-    (sizeof(((SLT_IFB_BcnTlm_Payload_t *)0)->member) / sizeof(((SLT_IFB_BcnTlm_Payload_t *)0)->member[0]))
+    (sizeof(((PAY_SLT_BcnTlm_Payload_t *)0)->member) / sizeof(((PAY_SLT_BcnTlm_Payload_t *)0)->member[0]))
 
 #define TO_LAB_PRINT_PAY_SLT_U8_ARRAY(label, payload_ptr, member)                   \
     do                                                                             \
     {                                                                              \
         uint8 Values[TO_LAB_PAY_SLT_ARRAY_COUNT(member)];                          \
-        memcpy(Values, &(payload_ptr)[offsetof(SLT_IFB_BcnTlm_Payload_t, member)], \
+        memcpy(Values, &(payload_ptr)[offsetof(PAY_SLT_BcnTlm_Payload_t, member)], \
                sizeof(Values));                                                    \
         TO_LAB_PrintU8Array((label), Values, TO_LAB_PAY_SLT_ARRAY_COUNT(member));  \
     } while (0)
@@ -161,7 +161,7 @@ static void TO_LAB_PrintFloatArray(const char *Label, const float *Values, size_
     do                                                                             \
     {                                                                              \
         uint16 Values[TO_LAB_PAY_SLT_ARRAY_COUNT(member)];                         \
-        memcpy(Values, &(payload_ptr)[offsetof(SLT_IFB_BcnTlm_Payload_t, member)], \
+        memcpy(Values, &(payload_ptr)[offsetof(PAY_SLT_BcnTlm_Payload_t, member)], \
                sizeof(Values));                                                    \
         TO_LAB_PrintU16Array((label), Values, TO_LAB_PAY_SLT_ARRAY_COUNT(member)); \
     } while (0)
@@ -170,7 +170,7 @@ static void TO_LAB_PrintFloatArray(const char *Label, const float *Values, size_
     do                                                                             \
     {                                                                              \
         int16 Values[TO_LAB_PAY_SLT_ARRAY_COUNT(member)];                          \
-        memcpy(Values, &(payload_ptr)[offsetof(SLT_IFB_BcnTlm_Payload_t, member)], \
+        memcpy(Values, &(payload_ptr)[offsetof(PAY_SLT_BcnTlm_Payload_t, member)], \
                sizeof(Values));                                                    \
         TO_LAB_PrintI16Array((label), Values, TO_LAB_PAY_SLT_ARRAY_COUNT(member)); \
     } while (0)
@@ -179,7 +179,7 @@ static void TO_LAB_PrintFloatArray(const char *Label, const float *Values, size_
     do                                                                               \
     {                                                                                \
         float Values[TO_LAB_PAY_SLT_ARRAY_COUNT(member)];                            \
-        memcpy(Values, &(payload_ptr)[offsetof(SLT_IFB_BcnTlm_Payload_t, member)],   \
+        memcpy(Values, &(payload_ptr)[offsetof(PAY_SLT_BcnTlm_Payload_t, member)],   \
                sizeof(Values));                                                      \
         TO_LAB_PrintFloatArray((label), Values, TO_LAB_PAY_SLT_ARRAY_COUNT(member)); \
     } while (0)
@@ -216,7 +216,7 @@ static void TO_LAB_PrintPaySltBcnPayload(const char *Path, const CFE_SB_Buffer_t
     const size_t HeaderSize = sizeof(CFE_MSG_TelemetryHeader_t);
     const uint8 *Bytes = (const uint8 *)SBBufPtr;
     const uint8 *PayloadPtr = &Bytes[HeaderSize];
-    SLT_IFB_BcnTlm_Payload_t Bcn;
+    PAY_SLT_BcnTlm_Payload_t Bcn;
 
     if (SourceSize < (HeaderSize + sizeof(Bcn)))
     {

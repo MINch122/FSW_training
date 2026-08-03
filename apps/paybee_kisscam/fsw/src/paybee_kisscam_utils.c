@@ -3,6 +3,7 @@
 #include "paybee_kisscam_tblstruct.h"
 #include "paybee_kisscam_eventids.h"
 #include "paybee_kisscam_task.h"
+#include "paybee_kisscam_utils.h"
 
 #include <fcntl.h>
 #include <unistd.h>

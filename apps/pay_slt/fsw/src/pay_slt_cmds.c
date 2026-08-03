@@ -29,6 +29,7 @@ static uint16 PAY_SLT_GetParamElementSize(uint8 type)
     switch (type)
     {
         case GS_PARAM_UINT8:
+        case GS_PARAM_INT8:
         case GS_PARAM_STRING:
             return sizeof(uint8);
         case GS_PARAM_UINT16:
@@ -168,21 +169,43 @@ CFE_Status_t PAY_SLT_SendHkCmd(const PAY_SLT_SendHkCmd_t *Msg) {
     PAY_SLT_Data.CmdCounter++;
 
     PAY_SLT_HkTlm_Payload_t *HkPkt = &PAY_SLT_Data.HkTlm.Payload;
+    int32 ExpSysStatusStatus;
+    int32 ExpBrmStatus;
+    int32 ExpNtcStatus;
+    int32 IfbNtcStatus;
+
     memset(HkPkt, 0, sizeof(*HkPkt));
 
     PAY_SLT_UpdateIfbCache();
 
     // PAY-EXP
     // [ICD 0x0000] sys_status (INT8, 길이 2)
-    (void)PAY_SLT_FetchParam_Simple(GS_PARAM_INT8, PAY_SLT_IFB_NODE, TABLE_TELEMETRY, 0x0000, 2, HkPkt->sys_status);
+    ExpSysStatusStatus = PAY_SLT_FetchParam_Simple(GS_PARAM_INT8, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0000, 2,
+                                                   HkPkt->sys_status);
     // [ICD 0x0026] brm_data (INT16, 길이 3)
-    (void)PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_IFB_NODE, TABLE_TELEMETRY, 0x0026, 3, HkPkt->brm_data);
+    ExpBrmStatus = PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0026, 3,
+                                             HkPkt->brm_data);
     // [ICD 0x003C] ntc_data (INT16, 길이 8)
-    (void)PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_IFB_NODE, TABLE_TELEMETRY, 0x003C, 8, HkPkt->ntc_data);
+    ExpNtcStatus = PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x003C, 8,
+                                             HkPkt->ntc_data);
 
     // PAY-IFB
     // [ICD 0x001A] ntc_data_ifb (INT16, 길이 4)
-    (void)PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_IFB_NODE, TABLE_TELEMETRY, 0x001A, 4, HkPkt->ntc_data_ifb);
+    IfbNtcStatus = PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_IFB_NODE, TABLE_TELEMETRY, 0x001A, 4,
+                                             HkPkt->ntc_data_ifb);
+
+    PAY_SLT_APP_printf("[PAY-SLT][HK] fetch status: exp_sys=%d exp_brm=%d exp_ntc=%d ifb_ntc=%d\n",
+                       (int)ExpSysStatusStatus, (int)ExpBrmStatus, (int)ExpNtcStatus, (int)IfbNtcStatus);
+    PAY_SLT_APP_printf("[PAY-SLT][HK] exp sys_status=[%d %d] brm=[%d %d %d]\n",
+                       (int)HkPkt->sys_status[0], (int)HkPkt->sys_status[1],
+                       (int)HkPkt->brm_data[0], (int)HkPkt->brm_data[1], (int)HkPkt->brm_data[2]);
+    PAY_SLT_APP_printf("[PAY-SLT][HK] exp ntc=[%d %d %d %d %d %d %d %d]\n",
+                       (int)HkPkt->ntc_data[0], (int)HkPkt->ntc_data[1], (int)HkPkt->ntc_data[2],
+                       (int)HkPkt->ntc_data[3], (int)HkPkt->ntc_data[4], (int)HkPkt->ntc_data[5],
+                       (int)HkPkt->ntc_data[6], (int)HkPkt->ntc_data[7]);
+    PAY_SLT_APP_printf("[PAY-SLT][HK] ifb ntc=[%d %d %d %d]\n",
+                       (int)HkPkt->ntc_data_ifb[0], (int)HkPkt->ntc_data_ifb[1],
+                       (int)HkPkt->ntc_data_ifb[2], (int)HkPkt->ntc_data_ifb[3]);
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(PAY_SLT_Data.HkTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(PAY_SLT_Data.HkTlm.TelemetryHeader), true);
@@ -200,6 +223,9 @@ CFE_Status_t PAY_SLT_SendBeaconCmd(const PAY_SLT_SendBcnCmd_t *Msg) {
         
     PAY_SLT_Data.CmdCounter++;
     PAY_SLT_BcnTlm_Payload_t *BcnPkt = &PAY_SLT_Data.BcnTlm.Payload;
+    int8 sys_status_a7[2] = {0};
+
+    memset(BcnPkt, 0, sizeof(*BcnPkt));
 
     PAY_SLT_UpdateIfbCache();
 
@@ -207,36 +233,37 @@ CFE_Status_t PAY_SLT_SendBeaconCmd(const PAY_SLT_SendBcnCmd_t *Msg) {
     BcnPkt->ErrCounter = PAY_SLT_Data.ErrCounter;
 
     // PAY-EXP-A7
-    // System uptime in sec (U32, Addr: 0x0000)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0000, 1, &BcnPkt->sys_uptime_a7);
-    // System current time (U32, Addr: 0x0004)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0004, 1, &BcnPkt->sys_now_a7);
-    // System boot count - MPU (U16, Addr: 0x0008)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0008, 1, &BcnPkt->boot_cnt_p);
-    // System boot cause code - MPU (U8 Array[8], Addr: 0x000A)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT8,  PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x000A, 8, BcnPkt->boot_his_p);
-    // System boot count - MCU (U16, Addr: 0x0012)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0012, 1, &BcnPkt->boot_cnt_c);
-    // System boot cause code - MCU (U8 Array[8], Addr: 0x0014)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT8,  PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0014, 8, BcnPkt->boot_his_c);
-    // Time left before WDT causes reboot (U32, Addr: 0x001C)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x001C, 1, &BcnPkt->wdt_left_a7);
-    // Board temperature (I16, Addr: 0x0020)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_INT16,  PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0020, 1, &BcnPkt->brd_temp_a7);
-    // SLF sensor data (U16 Array[4], Addr: 0x0022)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0022, 4, BcnPkt->slf_data);
-    // Barometric sensor data (U16 Array[3], Addr: 0x002A)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x002A, 3, BcnPkt->brm_data);
-    // IMU sensor data (U16 Array[8], Addr: 0x0030)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0030, 8, BcnPkt->imu_data);
-    // NTC sensor data (I16 Array[8], Addr: 0x0040)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_INT16,  PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0040, 8, BcnPkt->ntc_data_a7);
-    // System power voltage measures (U16 Array[8], Addr: 0x0050)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0050, 8, BcnPkt->pwr_volt);
-    // System power current measures (U16 Array[8], Addr: 0x0060)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0060, 8, BcnPkt->pwr_current);
-    // System status (I16, Addr: 0x0070)
-    PAY_SLT_FetchParam_Simple(GS_PARAM_INT16,  PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0070, 1, &BcnPkt->sys_status_a7);
+    // System status (I8 Array[2], Addr: 0x0000)
+    if (PAY_SLT_FetchParam_Simple(GS_PARAM_INT8, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0000, 2,
+                                  sys_status_a7) == CFE_SUCCESS) {
+        BcnPkt->sys_status_a7 = (int16)(((uint16)(uint8)sys_status_a7[1] << 8) | (uint8)sys_status_a7[0]);
+    }
+    // System uptime in sec (U32, Addr: 0x0002)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0002, 1, &BcnPkt->sys_uptime_a7);
+    // System current time (U32, Addr: 0x0006)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0006, 1, &BcnPkt->sys_now_a7);
+    // System boot count - MPU (U16, Addr: 0x000A)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x000A, 1, &BcnPkt->boot_cnt_p);
+    // System boot cause code - MPU (U8 Array[8], Addr: 0x000C)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT8,  PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x000C, 8, BcnPkt->boot_his_p);
+    // System boot count - MCU (U16, Addr: 0x0014)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0014, 1, &BcnPkt->boot_cnt_c);
+    // System boot cause code - MCU (U8 Array[8], Addr: 0x0016)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT8,  PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0016, 8, BcnPkt->boot_his_c);
+    // Board temperature (I16, Addr: 0x001E)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_INT16,  PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x001E, 1, &BcnPkt->brd_temp_a7);
+    // SLF sensor data (I16 Array[3], Addr: 0x0020)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0020, 3, BcnPkt->slf_data);
+    // Barometric sensor data (I16 Array[3], Addr: 0x0026)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x0026, 3, BcnPkt->brm_data);
+    // IMU sensor data (I16 Array[8], Addr: 0x002C)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x002C, 8, BcnPkt->imu_data);
+    // NTC sensor data (I16 Array[8], Addr: 0x003C)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_INT16,  PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x003C, 8, BcnPkt->ntc_data_a7);
+    // System power voltage measures (U16 Array[8], Addr: 0x004C)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x004C, 8, BcnPkt->pwr_volt);
+    // System power current measures (U16 Array[8], Addr: 0x005C)
+    PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE, TABLE_TELEMETRY, 0x005C, 8, BcnPkt->pwr_current);
 
     // PAY-IFB 
     // System status (I16, Addr: 0x0000)

@@ -34,7 +34,7 @@
 #include "pay_slt_interface_cfg.h"
 
 #ifndef PAY_SLT_DEBUG
-#define PAY_SLT_DEBUG true
+#define PAY_SLT_DEBUG false
 #endif
 
 #ifndef DEBUG_PAY_SLT
@@ -54,14 +54,5 @@
 #ifndef PAY_SLT_HK_ENABLED
 #define PAY_SLT_HK_ENABLED 0
 #endif
-
-#if defined(CFE_SRL_I2C1_HANDLE_INDEXER) && !defined(PAY_SLT_I2C_HANDLE_INDEXER)
-#define PAY_SLT_I2C_HANDLE_INDEXER CFE_SRL_I2C1_HANDLE_INDEXER
-#endif
-
-#if defined(CFE_SRL_RS422_HANDLE_INDEXER)
-#define PAY_SLT_RS422_HANDLE_INDEXER CFE_SRL_RS422_HANDLE_INDEXER
-#endif
-
 
 #endif

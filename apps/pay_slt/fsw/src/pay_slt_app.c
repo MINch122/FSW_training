@@ -122,3 +122,4 @@ CFE_Status_t PAY_SLT_Init(void)
 
     return CFE_SUCCESS;
 }
+

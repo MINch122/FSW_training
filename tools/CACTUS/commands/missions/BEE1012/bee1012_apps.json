@@ -7743,21 +7743,32 @@
         "params": []
       },
       {
-        "name": "Set Beacon Enabled",
+        "name": "Output Enabled",
         "mid": "0x1830",
         "fc": 3,
         "params": [
           {
-            "name": "Arg",
+            "name": "HkEnabled",
+            "type": "uint8",
+            "default": "0"
+          },
+          {
+            "name": "BcnEnabled",
             "type": "uint8",
             "default": "0"
           }
         ]
       },
       {
+        "name": "RS422 Ping",
+        "mid": "0x1830",
+        "fc": 4,
+        "params": []
+      },
+      {
         "name": "Param Get",
         "mid": "0x1830",
-        "fc": 87,
+        "fc": 5,
         "params": [
           {
             "name": "node",
@@ -7776,8 +7787,18 @@
           },
           {
             "name": "type",
-            "type": "uint8",
-            "default": "2"
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "UINT8": 0,
+              "UINT16": 1,
+              "UINT32": 2,
+              "INT8": 4,
+              "INT16": 5,
+              "FLOAT": 13,
+              "STRING": 14
+            },
+            "default": "UINT32"
           },
           {
             "name": "len",
@@ -7789,7 +7810,7 @@
       {
         "name": "Param Set",
         "mid": "0x1830",
-        "fc": 88,
+        "fc": 6,
         "params": [
           {
             "name": "node",
@@ -7808,8 +7829,14 @@
           },
           {
             "name": "type",
-            "type": "uint8",
-            "default": "2"
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "UINT8": 0,
+              "UINT16": 1,
+              "UINT32": 2
+            },
+            "default": "UINT32"
           },
           {
             "name": "padding",
@@ -7822,13 +7849,65 @@
             "name": "value",
             "type": "uint32",
             "default": "0"
+          },
+          {
+            "name": "value_padding",
+            "type": "bytes",
+            "length": 92,
+            "default": "",
+            "hidden": true
+          }
+        ]
+      },
+      {
+        "name": "Param Set String",
+        "mid": "0x1830",
+        "fc": 6,
+        "params": [
+          {
+            "name": "node",
+            "type": "uint8",
+            "default": "11"
+          },
+          {
+            "name": "table",
+            "type": "uint8",
+            "default": "3"
+          },
+          {
+            "name": "addr",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "type",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "STRING": 14
+            },
+            "default": "STRING",
+            "hidden": true
+          },
+          {
+            "name": "padding",
+            "type": "bytes",
+            "length": 3,
+            "default": "",
+            "hidden": true
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "length": 96,
+            "default": ""
           }
         ]
       },
       {
         "name": "Scan Files",
         "mid": "0x1830",
-        "fc": 89,
+        "fc": 7,
         "params": [
           {
             "name": "node",
@@ -7838,9 +7917,26 @@
         ]
       },
       {
-        "name": "Download File",
+        "name": "Download File I2C",
         "mid": "0x1830",
-        "fc": 90,
+        "fc": 8,
+        "params": [
+          {
+            "name": "file_index",
+            "type": "uint32",
+            "default": "0"
+          },
+          {
+            "name": "start_chunk",
+            "type": "uint32",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "Download File RS422",
+        "mid": "0x1830",
+        "fc": 9,
         "params": [
           {
             "name": "file_index",
@@ -7857,7 +7953,7 @@
       {
         "name": "Get Full Table",
         "mid": "0x1830",
-        "fc": 91,
+        "fc": 10,
         "params": [
           {
             "name": "node",

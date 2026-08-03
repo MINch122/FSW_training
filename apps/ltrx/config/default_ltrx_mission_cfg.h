@@ -3,6 +3,8 @@
 
 #include "ltrx_interface_cfg.h"
 
+#include "osapi.h"
+
 #ifndef LTRX_DEBUG
 #define LTRX_DEBUG false
 #endif
