@@ -23,6 +23,17 @@ set(TTC_MISSION_CONFIG_FILE_LIST
   ttc_topicid_values.h
 )
 
+if (CFE_EDS_ENABLED_BUILD)
+
+  # In an EDS-based build, these files come generated from the EDS tool
+  set(TTC_CFGFILE_SRC_ttc_interface_cfg_values "ttc_eds_designparameters.h")
+  set(TTC_CFGFILE_SRC_ttc_msgdefs              "ttc_eds_typedefs.h")
+  set(TTC_CFGFILE_SRC_ttc_msgstruct            "ttc_eds_typedefs.h")
+  set(TTC_CFGFILE_SRC_ttc_tbldefs              "ttc_eds_typedefs.h")
+  set(TTC_CFGFILE_SRC_ttc_fcncode_values       "ttc_eds_cc.h")
+
+endif(CFE_EDS_ENABLED_BUILD)
+
 # Create wrappers around all config header files so they can be
 # individually overridden without modifying the distribution defaults.
 foreach(TTC_CFGFILE ${TTC_MISSION_CONFIG_FILE_LIST})

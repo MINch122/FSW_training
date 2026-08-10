@@ -202,6 +202,11 @@ static CFE_Status_t CommitSlot(uint16 Slot,
 {
     CFE_MSG_Size_t MsgSize;
 
+    if (ExecutionType != TTC_EXECTYPE_SKIP_LATE &&
+        ExecutionType != TTC_EXECTYPE_FORCE     &&
+        ExecutionType != TTC_EXECTYPE_ABORT_LATE)
+        return ERR_INVALID_EXEC_TYPE;
+
     CFE_MSG_GetSize((CFE_MSG_Message_t*)Timeline.Entries[Slot].Command, &MsgSize);
     if (MsgSize != CmdSize)
         return ERR_CMD_SIZE_MISMATCH;
@@ -384,6 +389,10 @@ CFE_Status_t TTC_TimelineAddEntry(uint8        TimeTagType,
                                   uint16       CmdDataSize)
 {
     CFE_Status_t status;
+
+    if (TimeTagType != TTC_TIMETAG_TYPE_ABSOLUTE &&
+        TimeTagType != TTC_TIMETAG_TYPE_RELATIVE)
+        return ERR_INVALID_TIME_TAG_TYPE;
 
     if (CmdDataSize > TTC_PLATFORM_MAX_COMMAND_SIZE)
         return ERR_CMD_SIZE_TOO_LARGE;
@@ -573,6 +582,10 @@ CFE_Status_t TTC_Plumb_TimelineAddEntryFinalize(uint8  TimeTagType,
     if (IsAnonymousEntry(EntryId, GroupId))
         return ERR_ANONYMOUS_ID;
 
+    if (TimeTagType != TTC_TIMETAG_TYPE_ABSOLUTE &&
+        TimeTagType != TTC_TIMETAG_TYPE_RELATIVE)
+        return ERR_INVALID_TIME_TAG_TYPE;
+
     if (CmdSize == 0 || CmdSize > TTC_PLATFORM_MAX_COMMAND_SIZE)
         return ERR_CMD_SIZE_TOO_LARGE;
 
@@ -581,6 +594,11 @@ CFE_Status_t TTC_Plumb_TimelineAddEntryFinalize(uint8  TimeTagType,
         return ERR_ENTRY_NOT_FOUND;
 
     uint32 AbsTimeTag = TimeTag;
+    uint32 Now = CFE_TIME_GetTime().Seconds;
+
+    if (TimeTagType == TTC_TIMETAG_TYPE_ABSOLUTE && AbsTimeTag < Now)
+        return ERR_TIME_TAG_IN_PAST;
+
     if (TimeTagType == TTC_TIMETAG_TYPE_RELATIVE)
         AbsTimeTag = CFE_TIME_GetTime().Seconds + TimeTag;
 

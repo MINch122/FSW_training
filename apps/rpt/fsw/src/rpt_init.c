@@ -99,7 +99,8 @@ CFE_Status_t RPT_OpsDataInit(void) {
             RPT_Data.OpsData.EpochSubsec = Epoch.Subseconds;
             Status = CFE_SUCCESS;
 
-            OS_printf("Epoch - Sec: %u || Subsec: %u\n", RPT_Data.OpsData.EpochSec, RPT_Data.OpsData.EpochSubsec);
+            RPT_APP_printf("Epoch - Sec: %u || Subsec: %u\n", RPT_Data.OpsData.EpochSec,
+                           RPT_Data.OpsData.EpochSubsec);
         }
         else if (RPT_Data.OpsData.BootCount != 0 || Status == sizeof(RPT_OperationData_t)) Status = CFE_SUCCESS;
         else Status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;

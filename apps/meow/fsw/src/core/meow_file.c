@@ -87,14 +87,23 @@ int meow_file_write(const char* path,
 
     ssize_t written = write(fd, data, size);
 
-    if (written == (ssize_t)size) {
-        if (flags & MEOW_FILE_WRITE_FSYNC)
-            fsync(fd);
+    if (written == (ssize_t)size)
         ret = MEOW_FILE_OK;
-    }
     else {
-        last_errno = errno;
+        last_errno = written < 0 ? errno: 0;
         ret = MEOW_FILE_ERR_WRITE;
+    }
+
+    if (ret == MEOW_FILE_OK && (flags & MEOW_FILE_WRITE_FSYNC)) {
+        int interrupt_retry = 5;
+        do {
+            if (fsync(fd) == 0) {
+                ret = MEOW_FILE_OK;
+                break;
+            }
+            ret = MEOW_FILE_ERR_FSYNC;
+            last_errno = errno;
+        } while (last_errno == EINTR && --interrupt_retry > 0);
     }
 
     close(fd);
@@ -123,15 +132,11 @@ int meow_file_copy(const char* src, const char* dst)
     if (!src || !dst)
         return MEOW_FILE_ERR_NULL;
 
-    struct stat ss, ds;
+    struct stat ss;
     if (stat(src, &ss) < 0) {
         last_errno = errno;
         return MEOW_FILE_ERR_STAT;
     }
-
-    if (stat(dst, &ds) == 0 &&
-        ss.st_ino == ds.st_ino && ss.st_dev == ds.st_dev)
-        return MEOW_FILE_ERR_OP;  /* src and dst are the same file */
 
     int src_fd = open(src, O_RDONLY);
     if (src_fd < 0) {
@@ -139,11 +144,14 @@ int meow_file_copy(const char* src, const char* dst)
         return MEOW_FILE_ERR_OPEN;
     }
 
-    int dst_fd = open(dst, O_WRONLY | O_CREAT | O_TRUNC, ss.st_mode & 0777);
+    /* O_EXCL makes the no-overwrite policy atomic. A separate stat(dst)
+     * check would leave a race where another task could create dst before
+     * this open and have its file truncated. */
+    int dst_fd = open(dst, O_WRONLY | O_CREAT | O_EXCL, ss.st_mode & 0777);
     if (dst_fd < 0) {
         last_errno = errno;
         close(src_fd);
-        return MEOW_FILE_ERR_OPEN;
+        return last_errno == EEXIST ? MEOW_FILE_ERR_EXIST : MEOW_FILE_ERR_OPEN;
     }
 
     uint8_t buf[COPY_BUF_SIZE];

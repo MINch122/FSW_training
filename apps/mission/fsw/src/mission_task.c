@@ -2,8 +2,6 @@
 #include "mission_eventids.h"
 #include "mission_dispatch.h"
 #include "mission_utils.h"
-#include "utrx_msgids.h"
-#include "utrx_msg.h"
 #include "cfe_msgids.h"
 
 MISSION_Data_t MISSION_Data;
@@ -75,8 +73,6 @@ CFE_Status_t MISSION_Init(void) {
     else {
         CFE_MSG_Init(CFE_MSG_PTR(MISSION_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(MISSION_HK_TLM_MID),
                         sizeof(MISSION_Data.HkTlm));
-        CFE_MSG_Init(CFE_MSG_PTR(MISSION_Data.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(MISSION_BCN_TLM_MID),
-                        sizeof(MISSION_Data.BcnTlm));
         CFE_MSG_Init(CFE_MSG_PTR(MISSION_Data.Report.TelemetryHeader), CFE_SB_ValueToMsgId(MISSION_REPORT_TLM_MID),
                         sizeof(MISSION_Data.Report));
         Status = CFE_SB_CreatePipe(&MISSION_Data.CmdPipe, MISSION_Data.PipeDepth, MISSION_Data.CmdPipeName);
@@ -95,29 +91,14 @@ CFE_Status_t MISSION_Init(void) {
     }
 
     if (Status == CFE_SUCCESS) {
-        Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(MISSION_SEND_BCN_MID), MISSION_Data.CmdPipe);
-        if (Status != CFE_SUCCESS) {
-            CFE_EVS_SendEvent(MISSION_SUB_BCN_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "MISSION: Error Subscribing to BCN request, RC = 0x%08lX", (unsigned long)Status);
-        }
-    }
-
-    if (Status == CFE_SUCCESS) {
-        Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(MISSION_CMD_MID), MISSION_Data.CmdPipe);
+        Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(MISSION_SET_COMPLETE_MID), MISSION_Data.CmdPipe);
         if (Status != CFE_SUCCESS) {
             CFE_EVS_SendEvent(MISSION_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "MISSION: Error Subscribing to Cmd request, RC = 0x%08lX", (unsigned long)Status);
+                              "MISSION: Error Subscribing to set-complete command, RC = 0x%08lX",
+                              (unsigned long)Status);
         }
     }
 
-    if (Status == CFE_SUCCESS) {
-        Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(UTRX_HK_TLM_MID), MISSION_Data.CmdPipe);
-        if (Status != CFE_SUCCESS) {
-            CFE_EVS_SendEvent(MISSION_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "MISSION: Error Subscribing to UTRX HK tlm, RC = 0x%08lX", (unsigned long)Status);
-        }
-    }
-    
     OS_TaskDelay(10000);
 
     if (Status == CFE_SUCCESS && MISSION_ENABLE_LEOP_SEQUENCE) {

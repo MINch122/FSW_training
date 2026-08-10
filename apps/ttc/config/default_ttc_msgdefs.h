@@ -27,6 +27,7 @@
 #include "common_types.h"
 #include "ttc_fcncodes.h"
 #include "ttc_internal_cfg.h"
+#include "ttc_interface_cfg.h"
 
 typedef struct __attribute__((packed)) {
     uint32 ExecutionTimeAbsolute;
@@ -107,5 +108,15 @@ typedef struct TTC_HkTlm_Payload
     uint8 CommandErrorCounter;
     uint8 spare[2];
 } TTC_HkTlm_Payload_t;
+
+typedef struct TTC_Report_Payload
+{
+    uint16 MsgID;
+    uint8  CommandCode;
+    uint8  ReturnType;
+    int32  ReturnCode;
+    uint16 ReturnDataSize;
+    uint8  ReturnValue[TTC_MISSION_MAX_REPORT_LEN];
+} TTC_Report_Payload_t;
 
 #endif

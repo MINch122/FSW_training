@@ -11,93 +11,59 @@ static uint32 MISSION_LEOP_CalculateCRC(const void *Data, size_t Size)
 
 static void MISSION_LEOP_SetDefaults(void)
 {
+    MISSION_Data.LEOPProcessStarted     = false;
     MISSION_Data.LEOPWaitComplete       = false;
     MISSION_Data.LEOPWaitElapsedSec     = 0;
-    MISSION_Data.LEOPWaitRemainingSec   = MISSION_LEOP_WAIT_DURATION_SEC;
-    MISSION_Data.LEOPUartDeployTryCount = 0;
-    MISSION_Data.LEOPGpioBurnTryCount   = 0;
-    MISSION_Data.LEOPToEnabled          = false;
-    MISSION_Data.LEOPGpioDeployIssued   = false;
-    MISSION_Data.LEOPUtrxRxBytesInitialized = false;
-    MISSION_Data.LEOPUtrxRxBytesIncreased   = false;
-    MISSION_Data.LEOPUtrxInitRxBytes        = 0;
-    MISSION_Data.LEOPUtrxRxData             = 0;
-    MISSION_Data.LEOPState              = MISSION_LEOP_STATE_WAITING;
+    MISSION_Data.LEOPWaitRemainingSec   = MISSION_LEOP_INITIAL_WAIT_SEC;
+    MISSION_Data.LEOPCycleCount         = 0;
+    MISSION_Data.LEOPState              = MISSION_LEOP_STATE_INITIAL_WAIT;
+}
+
+static uint32 MISSION_LEOP_GetWaitDuration(MISSION_LEOP_State_t State)
+{
+    switch (State)
+    {
+        case MISSION_LEOP_STATE_INITIAL_WAIT:
+            return MISSION_LEOP_INITIAL_WAIT_SEC;
+        case MISSION_LEOP_STATE_BURN:
+            return MISSION_LEOP_BURN_DURATION_SEC;
+        case MISSION_LEOP_STATE_POST_WAIT:
+            return MISSION_LEOP_POST_BURN_WAIT_SEC;
+        default:
+            return 0;
+    }
 }
 
 static void MISSION_LEOP_CopyFileToRuntime(const MISSION_LEOP_FileData_t *FileData)
 {
-    MISSION_Data.LEOPWaitComplete       = (FileData->LeopWaitComplete != 0u);
-    MISSION_Data.LEOPWaitElapsedSec     = FileData->LeopWaitElapsedSec;
-    MISSION_Data.LEOPWaitRemainingSec   = FileData->LeopWaitRemainingSec;
-    MISSION_Data.LEOPUartDeployTryCount = FileData->LeopUartDeployTryCount;
-    MISSION_Data.LEOPGpioBurnTryCount   = FileData->LeopGpioBurnTryCount;
-    MISSION_Data.LEOPState              = (MISSION_LEOP_State_t)FileData->LeopState;
-    MISSION_Data.LEOPToEnabled          = (FileData->LeopToEnabled != 0u);
-    MISSION_Data.LEOPGpioDeployIssued   = (FileData->LeopGpioDeployIssued != 0u);
+    uint32 WaitDurationSec;
 
-    if (!MISSION_Data.LEOPUtrxRxBytesInitialized &&
-        FileData->LeopUtrxRxBytesInitialized != 0u && FileData->LeopUtrxInitRxBytes != 0u)
+    MISSION_LEOP_SetDefaults();
+    MISSION_Data.LEOPCycleCount       = FileData->LeopCycleCount;
+    MISSION_Data.LEOPState            = (MISSION_LEOP_State_t)FileData->LeopState;
+    MISSION_Data.LEOPWaitElapsedSec   = FileData->LeopWaitElapsedSec;
+    WaitDurationSec                   = MISSION_LEOP_GetWaitDuration(MISSION_Data.LEOPState);
+
+    if (WaitDurationSec == 0u || MISSION_Data.LEOPWaitElapsedSec >= WaitDurationSec)
     {
-        MISSION_Data.LEOPUtrxRxBytesInitialized = true;
-        MISSION_Data.LEOPUtrxRxBytesIncreased   = false;
-        MISSION_Data.LEOPUtrxInitRxBytes        = FileData->LeopUtrxInitRxBytes;
-        MISSION_Data.LEOPUtrxRxData             = FileData->LeopUtrxInitRxBytes;
+        MISSION_Data.LEOPWaitComplete     = true;
+        MISSION_Data.LEOPWaitRemainingSec = 0;
+    }
+    else
+    {
+        MISSION_Data.LEOPWaitRemainingSec = WaitDurationSec - MISSION_Data.LEOPWaitElapsedSec;
     }
 }
 
 static void MISSION_LEOP_CopyRuntimeToFile(MISSION_LEOP_FileData_t *FileData)
 {
     memset(FileData, 0, sizeof(*FileData));
-    FileData->Signature              = MISSION_LEOP_FILE_SIGNATURE;
-    FileData->Version                = MISSION_LEOP_FILE_VERSION;
-    FileData->LeopWaitComplete       = (uint8)MISSION_Data.LEOPWaitComplete;
-    FileData->LeopWaitElapsedSec     = MISSION_Data.LEOPWaitElapsedSec;
-    FileData->LeopWaitRemainingSec   = MISSION_Data.LEOPWaitRemainingSec;
-    FileData->LeopUartDeployTryCount = MISSION_Data.LEOPUartDeployTryCount;
-    FileData->LeopGpioBurnTryCount   = MISSION_Data.LEOPGpioBurnTryCount;
-    FileData->LeopState              = (uint8)MISSION_Data.LEOPState;
-    FileData->LeopToEnabled          = (uint8)MISSION_Data.LEOPToEnabled;
-    FileData->LeopGpioDeployIssued   = (uint8)MISSION_Data.LEOPGpioDeployIssued;
-    FileData->LeopUtrxRxBytesInitialized = (uint8)MISSION_Data.LEOPUtrxRxBytesInitialized;
-    FileData->LeopUtrxInitRxBytes        = MISSION_Data.LEOPUtrxInitRxBytes;
-    FileData->CRC                    = MISSION_LEOP_CalculateCRC(FileData, sizeof(*FileData) - sizeof(FileData->CRC));
-}
-
-static void MISSION_LEOP_RestoreWaitTimer(void)
-{
-    CFE_TIME_SysTime_t Now;
-    CFE_TIME_SysTime_t SavedElapsed;
-
-    if (MISSION_Data.LEOPWaitComplete || MISSION_Data.LEOPProcessStarted)
-    {
-        return;
-    }
-
-    if (MISSION_Data.LEOPWaitElapsedSec > MISSION_LEOP_WAIT_DURATION_SEC)
-    {
-        MISSION_Data.LEOPWaitElapsedSec = MISSION_LEOP_WAIT_DURATION_SEC;
-        MISSION_Data.LEOPWaitRemainingSec = 0;
-        MISSION_Data.LEOPWaitComplete = true;
-        return;
-    }
-
-    if (MISSION_Data.LEOPWaitElapsedSec > 0)
-    {
-        Now = CFE_TIME_GetTime();
-        SavedElapsed.Seconds = MISSION_Data.LEOPWaitElapsedSec;
-        SavedElapsed.Subseconds = 0;
-        MISSION_Data.LEOPStartTime = CFE_TIME_Subtract(Now, SavedElapsed);
-        MISSION_Data.LEOPProcessStarted = true;
-        MISSION_APP_printf("MISSION LEOP: wait timer restored elapsed=%lu sec remaining=%lu sec\n",
-                           (unsigned long)MISSION_Data.LEOPWaitElapsedSec,
-                           (unsigned long)MISSION_Data.LEOPWaitRemainingSec);
-    }
-}
-
-static void MISSION_LEOP_RetryDelay(void)
-{
-    OS_TaskDelay(1000 * MISSION_LEOP_RETRY_DELAY_SEC);
+    FileData->Signature            = MISSION_LEOP_FILE_SIGNATURE;
+    FileData->Version              = MISSION_LEOP_FILE_VERSION;
+    FileData->LeopCycleCount       = MISSION_Data.LEOPCycleCount;
+    FileData->LeopState            = (uint8)MISSION_Data.LEOPState;
+    FileData->LeopWaitElapsedSec   = MISSION_Data.LEOPWaitElapsedSec;
+    FileData->CRC                  = MISSION_LEOP_CalculateCRC(FileData, sizeof(*FileData) - sizeof(FileData->CRC));
 }
 
 CFE_Status_t MISSION_LEOP_Lock(void)
@@ -124,45 +90,6 @@ void MISSION_LEOP_Unlock(void)
     {
         (void)OS_MutSemGive(MISSION_Data.LEOPMutex);
     }
-}
-
-static bool MISSION_LEOP_GetUtrxRxBytesStatus(bool *Initialized, uint32 *InitialRxBytes, uint32 *CurrentRxBytes)
-{
-    bool Increased;
-
-    if (MISSION_LEOP_Lock() != CFE_SUCCESS)
-    {
-        if (Initialized != NULL)
-        {
-            *Initialized = false;
-        }
-        if (InitialRxBytes != NULL)
-        {
-            *InitialRxBytes = 0;
-        }
-        if (CurrentRxBytes != NULL)
-        {
-            *CurrentRxBytes = 0;
-        }
-        return false;
-    }
-
-    Increased = MISSION_Data.LEOPUtrxRxBytesIncreased;
-    if (Initialized != NULL)
-    {
-        *Initialized = MISSION_Data.LEOPUtrxRxBytesInitialized;
-    }
-    if (InitialRxBytes != NULL)
-    {
-        *InitialRxBytes = MISSION_Data.LEOPUtrxInitRxBytes;
-    }
-    if (CurrentRxBytes != NULL)
-    {
-        *CurrentRxBytes = MISSION_Data.LEOPUtrxRxData;
-    }
-    MISSION_LEOP_Unlock();
-
-    return Increased;
 }
 
 static CFE_Status_t MISSION_LEOP_LockFile(void)
@@ -233,12 +160,16 @@ static CFE_Status_t MISSION_LEOP_LoadState(void)
     OsStatus = OS_lseek(MISSION_Data.LEOPDataHandle, 0, OS_SEEK_SET);
     if (OsStatus < OS_SUCCESS)
     {
+        (void)OS_close(MISSION_Data.LEOPDataHandle);
+        MISSION_Data.LEOPDataHandle = OS_OBJECT_ID_UNDEFINED;
         MISSION_LEOP_UnlockFile();
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
     memset(&FileData, 0, sizeof(FileData));
     OsStatus = OS_read(MISSION_Data.LEOPDataHandle, &FileData, sizeof(FileData));
+    (void)OS_close(MISSION_Data.LEOPDataHandle);
+    MISSION_Data.LEOPDataHandle = OS_OBJECT_ID_UNDEFINED;
     MISSION_LEOP_UnlockFile();
     if (OsStatus != (int32)sizeof(FileData))
     {
@@ -249,7 +180,15 @@ static CFE_Status_t MISSION_LEOP_LoadState(void)
 
     ExpectedCRC = MISSION_LEOP_CalculateCRC(&FileData, sizeof(FileData) - sizeof(FileData.CRC));
     if (FileData.Signature != MISSION_LEOP_FILE_SIGNATURE || FileData.Version != MISSION_LEOP_FILE_VERSION ||
-        FileData.CRC != ExpectedCRC)
+        FileData.CRC != ExpectedCRC || FileData.LeopCycleCount > MISSION_LEOP_SEQUENCE_REPEAT_COUNT ||
+        FileData.LeopState > MISSION_LEOP_STATE_COMPLETE ||
+        (FileData.LeopState == MISSION_LEOP_STATE_INITIAL_WAIT && FileData.LeopCycleCount != 0u) ||
+        (FileData.LeopState == MISSION_LEOP_STATE_COMPLETE &&
+         FileData.LeopCycleCount != MISSION_LEOP_SEQUENCE_REPEAT_COUNT) ||
+        (FileData.LeopState != MISSION_LEOP_STATE_COMPLETE &&
+         FileData.LeopCycleCount >= MISSION_LEOP_SEQUENCE_REPEAT_COUNT) ||
+        FileData.LeopWaitElapsedSec >
+            MISSION_LEOP_GetWaitDuration((MISSION_LEOP_State_t)FileData.LeopState))
     {
         MISSION_LEOP_SetDefaults();
         MISSION_APP_printf("MISSION LEOP: state file missing, short, or invalid; defaults applied\n");
@@ -257,68 +196,92 @@ static CFE_Status_t MISSION_LEOP_LoadState(void)
     }
 
     MISSION_LEOP_CopyFileToRuntime(&FileData);
-    MISSION_LEOP_RestoreWaitTimer();
-    MISSION_APP_printf("MISSION LEOP: state loaded state=%u wait_complete=%u to_enabled=%u gpio_issued=%u "
-                       "gpio_burn_count=%u rx_initialized=%u rx_initial=%lu\n",
-                       (unsigned int)MISSION_Data.LEOPState, (unsigned int)MISSION_Data.LEOPWaitComplete,
-                       (unsigned int)MISSION_Data.LEOPToEnabled, (unsigned int)MISSION_Data.LEOPGpioDeployIssued,
-                       (unsigned int)MISSION_Data.LEOPGpioBurnTryCount,
-                       (unsigned int)MISSION_Data.LEOPUtrxRxBytesInitialized,
-                       (unsigned long)MISSION_Data.LEOPUtrxInitRxBytes);
+    MISSION_APP_printf("MISSION LEOP: state loaded state=%u cycle_count=%u wait_elapsed=%lu sec\n",
+                       (unsigned int)MISSION_Data.LEOPState,
+                       (unsigned int)MISSION_Data.LEOPCycleCount,
+                       (unsigned long)MISSION_Data.LEOPWaitElapsedSec);
 
     return CFE_SUCCESS;
 }
 
-static void MISSION_LEOP_UpdateWaitStatus(void)
+static void MISSION_LEOP_Wait(uint32 WaitTimeSec)
 {
     CFE_TIME_SysTime_t Now;
-    CFE_TIME_SysTime_t Elapsed;
+    CFE_TIME_SysTime_t SessionElapsed;
+    uint32             SavedElapsedSec;
+    uint32             TotalElapsedSec;
+    uint32             NextSaveElapsedSec;
+    uint32             NextLogElapsedSec;
 
-    if (MISSION_Data.LEOPWaitComplete)
+    if (WaitTimeSec == 0u || MISSION_Data.LEOPCompleteRequested)
     {
-        MISSION_Data.LEOPWaitElapsedSec   = MISSION_LEOP_WAIT_DURATION_SEC;
+        MISSION_Data.LEOPProcessStarted   = false;
+        MISSION_Data.LEOPWaitComplete     = false;
+        MISSION_Data.LEOPWaitElapsedSec   = 0;
         MISSION_Data.LEOPWaitRemainingSec = 0;
         return;
     }
 
-    Now = CFE_TIME_GetTime();
-    Elapsed = CFE_TIME_Subtract(Now, MISSION_Data.LEOPStartTime);
-    MISSION_Data.LEOPWaitElapsedSec = Elapsed.Seconds;
-
-    if (Elapsed.Seconds >= MISSION_LEOP_WAIT_DURATION_SEC)
+    if (MISSION_Data.LEOPWaitElapsedSec >= WaitTimeSec)
     {
-        MISSION_Data.LEOPWaitComplete = true;
-        MISSION_Data.LEOPWaitElapsedSec = MISSION_LEOP_WAIT_DURATION_SEC;
+        MISSION_Data.LEOPProcessStarted   = false;
+        MISSION_Data.LEOPWaitComplete     = false;
+        MISSION_Data.LEOPWaitElapsedSec   = 0;
         MISSION_Data.LEOPWaitRemainingSec = 0;
+        return;
     }
-    else
-    {
-        MISSION_Data.LEOPWaitRemainingSec = MISSION_LEOP_WAIT_DURATION_SEC - Elapsed.Seconds;
-    }
-}
 
-static void MISSION_LEOP_WaitUntilComplete(void)
-{
-    uint32 NextSaveElapsedSec;
-
-    MISSION_Data.LEOPState = MISSION_LEOP_STATE_WAITING;
-    (void)MISSION_LEOP_SaveState();
-    NextSaveElapsedSec = MISSION_Data.LEOPWaitElapsedSec + MISSION_LEOP_SAVE_INTERVAL_SEC;
+    SavedElapsedSec                     = MISSION_Data.LEOPWaitElapsedSec;
+    MISSION_Data.LEOPProcessStarted   = true;
+    MISSION_Data.LEOPWaitComplete     = false;
+    MISSION_Data.LEOPWaitRemainingSec = WaitTimeSec - SavedElapsedSec;
+    MISSION_Data.LEOPStartTime        = CFE_TIME_GetTime();
+    NextSaveElapsedSec                = SavedElapsedSec + MISSION_LEOP_SAVE_INTERVAL_SEC;
+    NextLogElapsedSec                 = SavedElapsedSec + MISSION_LEOP_WAIT_LOG_SEC;
 
     while (!MISSION_Data.LEOPWaitComplete)
     {
         OS_TaskDelay(1000);
-        MISSION_LEOP_UpdateWaitStatus();
+        if (MISSION_Data.LEOPCompleteRequested)
+        {
+            break;
+        }
+
+        Now              = CFE_TIME_GetTime();
+        SessionElapsed   = CFE_TIME_Subtract(Now, MISSION_Data.LEOPStartTime);
+        TotalElapsedSec  = SavedElapsedSec + SessionElapsed.Seconds;
+
+        if (TotalElapsedSec >= WaitTimeSec)
+        {
+            MISSION_Data.LEOPWaitComplete     = true;
+            MISSION_Data.LEOPWaitElapsedSec   = WaitTimeSec;
+            MISSION_Data.LEOPWaitRemainingSec = 0;
+        }
+        else
+        {
+            MISSION_Data.LEOPWaitElapsedSec   = TotalElapsedSec;
+            MISSION_Data.LEOPWaitRemainingSec = WaitTimeSec - TotalElapsedSec;
+        }
 
         if (MISSION_Data.LEOPWaitComplete || MISSION_Data.LEOPWaitElapsedSec >= NextSaveElapsedSec)
         {
             (void)MISSION_LEOP_SaveState();
+            NextSaveElapsedSec = MISSION_Data.LEOPWaitElapsedSec + MISSION_LEOP_SAVE_INTERVAL_SEC;
+        }
+
+        if (MISSION_Data.LEOPWaitComplete || MISSION_Data.LEOPWaitElapsedSec >= NextLogElapsedSec)
+        {
             MISSION_APP_printf("MISSION LEOP: wait remaining=%lu sec elapsed=%lu sec\n",
                                (unsigned long)MISSION_Data.LEOPWaitRemainingSec,
                                (unsigned long)MISSION_Data.LEOPWaitElapsedSec);
-            NextSaveElapsedSec = MISSION_Data.LEOPWaitElapsedSec + MISSION_LEOP_SAVE_INTERVAL_SEC;
+            NextLogElapsedSec = MISSION_Data.LEOPWaitElapsedSec + MISSION_LEOP_WAIT_LOG_SEC;
         }
     }
+
+    MISSION_Data.LEOPProcessStarted   = false;
+    MISSION_Data.LEOPWaitComplete     = false;
+    MISSION_Data.LEOPWaitElapsedSec   = 0;
+    MISSION_Data.LEOPWaitRemainingSec = 0;
 }
 
 static CFE_Status_t MISSION_LEOP_EnableTo(void)
@@ -339,21 +302,14 @@ static CFE_Status_t MISSION_LEOP_EnableTo(void)
         return Status;
     }
 
-    MISSION_Data.LEOPUartDeployTryCount++;
-    (void)MISSION_LEOP_SaveState();
-    MISSION_APP_printf("MISSION LEOP: TO enable transmit try=%u\n",
-                       (unsigned int)MISSION_Data.LEOPUartDeployTryCount);
+    MISSION_APP_printf("MISSION LEOP: TO enable transmit\n");
 
     Status = CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
     if (Status != CFE_SUCCESS)
     {
-        MISSION_Data.ErrCounter++;
-        MISSION_APP_printf("MISSION LEOP: TO enable failed status=0x%08lX\n", (unsigned long)Status);
         return Status;
     }
 
-    MISSION_Data.LEOPToEnabled = true;
-    MISSION_Data.LEOPState = MISSION_LEOP_STATE_TO_ENABLED;
     MISSION_APP_printf("MISSION LEOP: TO enabled\n");
 
     return Status;
@@ -377,21 +333,12 @@ static CFE_Status_t MISSION_LEOP_SendGpioDeployCmd(CFE_MSG_FcnCode_t FcnCode)
         return Status;
     }
 
-    Status = CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
-    if (Status != CFE_SUCCESS)
-    {
-        MISSION_Data.ErrCounter++;
-    }
-
-    return Status;
+    return CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
 }
 
 static CFE_Status_t MISSION_LEOP_GpioHigh(void)
 {
     CFE_Status_t Status;
-
-    MISSION_Data.LEOPGpioBurnTryCount++;
-    (void)MISSION_LEOP_SaveState();
 
     Status = MISSION_LEOP_SendGpioDeployCmd(GPIO_DEP1_EN_ON_CC);
     if (Status != CFE_SUCCESS)
@@ -399,7 +346,7 @@ static CFE_Status_t MISSION_LEOP_GpioHigh(void)
         return Status;
     }
 
-    OS_TaskDelay(30000);
+    MISSION_LEOP_Wait(MISSION_LEOP_BURN_DURATION_SEC);
 
     Status = MISSION_LEOP_SendGpioDeployCmd(GPIO_DEP1_EN_OFF_CC);
     if (Status != CFE_SUCCESS)
@@ -407,30 +354,7 @@ static CFE_Status_t MISSION_LEOP_GpioHigh(void)
         return Status;
     }
 
-    MISSION_Data.LEOPGpioDeployIssued = true;
-    MISSION_Data.LEOPState = MISSION_LEOP_STATE_GPIO_HIGH_DONE;
-
     return CFE_SUCCESS;
-}
-
-static void MISSION_LEOP_PostBurnWait(void)
-{
-    uint32 RemainingSec = MISSION_LEOP_POST_BURN_WAIT_SEC;
-    uint32 DelaySec;
-
-    while (RemainingSec > 0)
-    {
-        DelaySec = RemainingSec;
-        if (DelaySec > MISSION_LEOP_POST_BURN_LOG_SEC)
-        {
-            DelaySec = MISSION_LEOP_POST_BURN_LOG_SEC;
-        }
-
-        OS_TaskDelay(DelaySec * 1000);
-        RemainingSec -= DelaySec;
-
-        MISSION_APP_printf("MISSION LEOP: post-burn wait remaining=%lu sec\n", (unsigned long)RemainingSec);
-    }
 }
 
 CFE_Status_t MISSION_LEOP_SaveState(void)
@@ -454,16 +378,17 @@ CFE_Status_t MISSION_LEOP_SaveState(void)
         return Status;
     }
 
-    Status = MISSION_LEOP_OpenDataFile();
-    if (Status != CFE_SUCCESS)
+    if (MISSION_Data.LEOPDataHandle != OS_OBJECT_ID_UNDEFINED)
     {
-        MISSION_LEOP_UnlockFile();
-        return Status;
+        (void)OS_close(MISSION_Data.LEOPDataHandle);
+        MISSION_Data.LEOPDataHandle = OS_OBJECT_ID_UNDEFINED;
     }
 
-    OsStatus = OS_lseek(MISSION_Data.LEOPDataHandle, 0, OS_SEEK_SET);
-    if (OsStatus < OS_SUCCESS)
+    OsStatus = OS_OpenCreate(&MISSION_Data.LEOPDataHandle, MISSION_LEOP_TEMP_DATA_PATH,
+                             OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    if (OsStatus != OS_SUCCESS)
     {
+        MISSION_Data.LEOPDataHandle = OS_OBJECT_ID_UNDEFINED;
         MISSION_LEOP_UnlockFile();
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
@@ -471,8 +396,15 @@ CFE_Status_t MISSION_LEOP_SaveState(void)
     OsStatus = OS_write(MISSION_Data.LEOPDataHandle, &FileData, sizeof(FileData));
     (void)OS_close(MISSION_Data.LEOPDataHandle);
     MISSION_Data.LEOPDataHandle = OS_OBJECT_ID_UNDEFINED;
-    MISSION_LEOP_UnlockFile();
     if (OsStatus != (int32)sizeof(FileData))
+    {
+        MISSION_LEOP_UnlockFile();
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    OsStatus = OS_rename(MISSION_LEOP_TEMP_DATA_PATH, MISSION_LEOP_DATA_PATH);
+    MISSION_LEOP_UnlockFile();
+    if (OsStatus != OS_SUCCESS)
     {
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
@@ -480,124 +412,123 @@ CFE_Status_t MISSION_LEOP_SaveState(void)
     return CFE_SUCCESS;
 }
 
+CFE_Status_t MISSION_LEOP_RequestComplete(void)
+{
+    CFE_Status_t Status;
+
+    Status = MISSION_LEOP_Lock();
+    if (Status != CFE_SUCCESS)
+    {
+        return Status;
+    }
+
+    MISSION_Data.LEOPCompleteRequested  = true;
+    MISSION_Data.LEOPProcessStarted     = false;
+    MISSION_Data.LEOPWaitComplete       = true;
+    MISSION_Data.LEOPWaitElapsedSec     = 0;
+    MISSION_Data.LEOPWaitRemainingSec   = 0;
+    MISSION_Data.LEOPCycleCount         = MISSION_LEOP_SEQUENCE_REPEAT_COUNT;
+    MISSION_Data.LEOPState              = MISSION_LEOP_STATE_COMPLETE;
+
+    MISSION_LEOP_Unlock();
+
+    MISSION_APP_printf("MISSION LEOP: complete requested by command\n");
+    return MISSION_LEOP_SaveState();
+}
+
 void MISSION_LEOP_Process(void)
 {
     CFE_Status_t Status;
-    int32        Burn_try_count = 0;
-    bool         RxBytesInitialized;
-    bool         RxBytesIncreased;
-    uint32       InitialRxBytes;
-    uint32       CurrentRxBytes;
+    uint8        Cycle;
 
-    while (true)
+    Status = MISSION_LEOP_LoadState();
+    if (Status != CFE_SUCCESS)
     {
-        Status = MISSION_LEOP_LoadState();
-        if (Status != CFE_SUCCESS)
-        {
-            MISSION_Data.ErrCounter++;
-            MISSION_LEOP_RetryDelay();
-            continue;
-        }
+        MISSION_Data.ErrCounter++;
+        MISSION_LEOP_SetDefaults();
+        MISSION_APP_printf("MISSION LEOP: state load failed status=0x%08lX; continuing with defaults\n",
+                           (unsigned long)Status);
+    }
 
-        if (MISSION_Data.LEOPState == MISSION_LEOP_STATE_COMPLETE)
-        {
-            MISSION_APP_printf("MISSION LEOP: complete state loaded, re-enabling TO before exit\n");
-            Status = MISSION_LEOP_EnableTo();
-            if (Status != CFE_SUCCESS)
-            {
-                (void)MISSION_LEOP_SaveState();
-                MISSION_LEOP_RetryDelay();
-                continue;
-            }
-
-            MISSION_Data.LEOPState = MISSION_LEOP_STATE_COMPLETE;
-            (void)MISSION_LEOP_SaveState();
-            MISSION_APP_printf("MISSION LEOP: complete state preserved after TO enable\n");
-            return;
-        }
-
-        if (!MISSION_Data.LEOPWaitComplete)
-        {
-            if (!MISSION_Data.LEOPProcessStarted)
-            {
-                MISSION_Data.LEOPStartTime = CFE_TIME_GetTime();
-                MISSION_Data.LEOPProcessStarted = true;
-                MISSION_APP_printf("MISSION LEOP: wait timer started\n");
-            }
-
-            MISSION_LEOP_UpdateWaitStatus();
-            if (!MISSION_Data.LEOPWaitComplete)
-            {
-                MISSION_LEOP_WaitUntilComplete();
-            }
-        }
-
-        if (MISSION_Data.LEOPWaitComplete && !MISSION_Data.LEOPGpioDeployIssued)
-        {
-            MISSION_APP_printf("MISSION LEOP: wait complete, issuing initial GPIO burn\n");
-            Status = MISSION_LEOP_GpioHigh();
-            Burn_try_count++;
-            if (Status != CFE_SUCCESS)
-            {
-                MISSION_Data.ErrCounter++;
-                (void)MISSION_LEOP_SaveState();
-                MISSION_LEOP_RetryDelay();
-                continue;
-            }
-
-            (void)MISSION_LEOP_SaveState();
-            MISSION_LEOP_PostBurnWait();
-        }
-
-        MISSION_Data.LEOPState = MISSION_LEOP_STATE_WAIT_COMPLETE;
-        (void)MISSION_LEOP_SaveState();
-        MISSION_APP_printf("MISSION LEOP: wait phase complete, checking UTRX RxBytes\n");
-
-        RxBytesIncreased = MISSION_LEOP_GetUtrxRxBytesStatus(&RxBytesInitialized, &InitialRxBytes, &CurrentRxBytes);
-
-        if (!RxBytesIncreased && Burn_try_count < MISSION_LEOP_MAX_GPIO_BURN_TRY_COUNT)
-        {
-            MISSION_APP_printf("MISSION LEOP: UTRX RxBytes not increased initialized=%u initial=%lu current=%lu, "
-                               "issuing GPIO burn attempt=%ld\n",
-                               (unsigned int)RxBytesInitialized, (unsigned long)InitialRxBytes,
-                               (unsigned long)CurrentRxBytes, (long)(Burn_try_count + 1));
-            Status = MISSION_LEOP_GpioHigh();
-            Burn_try_count++;
-            if (Status != CFE_SUCCESS)
-            {
-                MISSION_Data.ErrCounter++;
-                (void)MISSION_LEOP_SaveState();
-                MISSION_LEOP_RetryDelay();
-                continue;
-            }
-
-            (void)MISSION_LEOP_SaveState();
-            Status = MISSION_LEOP_EnableTo();
-
-            if (Status != CFE_SUCCESS)
-            {
-                (void)MISSION_LEOP_SaveState();
-                MISSION_LEOP_RetryDelay();
-                continue;
-            }
-
-            (void)MISSION_LEOP_SaveState();
-        
-            MISSION_LEOP_PostBurnWait();
-            continue;
-        }
-
-        MISSION_Data.LEOPState = MISSION_LEOP_STATE_COMPLETE;
-        (void)MISSION_LEOP_SaveState();
-        MISSION_APP_printf("MISSION LEOP: sequence complete reason=%s rx_initialized=%u initial=%lu current=%lu "
-                           "increased=%u run_burn_count=%ld saved_gpio_burn_count=%u max_gpio_burn_count=%u\n",
-                           RxBytesIncreased ? "utrx_rxbytes_increased" : "max_gpio_burn_try_count_reached",
-                           (unsigned int)RxBytesInitialized, (unsigned long)InitialRxBytes,
-                           (unsigned long)CurrentRxBytes, (unsigned int)RxBytesIncreased,
-                           (long)Burn_try_count, (unsigned int)MISSION_Data.LEOPGpioBurnTryCount,
-                           (unsigned int)MISSION_LEOP_MAX_GPIO_BURN_TRY_COUNT);
+    if (MISSION_Data.LEOPState == MISSION_LEOP_STATE_COMPLETE)
+    {
+        MISSION_LEOP_EnableTo();
+        MISSION_APP_printf("MISSION LEOP: complete state loaded, exiting\n");
         return;
     }
+
+    if (MISSION_Data.LEOPState == MISSION_LEOP_STATE_INITIAL_WAIT)
+    {
+        MISSION_APP_printf("MISSION LEOP: initial wait started duration=%lu sec\n",
+                           (unsigned long)MISSION_LEOP_INITIAL_WAIT_SEC);
+        MISSION_LEOP_Wait(MISSION_LEOP_INITIAL_WAIT_SEC);
+        if (!MISSION_Data.LEOPCompleteRequested)
+        {
+            MISSION_Data.LEOPState = MISSION_LEOP_STATE_BURN;
+            (void)MISSION_LEOP_SaveState();
+        }
+    }
+
+    for (Cycle = MISSION_Data.LEOPCycleCount;
+         Cycle < MISSION_LEOP_SEQUENCE_REPEAT_COUNT && !MISSION_Data.LEOPCompleteRequested; Cycle++)
+    {
+        MISSION_LEOP_Wait(0u);
+        MISSION_Data.LEOPState = MISSION_LEOP_STATE_BURN;
+
+        MISSION_APP_printf("MISSION LEOP: cycle=%u/%u issuing GPIO burn duration=%lu sec\n",
+                           (unsigned int)(Cycle + 1), (unsigned int)MISSION_LEOP_SEQUENCE_REPEAT_COUNT,
+                           (unsigned long)MISSION_LEOP_BURN_DURATION_SEC);
+
+        (void)MISSION_LEOP_GpioHigh();
+        if (MISSION_Data.LEOPCompleteRequested)
+        {
+            break;
+        }
+        (void)MISSION_LEOP_SaveState();
+
+        if (MISSION_Data.LEOPCompleteRequested)
+        {
+            break;
+        }
+        MISSION_Data.LEOPState = MISSION_LEOP_STATE_TO_ENABLE;
+        (void)MISSION_LEOP_EnableTo();
+        if (MISSION_Data.LEOPCompleteRequested)
+        {
+            break;
+        }
+        (void)MISSION_LEOP_SaveState();
+
+        if (MISSION_Data.LEOPCompleteRequested)
+        {
+            break;
+        }
+        MISSION_Data.LEOPState = MISSION_LEOP_STATE_POST_WAIT;
+        (void)MISSION_LEOP_SaveState();
+        MISSION_APP_printf("MISSION LEOP: cycle=%u/%u post-burn wait started duration=%lu sec\n",
+                           (unsigned int)(Cycle + 1), (unsigned int)MISSION_LEOP_SEQUENCE_REPEAT_COUNT,
+                           (unsigned long)MISSION_LEOP_POST_BURN_WAIT_SEC);
+        MISSION_LEOP_Wait(MISSION_LEOP_POST_BURN_WAIT_SEC);
+
+        if (MISSION_Data.LEOPCompleteRequested)
+        {
+            break;
+        }
+
+        MISSION_Data.LEOPCycleCount = Cycle + 1u;
+        MISSION_Data.LEOPState = (MISSION_Data.LEOPCycleCount < MISSION_LEOP_SEQUENCE_REPEAT_COUNT)
+                                     ? MISSION_LEOP_STATE_BURN
+                                     : MISSION_LEOP_STATE_COMPLETE;
+        (void)MISSION_LEOP_SaveState();
+    }
+
+    MISSION_LEOP_Wait(0u);
+    MISSION_Data.LEOPWaitComplete = true;
+    MISSION_Data.LEOPCycleCount   = MISSION_LEOP_SEQUENCE_REPEAT_COUNT;
+    MISSION_Data.LEOPState        = MISSION_LEOP_STATE_COMPLETE;
+    (void)MISSION_LEOP_SaveState();
+    MISSION_APP_printf("MISSION LEOP: sequence complete cycle_count=%u repeat_count=%u\n",
+                       (unsigned int)MISSION_Data.LEOPCycleCount,
+                       (unsigned int)MISSION_LEOP_SEQUENCE_REPEAT_COUNT);
 }
 
 void MISSION_LEOP_Task(void)

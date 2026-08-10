@@ -66,18 +66,10 @@ void MEOW_ProcessGroundCommand(const CFE_SB_Buffer_t* buf)
         DISPATCH(MEOW_SYS_TIME_SET_CC,     MEOW_SysTimeSetCmd_t,     MEOW_SysTimeSetCmd);
         DISPATCH(MEOW_SYS_FORCE_KILL_CC,   MEOW_SysForceKillCmd_t,   MEOW_SysForceKillCmd);
 
-        DISPATCH(MEOW_CSP_SERVER_START_CC,     MEOW_CspServerStartCmd_t,     MEOW_CspServerStartCmd);
-        DISPATCH(MEOW_CSP_SERVER_STOP_CC,      MEOW_CspServerStopCmd_t,      MEOW_CspServerStopCmd);
-        DISPATCH(MEOW_CSP_SET_READ_TIMEOUT_CC, MEOW_CspSetReadTimeoutCmd_t,  MEOW_CspSetReadTimeoutCmd);
-        DISPATCH(MEOW_CSP_HANDLER_LOAD_CC,     MEOW_CspHandlerLoadCmd_t,     MEOW_CspHandlerLoadCmd);
-        DISPATCH(MEOW_CSP_HANDLER_CLEAR_CC,    MEOW_CspHandlerClearCmd_t,    MEOW_CspHandlerClearCmd);
-        DISPATCH(MEOW_CSP_SEND_CC,             MEOW_CspSendCmd_t,            MEOW_CspSendCmd);
+#ifdef MEOW_INCLUDE_CSP
         DISPATCH(MEOW_CSP_FTP_UPLOAD_CC,       MEOW_CspFtpUploadCmd_t,       MEOW_CspFtpUploadCmd);
         DISPATCH(MEOW_CSP_FTP_DOWNLOAD_CC,     MEOW_CspFtpDownloadCmd_t,     MEOW_CspFtpDownloadCmd);
-        DISPATCH(MEOW_CSP_IFSTATS_CC,          MEOW_CspIfstatsCmd_t,         MEOW_CspIfstatsCmd);
-        DISPATCH(MEOW_CSP_ROUTE_SET_CC,        MEOW_CspRouteSetCmd_t,        MEOW_CspRouteSetCmd);
-        DISPATCH(MEOW_CSP_REROUTE_SET_CC,      MEOW_CspRerouteSetCmd_t,      MEOW_CspRerouteSetCmd);
-        DISPATCH(MEOW_CSP_REROUTE_CLEAR_CC,    MEOW_CspRerouteClearCmd_t,    MEOW_CspRerouteClearCmd);
+#endif /* MEOW_INCLUDE_CSP */
 
         default:
             CFE_EVS_SendEvent(MEOW_CC_ERR_EID, CFE_EVS_EventType_ERROR,

@@ -31,6 +31,7 @@
 #include "ttc_msg.h"
 
 void TTC_SendHkCmd(const TTC_SendHkCmd_t* Msg);
+void TTC_ReportCmd(const TTC_ReportCmd_t* Msg);
 void TTC_ResetCountersCmd(const TTC_ResetCountersCmd_t* Msg);
 void TTC_NoopCmd(const TTC_NoopCmd_t* Msg);
 

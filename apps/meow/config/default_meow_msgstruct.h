@@ -4,7 +4,6 @@
 #include "meow_mission_cfg.h"
 #include "meow_msgdefs.h"
 #include "cfe_msg_hdr.h"
-#include "rpt_interface_cfg.h"
 
 /* -------------------------------------------------------------------------
  * App commands
@@ -148,34 +147,6 @@ typedef struct {
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-} MEOW_CspServerStartCmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t CommandHeader;
-} MEOW_CspServerStopCmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t          CommandHeader;
-    MEOW_CspSetReadTimeoutPayload_t  Payload;
-} MEOW_CspSetReadTimeoutCmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t       CommandHeader;
-    MEOW_CspHandlerLoadPayload_t  Payload;
-} MEOW_CspHandlerLoadCmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t        CommandHeader;
-    MEOW_CspHandlerClearPayload_t  Payload;
-} MEOW_CspHandlerClearCmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t CommandHeader;
-    MEOW_CspSendPayload_t   Payload;
-} MEOW_CspSendCmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t CommandHeader;
     MEOW_CspFtpPayload_t    Payload;
 } MEOW_CspFtpUploadCmd_t;
 
@@ -183,26 +154,6 @@ typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
     MEOW_CspFtpPayload_t    Payload;
 } MEOW_CspFtpDownloadCmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t    CommandHeader;
-    MEOW_CspIfstatsPayload_t   Payload;
-} MEOW_CspIfstatsCmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t    CommandHeader;
-    MEOW_CspRouteSetPayload_t  Payload;
-} MEOW_CspRouteSetCmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t      CommandHeader;
-    MEOW_CspRerouteSetPayload_t  Payload;
-} MEOW_CspRerouteSetCmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t        CommandHeader;
-    MEOW_CspRerouteClearPayload_t  Payload;
-} MEOW_CspRerouteClearCmd_t;
 
 /* -------------------------------------------------------------------------
  * Telemetry
@@ -215,7 +166,7 @@ typedef struct {
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    RPT_Report_t              Payload;
+    MEOW_Report_Payload_t     Payload;
 } MEOW_Report_t;
 
 #endif /* MEOW_MSGSTRUCT_H */

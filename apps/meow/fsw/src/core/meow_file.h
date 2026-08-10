@@ -21,6 +21,8 @@ typedef enum {
     MEOW_FILE_ERR_WRITE = -4,
     MEOW_FILE_ERR_STAT  = -5,
     MEOW_FILE_ERR_OP    = -6, /* unlink / rename / mkdir / truncate */
+    MEOW_FILE_ERR_EXIST = -7, /* copy destination already exists */
+    MEOW_FILE_ERR_FSYNC = -8, /* fsync() failed */
 } meow_file_ret_t;
 
 
@@ -121,15 +123,15 @@ int meow_file_write(const char* path,
 int meow_file_remove(const char* path);
 
 /**
- * @brief Copy src to dst, preserving permission bits.
+ * @brief Copy src to a new dst file, preserving permission bits.
  *
  * @details
- *      - Performs an inode check before copying; returns MEOW_FILE_ERR_OP
- *            if src and dst resolve to the same file.
+ *      - Fails with MEOW_FILE_ERR_EXIST if dst already exists.
  *      - On write failure, the partial destination file is removed.
  *      - Does not preserve ownership or timestamps.
- *      - Copies even if @a dst already exists, truncating it first, as
- *            normal cp would. To check for existence, stat @a dst first.
+ *      - To replace an existing file deliberately, copy to a separate new
+ *            path first and then use meow_file_move() to rename it over the
+ *            final destination.
  *
  * @param src  Source file path.
  * @param dst  Destination file path.
@@ -139,7 +141,8 @@ int meow_file_remove(const char* path);
  *          MEOW_FILE_ERR_OPEN if src or dst cannot be opened.
  *          MEOW_FILE_ERR_READ if reading src fails mid-copy.
  *          MEOW_FILE_ERR_WRITE if writing dst fails mid-copy.
- *          MEOW_FILE_ERR_OP if src and dst are the same file.
+ *          MEOW_FILE_ERR_EXIST if dst already exists, including when src and
+ *            dst name the same file.
  */
 int meow_file_copy(const char* src, const char* dst);
 
@@ -147,8 +150,11 @@ int meow_file_copy(const char* src, const char* dst);
  * @brief Move src to dst.
  *
  * @details
- *      - Tries rename() first. On EXDEV (cross-filesystem), falls back to
- *            meow_file_copy() followed by unlink(src).
+ *      - Tries rename() first. On the same filesystem this atomically replaces
+ *            an existing dst, which is the intended explicit-overwrite path.
+ *      - On EXDEV (cross-filesystem), falls back to meow_file_copy() followed
+ *            by unlink(src). Because copy never overwrites, this fallback
+ *            returns MEOW_FILE_ERR_EXIST if dst already exists.
  *
  * @param src  Source file path.
  * @param dst  Destination file path.

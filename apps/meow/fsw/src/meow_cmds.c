@@ -26,7 +26,7 @@ void MEOW_SendReport(const void* cmd,
     MEOW_AppData.Report.Payload.CommandCode = cmdCode;
     MEOW_AppData.Report.Payload.ReturnType = retType;
     MEOW_AppData.Report.Payload.ReturnCode = retCode;
-    uint16 CopySize = dataSize > RPT_RET_VALUE_BUF_SIZE ? RPT_RET_VALUE_BUF_SIZE : dataSize;
+    uint16 CopySize = dataSize > MEOW_MISSION_MAX_REPORT_LEN ? MEOW_MISSION_MAX_REPORT_LEN : dataSize;
     MEOW_AppData.Report.Payload.ReturnDataSize = CopySize;
     if (data && dataSize)
         memcpy(MEOW_AppData.Report.Payload.ReturnValue,
@@ -44,7 +44,7 @@ CFE_Status_t MEOW_SendHkCmd(const MEOW_SendHkCmd_t* msg)
     MEOW_AppData.HkTlm.Payload.cmd_counter = MEOW_AppData.CmdCounter;
     MEOW_AppData.HkTlm.Payload.err_counter = MEOW_AppData.ErrCounter;
     MEOW_APP_printf("MEOW: HK report requested\n");
-    MEOW_SendReport(msg, &MEOW_AppData.HkTlm.Payload, sizeof(MEOW_AppData.HkTlm.Payload), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
+    MEOW_SendReport(msg, &MEOW_AppData.HkTlm.Payload, sizeof(MEOW_AppData.HkTlm.Payload), CFE_SUCCESS, 0);
     return CFE_SUCCESS;
 }
 
@@ -55,7 +55,7 @@ CFE_Status_t MEOW_NoopCmd(const MEOW_NoopCmd_t* msg)
                       "MEOW: NOOP %s", MEOW_VERSION);
 
     static const char NoopReport[] = "Yosi In Space";
-    MEOW_SendReport(msg, NoopReport, sizeof(NoopReport), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
+    MEOW_SendReport(msg, NoopReport, sizeof(NoopReport), CFE_SUCCESS, 0);
     return CFE_SUCCESS;
 }
 
@@ -67,7 +67,7 @@ CFE_Status_t MEOW_ResetCountersCmd(const MEOW_ResetCountersCmd_t* msg)
                       "MEOW: counters reset");
 
     uint16 Counters[2] = {MEOW_AppData.CmdCounter, MEOW_AppData.ErrCounter};
-    MEOW_SendReport(msg, Counters, sizeof(Counters), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
+    MEOW_SendReport(msg, Counters, sizeof(Counters), CFE_SUCCESS, 0);
     return CFE_SUCCESS;
 }
 
@@ -323,6 +323,7 @@ void MEOW_FileMoveCmd(const MEOW_FileMoveCmd_t* msg)
 void MEOW_FileStatCmd(const MEOW_FileStatCmd_t* msg)
 {
     meow_file_stat_t st;
+    memset(&st, 0, sizeof(st));
     MEOW_AppData.CmdCounter++;
     int ret = meow_file_stat(msg->Payload.path, &st);
     if (ret == MEOW_FILE_OK) {
@@ -524,98 +525,10 @@ void MEOW_SysForceKillCmd(const MEOW_SysForceKillCmd_t* msg)
                       ret, (int)os_errno, (int)msg->Payload.mode);
 }
 
+#ifdef MEOW_INCLUDE_CSP
 /* -------------------------------------------------------------------------
  * CSP
  * ---------------------------------------------------------------------- */
-
-void MEOW_CspServerStartCmd(const MEOW_CspServerStartCmd_t* msg)
-{
-    MEOW_AppData.CmdCounter++;
-    int ret = meow_csp_server_start();
-    if (ret == MEOW_CSP_OK) {
-        MEOW_SendReport(msg, NULL, 0, ret, 0);
-    }
-    else {
-        MEOW_AppData.ErrCounter++;
-        MEOW_SendReport(msg, NULL, 0, ret, 0);
-        CFE_EVS_SendEvent(MEOW_CSP_SERVER_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "MEOW: csp server start error %d", ret);
-    }
-}
-
-void MEOW_CspServerStopCmd(const MEOW_CspServerStopCmd_t* msg)
-{
-    MEOW_AppData.CmdCounter++;
-    int ret = meow_csp_server_stop();
-    if (ret == MEOW_CSP_OK) {
-        MEOW_SendReport(msg, NULL, 0, ret, 0);
-    }
-    else {
-        MEOW_AppData.ErrCounter++;
-        MEOW_SendReport(msg, NULL, 0, ret, 0);
-        CFE_EVS_SendEvent(MEOW_CSP_SERVER_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "MEOW: csp server stop error %d", ret);
-    }
-}
-
-void MEOW_CspSetReadTimeoutCmd(const MEOW_CspSetReadTimeoutCmd_t* msg)
-{
-    MEOW_AppData.CmdCounter++;
-    meow_csp_set_read_timeout(msg->Payload.timeout_ms);
-    MEOW_SendReport(msg, NULL, 0, MEOW_CSP_OK, 0);
-}
-
-void MEOW_CspHandlerLoadCmd(const MEOW_CspHandlerLoadCmd_t* msg)
-{
-    MEOW_AppData.CmdCounter++;
-    int ret = meow_csp_handler_load(msg->Payload.port,
-                                    msg->Payload.path,
-                                    msg->Payload.symbol);
-    if (ret == MEOW_CSP_OK) {
-        MEOW_SendReport(msg, NULL, 0, ret, 0);
-    }
-    else {
-        int32 raw_err = (int32)meow_csp_last_module_err();
-        MEOW_AppData.ErrCounter++;
-        MEOW_SendReport(msg, &raw_err, sizeof(raw_err), ret, 0);
-        CFE_EVS_SendEvent(MEOW_CSP_HANDLER_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "MEOW: csp handler load error %d module_err=%d port=%u: %.64s",
-                          ret, (int)raw_err, (unsigned)msg->Payload.port,
-                          msg->Payload.symbol);
-    }
-}
-
-void MEOW_CspHandlerClearCmd(const MEOW_CspHandlerClearCmd_t* msg)
-{
-    MEOW_AppData.CmdCounter++;
-    meow_csp_handler_clear(msg->Payload.port);
-    MEOW_SendReport(msg, NULL, 0, MEOW_CSP_OK, 0);
-}
-
-void MEOW_CspSendCmd(const MEOW_CspSendCmd_t* msg)
-{
-    MEOW_AppData.CmdCounter++;
-    int ret = meow_csp_send(msg->Payload.dst,
-                            msg->Payload.dst_port,
-                            msg->Payload.src_port,
-                            msg->Payload.prio,
-                            msg->Payload.data,
-                            msg->Payload.len,
-                            msg->Payload.timeout_ms);
-    if (ret == MEOW_CSP_OK) {
-        MEOW_SendReport(msg, NULL, 0, ret, 0);
-    }
-    else {
-        int32 raw_err = (int32)meow_csp_last_err();
-        MEOW_AppData.ErrCounter++;
-        MEOW_SendReport(msg, &raw_err, sizeof(raw_err), ret, 0);
-        CFE_EVS_SendEvent(MEOW_CSP_SEND_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "MEOW: csp send error %d csp_err=%d dst=%u port=%u",
-                          ret, (int)raw_err,
-                          (unsigned)msg->Payload.dst,
-                          (unsigned)msg->Payload.dst_port);
-    }
-}
 
 void MEOW_CspFtpUploadCmd(const MEOW_CspFtpUploadCmd_t* msg)
 {
@@ -663,81 +576,4 @@ void MEOW_CspFtpDownloadCmd(const MEOW_CspFtpDownloadCmd_t* msg)
     }
 }
 
-void MEOW_CspIfstatsCmd(const MEOW_CspIfstatsCmd_t* msg)
-{
-    meow_csp_ifstats_t stats;
-    MEOW_AppData.CmdCounter++;
-    int ret = meow_csp_ifstats(msg->Payload.iface_name, &stats);
-    if (ret == MEOW_CSP_OK) {
-        MEOW_SendReport(msg, &stats, sizeof(stats), ret, 0);
-    }
-    else {
-        MEOW_AppData.ErrCounter++;
-        MEOW_SendReport(msg, NULL, 0, ret, 0);
-        CFE_EVS_SendEvent(MEOW_CSP_ROUTE_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "MEOW: csp ifstats error %d: %.16s",
-                          ret, msg->Payload.iface_name);
-    }
-}
-
-void MEOW_CspRouteSetCmd(const MEOW_CspRouteSetCmd_t* msg)
-{
-    MEOW_AppData.CmdCounter++;
-    int ret = meow_csp_route_set(msg->Payload.dst,
-                                 msg->Payload.mask,
-                                 msg->Payload.iface_name,
-                                 msg->Payload.via);
-    if (ret == MEOW_CSP_OK) {
-        MEOW_SendReport(msg, NULL, 0, ret, 0);
-    }
-    else {
-        int32 raw_err = (int32)meow_csp_last_err();
-        MEOW_AppData.ErrCounter++;
-        MEOW_SendReport(msg, &raw_err, sizeof(raw_err), ret, 0);
-        CFE_EVS_SendEvent(MEOW_CSP_ROUTE_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "MEOW: csp route set error %d csp_err=%d dst=%u: %.16s",
-                          ret, (int)raw_err,
-                          (unsigned)msg->Payload.dst, msg->Payload.iface_name);
-    }
-}
-
-void MEOW_CspRerouteSetCmd(const MEOW_CspRerouteSetCmd_t* msg)
-{
-    MEOW_AppData.CmdCounter++;
-    meow_csp_reroute_entry_t entry;
-    entry.dst_port     = msg->Payload.dst_port;
-    entry.src_node     = msg->Payload.src_node;
-    entry.fwd_dst      = msg->Payload.fwd_dst;
-    entry.fwd_dst_port = msg->Payload.fwd_dst_port;
-    entry.fwd_src_port = msg->Payload.fwd_src_port;
-    entry.timeout_ms   = msg->Payload.timeout_ms;
-    entry.active       = (int)msg->Payload.active;
-    memset(entry._pad, 0, sizeof(entry._pad));
-    int ret = meow_csp_reroute_set(msg->Payload.idx, &entry);
-    if (ret == MEOW_CSP_OK) {
-        MEOW_SendReport(msg, NULL, 0, ret, 0);
-    }
-    else {
-        MEOW_AppData.ErrCounter++;
-        MEOW_SendReport(msg, NULL, 0, ret, 0);
-        CFE_EVS_SendEvent(MEOW_CSP_REROUTE_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "MEOW: csp reroute set error %d idx=%u",
-                          ret, (unsigned)msg->Payload.idx);
-    }
-}
-
-void MEOW_CspRerouteClearCmd(const MEOW_CspRerouteClearCmd_t* msg)
-{
-    MEOW_AppData.CmdCounter++;
-    int ret = meow_csp_reroute_clear(msg->Payload.idx);
-    if (ret == MEOW_CSP_OK) {
-        MEOW_SendReport(msg, NULL, 0, ret, 0);
-    }
-    else {
-        MEOW_AppData.ErrCounter++;
-        MEOW_SendReport(msg, NULL, 0, ret, 0);
-        CFE_EVS_SendEvent(MEOW_CSP_REROUTE_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "MEOW: csp reroute clear error %d idx=%u",
-                          ret, (unsigned)msg->Payload.idx);
-    }
-}
+#endif /* MEOW_INCLUDE_CSP */

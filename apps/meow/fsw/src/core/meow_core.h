@@ -35,6 +35,8 @@
 #include "meow_sys.h"
 #include "meow_shell.h"
 #include "meow_file.h"
+#ifdef MEOW_INCLUDE_CSP
 #include "meow_csp.h"
+#endif
 
 #endif

@@ -109,30 +109,6 @@ typedef struct {
  * CSP command payloads
  * ---------------------------------------------------------------------- */
 
-typedef struct {
-    uint32 timeout_ms;
-} MEOW_CspSetReadTimeoutPayload_t;
-
-typedef struct {
-    uint8  port;
-    char   path[MEOW_MISSION_MAX_PATH_LEN];
-    char   symbol[MEOW_MISSION_MAX_SYMBOL_LEN];
-} MEOW_CspHandlerLoadPayload_t;
-
-typedef struct {
-    uint8  port;
-} MEOW_CspHandlerClearPayload_t;
-
-typedef struct {
-    uint8  dst;
-    uint8  dst_port;
-    uint8  src_port;
-    uint8  prio;
-    uint32 timeout_ms;
-    uint16 len;
-    uint8  data[MEOW_MISSION_MAX_WRITE_LEN];
-} MEOW_CspSendPayload_t;
-
 /* used by: ftp_upload, ftp_download */
 typedef struct {
     uint8  host;
@@ -142,34 +118,6 @@ typedef struct {
     char   local_path[MEOW_MISSION_MAX_PATH_LEN];
     char   remote_path[MEOW_MISSION_MAX_PATH_LEN];
 } MEOW_CspFtpPayload_t;
-
-typedef struct {
-    char   iface_name[MEOW_MISSION_MAX_IFACE_NAME_LEN];
-} MEOW_CspIfstatsPayload_t;
-
-typedef struct {
-    uint8  dst;
-    uint8  mask;
-    uint8  via;
-    uint8  spare;
-    char   iface_name[MEOW_MISSION_MAX_IFACE_NAME_LEN];
-} MEOW_CspRouteSetPayload_t;
-
-typedef struct {
-    uint8  idx;
-    uint8  dst_port;
-    uint8  src_node;
-    uint8  fwd_dst;
-    uint8  fwd_dst_port;
-    uint8  fwd_src_port;
-    uint8  active;
-    uint8  spare;
-    uint16 timeout_ms;
-} MEOW_CspRerouteSetPayload_t;
-
-typedef struct {
-    uint8  idx;
-} MEOW_CspRerouteClearPayload_t;
 
 /* -------------------------------------------------------------------------
  * Telemetry payloads
@@ -186,7 +134,7 @@ typedef struct {
     uint8  ReturnType;
     int32  ReturnCode;
     uint16 ReturnDataSize;
-    uint8  ReturnValue[MEOW_MISSION_MAX_READ_LEN];
+    uint8  ReturnValue[MEOW_MISSION_MAX_REPORT_LEN];
 } MEOW_Report_Payload_t;
 
 #endif /* DEFAULT_MEOW_MSGDEFS_H */

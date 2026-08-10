@@ -7,6 +7,7 @@
 
 #include "meow_file.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -202,7 +203,26 @@ void Test_FileCopy_SameFile(void)
 {
     cleanup();
     meow_file_write(TMP_A, (const uint8_t*)"hi", 2, 0, 0);
-    UtAssert_INT32_EQ(meow_file_copy(TMP_A, TMP_A), MEOW_FILE_ERR_OP);
+    UtAssert_INT32_EQ(meow_file_copy(TMP_A, TMP_A), MEOW_FILE_ERR_EXIST);
+    cleanup();
+}
+
+void Test_FileCopy_ExistingDestination(void)
+{
+    static const uint8_t ORIGINAL[] = "keep me";
+    uint8_t              buf[32] = {0};
+    size_t               n = 0;
+
+    cleanup();
+    meow_file_write(TMP_A, HELLO, HELLO_LEN, 0, 0);
+    meow_file_write(TMP_B, ORIGINAL, sizeof(ORIGINAL) - 1, 0, 0);
+
+    UtAssert_INT32_EQ(meow_file_copy(TMP_A, TMP_B), MEOW_FILE_ERR_EXIST);
+    UtAssert_INT32_EQ(meow_file_errno(), EEXIST);
+    UtAssert_INT32_EQ(meow_file_read(TMP_B, 0, buf, sizeof(buf), &n), MEOW_FILE_OK);
+    UtAssert_UINT32_EQ(n, sizeof(ORIGINAL) - 1);
+    UtAssert_MemCmp(buf, ORIGINAL, sizeof(ORIGINAL) - 1,
+                    "existing destination remains unchanged");
     cleanup();
 }
 
@@ -242,6 +262,23 @@ void Test_FileMove_SameFs(void)
     UtAssert_INT32_EQ(meow_file_read(TMP_A, 0, buf, sizeof(buf), &n), MEOW_FILE_ERR_OPEN);
     UtAssert_INT32_EQ(meow_file_read(TMP_B, 0, buf, sizeof(buf), &n), MEOW_FILE_OK);
     UtAssert_UINT32_EQ(n, HELLO_LEN);
+    cleanup();
+}
+
+void Test_FileMove_ReplacesExisting(void)
+{
+    static const uint8_t OLD[] = "old";
+    uint8_t              buf[32] = {0};
+    size_t               n = 0;
+
+    cleanup();
+    meow_file_write(TMP_A, HELLO, HELLO_LEN, 0, 0);
+    meow_file_write(TMP_B, OLD, sizeof(OLD) - 1, 0, 0);
+
+    UtAssert_INT32_EQ(meow_file_move(TMP_A, TMP_B), MEOW_FILE_OK);
+    UtAssert_INT32_EQ(meow_file_read(TMP_B, 0, buf, sizeof(buf), &n), MEOW_FILE_OK);
+    UtAssert_UINT32_EQ(n, HELLO_LEN);
+    UtAssert_MemCmp(buf, HELLO, HELLO_LEN, "move explicitly replaces destination");
     cleanup();
 }
 
@@ -415,10 +452,12 @@ void UtTest_Setup(void)
 
     UtTest_Add(Test_FileCopy_NullArgs,             NULL, NULL, "FileCopy_NullArgs");
     UtTest_Add(Test_FileCopy_SameFile,             NULL, NULL, "FileCopy_SameFile");
+    UtTest_Add(Test_FileCopy_ExistingDestination,  NULL, NULL, "FileCopy_ExistingDestination");
     UtTest_Add(Test_FileCopy_Success,              NULL, NULL, "FileCopy_Success");
 
     UtTest_Add(Test_FileMove_NullArgs,             NULL, NULL, "FileMove_NullArgs");
     UtTest_Add(Test_FileMove_SameFs,               NULL, NULL, "FileMove_SameFs");
+    UtTest_Add(Test_FileMove_ReplacesExisting,     NULL, NULL, "FileMove_ReplacesExisting");
 
     UtTest_Add(Test_FileStat_NullArgs,             NULL, NULL, "FileStat_NullArgs");
     UtTest_Add(Test_FileStat_NoExist,              NULL, NULL, "FileStat_NoExist");

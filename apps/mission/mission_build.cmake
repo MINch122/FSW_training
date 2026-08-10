@@ -10,7 +10,6 @@
 
 # The list of header files that control the MISSION configuration
 set(MISSION_MISSION_CONFIG_FILE_LIST
-  mission_fcncodes.h
   mission_interface_cfg.h
   mission_mission_cfg.h
   mission_perfids.h

@@ -32,18 +32,8 @@ enum MEOW_FunctionCode_ {
     MEOW_FunctionCode_SYS_TIME_SET           = 44,
     MEOW_FunctionCode_SYS_FORCE_KILL         = 45,
 
-    MEOW_FunctionCode_CSP_SERVER_START       = 50,
-    MEOW_FunctionCode_CSP_SERVER_STOP        = 51,
-    MEOW_FunctionCode_CSP_SET_READ_TIMEOUT   = 52,
-    MEOW_FunctionCode_CSP_HANDLER_LOAD       = 53,
-    MEOW_FunctionCode_CSP_HANDLER_CLEAR      = 54,
-    MEOW_FunctionCode_CSP_SEND               = 55,
     MEOW_FunctionCode_CSP_FTP_UPLOAD         = 56,
     MEOW_FunctionCode_CSP_FTP_DOWNLOAD       = 57,
-    MEOW_FunctionCode_CSP_IFSTATS            = 58,
-    MEOW_FunctionCode_CSP_ROUTE_SET          = 59,
-    MEOW_FunctionCode_CSP_REROUTE_SET        = 60,
-    MEOW_FunctionCode_CSP_REROUTE_CLEAR      = 61,
 };
 
 #endif /* DEFAULT_MEOW_FCNCODE_VALUES_H */

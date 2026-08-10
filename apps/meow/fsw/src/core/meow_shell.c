@@ -89,7 +89,8 @@ static int cmd_is_blocked(const char* input)
     while (*p && *p != ' ' && *p != '\t' && i < BL_MAX_TOKEN_LEN - 1)
         cmd[i++] = *p++;
     cmd[i] = '\0';
-    strncpy(cmd, cmd_basename(cmd), BL_MAX_TOKEN_LEN - 1);
+    const char* base = cmd_basename(cmd);
+    memmove(cmd, base, strlen(base) + 1);
 
     /* remaining tokens → flags or targets */
     while (*p && ntargets < BL_MAX_TOKENS) {

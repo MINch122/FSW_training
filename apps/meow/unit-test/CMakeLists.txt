@@ -36,6 +36,8 @@ foreach(CORE_UNIT meow_shell meow_file meow_sys)
     )
 endforeach()
 
+if(MEOW_INCLUDE_CSP)
+
 # -------------------------------------------------------------------------
 # meow_csp — external deps stubbed in meow_csp_ut_stubs
 # -------------------------------------------------------------------------
@@ -70,3 +72,5 @@ target_link_libraries(coverage-meow-meow_csp-testrunner
     meow_csp_ut_stubs
     pthread
 )
+
+endif() # MEOW_INCLUDE_CSP

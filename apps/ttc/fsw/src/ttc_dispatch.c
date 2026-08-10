@@ -98,8 +98,10 @@ void TTC_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             break;
 
         case TTC_REPORT_CC:
-            // TODO: implement a report interface.
-            OS_printf("TTC: Report command received (not implemented)\n");
+            if (TTC_VerifyCmdLength(&SBBufPtr->Msg, sizeof(TTC_ReportCmd_t)))
+            {
+                TTC_ReportCmd((const TTC_ReportCmd_t *)SBBufPtr);
+            }
             break;
 
         case TTC_GET_TIMELINE_HK_CC:

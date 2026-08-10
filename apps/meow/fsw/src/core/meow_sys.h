@@ -121,11 +121,13 @@ int meow_sys_time_set(const meow_sys_time_t* in);
  * @brief Forcibly terminate or crash the process for testing/watchdog purposes.
  *
  * @details
- *      - mode=MEOW_SYS_KILLMODE_EXIT: _exit(1)
- *      - mode=MEOW_SYS_KILLMODE_UNFORGIVABLE: null pointer write (crash)
- *      - mode=MEOW_SYS_KILLMODE_ABORT: abort()
- *      - mode=MEOW_SYS_KILLMODE_SIGKILL: kill(-1, SIGKILL)
- *      - mode=MEOW_SYS_KILLMODE_SYSRQ: echo 'c' > /proc/sysrq-trigger
+ *      - The following three modes only terminate the current process, i.e., the cFS runtime.
+ *          - mode=MEOW_SYS_KILLMODE_EXIT: _exit(1)
+ *          - mode=MEOW_SYS_KILLMODE_UNFORGIVABLE: null pointer write (crash)
+ *          - mode=MEOW_SYS_KILLMODE_ABORT: abort()
+ *      - The other two modes either kill the entire container or trigger a kernel panic.
+ *          - mode=MEOW_SYS_KILLMODE_SIGKILL: kill(-1, SIGKILL)
+ *          - mode=MEOW_SYS_KILLMODE_SYSRQ: echo 'c' > /proc/sysrq-trigger
  *
  * @param mode  Termination mode. See meow_sys_killmode_t.
  * @return  MEOW_SYS_ERR_INVAL for invalid mode.

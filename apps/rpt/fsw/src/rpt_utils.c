@@ -62,7 +62,7 @@ void RPT_Enqueue(const RPT_Report_t *Report, bool IsCritical) {
         RPT_Data.CritQueue.Entry[RPT_Data.CritQueue.Head].Time.Subseconds = RPT_Data.OpsData.TimeSubsec;
 
         if (RPT_Data.CritQueue.Count < RPT_CRITICAL_QUEUE_LEN) RPT_Data.CritQueue.Count ++;
-        OS_printf("Critical Q Head: %u || Count: %u\n", RPT_Data.CritQueue.Head, RPT_Data.CritQueue.Count);
+        RPT_APP_printf("Critical Q Head: %u || Count: %u\n", RPT_Data.CritQueue.Head, RPT_Data.CritQueue.Count);
 
         OS_MutSemGive(RPT_Data.CritMutexID);
         OS_MutSemGive(RPT_Data.OpsMutexID);
@@ -146,16 +146,16 @@ int32 RPT_MultipleReport(uint8_t StartIdx, uint8_t TotNum) {
     }
 
     if (StartIdx > RPT_Data.RptQueue.Count) {
-        OS_printf("Invalid StartIdx.\n");
+        RPT_APP_printf("Invalid StartIdx.\n");
         StartIdx = 0;
     }
     if (TotNum > RPT_Data.RptQueue.Count) {
-        OS_printf("Invalid TotNum.\n");
+        RPT_APP_printf("Invalid TotNum.\n");
         TotNum = RPT_Data.RptQueue.Count;
         StartIdx = 0;
     }
     if (StartIdx + TotNum > RPT_Data.RptQueue.Count) {
-        OS_printf("Invalid Parameters.\n");
+        RPT_APP_printf("Invalid Parameters.\n");
         TotNum = RPT_Data.RptQueue.Count - StartIdx;
     }
     
@@ -284,7 +284,7 @@ osal_id_t RPT_OpenOpsFile(uint8_t IsBackup) {
 
     // FD = open(Path, O_CREAT | O_RDWR, 0666);
     OsStatus = OS_OpenCreate(&FD, RPT_OPS_DATA_PATH, OS_FILE_FLAG_CREATE, OS_READ_WRITE);
-    OS_printf("RPT Ops FD: %d\n", FD);
+    RPT_APP_printf("RPT Ops FD: %d\n", FD);
 
     /* If, error occur, return 0  NOTE: `osal_id_t` is unsigned */ 
     if (OsStatus != OS_SUCCESS) return OS_OBJECT_ID_UNDEFINED;
@@ -340,7 +340,7 @@ osal_id_t RPT_OpenCriticalFile(void) {
     int32 OsStatus;
     
     OsStatus = OS_OpenCreate(&FD, RPT_CRITICAL_DATA_PATH, OS_FILE_FLAG_CREATE, OS_READ_WRITE);
-    OS_printf("RPT Critical FD: %d\n", FD);
+    RPT_APP_printf("RPT Critical FD: %d\n", FD);
     
     /* If, error occur, return 0  NOTE: `osal_id_t` is unsigned */ 
     if (OsStatus != OS_SUCCESS) return OS_OBJECT_ID_UNDEFINED;

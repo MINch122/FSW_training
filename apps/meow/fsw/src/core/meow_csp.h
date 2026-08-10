@@ -7,6 +7,8 @@
 #ifndef _MEOW_CSP_H_
 #define _MEOW_CSP_H_
 
+#ifdef MEOW_INCLUDE_CSP
+
 #include <stdint.h>
 #include <csp/csp.h>
 
@@ -394,5 +396,7 @@ int meow_csp_last_ftp_err(void);
  *      - Returns 0 (OS_SUCCESS) if no failure has occurred yet.
  */
 int meow_csp_last_module_err(void);
+
+#endif /* MEOW_INCLUDE_CSP */
 
 #endif /* MEOW_CSP_H */

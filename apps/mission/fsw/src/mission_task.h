@@ -18,8 +18,6 @@
 #include "mission_msgids.h"
 #include "mission_msg.h"
 #include "mission_tbl.h"
-#include "utrx_msgids.h"
-#include "utrx_msg.h"
 
 /************************************************************************
 ** Type Definitions
@@ -29,7 +27,6 @@
 ** Global Data
 */
 typedef struct {
-    uint8 CmdCounter;
     uint8 ErrCounter;
 
     uint32 RunStatus;
@@ -44,7 +41,6 @@ typedef struct {
      * MISSION Tlm struct
      */
     MISSION_HkTlm_t     HkTlm;
-    MISSION_BcnTlm_t    BcnTlm;
     MISSION_ReportTlm_t Report;
 
     osal_id_t            LEOPDataHandle;
@@ -54,17 +50,11 @@ typedef struct {
     CFE_TIME_SysTime_t   LEOPStartTime;
     uint32               LEOPWaitElapsedSec;
     uint32               LEOPWaitRemainingSec;
-    uint8                LEOPUartDeployTryCount;
-    uint8                LEOPGpioBurnTryCount;
+    uint8                LEOPCycleCount;
     MISSION_LEOP_State_t LEOPState;
     bool                 LEOPProcessStarted;
     bool                 LEOPWaitComplete;
-    bool                 LEOPToEnabled;
-    bool                 LEOPGpioDeployIssued;
-    bool                 LEOPUtrxRxBytesInitialized;
-    bool                 LEOPUtrxRxBytesIncreased;
-    uint32               LEOPUtrxInitRxBytes;
-    uint32               LEOPUtrxRxData;
+    volatile bool        LEOPCompleteRequested;
 
 } MISSION_Data_t;
 

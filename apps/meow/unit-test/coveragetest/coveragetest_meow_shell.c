@@ -78,6 +78,15 @@ void Test_ExecSync_TrueCommand(void)
     cleanup();
 }
 
+void Test_ExecSync_AbsolutePath(void)
+{
+    cleanup();
+    meow_shell_result_t r;
+    UtAssert_INT32_EQ(meow_shell_exec_sync("/bin/true", REDIR, 5000, &r), MEOW_SHELL_OK);
+    UtAssert_INT32_EQ(r.exit_code, 0);
+    cleanup();
+}
+
 void Test_ExecSync_FalseCommand(void)
 {
     cleanup();
@@ -209,6 +218,7 @@ void UtTest_Setup(void)
     UtTest_Add(Test_Poll_NullExitCode,          NULL, NULL, "Poll_NullExitCode");
 
     UtTest_Add(Test_ExecSync_TrueCommand,       NULL, NULL, "ExecSync_TrueCommand");
+    UtTest_Add(Test_ExecSync_AbsolutePath,      NULL, NULL, "ExecSync_AbsolutePath");
     UtTest_Add(Test_ExecSync_FalseCommand,      NULL, NULL, "ExecSync_FalseCommand");
     UtTest_Add(Test_ExecSync_Timeout,           NULL, NULL, "ExecSync_Timeout");
 

@@ -20,7 +20,7 @@
 typedef enum {
     TTC_EXECTYPE_SKIP_LATE  = 0,    /* Skip if late.                         */
     TTC_EXECTYPE_FORCE      = 1,    /* Always execute no matter how late.    */
-    TTC_EXECTYPE_ABORT_LATE = 2,    /* Abort the remaining commands if late. */
+    TTC_EXECTYPE_ABORT_LATE = 2,    /* Skip, and abort all remaining commands if late. */
 } TTC_CommandExecutionType_t;
 
 /**
@@ -36,6 +36,8 @@ typedef enum {
     ERR_OK = 0,
     ERR_NO_EMPTY_SLOT,
     ERR_CMD_SIZE_TOO_LARGE,
+    ERR_INVALID_EXEC_TYPE,
+    ERR_INVALID_TIME_TAG_TYPE,
     ERR_ENTRY_NOT_FOUND,
     ERR_DUPLICATE_ENTRY,
     ERR_WRITE_OUT_OF_BOUNDS,
@@ -223,12 +225,14 @@ CFE_Status_t TTC_TimelineExecuteEntry(uint16 EntryId,
                                       bool PersistentExecution);
 
 /**
- * @brief Immediately execute all pending entries in the given group regardless of their TimeTag or ExecutionType.
+ * @brief Immediately execute all pending entries in the given group regardless 
+ *        of their TimeTag or ExecutionType.
  *        Executions by this interface do not increment the housekeeping counter.
  *
- *        The order of execution is increasing order of their TimeTags, not the entry IDs.
- *        If the given GroupId is TTC_PLATFORM_ANONYMOUS_GROUP_ID, execute all pending entries
- *        except those with EntryId TTC_PLATFORM_ANONYMOUS_ENTRY_ID.
+ *        The execution is in increasing order of their TimeTags, not the entry IDs.
+ *        entries If the given GroupId is TTC_PLATFORM_ANONYMOUS_GROUP_ID, execute
+ *        all pending except those with EntryId TTC_PLATFORM_ANONYMOUS_ENTRY_ID
+ *        (That is, only the anonymous entries are excluded).
  * 
  * @param GroupId Pending group ID to execute.
  * @param PersistentExecution If false, the entries will be deleted after execution.

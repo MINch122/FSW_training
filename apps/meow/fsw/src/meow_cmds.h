@@ -37,18 +37,10 @@ void MEOW_SysTimeGetCmd(const MEOW_SysTimeGetCmd_t *msg);
 void MEOW_SysTimeSetCmd(const MEOW_SysTimeSetCmd_t *msg);
 void MEOW_SysForceKillCmd(const MEOW_SysForceKillCmd_t *msg);
 
+#ifdef MEOW_INCLUDE_CSP
 /* CSP */
-void MEOW_CspServerStartCmd(const MEOW_CspServerStartCmd_t *msg);
-void MEOW_CspServerStopCmd(const MEOW_CspServerStopCmd_t *msg);
-void MEOW_CspSetReadTimeoutCmd(const MEOW_CspSetReadTimeoutCmd_t *msg);
-void MEOW_CspHandlerLoadCmd(const MEOW_CspHandlerLoadCmd_t *msg);
-void MEOW_CspHandlerClearCmd(const MEOW_CspHandlerClearCmd_t *msg);
-void MEOW_CspSendCmd(const MEOW_CspSendCmd_t *msg);
 void MEOW_CspFtpUploadCmd(const MEOW_CspFtpUploadCmd_t *msg);
 void MEOW_CspFtpDownloadCmd(const MEOW_CspFtpDownloadCmd_t *msg);
-void MEOW_CspIfstatsCmd(const MEOW_CspIfstatsCmd_t *msg);
-void MEOW_CspRouteSetCmd(const MEOW_CspRouteSetCmd_t *msg);
-void MEOW_CspRerouteSetCmd(const MEOW_CspRerouteSetCmd_t *msg);
-void MEOW_CspRerouteClearCmd(const MEOW_CspRerouteClearCmd_t *msg);
+#endif /* MEOW_INCLUDE_CSP */
 
 #endif /* MEOW_CMDS_H */

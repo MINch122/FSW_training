@@ -10,11 +10,6 @@
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    MISSION_BcnTlm_Payload_t Payload;
-} MISSION_BcnTlm_t;
-
-typedef struct {
-    CFE_MSG_TelemetryHeader_t TelemetryHeader;
     MISSION_HkTlm_Payload_t Payload;
 } MISSION_HkTlm_t;
 
@@ -28,20 +23,8 @@ typedef struct {
 } MISSION_SendHkCmd_t;
 
 typedef struct {
-
     CFE_MSG_CommandHeader_t CommandHeader;
-
-} MISSION_NoopCmd_t;
-
-typedef struct {
-    
-    CFE_MSG_CommandHeader_t CommandHeader;
-
-} MISSION_ResetCounterCmd_t;
-
-typedef struct {
-    CFE_MSG_CommandHeader_t CommandHeader;
-} MISSION_AppsPermOffCmd_t;
+} MISSION_SetCompleteCmd_t;
 
 
 #endif
