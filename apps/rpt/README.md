@@ -15,7 +15,6 @@
 ## 1. Core Operation data
 - RPT track the some operation data (e.g. Boot count, spacecraft time...etc) and Store it to NON-volatile memory
 - And automatically load the latest data after reboot
-- Backup Operation data is stored periodically
 - CRC32 is used for data validation
 
 ## 2. Result of TC

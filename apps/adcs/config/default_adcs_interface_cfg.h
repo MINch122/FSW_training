@@ -18,26 +18,19 @@
 
 /**
  * @file
- *   ADCS Application Private Config Definitions
+ *   ADCS Application Interface Config Definitions
  *
- * This provides default values for configurable items that are internal
- * to this module and do NOT affect the interface(s) of this module.  Changes
- * to items in this file only affect the local module and will be transparent
- * to external entities that are using the public interface(s).
+ * This provides default values for configurable items shared by the ADCS
+ * command and CubeADCS device interfaces.
  *
  * @note This file may be overridden/superceded by mission-provided defintions
  * either by overriding this header or by generating definitions from a command/data
  * dictionary tool.
  */
-#ifndef ADCS_INTERNAL_CFG_H
-#define ADCS_INTERNAL_CFG_H
+#ifndef ADCS_INTERFACE_CFG_H
+#define ADCS_INTERFACE_CFG_H
 
 /***********************************************************************/
-#define ADCS_PIPE_DEPTH 32 /* Depth of the Command Pipe for Application */
-
-#define ADCS_EVS_TASK_STACK_SIZE        2048
-#define ADCS_EVS_TASK_STACK_PRIORITY    200
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                              EndPoint ID                                  */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * *  * * * * */
@@ -77,9 +70,13 @@
 #define ADCS_ID_SET_MAG_SENSING_ELM_CONFIG			77
 #define ADCS_ID_SET_TRANSFER_FRAME					79		// UPDATED 20251026
 #define ADCS_ID_SET_UNSOLICIT_TLM_MSG_SETUP			112
-#define ADCS_ID_SET_UNSOLICIT_EVENT_MSG_SETUP       116
 #define ADCS_ID_SET_REQ_TLM_LOG_TRANSFER_SETUP		117		// UPDATED 20251026
 #define ADCS_ID_SET_INITIATE_EVENT_LOG_TRANSFER     120
+
+/* ConModeSelect values from CubeADCS API Table 14. */
+#define ADCS_CONMODE_RW_EO_TARGET_TRACK              14 /* ConTgtTrack: fixed +Z_B axis */
+#define ADCS_CONMODE_RW_GS_TARGET_TRACK              16 /* ConGndTrack: configured body vector */
+#define ADCS_CONMODE_NADIR_YAW_GROUND_TARGET         21 /* Nadir pointing, yaw towards ground target */
 
 /* Get fucntion : ID 128 ~ 244 */
 #define	ADCS_ID_GET_ERROR_LOG_SETTING				132
@@ -131,10 +128,9 @@
 #define	ADCS_ID_GET_MAG_SENSING_ELM_CONFIG			221
 #define	ADCS_ID_GET_TLM_LOG_INCLMASK				227		// UPDATED 20251028
 #define	ADCS_ID_GET_UNSOLICIT_TLM_MSG_SETUP			228
-#define ADCS_ID_GET_UNSOLICIT_EVENT_MSG_SETUP       233
 #define ADCS_ID_GET_TLM_LOG_STATUS_RESPONSE			234		// UPDATED 20251026
 #define ADCS_ID_GET_EVENT_LOG_STATUS_RESPONSE       235
 #define ADCS_ID_GET_PORTMAP                         239
 /* End of EndPoint ID */
 
-#endif
+#endif /* ADCS_INTERFACE_CFG_H */

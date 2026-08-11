@@ -229,15 +229,15 @@ static void TO_LAB_PrintPaySltBcnPayload(const char *Path, const CFE_SB_Buffer_t
 
     TO_LAB_APP_printf("\n============[ TO_LAB %s PAY-SLT BCN ]============\n", Path);
     TO_LAB_APP_printf("[CNT] cmd=%u err=%u\n", (unsigned int)Bcn.CmdCounter, (unsigned int)Bcn.ErrCounter);
-    TO_LAB_APP_printf("[PAY-EXP-A7] uptime=%lu now=%lu wdt_left=%lu boot_p=%u boot_c=%u brd_temp=%d sys_status=%d\n",
+    TO_LAB_APP_printf("[PAY-EXP-A7] uptime=%lu now=%lu boot_p=%u boot_c=%u brd_temp=%d sys_status=[%d,%d]\n",
                       (unsigned long)Bcn.sys_uptime_a7, (unsigned long)Bcn.sys_now_a7,
-                      (unsigned long)Bcn.wdt_left_a7, (unsigned int)Bcn.boot_cnt_p,
-                      (unsigned int)Bcn.boot_cnt_c, (int)Bcn.brd_temp_a7, (int)Bcn.sys_status_a7);
+                      (unsigned int)Bcn.boot_cnt_p, (unsigned int)Bcn.boot_cnt_c,
+                      (int)Bcn.brd_temp_a7, (int)Bcn.sys_status_a7[0], (int)Bcn.sys_status_a7[1]);
     TO_LAB_PRINT_PAY_SLT_U8_ARRAY("       boot_his_p=", PayloadPtr, boot_his_p);
     TO_LAB_PRINT_PAY_SLT_U8_ARRAY("       boot_his_c=", PayloadPtr, boot_his_c);
-    TO_LAB_PRINT_PAY_SLT_U16_ARRAY("       slf_data=", PayloadPtr, slf_data);
-    TO_LAB_PRINT_PAY_SLT_U16_ARRAY("       brm_data=", PayloadPtr, brm_data);
-    TO_LAB_PRINT_PAY_SLT_U16_ARRAY("       imu_data=", PayloadPtr, imu_data);
+    TO_LAB_PRINT_PAY_SLT_I16_ARRAY("       slf_data=", PayloadPtr, slf_data);
+    TO_LAB_PRINT_PAY_SLT_I16_ARRAY("       brm_data=", PayloadPtr, brm_data);
+    TO_LAB_PRINT_PAY_SLT_I16_ARRAY("       imu_data=", PayloadPtr, imu_data);
     TO_LAB_PRINT_PAY_SLT_I16_ARRAY("       ntc_data_a7=", PayloadPtr, ntc_data_a7);
     TO_LAB_PRINT_PAY_SLT_U16_ARRAY("       pwr_volt=", PayloadPtr, pwr_volt);
     TO_LAB_PRINT_PAY_SLT_U16_ARRAY("       pwr_current=", PayloadPtr, pwr_current);
@@ -319,9 +319,8 @@ static void TO_LAB_PrintHkCombinedPkt1Hardcoded(const char *Path, const CFE_SB_B
     memcpy(&Adcs, &Bytes[BCN_ADCS_OFFSET], sizeof(Adcs));
 
     TO_LAB_APP_printf("\n============[ TO_LAB %s HK COMBINED BCN ]============\n", Path);
-    TO_LAB_APP_printf("[RPT]  boot_count=%u | seq=%lu | reset_cause=0x%02X\n",
-                      (unsigned int)Rpt.BootCount, (unsigned long)Rpt.Sequence,
-                      (unsigned int)Rpt.ResetCause);
+    TO_LAB_APP_printf("[RPT]  boot_count=%u | reset_cause=0x%02X\n",
+                      (unsigned int)Rpt.BootCount, (unsigned int)Rpt.ResetCause);
     TO_LAB_APP_printf("[UTRX] active=%u | boot_count=%u\n",
                       (unsigned int)Utrx.ActiveConf, (unsigned int)Utrx.BootCount);
     TO_LAB_APP_printf("       boot_cause=0x%08lX | temp=%d\n",

@@ -20,6 +20,7 @@ CFE_APP, ltrx,        LTRX_AppMain,       LTRX,         75,   16384, 0x0, 0;
 CFE_APP, gpio,        GPIO_Main,          GPIO,         85,   16384, 0x0, 0;
 CFE_APP, paybee_kisscam, paybee_kisscam_Main, PAY_KISSCAM, 90,   16384, 0x0, 0;
 CFE_APP, pay_slt,     PAY_SLT_Main,       PAY_SLT,      80,   16384, 0x0, 0;
+CFE_APP, thrust,      THRUST_AppMain,      THRUST,       95,   16384, 0x0, 0;
 ! Startup script fields:
 ! 1. Object Type      -- CFE_APP for an Application, or CFE_LIB for a library.
 ! 2. Path/Filename    -- This is a cFE Virtual filename, not a vxWorks device/pathname

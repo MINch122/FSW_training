@@ -53,13 +53,9 @@ void RPT_Enqueue(const RPT_Report_t *Report, bool IsCritical) {
         OS_MutSemTake(RPT_Data.OpsMutexID);
 
         RPT_Data.CritQueue.Entry[RPT_Data.CritQueue.Head].Report = *Report;
-        RPT_Data.CritQueue.Head = (RPT_Data.CritQueue.Head + 1) % RPT_CRITICAL_QUEUE_LEN;
-        
-        /**
-         * Append Time info - Only for critical
-         */
         RPT_Data.CritQueue.Entry[RPT_Data.CritQueue.Head].Time.Seconds = RPT_Data.OpsData.TimeSec;
         RPT_Data.CritQueue.Entry[RPT_Data.CritQueue.Head].Time.Subseconds = RPT_Data.OpsData.TimeSubsec;
+        RPT_Data.CritQueue.Head = (RPT_Data.CritQueue.Head + 1) % RPT_CRITICAL_QUEUE_LEN;
 
         if (RPT_Data.CritQueue.Count < RPT_CRITICAL_QUEUE_LEN) RPT_Data.CritQueue.Count ++;
         RPT_APP_printf("Critical Q Head: %u || Count: %u\n", RPT_Data.CritQueue.Head, RPT_Data.CritQueue.Count);
@@ -104,7 +100,7 @@ int32 RPT_Report(const RPT_Report_t *Report, bool IsCritical) {
         if (Status == CFE_SUCCESS) {
             RPT_Tlm.Payload.Report = *Report;
             RPT_Tlm.Payload.Time.Seconds = RPT_Data.OpsData.TimeSec;
-            RPT_Tlm.Payload.Time.Seconds = RPT_Data.OpsData.TimeSubsec;
+            RPT_Tlm.Payload.Time.Subseconds = RPT_Data.OpsData.TimeSubsec;
 
             CFE_SB_TimeStampMsg(CFE_MSG_PTR(RPT_Tlm.TelemetryHeader));
             Status = CFE_SB_TransmitMsg(CFE_MSG_PTR(RPT_Tlm.TelemetryHeader), false);
@@ -272,17 +268,10 @@ bool RPT_VerifyReportLength(const CFE_MSG_Message_t *MsgPtr) {
  * Operation Data function
  * 
  **********************************/
-osal_id_t RPT_OpenOpsFile(uint8_t IsBackup) {
+osal_id_t RPT_OpenOpsFile(void) {
     osal_id_t FD = OS_OBJECT_ID_UNDEFINED;
     int32 OsStatus;
-    char Path[64] = {0,};
-    
-    if (!IsBackup) strcpy(Path, RPT_OPS_DATA_PATH);
-    else sprintf(Path, "%sOps-%032u", 
-                RPT_OPS_BACKUP_PATH, 
-                RPT_Data.OpsData.Sequence);
 
-    // FD = open(Path, O_CREAT | O_RDWR, 0666);
     OsStatus = OS_OpenCreate(&FD, RPT_OPS_DATA_PATH, OS_FILE_FLAG_CREATE, OS_READ_WRITE);
     RPT_APP_printf("RPT Ops FD: %d\n", FD);
 
@@ -319,16 +308,6 @@ int32 RPT_ReadFromFile(osal_id_t FD, void *Data, size_t Size) {
     /* Size of readed data */
     return OsStatus;
 }
-
-int32 RPT_CloseFile(osal_id_t FD) {
-    int32 OsStatus;
-
-    OsStatus = OS_close(FD);
-    if (OsStatus != OS_SUCCESS) return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-
-    return CFE_SUCCESS;
-}
-
 
 /**********************************
  * 

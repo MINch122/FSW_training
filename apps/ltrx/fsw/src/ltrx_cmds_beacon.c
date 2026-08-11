@@ -45,16 +45,35 @@ static bool     s_PendingDownReady = false;
 
 /* Downstream gate (Bus Beacon staging on/off). Default: enabled. */
 static bool s_DownstreamEnabled = true;
+static uint16_t s_DownstreamBeaconPeriod = LTRX_BUS_BEACON_PERIOD_DEFAULT;
+static uint16_t s_DownstreamBeaconCount  = 0u;
 
 void LTRX_Downstream_SetEnabled(bool enabled)
 {
     s_DownstreamEnabled = enabled;
+    s_DownstreamBeaconCount = 0u;
     LTRX_APP_printf("LTRX: downstream %s\n", enabled ? "enabled" : "disabled");
 }
 
 bool LTRX_Downstream_IsEnabled(void)
 {
     return s_DownstreamEnabled;
+}
+
+void LTRX_Downstream_SetBeaconPeriod(uint16_t period)
+{
+    s_DownstreamBeaconPeriod = period;
+    s_DownstreamBeaconCount  = 0u;
+}
+
+uint16_t LTRX_Downstream_GetBeaconPeriod(void)
+{
+    return s_DownstreamBeaconPeriod;
+}
+
+uint16_t LTRX_Downstream_GetBeaconCount(void)
+{
+    return s_DownstreamBeaconCount;
 }
 
 
@@ -903,6 +922,13 @@ void LTRX_OnBusBeaconReceived(const CFE_SB_Buffer_t *SBBufPtr)
     {
         return;
     }
+
+    s_DownstreamBeaconCount++;
+    if (s_DownstreamBeaconCount < s_DownstreamBeaconPeriod)
+    {
+        return;
+    }
+    s_DownstreamBeaconCount = 0u;
  
     const uint8_t *payload = ((const uint8_t *)SBBufPtr) + LTRX_HK_COMBINED_PAYLOAD_OFFSET;
     uint16_t payload_len = (uint16_t)(msg_size - LTRX_HK_COMBINED_PAYLOAD_OFFSET);

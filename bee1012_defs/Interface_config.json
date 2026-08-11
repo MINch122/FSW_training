@@ -56,7 +56,7 @@
         },
         {
             "type": "i2c",
-            "ready": false,
+            "ready": true,
             "name": "I2C2",
             "DevName": "/dev/i2c-2",
 
@@ -94,15 +94,6 @@
             "line": 4,
             "default": 0,
             "direction": "in"
-        },
-        {
-            "type": "gpio",
-            "ready": false,
-            "name":"gpio2",
-            "DevName": "/dev/gpiochip2",
-            "line": 3,
-            "default": 0,
-            "direction": "out"
         },
        {
             "type": "gpio",

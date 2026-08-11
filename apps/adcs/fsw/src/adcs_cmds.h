@@ -30,19 +30,14 @@
 #include "cfe_error.h"
 #include "adcs_msg.h"
 
+#define ADCS_RPT_PHASE_STARTED   1u
+#define ADCS_RPT_PHASE_COMPLETED 2u
+
 CFE_Status_t ADCS_SendHkCmd(const ADCS_SendHkCmd_t *Msg);
 CFE_Status_t ADCS_SendBcnCmd(const ADCS_SendBcnCmd_t *Msg);
 CFE_Status_t ADCS_NoopCmd(const ADCS_NoopCmd_t *Msg);
 CFE_Status_t ADCS_ResetCountersCmd(const ADCS_ResetCountersCmd_t *Msg);
 CFE_Status_t ADCS_SetInterfaceTransportCmd(const ADCS_InterfaceTransportCmd_t *Msg);
-/*
-CFE_Status_t ADCS_EN_HighCmd(void);
-CFE_Status_t ADCS_EN_LowCmd(void);
-CFE_Status_t ADCS_Boot_HighCmd(void);
-CFE_Status_t ADCS_Boot_LowCmd(void);
-CFE_Status_t ADCS_ExitBootloader(void);
-*/
-
 
 /*******************************************
  * 
@@ -84,13 +79,11 @@ CFE_Status_t ADCS_SetEstimationModeCmd(const ADCS_EstimationModeCmd_t *msg);	// 
 CFE_Status_t ADCS_SetOperationalStateCmd(const ADCS_OperationalStateCmd_t *msg);	// 72
 CFE_Status_t ADCS_SetMagSensingElmConfigCmd(const ADCS_MagSensingElmConfigCmd_t *msg);	// 77
 CFE_Status_t ADCS_SetUnsolicitTlmMsgSetupCmd(const ADCS_UnsolicitTlmMsgSetupCmd_t *msg);	// 112
-CFE_Status_t ADCS_SetUnsolicitEventMsgSetupCmd(const ADCS_UnsolicitEventMsgSetupCmd_t *msg);	// 116
 CFE_Status_t ADCS_SetInitiateEventLogTransferCmd(const ADCS_InitiateEventLogTransferCmd_t *msg);	// 120
 
 /* Get function */
 CFE_Status_t ADCS_GetErrorLogSettingCmd(void);	// 132
 CFE_Status_t ADCS_GetCurrentUnixTimeCmd(void);	// 133
-CFE_Status_t ADCS_GetCurrentUnixTimeInternalCmd(void); // 133
 CFE_Status_t ADCS_GetPersistConfigDiagnosticCmd(void);	// 134
 CFE_Status_t ADCS_GetCommunicationStatusCmd(void);	// 135
 CFE_Status_t ADCS_GetControlEstimationModeCmd(void);	// 150
@@ -98,7 +91,7 @@ CFE_Status_t ADCS_GetReferenceIRCVectorCmd(void);	// 156
 CFE_Status_t ADCS_GetReferenceLLHTargetCmd(void);	// 157
 CFE_Status_t ADCS_GetOrbitModeCmd(void);	// 162
 CFE_Status_t ADCS_GetHealthTlmMMTCmd(void);	// 167
-CFE_Status_t ADCS_GetRawCubeSenseSunCmd(void);	// 170
+CFE_Status_t ADCS_GetRawCalibratedCubeSenseSunCmd(void);	// 170 + 178
 CFE_Status_t ADCS_GetReferenceRPYvaluesCmd(void);	// 181
 CFE_Status_t ADCS_GetOpenLoopCmdMTQCmd(void);	// 182
 CFE_Status_t ADCS_GetPowerStateCmd(void);	// 183
@@ -117,24 +110,22 @@ CFE_Status_t ADCS_GetNodeSelectionConfigCmd(void);	// 197
 CFE_Status_t ADCS_GetMTQConfigCmd(void);	// 198
 CFE_Status_t ADCS_GetEstimationModeCmd(void);	// 199
 CFE_Status_t ADCS_GetOperationalStateCmd(void);	// 200
-CFE_Status_t ADCS_GetRawCSSSensorCmd(void);	// 203
-CFE_Status_t ADCS_GetRawGYRSensorCmd(void);	// 204
-CFE_Status_t ADCS_GetRawRWLSensorCmd(void);	// 205
+CFE_Status_t ADCS_GetRawCalibratedCSSSensorCmd(void);	// 203 + 206
+CFE_Status_t ADCS_GetRawCalibratedGYRSensorCmd(void);	// 204 + 207
+CFE_Status_t ADCS_GetRawCalibratedRWLSensorCmd(void);	// 205 + 209
 CFE_Status_t ADCS_GetCalibratedGYRSensorCmd(void);	// 207
 CFE_Status_t ADCS_GetMagSensingElmConfigCmd(void);	// 221
 CFE_Status_t ADCS_GetTlmLogInclMaskCmd(void); // 227
 CFE_Status_t ADCS_GetUnsolicitTlmMsgSetupCmd(void);	// 228
-CFE_Status_t ADCS_GetUnsolicitEventMsgSetupCmd(void);	// 233
 CFE_Status_t ADCS_GetEventLogStatusResponseCmd(void);	// 235
 CFE_Status_t ADCS_GetPortMapCmd(void);  // 239
 
 CFE_Status_t ADCS_SetErrorLogClearCmd(const ADCS_ErrorLogClearCmd_t *msg);
 CFE_Status_t ADCS_SequenceCmd_Detumbling(void);
 CFE_Status_t ADCS_SequenceCmd_GNDpointing(const ADCS_SequenceCmdGNDpointingCmd_t *msg);
-CFE_Status_t ADCS_SequenceCmd_Vpointing(void);
-CFE_Status_t ADCS_SequenceCmd_KSCpointing(void);
-CFE_Status_t ADCS_SequenceCmd_LGCpointing(void);
-CFE_Status_t ADCS_SequenceCmd_RPYpointing(const ADCS_SequenceCmdRPYpointingCmd_t *msg);
+CFE_Status_t ADCS_SequenceCmd_Sunpointing(void);
+CFE_Status_t ADCS_SequenceCmd_TGTpointing(const ADCS_SequenceCmdTGTpointingCmd_t *msg);
+CFE_Status_t ADCS_SequenceCmd_Nadirpointing(const ADCS_SequenceCmdNadirpointingCmd_t *msg);
 /* Commissioning sequence */
 CFE_Status_t ADCS_Comm01Cmd(const ADCS_Comm01Cmd_t *msg);
 CFE_Status_t ADCS_Comm02Cmd(const ADCS_Comm02Cmd_t *msg);
@@ -144,7 +135,7 @@ CFE_Status_t ADCS_Comm05Cmd(const ADCS_Comm05Cmd_t *msg);
 CFE_Status_t ADCS_Comm06Cmd(const ADCS_Comm06Cmd_t *msg);
 CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg);
 CFE_Status_t ADCS_Comm08Cmd(const ADCS_Comm08Cmd_t *msg);
-CFE_Status_t ADCS_Comm09Cmd(const ADCS_Comm09Cmd_t *msg);
 CFE_Status_t ADCS_Comm10Cmd(const ADCS_Comm10Cmd_t *msg);
+CFE_Status_t ADCS_Comm11Cmd(const ADCS_Comm11Cmd_t *msg);
 
 #endif /* ADCS_CMDS_H */

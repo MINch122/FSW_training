@@ -60,12 +60,13 @@ static size_t PAY_SLT_ParamElementCapacity(uint8 type)
 {
     switch (type) {
         case GS_PARAM_UINT8:
-        case GS_PARAM_INT8:
             return sizeof(((PAY_SLT_Params_t *)0)->param.u8) / sizeof(((PAY_SLT_Params_t *)0)->param.u8[0]);
         case GS_PARAM_UINT16:
             return sizeof(((PAY_SLT_Params_t *)0)->param.u16) / sizeof(((PAY_SLT_Params_t *)0)->param.u16[0]);
         case GS_PARAM_UINT32:
             return sizeof(((PAY_SLT_Params_t *)0)->param.u32) / sizeof(((PAY_SLT_Params_t *)0)->param.u32[0]);
+        case GS_PARAM_INT8:
+            return sizeof(((PAY_SLT_Params_t *)0)->param.i8) / sizeof(((PAY_SLT_Params_t *)0)->param.i8[0]);
         case GS_PARAM_INT16:
             return sizeof(((PAY_SLT_Params_t *)0)->param.i16) / sizeof(((PAY_SLT_Params_t *)0)->param.i16[0]);
         case GS_PARAM_STRING:
@@ -399,10 +400,7 @@ int32 PAY_SLT_FetchParam(PAY_SLT_Params_t *Payload) {
     Status = PAY_SLT_FetchParamCompat(Payload);
     
     if (Status != CFE_SUCCESS) {
-        CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "PAY_SLT_FetchParam err: %d node=%u table=%u addr=0x%04X type=%u len=%u",
-                          (int)Status, (unsigned int)Payload->node, (unsigned int)Payload->table,
-                          (unsigned int)Payload->addr, (unsigned int)Payload->type, (unsigned int)Payload->len);
+        CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "PAY_SLT_FetchParam err: %d", Status);
     }
 
     return Status;
@@ -515,7 +513,9 @@ int32 PAY_SLT_ReadExpI2CChunk(CFE_SRL_IO_Handle_t *handle, uint32 start_addr, vo
 #define PAY_SLT_RS422_DOWNLOAD_TIMEOUT_MS 5000U
 #define PAY_SLT_RS422_DOWNLOAD_TX_INTERVAL_MS 100U
 #define PAY_SLT_RS422_DOWNLOAD_HEADER_SIZE 7U
-#define PAY_SLT_RS422_DOWNLOAD_OVERHEAD_SIZE PAY_SLT_RS422_DOWNLOAD_HEADER_SIZE
+#define PAY_SLT_RS422_DOWNLOAD_END_SIZE 1U
+#define PAY_SLT_RS422_DOWNLOAD_OVERHEAD_SIZE \
+    (PAY_SLT_RS422_DOWNLOAD_HEADER_SIZE + PAY_SLT_RS422_DOWNLOAD_END_SIZE)
 
 static int32 PAY_SLT_ReadExpRS422Bytes(CFE_SRL_IO_Handle_t *handle, uint8 *data, size_t size,
                                        const uint8 *tx_data, size_t tx_size, uint32 interval)
@@ -581,7 +581,7 @@ int32 PAY_SLT_ReadExpRS422Chunk(CFE_SRL_IO_Handle_t *handle, void *data, size_t 
 
     remaining_size = (size_t)(payload_len - 2U); /* Chunk data only; PN was already read in header */
 
-    if ((PAY_SLT_RS422_DOWNLOAD_HEADER_SIZE + remaining_size) > size) {
+    if ((PAY_SLT_RS422_DOWNLOAD_OVERHEAD_SIZE + remaining_size) > size) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "RS422 DOWNLOAD reply length %u exceeds buffer payload max %u. Header=%02X %02X %02X %02X %02X %02X %02X",
                           payload_len, (unsigned int)(size - PAY_SLT_RS422_DOWNLOAD_OVERHEAD_SIZE),
@@ -590,7 +590,7 @@ int32 PAY_SLT_ReadExpRS422Chunk(CFE_SRL_IO_Handle_t *handle, void *data, size_t 
     }
 
     return PAY_SLT_ReadExpRS422Bytes(handle, &rx_data[PAY_SLT_RS422_DOWNLOAD_HEADER_SIZE],
-                                     remaining_size, NULL, 0U, 0U);
+                                     remaining_size + PAY_SLT_RS422_DOWNLOAD_END_SIZE, NULL, 0U, 0U);
 }
 
 
@@ -777,11 +777,22 @@ void PAY_SLT_PrintParamTable(uint8 node, uint8 table, const gs_param_table_insta
 /*   지상에서 보낸 명령이 성공했는지/실패했는지 기록, telemetry packet 작성 후 발송    */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-CFE_Status_t PAY_SLT_HandleReport(int32 status, uint8 command_code, bool device_error, const void *read_data, uint16 read_size) {
+CFE_Status_t PAY_SLT_HandleReportForMid(uint16 message_id, int32 status, uint8 command_code, bool device_error,
+                                        const void *read_data, uint16 read_size) {
     CFE_SB_Buffer_t *BufPtr;
     PAY_SLT_RPT_t *Report;
-    bool success = ((status == CFE_SUCCESS) || (device_error && (status > 0)));
+    CFE_Status_t report_status;
+    bool success = (status == CFE_SUCCESS);
     size_t copy_size = read_size;
+
+    if (!success) {
+        PAY_SLT_Data.ErrCounter++;
+        if (device_error) {
+            PAY_SLT_Data.DeviceErrCounter++;
+        } else {
+            PAY_SLT_Data.AppErrCounter++;
+        }
+    }
 
     BufPtr = CFE_SB_AllocateMessageBuffer(sizeof(PAY_SLT_RPT_t));
     if (BufPtr == NULL) {
@@ -790,29 +801,22 @@ CFE_Status_t PAY_SLT_HandleReport(int32 status, uint8 command_code, bool device_
 
     Report = (PAY_SLT_RPT_t *)BufPtr;
     memset(Report, 0, sizeof(*Report));
-    if (CFE_MSG_Init(CFE_MSG_PTR(Report->TelemetryHeader), CFE_SB_ValueToMsgId(PAY_SLT_RPT_TLM_MID), sizeof(*Report)) !=
-        CFE_SUCCESS)
+    report_status = CFE_MSG_Init(CFE_MSG_PTR(Report->TelemetryHeader), CFE_SB_ValueToMsgId(PAY_SLT_RPT_TLM_MID),
+                                 sizeof(*Report));
+    if (report_status != CFE_SUCCESS)
     {
         CFE_SB_ReleaseMessageBuffer(BufPtr);
-        return CFE_MSG_BAD_ARGUMENT;
+        return report_status;
     }
 
-    Report->Report.MsgID = PAY_SLT_CMD_MID;
+    Report->Report.MsgID = message_id;
     Report->Report.CommandCode = command_code;
-    Report->Report.ReturnCode = success ? CFE_SUCCESS : status;
+    Report->Report.ReturnCode = status;
 
     if (success) {
         Report->Report.ReturnType = RPT_RETTYPE_SUCCESS;
-        PAY_SLT_Data.CmdCounter++;
     } else {
         Report->Report.ReturnType = device_error ? RPT_RETTYPE_HW : RPT_RETTYPE_APP;
-        PAY_SLT_Data.CmdCounter++;
-        PAY_SLT_Data.ErrCounter++;
-        if (device_error) {
-            PAY_SLT_Data.DeviceErrCounter++;
-        } else {
-            PAY_SLT_Data.AppErrCounter++;
-        }
     }
 
     if ((read_data == NULL) || (read_size == 0U)) {
@@ -828,10 +832,16 @@ CFE_Status_t PAY_SLT_HandleReport(int32 status, uint8 command_code, bool device_
 
 send_report:
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report->TelemetryHeader));
-    if (CFE_SB_TransmitBuffer(BufPtr, true) != CFE_SUCCESS) {  
-        CFE_SB_ReleaseMessageBuffer(BufPtr);
-        return CFE_SB_BUF_ALOC_ERR;
+    report_status = CFE_SB_TransmitBuffer(BufPtr, true);
+    if (report_status != CFE_SUCCESS) {
+        return report_status;
     }
 
     return success ? CFE_SUCCESS : status;
+}
+
+CFE_Status_t PAY_SLT_HandleReport(int32 status, uint8 command_code, bool device_error, const void *read_data,
+                                  uint16 read_size)
+{
+    return PAY_SLT_HandleReportForMid(PAY_SLT_CMD_MID, status, command_code, device_error, read_data, read_size);
 }

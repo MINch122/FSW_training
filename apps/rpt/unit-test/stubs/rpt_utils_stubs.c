@@ -49,22 +49,6 @@ uint8 RPT_CalculateResetCause(uint8 ResetType, uint8 ResetSubType)
 
 /*
  * ----------------------------------------------------
- * Generated stub function for RPT_CloseFile()
- * ----------------------------------------------------
- */
-int32 RPT_CloseFile(osal_id_t FD)
-{
-    UT_GenStub_SetupReturnBuffer(RPT_CloseFile, int32);
-
-    UT_GenStub_AddParam(RPT_CloseFile, osal_id_t, FD);
-
-    UT_GenStub_Execute(RPT_CloseFile, Basic, NULL);
-
-    return UT_GenStub_GetReturnValue(RPT_CloseFile, int32);
-}
-
-/*
- * ----------------------------------------------------
  * Generated stub function for RPT_Enqueue()
  * ----------------------------------------------------
  */
@@ -129,11 +113,9 @@ osal_id_t RPT_OpenCriticalFile(void)
  * Generated stub function for RPT_OpenOpsFile()
  * ----------------------------------------------------
  */
-osal_id_t RPT_OpenOpsFile(uint8_t IsBackup)
+osal_id_t RPT_OpenOpsFile(void)
 {
     UT_GenStub_SetupReturnBuffer(RPT_OpenOpsFile, osal_id_t);
-
-    UT_GenStub_AddParam(RPT_OpenOpsFile, uint8_t, IsBackup);
 
     UT_GenStub_Execute(RPT_OpenOpsFile, Basic, NULL);
 

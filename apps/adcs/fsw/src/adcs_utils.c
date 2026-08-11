@@ -28,14 +28,10 @@
 #include "adcs_eventids.h"
 #include "adcs_tbl.h"
 #include "adcs_utils.h"
-#include "csp/csp_types.h"
-
 #include "adcs_cube_error_typedefs.h"
 #include "adcs_cube_typedefs.h"
 #include "adcs_msg.h"
 #include "cfe_srl.h"
-
-#include <csp/csp.h>
 
 static Handle handle[TYPEDEF__COMMS_ENDPOINT_MAX];
 static TypeDef_TctlmEndpoint endpoint;
@@ -1413,33 +1409,6 @@ int32 ADCS_SetUnsolicitTlmMsgSetup(const ADCS_UnsolicitTlmMsgSetupCmd_Payload_t 
 	return CFE_SUCCESS;
 }
 
-int32 ADCS_SetUnsolicitEventMsgSetup(const ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t *setVal)
-{	// ID 116
-	
-    int32_t status;
-	TctlmCommsMasterSvc_Endpoint target;
-	uint8_t *tx_buffer;
-	uint16_t bufferSizeUsed;
-	
-	ZERO_VAR(target);
-	
-	target.id = ADCS_ID_SET_UNSOLICIT_EVENT_MSG_SETUP;
-	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
-
-	tx_buffer = cubeObc_connect_buffer(&target);
-
-	bufferSizeUsed = sizeof(ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t);
-	memcpy(tx_buffer, setVal, bufferSizeUsed);
-
-	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK)
-	{
-		OS_printf("ADCS CAN Write Error (Error code : %d, ID: %d)\n",status, target.id);
-		return status;
-	}
-
-	return CFE_SUCCESS;
-}
-
 int32 ADCS_SetReqTlmLogTransferSetup(const ADCS_RequestTlmLogTransferSetupCmd_Payload_t *setVal)
 {	// ID 117
 	
@@ -2426,31 +2395,6 @@ int32 ADCS_GetUnsolicitTlmMsgSetup(ADCS_UnsolicitTlmMsgSetupTlm_Payload_t *retur
 	return CFE_SUCCESS;
 }
 
-int32 ADCS_GetUnsolicitEventMsgSetup(ADCS_UnsolicitEventMsgSetupTlm_Payload_t *returnVal)
-{	// ID 233
-	
-    int32 status;
-	TctlmCommsMasterSvc_Endpoint target;
-	uint8 *rx_buffer;
-	uint16 bufferSizeUsed;
-
-	ZERO_VAR(target);
-	
-	target.id = ADCS_ID_GET_UNSOLICIT_EVENT_MSG_SETUP;
-	memcpy((uint8_t *) &target.endpoint, (uint8_t *) &endpoint, sizeof(TypeDef_TctlmEndpoint));
-
-	rx_buffer = cubeObc_connect_buffer(&target);
-
-	bufferSizeUsed = sizeof(ADCS_UnsolicitEventMsgSetupTlm_Payload_t);
-	if((status = cubeObc_sendReceive(&target, bufferSizeUsed)) != CUBEOBC_ERROR_OK) {
-		OS_printf("ADCS CAN Read Error (Error code : %d, ID: %d)\n", status, target.id);
-		return status;
-	}
-	memcpy(returnVal, rx_buffer, bufferSizeUsed);
-
-	return CFE_SUCCESS;
-}
-
 int32 ADCS_GetTlmLogStatusResponse(ADCS_TlmLogStatusResponseTlm_Payload_t *returnVal)
 {	// ID 234
 	
@@ -2556,6 +2500,10 @@ int32 ADCS_SetErrorLogClear(void)
  * 
  **********************************************/
 void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSize) {
+	if (Status != CFE_SUCCESS) {
+		ADCS_AppData.ErrCounter++;
+	}
+
 	CFE_SB_Buffer_t *BufPtr = CFE_SB_AllocateMessageBuffer(sizeof(ADCS_ReportTlm_t));
 	if (BufPtr == NULL) return;
 
@@ -2567,10 +2515,17 @@ void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSi
 
 	Report->Report.MsgID = ADCS_CMD_MID;
 	Report->Report.CommandCode = CC;
-	Report->Report.ReturnType = (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_HW;
+	if (Status == CFE_SUCCESS) {
+		Report->Report.ReturnType = RPT_RETTYPE_SUCCESS;
+	} else if (Status > CFE_SUCCESS) {
+		Report->Report.ReturnType = RPT_RETTYPE_HW;
+	} else {
+		Report->Report.ReturnType = RPT_RETTYPE_APP;
+	}
 	Report->Report.ReturnCode = Status; // `adcs_cube_error_typedefs.h`
 	uint16_t CopySize = (ReadSize > RPT_RET_VALUE_BUF_SIZE) ? RPT_RET_VALUE_BUF_SIZE : ReadSize;
 	Report->Report.ReturnDataSize = CopySize;
+	memset(Report->Report.ReturnValue, 0, sizeof(Report->Report.ReturnValue));
 	if (ReadSize && ReadData) {
 		memcpy(Report->Report.ReturnValue, ReadData,
 				CopySize);
@@ -2582,107 +2537,6 @@ void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSi
 		return;
 	}
 	return;
-}
-
-
-/**************************************
- * CubeADCS EVS listen Task function
- **************************************/
-void ADCS_HandleEvent(const ADCS_EventEntry_t *Event) {
-	switch (Event->Identifier.EventClass)
-	{
-	case CLASS_CRITICAL:
-		OS_printf("CRRITICAL EventType : %u || EventSource : %u || EventClass : %u\n",
-				Event->Identifier.EventType, Event->Identifier.EventSource,
-				Event->Identifier.EventClass);
-		break;
-	case CLASS_MAJOR_WARNING:
-		OS_printf("MAJOR EventType : %u || EventSource : %u || EventClass : %u\n",
-				Event->Identifier.EventType, Event->Identifier.EventSource,
-				Event->Identifier.EventClass);
-		break;
-	case CLASS_MINOR_WARNING:
-		OS_printf("MINOR EventType : %u || EventSource : %u || EventClass : %u\n",
-				Event->Identifier.EventType, Event->Identifier.EventSource,
-				Event->Identifier.EventClass);
-		break;
-	case CLASS_INFORMATION:
-		OS_printf("INFO EventType : %u || EventSource : %u || EventClass : %u\n",
-				Event->Identifier.EventType, Event->Identifier.EventSource,
-				Event->Identifier.EventClass);
-		
-		switch (Event->Identifier.EventType)
-		{
-		case 142: // Eclipse/sunlight transition occurred
-			OS_printf("Event Data : ");
-			for (uint8_t i=0; i < 8; i++) {
-				OS_printf("0x%02X\t", Event->EventData[i]);
-			}
-			OS_printf("\n");
-			break;
-		case 139:
-			
-		default:
-			break;
-		}
-
-		break;
-	/* End of CLASS_INFORMATION */
-
-	default:
-		break;
-	}
-}
-
-void ADCS_ListenEventTask(void) {
-	int Status;
-	csp_socket_t *Sock;
-	csp_conn_t *Conn = NULL;
-	csp_packet_t *Packet = NULL;
-
-	Sock = csp_socket(CSP_O_NONE);
-	if (Sock == NULL) {
-        CFE_ES_WriteToSysLog("%s: csp_socket failed! NO RC\n", __func__);
-        return;  // Revise to `csp_socket failed`
-    }
-
-	Status = csp_bind(Sock, CSP_PORT_EVENT);
-	if (Status != CSP_ERR_NONE) {
-        CFE_ES_WriteToSysLog("%s: csp_bind failed at Port: %d RC=%d\n", __func__, CSP_PORT_EVENT, Status);
-        return;
-    }
-
-	Status = csp_listen(Sock, 5);
-	if (Status != CSP_ERR_NONE) {
-        CFE_ES_WriteToSysLog("%s: csp_listen failed! RC=%d\n", __func__, Status);
-        return;
-    }
-
-	for (;;) {
-		Conn = csp_accept(Sock, 10000);
-		if (Conn == NULL) {
-			continue;
-		}
-		while ((Packet = csp_read(Conn, 1000)) != NULL) {
-			int Port = csp_conn_dport(Conn);
-			switch (Port)
-			{
-			case CSP_PORT_EVENT:
-				OS_printf("ADCS Event Comming.\n");
-				ADCS_HandleEvent((const ADCS_EventEntry_t *)Packet);
-
-				/* Free buffer & Remove dangled pointer */
-				csp_buffer_free(Packet);
-				Packet = NULL;
-				break;
-			
-			default:
-				break;
-			}
-		}
-		csp_close(Conn);
-	}
-	
 }
 
 
@@ -3026,4 +2880,4 @@ int32 ADCS_Comm_GetRawRWLSensor(ADCS_Comm_RawRWLSensorTlm_Payload_t *returnVal) 
 int32 ADCS_Comm_GetCalibratedCSSSensor(ADCS_Comm_CalibratedCSSSensorTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_CALIBRATED_CSS_SENSOR, returnVal, sizeof(*returnVal)); }
 int32 ADCS_Comm_GetCalibratedRWLSensor(ADCS_Comm_CalibratedRWLSensorTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_CALIBRATED_RWL_SENSOR, returnVal, sizeof(*returnVal)); }
 int32 ADCS_Comm_GetMainEstTlm(ADCS_Comm_Estimator_Cmn_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_MAIN_ESTIMATOR_TLM, returnVal, sizeof(*returnVal)); }
-
+int32 ADCS_Comm_GetMainEstHighResTlm(ADCS_MainEstimatorHighResTlm_Payload_t *returnVal) { return ADCS_GetTelemetry_Common(ADCS_ID_GET_MAIN_ESTIMATOR_HIRES_TLM, returnVal, sizeof(*returnVal)); }

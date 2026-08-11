@@ -53,18 +53,17 @@ typedef struct __attribute__((__packed__)) {
 
     uint32        sys_uptime_a7;
     uint32        sys_now_a7;
-    uint32        wdt_left_a7;
-    uint16        slf_data[4];
+    int16         slf_data[3];
 
-    uint16        imu_data[8];
+    int16         imu_data[8];
     int16         ntc_data_a7[8];
     uint16        pwr_volt[8];
     uint16        pwr_current[8];
 
     int16         brd_temp_a7;
-    int16         sys_status_a7;
+    int8          sys_status_a7[2];
     uint16        boot_cnt_c;
-    uint16        brm_data[3];
+    int16         brm_data[3];
 
     uint8         boot_his_c[8];
     uint8         boot_his_p[8];    

@@ -61,12 +61,10 @@
 /* Downstream gating */
 #define LTRX_DOWNSTREAM_ENABLE_INF_EID   34  /* Downstream enabled */
 #define LTRX_DOWNSTREAM_DISABLE_INF_EID  35  /* Downstream disabled */
+#define LTRX_BUS_BCN_PERIOD_INF_EID      36  /* Bus Beacon period updated */
 
 /* Transport wrapper (CSP) errors */
 #define LTRX_TX_ERR_EID            40
 #define LTRX_RX_ERR_EID            41
-
-#define LTRX_TEST_CSP_PING_INF_EID 50
-#define LTRX_TEST_CSP_PING_ERR_EID 51
 
 #endif /* LTRX_EVENTIDS_H */

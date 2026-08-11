@@ -262,12 +262,21 @@ typedef struct
 
 typedef struct
 {
-    uint8 flag_estmode;        // 0: default EstGyroEkf(6), 5: EstGyro, 6: EstGyroEkf
-    float target_latitude;
-    float target_longitude;
-    float target_altitude;
+    uint8 flag_estmode;        // 0: default EstGyroEkf(6), 5: EstFullEkf, 6: EstGyroEkf
     uint16 target_duration;    // seconds, 0: default 600
 } __attribute__((packed)) ADCS_SequenceCmdGNDpointing_Payload_t;
+
+typedef struct
+{
+    uint8 flag_estmode;        // 0: default EstGyroEkf(6), 5: EstFullEkf, 6: EstGyroEkf
+    uint16 target_duration;    // seconds, 0: default 600
+} __attribute__((packed)) ADCS_SequenceCmdTGTpointing_Payload_t;
+
+typedef struct
+{
+    uint8 flag_estmode;        // 0: default EstGyroEkf(6), 5: EstFullEkf, 6: EstGyroEkf
+    uint16 target_duration;    // seconds, 0: default 600
+} __attribute__((packed)) ADCS_SequenceCmdNadirpointing_Payload_t;
 
 typedef struct
 { // ID 49
@@ -657,31 +666,6 @@ typedef struct
     uint8 UART2TlmEDInclusionBitmask[5];
     uint8 CANTlmEDInclusionBitmask[5];
 } __attribute__((packed)) ADCS_UnsolicitTlmMsgSetupCmd_Payload_t;
-
-typedef struct
-{ // ID 116
-    uint8 Flag;
-} ADCS_UnsolicitEventMsgSetupCmd_ExternalPayload_t;
-
-typedef struct
-{ // ID 116
-    uint8_t InfoUART : 1;
-    uint8_t MinorUART : 1;
-    uint8_t MajorUART : 1;
-    uint8_t CriticalUART : 1;
-
-    uint8_t InfoUART2 : 1;
-    uint8_t MinorUART2 : 1;
-    uint8_t MajorUART2 : 1;
-    uint8_t CriticalUART2 : 1;
-
-    uint8_t InfoCAN : 1;
-    uint8_t MinorCAN : 1;
-    uint8_t MajorCAN : 1;
-    uint8_t CriticalCAN : 1;
-
-    uint8_t Spare : 4; // Explicit declaration
-} __attribute__((packed)) ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t;
 
 typedef struct
 { // ID 117
@@ -1394,26 +1378,6 @@ typedef struct
 } __attribute__((packed)) ADCS_UnsolicitTlmMsgSetupTlm_Payload_t;
 
 typedef struct
-{ // ID 233
-    uint8_t InfoUART : 1;
-    uint8_t MinorUART : 1;
-    uint8_t MajorUART : 1;
-    uint8_t CriticalUART : 1;
-
-    uint8_t InfoUART2 : 1;
-    uint8_t MinorUART2 : 1;
-    uint8_t MajorUART2 : 1;
-    uint8_t CriticalUART2 : 1;
-
-    uint8_t InfoCAN : 1;
-    uint8_t MinorCAN : 1;
-    uint8_t MajorCAN : 1;
-    uint8_t CriticalCAN : 1;
-
-    uint8_t Spare : 4; // Explicit declaration
-} __attribute__((packed)) ADCS_UnsolicitEventMsgSetupTlm_Payload_t;
-
-typedef struct
 { // ID 234
     uint8  NumberOfQEntries;
     uint8  NumberOfRQIterations;
@@ -1505,42 +1469,6 @@ typedef struct
     uint32 Address_Wheel4;
 
 } __attribute__((packed)) ADCS_PortMapTlm_Payload_t;
-
-/*************************************
- * CubeADCS Event Entry
- *************************************/
-typedef struct
-{
-    uint32_t Counter;
-    uint32_t UpTime;
-    uint32_t UnixTime;
-    uint16_t MilliSec;
-    struct __attribute__((packed))
-    {
-        uint16_t EventType : 9;
-        uint8_t  EventSource : 5;
-        uint8_t  EventClass : 2;
-    } Identifier;
-    uint8_t EventData[8];
-} __attribute__((packed)) ADCS_EventEntry_t;
-
-/*************************************
- * CubeADCS Frame Something
- *************************************/
-typedef struct
-{
-    uint32_t Counter;
-    uint32_t UpTime;
-    uint32_t UnixTime;
-    uint16_t MilliSec;
-    struct __attribute__((packed))
-    {
-        uint16_t EventType : 9;
-        uint8_t  EventSource : 5;
-        uint8_t  EventClass : 2;
-    } Identifier;
-    uint8_t EventData[8];
-} __attribute__((packed)) ADCS_Frame_t;
 
 typedef struct
 {
@@ -1901,6 +1829,31 @@ typedef struct
     uint8   RWLValidFlag:1;
 } __attribute__((packed)) ADCS_Comm_CalibratedRWLSensorTlm_Payload_t;
 
+/* Combined responses returned by the existing raw sensor command codes. */
+typedef struct
+{
+    ADCS_RawCubeSenseSunTlm_Payload_t Raw;
+    ADCS_Comm_CalibratedFSSSensorTlm_Payload_t Calibrated;
+} __attribute__((packed)) ADCS_RawCalibratedFSSReport_Payload_t;
+
+typedef struct
+{
+    ADCS_RawCSSSensorTlm_Payload_t Raw;
+    ADCS_Comm_CalibratedCSSSensorTlm_Payload_t Calibrated;
+} __attribute__((packed)) ADCS_RawCalibratedCSSReport_Payload_t;
+
+typedef struct
+{
+    ADCS_RawGYRSensorTlm_Paylaod_t Raw;
+    ADCS_CalibratedGYRSensorTlm_Payload_t Calibrated;
+} __attribute__((packed)) ADCS_RawCalibratedGYRReport_Payload_t;
+
+typedef struct
+{
+    ADCS_RawRWLSensorTlm_Payload_t Raw;
+    ADCS_Comm_CalibratedRWLSensorTlm_Payload_t Calibrated;
+} __attribute__((packed)) ADCS_RawCalibratedRWLReport_Payload_t;
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                ADCS Set/Get Cmd Common Payload Structures                 */
@@ -2119,18 +2072,20 @@ typedef struct
 } __attribute__((packed)) ADCS_Comm_COMM_FLAG_Payload_t;
 
 typedef struct
-{	// COMM 10 - Target tracking commissioning command
+{	// COMM 10 - Ground target tracking commissioning (ConGndTrack, mode 16)
 
-	uint8	flag_tlmtype;
-	uint8	flag_estmode;		// 0: default EstGyroEkf(6), 5: EstGyro, 6: EstGyroEkf
-	uint8	flag_contmode;		// 14: ConTgtTrack, 16: ConGndTrack
-	float	target_latitude;
-	float	target_longitude;
-	float	target_altitude;
-	float	yaw;
+	uint8	flag_estmode;		// 0: default EstGyroEkf(6), 5: EstFullEkf, 6: EstGyroEkf
 	uint16	target_duration;	// seconds, 0: default 600
 
 } __attribute__((packed)) ADCS_Comm_COMM_10_CMD_Payload_t;
+
+typedef struct
+{	// COMM 11 - +Z_B ground target tracking commissioning (ConTgtTrack, mode 14)
+
+	uint8	flag_estmode;		// 0: default EstGyroEkf(6), 5: EstFullEkf, 6: EstGyroEkf
+	uint16	target_duration;	// seconds, 0: default 600
+
+} __attribute__((packed)) ADCS_Comm_COMM_11_CMD_Payload_t;
 
 typedef struct
 {	// COMM 01 - Compact
@@ -2440,24 +2395,17 @@ typedef struct
 } __attribute__((packed)) ADCS_Comm_COMM_08_Payload_t; /* Total ?? bytes */
 
 typedef struct
-{	// COMM 10
+{	// COMM 10/11 target tracking commissioning record
 
-	// Simple Header
 	uint16	sync_word;
+	ADCS_MainEstimatorHighResTlm_Payload_t MainEstHighRes;		// ID 211
+	ADCS_Comm_RawRWLSensorTlm_Payload_t RawRWL;			// ID 205
+	ADCS_Comm_CalibratedRWLSensorTlm_Payload_t CalibratedRWL;	// ID 209
 
-	// ID 210
-    ADCS_Comm_Estimator_Cmn_Payload_t	MainEst;
+} __attribute__((packed)) ADCS_Comm_TargetTracking_Payload_t;
 
-	// ID 205
-    ADCS_Comm_RawRWLSensorTlm_Payload_t	RawRWL;
-
-	// ID 172
-    ADCS_Comm_ControllerTlm_Payload_t	Controller;
-
-	// ID 174
-    ADCS_Comm_ModelsTlm_Payload_t	Models;
-
-} __attribute__((packed)) ADCS_Comm_COMM_10_Payload_t; /* Total ?? bytes */
+typedef ADCS_Comm_TargetTracking_Payload_t ADCS_Comm_COMM_10_Payload_t;
+typedef ADCS_Comm_TargetTracking_Payload_t ADCS_Comm_COMM_11_Payload_t;
 
 /*************************************
  * CubeADCS Event Entry

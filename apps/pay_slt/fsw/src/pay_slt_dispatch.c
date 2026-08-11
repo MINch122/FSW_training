@@ -8,36 +8,76 @@
 #include "pay_slt_eventids.h"
 #include "pay_slt_msg.h"
 #include "pay_slt_msgids.h"
+#include "pay_slt_utils.h"
 
 bool PAY_SLT_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
 {
-    bool result = true;
+    CFE_Status_t status;
     size_t actual_length = 0;
     CFE_SB_MsgId_t msg_id = CFE_SB_INVALID_MSG_ID;
     CFE_MSG_FcnCode_t fcn_code = 0;
+    uint16 msg_id_value = PAY_SLT_CMD_MID;
 
-    CFE_MSG_GetSize(MsgPtr, &actual_length);
-    if (ExpectedLength != actual_length)
+    if (MsgPtr == NULL)
     {
-        CFE_MSG_GetMsgId(MsgPtr, &msg_id);
-        CFE_MSG_GetFcnCode(MsgPtr, &fcn_code);
-        CFE_EVS_SendEvent(PAY_SLT_DISPATCH_CMD_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "Invalid Msg length: ID = 0x%X, CC = %u, Len = %u, Expected = %u",
-                          (unsigned int)CFE_SB_MsgIdToValue(msg_id), (unsigned int)fcn_code,
-                          (unsigned int)actual_length, (unsigned int)ExpectedLength);
-        PAY_SLT_Data.ErrCounter++;
-        PAY_SLT_Data.AppErrCounter++;
-        result = false;
+        (void)PAY_SLT_HandleReport(CFE_ES_BAD_ARGUMENT, 0, false, NULL, 0);
+        return false;
     }
 
-    return result;
+    status = CFE_MSG_GetMsgId(MsgPtr, &msg_id);
+    if (status != CFE_SUCCESS)
+    {
+        (void)PAY_SLT_HandleReport(status, 0, false, NULL, 0);
+        return false;
+    }
+    msg_id_value = (uint16)CFE_SB_MsgIdToValue(msg_id);
+
+    status = CFE_MSG_GetFcnCode(MsgPtr, &fcn_code);
+    if (status != CFE_SUCCESS)
+    {
+        (void)PAY_SLT_HandleReportForMid(msg_id_value, status, 0, false, NULL, 0);
+        return false;
+    }
+
+    status = CFE_MSG_GetSize(MsgPtr, &actual_length);
+    if (status != CFE_SUCCESS)
+    {
+        (void)PAY_SLT_HandleReportForMid(msg_id_value, status, (uint8)fcn_code, false, NULL, 0);
+        return false;
+    }
+
+    if (ExpectedLength != actual_length)
+    {
+        uint32 lengths[2] = {(uint32)actual_length, (uint32)ExpectedLength};
+
+        CFE_EVS_SendEvent(PAY_SLT_DISPATCH_CMD_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "Invalid Msg length: ID = 0x%X, CC = %u, Len = %u, Expected = %u",
+                          (unsigned int)msg_id_value, (unsigned int)fcn_code,
+                          (unsigned int)actual_length, (unsigned int)ExpectedLength);
+        (void)PAY_SLT_HandleReportForMid(msg_id_value, CFE_STATUS_WRONG_MSG_LENGTH, (uint8)fcn_code, false,
+                                         lengths, sizeof(lengths));
+        return false;
+    }
+
+    if (msg_id_value == PAY_SLT_CMD_MID)
+    {
+        PAY_SLT_Data.CmdCounter++;
+    }
+
+    return true;
 }
 
 void PAY_SLT_ProcessCommand(const CFE_SB_Buffer_t *SBBufPtr)
 {
+    CFE_Status_t status;
     CFE_MSG_FcnCode_t command_code = 0;
 
-    CFE_MSG_GetFcnCode(&SBBufPtr->Msg, &command_code);
+    status = CFE_MSG_GetFcnCode(&SBBufPtr->Msg, &command_code);
+    if (status != CFE_SUCCESS)
+    {
+        (void)PAY_SLT_HandleReport(status, 0, false, NULL, 0);
+        return;
+    }
 
     switch (command_code)
     {
@@ -56,7 +96,9 @@ void PAY_SLT_ProcessCommand(const CFE_SB_Buffer_t *SBBufPtr)
         case PAY_SLT_REPORT_BCN_CC:
             if (PAY_SLT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(PAY_SLT_SendBcnCmd_t)))
             {
-                PAY_SLT_SendBeaconCmd((const PAY_SLT_SendBcnCmd_t *)SBBufPtr);
+                status = PAY_SLT_SendBeaconCmd((const PAY_SLT_SendBcnCmd_t *)SBBufPtr);
+                (void)PAY_SLT_HandleReport(status, PAY_SLT_REPORT_BCN_CC, status != CFE_SUCCESS,
+                                           &PAY_SLT_Data.BcnEnabled, sizeof(PAY_SLT_Data.BcnEnabled));
             }
             break;
         case PAY_SLT_OUTPUT_ENABLED_CC:
@@ -108,19 +150,32 @@ void PAY_SLT_ProcessCommand(const CFE_SB_Buffer_t *SBBufPtr)
         default:
             CFE_EVS_SendEvent(PAY_SLT_DISPATCH_CC_ERR_EID, CFE_EVS_EventType_ERROR,
                               "PAY_SLT: invalid command code, CC = %u", (unsigned int)command_code);
-            PAY_SLT_Data.ErrCounter++;
-            PAY_SLT_Data.AppErrCounter++;
+            (void)PAY_SLT_HandleReport(CFE_STATUS_BAD_COMMAND_CODE, (uint8)command_code, false, NULL, 0);
             break;
     }
 }
 
 void PAY_SLT_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 {
+    CFE_Status_t status;
     CFE_SB_MsgId_t msg_id = CFE_SB_INVALID_MSG_ID;
+    uint16 msg_id_value;
 
-    CFE_MSG_GetMsgId(&SBBufPtr->Msg, &msg_id);
+    if (SBBufPtr == NULL)
+    {
+        (void)PAY_SLT_HandleReport(CFE_ES_BAD_ARGUMENT, 0, false, NULL, 0);
+        return;
+    }
 
-    switch (CFE_SB_MsgIdToValue(msg_id))
+    status = CFE_MSG_GetMsgId(&SBBufPtr->Msg, &msg_id);
+    if (status != CFE_SUCCESS)
+    {
+        (void)PAY_SLT_HandleReport(status, 0, false, NULL, 0);
+        return;
+    }
+    msg_id_value = (uint16)CFE_SB_MsgIdToValue(msg_id);
+
+    switch (msg_id_value)
     {
         case PAY_SLT_CMD_MID:
             PAY_SLT_ProcessCommand(SBBufPtr);
@@ -140,7 +195,9 @@ void PAY_SLT_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
         default:
             CFE_EVS_SendEvent(PAY_SLT_DISPATCH_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                               "PAY_SLT: invalid command packet, MID = 0x%x",
-                              (unsigned int)CFE_SB_MsgIdToValue(msg_id));
+                              (unsigned int)msg_id_value);
+            (void)PAY_SLT_HandleReportForMid(msg_id_value, CFE_STATUS_UNKNOWN_MSG_ID, 0, false,
+                                             &msg_id_value, sizeof(msg_id_value));
             break;
     }
 }

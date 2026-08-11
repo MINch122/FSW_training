@@ -11,7 +11,6 @@ typedef struct RPT_HkTlm_Payload{
      * Operation Data
      */
     uint16 BootCount;
-    uint32 Sequence; /* Backup data numbering */
 
     /**
      * Reset Cause

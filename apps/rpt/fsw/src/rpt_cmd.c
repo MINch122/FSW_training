@@ -19,7 +19,6 @@ CFE_Status_t RPT_SendBeaconCmd(void) {
     OS_MutSemTake(RPT_Data.OpsMutexID);
     RPT_Data.HkTlm.Payload.ResetCause = RPT_Data.OpsData.ResetCause;
     RPT_Data.HkTlm.Payload.BootCount = RPT_Data.OpsData.BootCount;
-    RPT_Data.HkTlm.Payload.Sequence = RPT_Data.OpsData.Sequence;
     OS_MutSemGive(RPT_Data.OpsMutexID);
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(RPT_Data.HkTlm.TelemetryHeader));
@@ -114,19 +113,6 @@ void RPT_UpdateOperationData(void) {
     RPT_Data.OpsData.CRC = RPT_CalculateCRC(&RPT_Data.OpsData, sizeof(RPT_OperationData_t) - sizeof(uint32_t));
 
     RPT_WriteToFile(RPT_Data.OpsDataHandle, &RPT_Data.OpsData, sizeof(RPT_OperationData_t));
-    
-    RPT_Data.OpsCount ++;
-
-    if (RPT_Data.OpsCount == RPT_OPS_STORE_BACKUP_COUNT) {
-        /* Write Back up data to External SD */
-        int FD;
-        FD = RPT_OpenOpsFile(true);
-        RPT_WriteToFile(FD, &RPT_Data.OpsData, sizeof(RPT_OperationData_t));
-        RPT_CloseFile(FD);
-
-        RPT_Data.OpsData.Sequence ++;
-        RPT_Data.OpsCount = 0;
-    }
     
     OS_MutSemGive(RPT_Data.OpsMutexID);
 }

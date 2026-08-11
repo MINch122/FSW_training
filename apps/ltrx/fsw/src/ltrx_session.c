@@ -240,10 +240,6 @@ void LTRX_SessionTick(void)
                 LTRX_SessionInit();
                 break;
 
-            case LTRX_REQ_QUERY_BEACON_STATUS:
-            case LTRX_REQ_QUERY_GNSS_INFO:
-                break;
-
             default:
                 break;
         }
@@ -455,8 +451,6 @@ void LTRX_SessionTick(void)
 CFE_Status_t LTRX_SessionRequestStartDownlink(void)      { return LTRX_PushReq(LTRX_REQ_START_DOWNLINK); }
 CFE_Status_t LTRX_SessionRequestAbort(void)              { return LTRX_PushReq(LTRX_REQ_ABORT); }
 CFE_Status_t LTRX_SessionRequestReset(void)              { return LTRX_PushReq(LTRX_REQ_RESET); }
-CFE_Status_t LTRX_SessionRequestQueryBeaconStatus(void)  { return LTRX_PushReq(LTRX_REQ_QUERY_BEACON_STATUS); }
-CFE_Status_t LTRX_SessionRequestQueryGnssInfo(void)      { return LTRX_PushReq(LTRX_REQ_QUERY_GNSS_INFO); }
 
 /* Type6 is received and Type8 ConfirmReady has been sent successfully */
 void LTRX_SessionNotifyUplinkOffered(void)

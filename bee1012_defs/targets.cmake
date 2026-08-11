@@ -103,7 +103,7 @@ SET(FT_INSTALL_SUBDIR "host/functional-test")
 SET(MISSION_CPUNAMES cpu1 obc)
 
 SET(cpu1_PROCESSORID 1)
-SET(cpu1_APPLIST ci_lab to_lab sch_lab hk ds fm stx utrx eps adcs ttc meow ltrx gpio paybee_kisscam pay_slt)
+SET(cpu1_APPLIST ci_lab to_lab sch_lab hk ds fm stx utrx eps adcs ttc meow ltrx gpio paybee_kisscam pay_slt thrust)
 SET(cpu1_FILELIST cfe_es_startup.scr)
 SET(cpu1_SYSTEM i686-linux-gnu)
 
@@ -111,6 +111,6 @@ SET(cpu1_SYSTEM i686-linux-gnu)
 # serves as an example of how one would configure multiple cpus.
 # Add for obc build 
 SET(obc_PROCESSORID 2)
-SET(obc_APPLIST ci_lab to_lab sch_lab hk ds fm stx utrx eps adcs ttc meow ltrx gpio paybee_kisscam pay_slt)
+SET(obc_APPLIST ci_lab to_lab sch_lab hk ds fm stx utrx eps adcs ttc meow ltrx gpio paybee_kisscam pay_slt thrust)
 SET(obc_FILELIST cfe_es_startup.scr)
 SET(obc_SYSTEM obc)

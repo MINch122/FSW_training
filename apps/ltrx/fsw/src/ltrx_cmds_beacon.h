@@ -38,6 +38,9 @@ uint16_t LTRX_Downlink_GetLength(void);
 /* Downstream staging gate (Bus Beacon -> downlink staging on/off) */
 void     LTRX_Downstream_SetEnabled(bool enabled);
 bool     LTRX_Downstream_IsEnabled(void);
+void     LTRX_Downstream_SetBeaconPeriod(uint16_t period);
+uint16_t LTRX_Downstream_GetBeaconPeriod(void);
+uint16_t LTRX_Downstream_GetBeaconCount(void);
 
 /* ---------------- UPLINK (GS -> OBC) ---------------- */
 bool     LTRX_Uplink_HasCompleteMessage(void);

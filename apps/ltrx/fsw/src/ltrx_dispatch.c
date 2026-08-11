@@ -143,6 +143,12 @@ void LTRX_DispatchCommand(const CFE_SB_Buffer_t *SBBufPtr)
             (void)LTRX_ResetDeviceCmdCountersCmd((const LTRX_ResetDeviceCmdCountersCmd_t *)SBBufPtr);
             break;
 
+        case LTRX_SET_BUS_BEACON_PERIOD_CC:
+            if (!LTRX_VerifyCmdLength(SBBufPtr, sizeof(LTRX_SetBusBeaconPeriodCmd_t), CC)) return;
+            status = LTRX_SetBusBeaconPeriodCmd((const LTRX_SetBusBeaconPeriodCmd_t *)SBBufPtr);
+            LTRX_CountCmdResult(status);
+            break;
+
         /* ---- Session triggers (dispatch counts result) ---- */
         case LTRX_SESSION_START_DOWNLINK_CC:
             if (!LTRX_VerifyCmdLength(SBBufPtr, ExpectedNoArgsSize, CC)) return;

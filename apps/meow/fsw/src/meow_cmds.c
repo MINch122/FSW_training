@@ -28,7 +28,8 @@ void MEOW_SendReport(const void* cmd,
     MEOW_AppData.Report.Payload.ReturnCode = retCode;
     uint16 CopySize = dataSize > MEOW_MISSION_MAX_REPORT_LEN ? MEOW_MISSION_MAX_REPORT_LEN : dataSize;
     MEOW_AppData.Report.Payload.ReturnDataSize = CopySize;
-    if (data && dataSize)
+    memset(MEOW_AppData.Report.Payload.ReturnValue, 0, sizeof(MEOW_AppData.Report.Payload.ReturnValue));
+    if (data && CopySize)
         memcpy(MEOW_AppData.Report.Payload.ReturnValue,
                data,
                CopySize);

@@ -33,7 +33,7 @@
 
 /** Maximum bytes carried in report telemetry, matching the RPT app report ABI. */
 #define MEOW_MISSION_MAX_REPORT_LEN         MEOW_MISSION_CFGVAL(MAX_REPORT_LEN)
-#define DEFAULT_MEOW_MISSION_MAX_REPORT_LEN 450
+#define DEFAULT_MEOW_MISSION_MAX_REPORT_LEN 512
 
 /** Maximum CSP interface name length including NUL terminator. */
 #define MEOW_MISSION_MAX_IFACE_NAME_LEN          MEOW_MISSION_CFGVAL(MAX_IFACE_NAME_LEN)

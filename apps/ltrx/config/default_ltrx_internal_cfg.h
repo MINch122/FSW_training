@@ -3,4 +3,8 @@
 
 #define LTRX_PIPE_DEPTH 32
 
+#ifndef LTRX_BUS_BEACON_PERIOD_DEFAULT
+#define LTRX_BUS_BEACON_PERIOD_DEFAULT 1U
+#endif
+
 #endif

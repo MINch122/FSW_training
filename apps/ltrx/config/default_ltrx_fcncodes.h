@@ -35,20 +35,15 @@
 #define LTRX_RESET_COUNTERS_CC            1  
 #define LTRX_RESET_APP_CMD_COUNTERS_CC    2  
 #define LTRX_RESET_DEVICE_CMD_COUNTERS_CC 3  
-#define LTRX_SEND_STATUS_CC               5  
+#define LTRX_SET_BUS_BEACON_PERIOD_CC     4
 
 /* Child/Session request trigger */
 #define LTRX_SESSION_START_DOWNLINK_CC    10  // Start downlink
 #define LTRX_SESSION_ABORT_CC             11  // Abort session
 #define LTRX_SESSION_RESET_STATE_CC       12  // Reset session
 
-#define LTRX_QUERY_BEACON_STATUS_CC       30 // Type ID 23
-#define LTRX_QUERY_GNSS_INFO_CC           31 // Type ID 21
-
 /* Downstream gating */
 #define LTRX_DOWNSTREAM_ENABLE_CC         40
 #define LTRX_DOWNSTREAM_DISABLE_CC        41
-
-#define LTRX_TEST_CSP_PING_CC            50 // can test
 
 #endif /* LTRX_FCNCODES_H */

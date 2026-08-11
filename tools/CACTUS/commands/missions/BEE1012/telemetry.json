@@ -361,7 +361,7 @@
         {
           "name": "ReturnValue",
           "type": "bytes",
-          "length": "MEOW_MISSION_MAX_READ_LEN",
+          "length": "MEOW_MISSION_MAX_REPORT_LEN",
           "display_length_from": "ReturnDataSize"
         },
         {
@@ -744,30 +744,6 @@
       "fields": []
     },
     {
-      "app": "MISSION",
-      "name": "Beacon",
-      "mid": "0x0828",
-      "description": "MISSION Beacon telemetry",
-      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
-    },
-    {
-      "app": "MISSION",
-      "name": "Housekeeping",
-      "mid": "0x0829",
-      "description": "MISSION Housekeeping telemetry",
-      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
-    },
-    {
-      "app": "MISSION",
-      "name": "Report",
-      "mid": "0x082A",
-      "description": "MISSION Report telemetry",
-      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
-    },
-    {
       "app": "GPIO",
       "name": "Housekeeping",
       "mid": "0x082B",
@@ -952,16 +928,15 @@
         { "name": "boot_cnt_p", "type": "uint16" },
         { "name": "sys_uptime_a7", "type": "uint32" },
         { "name": "sys_now_a7", "type": "uint32" },
-        { "name": "wdt_left_a7", "type": "uint32" },
-        { "name": "slf_data", "type": "uint16", "count": 4 },
-        { "name": "imu_data", "type": "uint16", "count": 8 },
+        { "name": "slf_data", "type": "int16", "count": 3 },
+        { "name": "imu_data", "type": "int16", "count": 8 },
         { "name": "ntc_data_a7", "type": "int16", "count": 8 },
         { "name": "pwr_volt", "type": "uint16", "count": 8 },
         { "name": "pwr_current", "type": "uint16", "count": 8 },
         { "name": "brd_temp_a7", "type": "int16" },
-        { "name": "sys_status_a7", "type": "int16" },
+        { "name": "sys_status_a7", "type": "int8", "count": 2 },
         { "name": "boot_cnt_c", "type": "uint16" },
-        { "name": "brm_data", "type": "uint16", "count": 3 },
+        { "name": "brm_data", "type": "int16", "count": 3 },
         { "name": "boot_his_c", "type": "uint8", "count": 8 },
         { "name": "boot_his_p", "type": "uint8", "count": 8 },
         { "name": "sys_uptime_ifb", "type": "uint32" },
@@ -991,8 +966,16 @@
       "description": "PAY_SLT Report telemetry",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
       "fields": [
-        { "name": "MsgID", "type": "uint16", "format": "hex", "hex_digits": 4 },
-        { "name": "CommandCode", "type": "uint8" },
+        {
+          "name": "MsgID",
+          "type": "uint16",
+          "format": "hex",
+          "hex_digits": 4
+        },
+        {
+          "name": "CommandCode",
+          "type": "uint8"
+        },
         {
           "name": "ReturnType",
           "type": "enum",
@@ -1006,8 +989,16 @@
             "HW": 5
           }
         },
-        { "name": "ReturnCode", "type": "int32", "format": "hex", "hex_digits": 8 },
-        { "name": "ReturnDataSize", "type": "uint16" },
+        {
+          "name": "ReturnCode",
+          "type": "int32",
+          "format": "hex",
+          "hex_digits": 8
+        },
+        {
+          "name": "ReturnDataSize",
+          "type": "uint16"
+        },
         {
           "name": "ReturnValue",
           "type": "bytes",
@@ -1015,22 +1006,6 @@
           "display_length_from": "ReturnDataSize"
         }
       ]
-    },
-    {
-      "app": "PAY_KISSCAM",
-      "name": "Housekeeping",
-      "mid": "0x0833",
-      "description": "PAY_KISSCAM Housekeeping telemetry",
-      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
-    },
-    {
-      "app": "PAY_KISSCAM",
-      "name": "Beacon",
-      "mid": "0x0834",
-      "description": "PAY_KISSCAM Beacon telemetry",
-      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
     },
     {
       "app": "PAY_KISSCAM",
@@ -1063,6 +1038,237 @@
       "description": "LTRX Report telemetry",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
       "fields": []
+    },
+    {
+      "app": "MISSION",
+      "name": "Report",
+      "mid": "0x0892",
+      "description": "MISSION command report telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        {
+          "name": "MsgID",
+          "type": "uint16",
+          "format": "hex",
+          "hex_digits": 4
+        },
+        {
+          "name": "CommandCode",
+          "type": "uint8"
+        },
+        {
+          "name": "ReturnType",
+          "type": "enum",
+          "storage": "uint8",
+          "values": {
+            "SUCCESS": 0,
+            "OSAL": 1,
+            "CFE": 2,
+            "LIB": 3,
+            "APP": 4,
+            "HW": 5
+          }
+        },
+        {
+          "name": "ReturnCode",
+          "type": "int32",
+          "format": "hex",
+          "hex_digits": 8
+        },
+        {
+          "name": "ReturnDataSize",
+          "type": "uint16"
+        },
+        {
+          "name": "ReturnValue",
+          "type": "bytes",
+          "length": 512,
+          "display_length_from": "ReturnDataSize"
+        }
+      ]
+    },
+    {
+      "app": "MISSION",
+      "name": "Housekeeping",
+      "mid": "0x0893",
+      "description": "MISSION LEOP housekeeping telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        {
+          "name": "CmdErrCounter",
+          "type": "uint8"
+        },
+        {
+          "name": "LeopWaitComplete",
+          "type": "uint8"
+        },
+        {
+          "name": "LeopWaitElapsedSec",
+          "type": "uint32"
+        },
+        {
+          "name": "LeopWaitRemainingSec",
+          "type": "uint32"
+        },
+        {
+          "name": "LeopCycleCount",
+          "type": "uint8"
+        },
+        {
+          "name": "LeopState",
+          "type": "uint8"
+        }
+      ]
+    },
+    {
+      "app": "THRUST",
+      "name": "Housekeeping",
+      "mid": "0x0870",
+      "description": "THRUST pressure, temperature, and status telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        {
+          "name": "Pressure_CH0",
+          "type": "float"
+        },
+        {
+          "name": "Pressure_CH1",
+          "type": "float"
+        },
+        {
+          "name": "Pressure_CH2",
+          "type": "float"
+        },
+        {
+          "name": "Pressure_CH3",
+          "type": "float"
+        },
+        {
+          "name": "Temp_CH0",
+          "type": "float"
+        },
+        {
+          "name": "Temp_CH1",
+          "type": "float"
+        },
+        {
+          "name": "Temp_CH2",
+          "type": "float"
+        },
+        {
+          "name": "Temp_CH3",
+          "type": "float"
+        },
+        {
+          "name": "Temp_CH4",
+          "type": "float"
+        },
+        {
+          "name": "Temp_CH5",
+          "type": "float"
+        },
+        {
+          "name": "Status",
+          "type": "uint32",
+          "format": "hex",
+          "hex_digits": 8
+        },
+        {
+          "name": "CmdCounter",
+          "type": "uint8"
+        },
+        {
+          "name": "ErrCounter",
+          "type": "uint8"
+        }
+      ]
+    },
+    {
+      "app": "THRUST",
+      "name": "Status",
+      "mid": "0x0871",
+      "description": "THRUST controller status telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        {
+          "name": "CurrentMode",
+          "type": "uint32"
+        },
+        {
+          "name": "CurrentStatus",
+          "type": "uint16",
+          "format": "hex",
+          "hex_digits": 4
+        },
+        {
+          "name": "FaultFlags",
+          "type": "uint16",
+          "format": "hex",
+          "hex_digits": 4
+        },
+        {
+          "name": "InterlockFlags",
+          "type": "uint16",
+          "format": "hex",
+          "hex_digits": 4
+        },
+        {
+          "name": "LastMsgId",
+          "type": "uint8"
+        },
+        {
+          "name": "LastResult",
+          "type": "uint8"
+        }
+      ]
+    },
+    {
+      "app": "THRUST",
+      "name": "Report",
+      "mid": "0x0872",
+      "description": "THRUST command report telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        {
+          "name": "MsgID",
+          "type": "uint16",
+          "format": "hex",
+          "hex_digits": 4
+        },
+        {
+          "name": "CommandCode",
+          "type": "uint8"
+        },
+        {
+          "name": "ReturnType",
+          "type": "enum",
+          "storage": "uint8",
+          "values": {
+            "SUCCESS": 0,
+            "OSAL": 1,
+            "CFE": 2,
+            "LIB": 3,
+            "APP": 4,
+            "HW": 5
+          }
+        },
+        {
+          "name": "ReturnCode",
+          "type": "int32",
+          "format": "hex",
+          "hex_digits": 8
+        },
+        {
+          "name": "ReturnDataSize",
+          "type": "uint16"
+        },
+        {
+          "name": "ReturnValue",
+          "type": "bytes",
+          "length": 512,
+          "display_length_from": "ReturnDataSize"
+        }
+      ]
     }
   ]
 }

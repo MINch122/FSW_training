@@ -74,10 +74,6 @@ typedef struct
     char   PipeName[CFE_MISSION_MAX_API_LEN];
     uint16 PipeDepth;
 
-    CFE_ES_TaskId_t TaskId;
-
-    uint8_t BootUpCheckCounter;
-
 } ADCS_AppData_t;
 
 /*

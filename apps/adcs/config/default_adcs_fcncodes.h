@@ -38,16 +38,6 @@
 #define ADCS_NOOP_CC           0
 #define ADCS_RESET_COUNTERS_CC 1
 
-#define ADCS_RESET_APP_CMD_COUNTERS_CC          2
-#define ADCS_RESET_DEVICE_CMD_COUNTERS_CC       3
-#define ADCS_SET_COMMUNICATION_MODE_AS_CAN_CC   4
-#define ADCS_GPIO_ENABLE_HIGH_CC 5
-#define ADCS_GPIO_ENABLE_LOW_CC 6
-#define ADCS_GPIO_BOOT_HIGH_CC 8
-#define ADCS_GPIO_BOOT_LOW_CC 9
-#define ADCS_EXIT_BOOTLOADER_CC 10
-#define ADCS_SET_INTERFACE_TRANSPORT_CC 91
-
 /* < ADCS Module Command Code (TC, TM) > */
 /* Telecommand */
 #define ADCS_SET_RESET_CC						11 // 1
@@ -58,7 +48,6 @@
 #define ADCS_SET_DISABLE_MAG_RWL_MNT_MNG_CC		16 // 43
 #define ADCS_SET_REFERENCE_IRC_VECTOR_CC		17 // 47
 #define ADCS_SET_REFERENCE_LLH_TARGET_CC		18 // 48
-#define ADCS_SET_COMMANDED_GNSS_MEASUREMENTS_CC 43 // 49
 #define ADCS_SET_ORBIT_MODE_CC					19 // 51
 #define ADCS_SET_MAG_DEPLOY_CMD_CC				20 // 52
 #define ADCS_SET_REFERENCE_RPY_VALUES_CC		21 // 54
@@ -81,11 +70,10 @@
 #define ADCS_SET_OPERATIONAL_STATE_CC			38 // 72
 #define ADCS_SET_MAG_SENSING_ELM_CONFIG_CC		39 // 77
 #define ADCS_SET_UNSOLICIT_TLM_MSG_SETUP_CC		40 // 112
-#define ADCS_SET_UNSOLICIT_EVENT_MSG_SETUP_CC	41 // 116
 #define ADCS_SET_INITIATE_EVENT_LOG_TRANSFER_CC	42 // 120
+#define ADCS_SET_COMMANDED_GNSS_MEASUREMENTS_CC 43 // 49
 #define ADCS_SET_OPENLOOPCMD_RWL_CC             44 // 74, Table 53
 #define ADCS_SET_OPENLOOP_CMD_HXYZ_RW_CC        45 // 76
-
 /* Telemetry */
 #define	ADCS_GET_ERROR_LOG_SETTING_CC			51 // 132
 #define ADCS_GET_CURRENT_UNIX_TIME_CC			52 // 133
@@ -96,7 +84,7 @@
 #define ADCS_GET_REFERENCE_LLH_TARGET_CC		57 // 157
 #define ADCS_GET_ORBIT_MODE_CC					58 // 162
 #define	ADCS_GET_HEALTH_TLM_MMT_CC				59 // 167
-#define ADCS_GET_RAW_CUBESENSE_SUN_CC			60 // 170
+#define ADCS_GET_RAW_CALIBRATED_CUBESENSE_SUN_CC	60 // 170 + 178
 #define	ADCS_GET_REFERENCE_RPY_VALUES_CC		61 // 181
 #define	ADCS_GET_OPENLOOPCMD_MTQ_CC				62 // 182
 #define ADCS_GET_POWER_STATE_CC					63 // 183
@@ -115,27 +103,25 @@
 #define	ADCS_GET_MTQ_CONFIG_CC					76 // 198
 #define	ADCS_GET_ESTIMATION_MODE_CC				77 // 199
 #define ADCS_GET_OPERATIONAL_STATE_CC			78 // 200
-#define ADCS_GET_RAW_CSS_SENSOR_CC				79 // 203
-#define ADCS_GET_RAW_GYR_SENSOR_CC				80 // 204
-#define ADCS_GET_RAW_RWL_SENSOR_CC				90 // 205
+#define ADCS_GET_RAW_CALIBRATED_CSS_SENSOR_CC		79 // 203 + 206
+#define ADCS_GET_RAW_CALIBRATED_GYR_SENSOR_CC		80 // 204 + 207
 #define ADCS_GET_CALIBRATED_GYR_SENSOR_CC		81 // 207
 #define	ADCS_GET_MAG_SENSING_ELM_CONFIG_CC		82 // 221
 #define	ADCS_GET_TLM_LOG_INCLMASK_CC			83 // 227
 #define	ADCS_GET_UNSOLICIT_TLM_MSG_SETUP_CC		84 // 228
-#define ADCS_GET_UNSOLICIT_EVENT_MSG_SETUP_CC	85 // 233
 #define ADCS_GET_EVENT_LOG_STATUS_RESPONSE_CC	86 // 235
 #define ADCS_GET_PORTMAP_CC	                    87 // 239
+#define ADCS_GET_RAW_CALIBRATED_RWL_SENSOR_CC	90 // 205 + 209
+
+#define ADCS_SET_INTERFACE_TRANSPORT_CC 91
 
 #define ADCS_SEQ_DTUMB_CC						100
 #define ADCS_SEQ_GNDPT_CC						101
-#define ADCS_SEQ_VELPT_CC						102
-#define ADCS_SEQ_KSCPT_CC						103
-#define ADCS_SEQ_LGCPT_CC						104
-#define ADCS_SEQ_RPYPT_CC						105
+#define ADCS_SEQ_SUN_CC                         102
+#define ADCS_SEQ_TGT_CC                         103
+#define ADCS_SEQ_NADIR_CC                       104
 
 #define ADCS_SET_ERROR_LOG_CLEAR_CC				110 // 5
-
-#define ADCS_GET_CURRENT_UNIX_TIME_INTERNAL_CC  114 // 133
 
 /* Commissioning Sequence */
 #define ADCS_COMM_01_CC                        118
@@ -146,8 +132,8 @@
 #define ADCS_COMM_06_CC                        123
 #define ADCS_COMM_07_CC                        124
 #define ADCS_COMM_08_CC                        125
-#define ADCS_COMM_09_CC                        126
-#define ADCS_COMM_10_CC                        127
+#define ADCS_COMM_10_CC                        126
+#define ADCS_COMM_11_CC                        127 /* Uses vacant COMM 09 FC; cFE FC is limited to 127. */
 
 
 #endif

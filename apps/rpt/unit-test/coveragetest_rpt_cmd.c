@@ -107,25 +107,6 @@ void RPT_Command_UpdateOpsData_Test_Nominal(void) {
     UtAssert_STUB_COUNT(OS_MutSemGive, 1);
     UtAssert_STUB_COUNT(RPT_CalculateCRC, 1);
     UtAssert_STUB_COUNT(RPT_WriteToFile, 1);
-
-    UtAssert_BOOL_TRUE(RPT_Data.OpsCount == 1);
-}
-
-void RPT_Command_UpdateOpsData_Test_WriteBackupNominal(void) {
-    /* Execute the function being tested */
-    RPT_Data.OpsCount = RPT_OPS_STORE_BACKUP_COUNT - 1;
-    UtAssert_VOIDCALL(RPT_UpdateOperationData());
-
-    /* Verify results */
-    UtAssert_STUB_COUNT(OS_MutSemTake, 1);
-    UtAssert_STUB_COUNT(OS_MutSemGive, 1);
-    UtAssert_STUB_COUNT(RPT_CalculateCRC, 1);
-    UtAssert_STUB_COUNT(RPT_WriteToFile, 2);
-    UtAssert_STUB_COUNT(RPT_OpenOpsFile, 1);
-    UtAssert_STUB_COUNT(RPT_CloseFile, 1);
-
-    UtAssert_UINT32_EQ(RPT_Data.OpsData.Sequence, 1);
-    UtAssert_BOOL_TRUE(RPT_Data.OpsCount == 0);
 }
 
 void RPT_Command_Report_Test_CriticalError(void) {
@@ -157,7 +138,6 @@ void UtTest_Setup(void) {
     UT_RPT_ADD_TEST(RPT_Command_Report_Test_Nominal);
     UT_RPT_ADD_TEST(RPT_Command_ClearQ_Test_Nominal);
     UT_RPT_ADD_TEST(RPT_Command_UpdateOpsData_Test_Nominal);
-    UT_RPT_ADD_TEST(RPT_Command_UpdateOpsData_Test_WriteBackupNominal);
     UT_RPT_ADD_TEST(RPT_Command_Report_Test_CriticalError);
     UT_RPT_ADD_TEST(RPT_Command_Report_Test_ReportError);
 }

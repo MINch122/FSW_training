@@ -66,7 +66,6 @@ typedef struct {
      */
     osal_id_t OpsDataHandle;
     RPT_OperationData_t OpsData;
-    uint8 OpsCount; /* If this count reached to `RPT_OPS_STORE_BACKUP_COUNT`, store backup data */
 
     /**
      * RPT Mutex ID

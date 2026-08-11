@@ -45,11 +45,15 @@ void RPT_Util_Enqueue_Test_Nominal(void) {
     RPT_Report_t Report;
     Report.MsgID = 0x2323;
     Report.CommandCode = 23;
+    RPT_Data.OpsData.TimeSec = 123;
+    RPT_Data.OpsData.TimeSubsec = 456;
 
     UtAssert_VOIDCALL(RPT_Enqueue(&Report, 1));
 
     UtAssert_UINT8_EQ(RPT_Data.CritQueue.Count, 1);
     UtAssert_UINT8_EQ(RPT_Data.CritQueue.Head, 1);
+    UtAssert_UINT32_EQ(RPT_Data.CritQueue.Entry[0].Time.Seconds, 123);
+    UtAssert_UINT32_EQ(RPT_Data.CritQueue.Entry[0].Time.Subseconds, 456);
     UtAssert_STUB_COUNT(CFE_ES_WriteToSysLog, 1);
 
     UtAssert_VOIDCALL(RPT_Enqueue(&Report, 0));
@@ -140,14 +144,14 @@ void RPT_Util_VerifyReportLength_Test_LenError(void) {
 }
 
 void RPT_Util_OpenOpsFile_Test_Nominal(void) {
-    UtAssert_True(OS_ObjectIdDefined(RPT_OpenOpsFile(true)), "RPT_OpenOpsFile return Valid id.");
+    UtAssert_True(OS_ObjectIdDefined(RPT_OpenOpsFile()), "RPT_OpenOpsFile return Valid id.");
     UtAssert_STUB_COUNT(OS_OpenCreate, 1);
 }
 
 void RPT_UtilOpenOpsFile_Test_OpenError(void) {
     UT_SetDeferredRetcode(UT_KEY(OS_OpenCreate), 1, -1);
 
-    UtAssert_UINT32_EQ(RPT_OpenOpsFile(false), OS_OBJECT_ID_UNDEFINED);
+    UtAssert_UINT32_EQ(RPT_OpenOpsFile(), OS_OBJECT_ID_UNDEFINED);
     UtAssert_STUB_COUNT(OS_OpenCreate, 1);
 }
 
@@ -187,22 +191,6 @@ void RPT_Util_ReadFromFile_Test_ReadError(void) {
     UtAssert_STUB_COUNT(OS_read, 1);
 }
 
-void RPT_Util_CloseFile_Test_Nominal(void) {
-    osal_id_t fake_id = UT_AllocStubObjId(OS_OBJECT_TYPE_OS_STREAM);
-    UT_SetDeferredRetcode(UT_KEY(OS_close), 1, OS_SUCCESS);
-
-    UtAssert_INT32_EQ(RPT_CloseFile(fake_id), CFE_SUCCESS);
-    UtAssert_STUB_COUNT(OS_close, 1);
-}
-
-void RPT_Util_CloseFile_Test_CloseError(void) {
-    UT_SetDeferredRetcode(UT_KEY(OS_close), 1, -1);
-
-    UtAssert_INT32_EQ(RPT_CloseFile(1), CFE_STATUS_EXTERNAL_RESOURCE_FAIL);
-    UtAssert_STUB_COUNT(OS_close, 1);
-}
-
-
 void UtTest_Setup(void) {
     UT_RPT_ADD_TEST(RPT_Util_Subscribe_Test_Nominal);
     UT_RPT_ADD_TEST(RPT_Util_Enqueue_Test_Nominal);
@@ -217,6 +205,4 @@ void UtTest_Setup(void) {
     UT_RPT_ADD_TEST(RPT_Util_WriteToFile_Test_WriteError);
     UT_RPT_ADD_TEST(RPT_Util_ReadFromFile_Test_Nominal);
     UT_RPT_ADD_TEST(RPT_Util_ReadFromFile_Test_ReadError);
-    UT_RPT_ADD_TEST(RPT_Util_CloseFile_Test_Nominal);
-    UT_RPT_ADD_TEST(RPT_Util_CloseFile_Test_CloseError);
 }

@@ -65,12 +65,25 @@ CFE_Status_t PAY_SLT_Init(void)
         return status;
     }
 
-    CFE_MSG_Init(CFE_MSG_PTR(PAY_SLT_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAY_SLT_HK_TLM_MID),
-                 sizeof(PAY_SLT_Data.HkTlm));
-    CFE_MSG_Init(CFE_MSG_PTR(PAY_SLT_Data.BcnTlm.TelemetryHeader), CFE_SB_ValueToMsgId(PAY_SLT_BCN_TLM_MID),
-                 sizeof(PAY_SLT_Data.BcnTlm));
-    CFE_MSG_Init(CFE_MSG_PTR(PAY_SLT_Data.RptPkt.TelemetryHeader), CFE_SB_ValueToMsgId(PAY_SLT_RPT_TLM_MID),
-                 sizeof(PAY_SLT_Data.RptPkt));
+    status = CFE_MSG_Init(CFE_MSG_PTR(PAY_SLT_Data.HkTlm.TelemetryHeader),
+                          CFE_SB_ValueToMsgId(PAY_SLT_HK_TLM_MID), sizeof(PAY_SLT_Data.HkTlm));
+    if (status == CFE_SUCCESS)
+    {
+        status = CFE_MSG_Init(CFE_MSG_PTR(PAY_SLT_Data.BcnTlm.TelemetryHeader),
+                              CFE_SB_ValueToMsgId(PAY_SLT_BCN_TLM_MID), sizeof(PAY_SLT_Data.BcnTlm));
+    }
+    if (status == CFE_SUCCESS)
+    {
+        status = CFE_MSG_Init(CFE_MSG_PTR(PAY_SLT_Data.RptPkt.TelemetryHeader),
+                              CFE_SB_ValueToMsgId(PAY_SLT_RPT_TLM_MID), sizeof(PAY_SLT_Data.RptPkt));
+    }
+    if (status != CFE_SUCCESS)
+    {
+        CFE_EVS_SendEvent(PAY_SLT_APP_INIT_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAY_SLT: telemetry message initialization failed, RC = 0x%08lX",
+                          (unsigned long)status);
+        return status;
+    }
 
     status = CFE_SB_CreatePipe(&PAY_SLT_Data.CommandPipe, PAY_SLT_Data.PipeDepth, PAY_SLT_Data.PipeName);
     if (status != CFE_SUCCESS)
@@ -108,13 +121,15 @@ CFE_Status_t PAY_SLT_Init(void)
     PAY_SLT_Data.RS422Handle = CFE_SRL_ApiGetHandle(CFE_SRL_RS422_HANDLE_INDEXER);
     
     if (PAY_SLT_Data.RS422Handle == NULL) {
-        CFE_EVS_SendEvent(PAY_SLT_APP_INIT_INF_EID, CFE_EVS_EventType_ERROR, "PAY_SLT: Failed to get RS422 handle");
+        CFE_EVS_SendEvent(PAY_SLT_APP_INIT_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAY_SLT: Failed to get RS422 handle");
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
     PAY_SLT_Data.I2c1Handle = CFE_SRL_ApiGetHandle(CFE_SRL_I2C1_HANDLE_INDEXER);
     if (PAY_SLT_Data.I2c1Handle == NULL) {
-        CFE_EVS_SendEvent(PAY_SLT_APP_INIT_INF_EID, CFE_EVS_EventType_ERROR, "PAY_SLT: Failed to get I2C1 handle");
+        CFE_EVS_SendEvent(PAY_SLT_APP_INIT_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAY_SLT: Failed to get I2C1 handle");
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
@@ -122,4 +137,3 @@ CFE_Status_t PAY_SLT_Init(void)
 
     return CFE_SUCCESS;
 }
-

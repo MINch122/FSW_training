@@ -40,7 +40,6 @@
 
 #define CSP_PORT_TCTLM			((uint8)8u)		/**< CSP port used for TCTLM */
 #define CSP_PORT_PASSTHROUGH	((uint8)48u)	/**< CSP port used for passthrough TCTLM */
-#define CSP_PORT_EVENT          ((uint8)31u)		/**< CSP port used for Events ingestion */
 #define CSP_UNKNOWN_LEN			((int32)-1)		/**< CSP parameter value which is used in `csp_transaction_w_opt` */
 
 #define ADCS_INTERFACE_TRANSPORT_CSP_CAN	((uint8)0u)
@@ -67,13 +66,6 @@
 // CubeADCS Log Frame Max Entry Number
 */
 #define CUBESPACE_MAX_ENTRY_NUM		11
-
-typedef enum CubeADCS_EventClass {
-	CLASS_INFORMATION,
-	CLASS_MINOR_WARNING,
-	CLASS_MAJOR_WARNING,
-	CLASS_CRITICAL
-} CubeADCS_EventClass_t;
 
 typedef struct HandleStruct {
 	uint8 buffer[COMMS_BUFFER_SIZE];/**< Buffer for packing and unpacking */
@@ -175,7 +167,6 @@ int32 ADCS_SetOperationalState(const ADCS_OperationalStateCmd_Payload_t *setVal)
 int32 ADCS_SetMagSensingElmConfig(const ADCS_MagSensingElmConfigCmd_Payload_t *setVal);	// 77
 int32 ADCS_SetTransferFrame(const ADCS_TransferFrameCmd_Payload_t *setVal);	// 79
 int32 ADCS_SetUnsolicitTlmMsgSetup(const ADCS_UnsolicitTlmMsgSetupCmd_Payload_t *setVal);	// 112
-int32 ADCS_SetUnsolicitEventMsgSetup(const ADCS_UnsolicitEventMsgSetupCmd_InternalPayload_t *setVal);	// 116
 int32 ADCS_SetReqTlmLogTransferSetup(const ADCS_RequestTlmLogTransferSetupCmd_Payload_t *setVal);	// 117
 int32 ADCS_SetInitiateEventLogTransfer(const ADCS_InitiateEventLogTransferCmd_Payload_t *setVal);	// 120
 
@@ -221,7 +212,6 @@ int32 ADCS_GetInfoFramInMemory(ADCS_InfoFrameInMemoryTlm_Payload_t *returnVal);	
 int32 ADCS_GetMagSensingElmConfig(ADCS_MagSensingElmConfigTlm_Payload_t *returnVal);	// 221
 int32 ADCS_GetTlmLogInclMask(ADCS_TlmLogInclMaskTlm_Payload_t *returnVal);	// 227
 int32 ADCS_GetUnsolicitTlmMsgSetup(ADCS_UnsolicitTlmMsgSetupTlm_Payload_t *returnVal);	// 228
-int32 ADCS_GetUnsolicitEventMsgSetup(ADCS_UnsolicitEventMsgSetupTlm_Payload_t *returnVal);	// 233
 int32 ADCS_GetTlmLogStatusResponse(ADCS_TlmLogStatusResponseTlm_Payload_t *returnVal);	// 234
 int32 ADCS_GetEventLogStatusResponse(ADCS_EventLogStatusResponseTlm_Payload_t *returnVal);	// 235
 int32 ADCS_GetPortMap(ADCS_PortMapTlm_Payload_t *returnVal);	// 239
@@ -231,13 +221,6 @@ int32 ADCS_GetPortMap(ADCS_PortMapTlm_Payload_t *returnVal);	// 239
  * Report function
  */
 void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSize);
-
-/**
- * Event Function
- */
-void ADCS_HandleEvent(const ADCS_EventEntry_t *Event);
-void ADCS_ListenEventTask(void);
-
 
 /**
  * Additional Function
@@ -266,5 +249,6 @@ int32 ADCS_Comm_GetRawRWLSensor(ADCS_Comm_RawRWLSensorTlm_Payload_t *returnVal);
 int32 ADCS_Comm_GetCalibratedCSSSensor(ADCS_Comm_CalibratedCSSSensorTlm_Payload_t *returnVal);
 int32 ADCS_Comm_GetCalibratedRWLSensor(ADCS_Comm_CalibratedRWLSensorTlm_Payload_t *returnVal);
 int32 ADCS_Comm_GetMainEstTlm(ADCS_Comm_Estimator_Cmn_Payload_t *returnVal);
+int32 ADCS_Comm_GetMainEstHighResTlm(ADCS_MainEstimatorHighResTlm_Payload_t *returnVal);
 
 #endif

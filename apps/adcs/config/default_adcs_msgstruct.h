@@ -55,26 +55,6 @@ typedef struct
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_GpioEnHighCmd_t;
-
-typedef struct{
-    CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_GpioEnLowCmd_t;
-
-typedef struct{
-    CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_GpioBootHighCmd_t;
-
-typedef struct{
-    CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_GpioBootLowCmd_t;
-
-typedef struct{
-    CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_ExitBootLoaderCmd_t;
-
-typedef struct{
-    CFE_MSG_CommandHeader_t CommandHeader;
     ADCS_InterfaceTransportCmd_Payload_t Payload;
 } ADCS_InterfaceTransportCmd_t;
 
@@ -218,13 +198,13 @@ typedef struct{
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    ADCS_Comm_COMM_FLAG_Payload_t Payload;
-} ADCS_Comm09Cmd_t;
+    ADCS_Comm_COMM_10_CMD_Payload_t Payload;
+} ADCS_Comm10Cmd_t;
 
 typedef struct{
     CFE_MSG_CommandHeader_t CommandHeader;
-    ADCS_Comm_COMM_10_CMD_Payload_t Payload;
-} ADCS_Comm10Cmd_t;
+    ADCS_Comm_COMM_11_CMD_Payload_t Payload;
+} ADCS_Comm11Cmd_t;
 
 typedef struct { // ID 56
     CFE_MSG_CommandHeader_t CommandHeader;
@@ -316,11 +296,6 @@ typedef struct { // ID 112
     ADCS_UnsolicitTlmMsgSetupCmd_Payload_t Payload;
 } ADCS_UnsolicitTlmMsgSetupCmd_t;
 
-typedef struct { // ID 116
-    CFE_MSG_CommandHeader_t CommandHeader;
-    ADCS_UnsolicitEventMsgSetupCmd_ExternalPayload_t Payload;
-} ADCS_UnsolicitEventMsgSetupCmd_t;
-
 typedef struct { // ID 120
     CFE_MSG_CommandHeader_t CommandHeader;
     ADCS_InitiateEventLogTransferCmd_Payload_t Payload;
@@ -370,7 +345,7 @@ typedef struct{ // ID 167
 
 typedef struct{  // ID 170
     CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_GetRawCubeSenseSunCmd_t;
+} ADCS_GetRawCalibratedCubeSenseSunCmd_t;
 
 typedef struct{ // ID 181
     CFE_MSG_CommandHeader_t CommandHeader;
@@ -446,15 +421,15 @@ typedef struct{ // ID 200
 
 typedef struct{ // ID 203
     CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_GetRawCSSSensorCmd_t;
+} ADCS_GetRawCalibratedCSSSensorCmd_t;
 
 typedef struct{ // ID 204
     CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_GetRawGYRSensorCmd_t;
+} ADCS_GetRawCalibratedGYRSensorCmd_t;
 
 typedef struct{ // ID 205
     CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_GetRawRWLSensorCmd_t;
+} ADCS_GetRawCalibratedRWLSensorCmd_t;
 
 typedef struct{ // ID 207
     CFE_MSG_CommandHeader_t CommandHeader;
@@ -471,10 +446,6 @@ typedef struct{ // ID 227
 typedef struct{ // ID 228
     CFE_MSG_CommandHeader_t CommandHeader;
 } ADCS_GetUnsolicitTlmMsgSetupCmd_t;
-
-typedef struct{ // ID 233
-    CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_GetUnsolicitEventMsgSetupCmd_t;
 
 typedef struct { // ID 235
     CFE_MSG_CommandHeader_t CommandHeader;
@@ -527,26 +498,21 @@ typedef struct {
     ADCS_SequenceCmdGNDpointing_Payload_t Payload;
 } ADCS_SequenceCmdGNDpointingCmd_t;
 
-/* Velocity Pointing */
-typedef struct { 
+/* Sun Pointing */
+typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_SequenceCmdVpointingCmd_t;
+} ADCS_SequenceCmdSunCmd_t;
 
-/* KissCAM EARTH Pointing */
-typedef struct { 
+/* +Z_B Ground Target Track */
+typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_SequenceCmdKSCpointingCmd_t;
+    ADCS_SequenceCmdTGTpointing_Payload_t Payload;
+} ADCS_SequenceCmdTGTpointingCmd_t;
 
-/* LG CAM EARTH Pointing */
-typedef struct { 
+/* Nadir Pointing with Yaw Towards Ground Target */
+typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
-} ADCS_SequenceCmdLGCpointingCmd_t;
-
-/* GS-based RPY Pointing */
-typedef struct { 
-    CFE_MSG_CommandHeader_t CommandHeader;
-	ADCS_ReferenceRPYvaluesCmd_Payload_t Payload;
-} ADCS_SequenceCmdRPYpointingCmd_t;
-
+    ADCS_SequenceCmdNadirpointing_Payload_t Payload;
+} ADCS_SequenceCmdNadirpointingCmd_t;
 
 #endif /* _adcs_app_msg_h_ */

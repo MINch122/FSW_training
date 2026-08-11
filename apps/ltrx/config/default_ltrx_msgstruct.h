@@ -40,16 +40,23 @@ typedef LTRX_NoArgsCmd_t LTRX_ResetCountersCmd_t;
 typedef LTRX_NoArgsCmd_t LTRX_ResetAppCmdCountersCmd_t;
 typedef LTRX_NoArgsCmd_t LTRX_ResetDeviceCmdCountersCmd_t;
 
+typedef struct LTRX_PACKED
+{
+    uint16 Period;
+} LTRX_SetBusBeaconPeriod_Payload_t;
+
+typedef struct LTRX_PACKED
+{
+    CFE_MSG_CommandHeader_t             CommandHeader;
+    LTRX_SetBusBeaconPeriod_Payload_t Payload;
+} LTRX_SetBusBeaconPeriodCmd_t;
+
 typedef LTRX_NoArgsCmd_t LTRX_SessionStartDownlinkCmd_t; /* CC=10 */
 typedef LTRX_NoArgsCmd_t LTRX_SessionAbortCmd_t;         /* CC=11 */
 typedef LTRX_NoArgsCmd_t LTRX_SessionResetStateCmd_t;    /* CC=12 */
-typedef LTRX_NoArgsCmd_t LTRX_QueryBeaconStatusCmd_t;    /* CC=30 */
-typedef LTRX_NoArgsCmd_t LTRX_QueryGnssInfoCmd_t;        /* CC=31 */
 
 typedef LTRX_NoArgsCmd_t LTRX_DownstreamEnableCmd_t;     /* CC=40 */
 typedef LTRX_NoArgsCmd_t LTRX_DownstreamDisableCmd_t;    /* CC=41 */
-
-typedef LTRX_NoArgsCmd_t LTRX_TestCspPingCmd_t;          /* CC=50 can test */
 
 /* Housekeeping telemetry */
 typedef struct
@@ -66,6 +73,8 @@ typedef struct
     uint8  HaveBeaconStatus;
     uint8  DownstreamEnabled;
     uint8  Reserved;
+    uint16 BusBeaconPeriod;
+    uint16 BusBeaconCount;
 } LTRX_HkTlm_Payload_t;
 
 typedef struct

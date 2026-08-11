@@ -34,9 +34,7 @@ typedef enum
 {
     LTRX_REQ_START_DOWNLINK = 0,
     LTRX_REQ_ABORT,
-    LTRX_REQ_RESET,
-    LTRX_REQ_QUERY_BEACON_STATUS,
-    LTRX_REQ_QUERY_GNSS_INFO
+    LTRX_REQ_RESET
 } LTRX_SessionReqType_t;
 
 /* Queue element */
@@ -60,7 +58,5 @@ LTRX_SessionState_t LTRX_SessionGetState(void);
 CFE_Status_t LTRX_SessionRequestStartDownlink(void);
 CFE_Status_t LTRX_SessionRequestAbort(void);
 CFE_Status_t LTRX_SessionRequestReset(void);
-CFE_Status_t LTRX_SessionRequestQueryBeaconStatus(void);
-CFE_Status_t LTRX_SessionRequestQueryGnssInfo(void);
 
 #endif /* LTRX_SESSION_H */

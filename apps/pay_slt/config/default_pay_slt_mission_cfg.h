@@ -34,7 +34,7 @@
 #include "pay_slt_interface_cfg.h"
 
 #ifndef PAY_SLT_DEBUG
-#define PAY_SLT_DEBUG false
+#define PAY_SLT_DEBUG true
 #endif
 
 #ifndef DEBUG_PAY_SLT

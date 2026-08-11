@@ -14,8 +14,8 @@
 
 void RPT_FIFO_Init(void) {
 
-    RPT_Data.CritQueue.Head = 0;
-    RPT_Data.CritQueue.Count = 0;
+    RPT_Data.RptQueue.Head = 0;
+    RPT_Data.RptQueue.Count = 0;
 
     RPT_Data.CritQueue.Head = 0;
     RPT_Data.CritQueue.Count = 0;
@@ -81,7 +81,7 @@ CFE_Status_t RPT_TableInit(void) {
 CFE_Status_t RPT_OpsDataInit(void) {
     CFE_Status_t Status = CFE_SUCCESS;
     
-    RPT_Data.OpsDataHandle = RPT_OpenOpsFile(false);
+    RPT_Data.OpsDataHandle = RPT_OpenOpsFile();
     if (RPT_Data.OpsDataHandle == OS_OBJECT_ID_UNDEFINED) {
         CFE_EVS_SendErr(RPT_DATA_OPEN_ERR_EID, "Open Operation data file failed.");
         Status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;

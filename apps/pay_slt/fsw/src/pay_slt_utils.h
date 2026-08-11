@@ -57,6 +57,7 @@ typedef struct __attribute__((packed)) {
         uint8  u8[256];
         uint16 u16[128];
         uint32 u32[64];
+        int8   i8[256];
         int16  i16[128];
         char   str[256];
         float  flt[64];
@@ -127,12 +128,12 @@ int32 PAY_SLT_ReadExpI2CChunk(CFE_SRL_IO_Handle_t *handle, uint32 start_addr, vo
  * @brief Request and read a payload data frame through the RS422 interface.
  *
  * Sends the RS422 DOWNLOAD command and stores the complete received frame,
- * including its 7-byte header, in @p data. The response payload length controls
- * how many additional bytes are read.
+ * including its 7-byte header and trailing END byte, in @p data. The response
+ * payload length controls how many additional bytes are read.
  *
  * @param handle  RS422 serial I/O handle.
  * @param data    Destination buffer for the frame header and payload.
- * @param size    Capacity of @p data; must include the 7-byte frame header.
+ * @param size    Capacity of @p data; must include the header and END byte.
  * @return CFE_SUCCESS on success; SLT_IFB_DEVICE_BAD_ARG for invalid input;
  *         CFE_SRL_PARTIAL_READ_ERR for an oversized or malformed length;
  *         otherwise a serial I/O error code.
@@ -194,8 +195,8 @@ void PAY_SLT_PrintParamTable(uint8 node, uint8 table, const gs_param_table_insta
 /**
  * @brief Build and publish a PAY_SLT command result report.
  *
- * Updates command/error counters, copies up to the RPT return-value capacity
- * from @p read_data, and transmits the report telemetry packet.
+ * Updates error counters, copies up to the RPT return-value capacity from
+ * @p read_data, and transmits the report telemetry packet.
  *
  * @param status        Command or device operation status.
  * @param command_code  PAY_SLT command code being reported.
@@ -206,5 +207,8 @@ void PAY_SLT_PrintParamTable(uint8 node, uint8 table, const gs_param_table_insta
  *         status or a message-buffer/transmit error.
  */
 CFE_Status_t PAY_SLT_HandleReport(int32 status, uint8 command_code, bool device_error, const void *read_data, uint16 read_size);
+
+CFE_Status_t PAY_SLT_HandleReportForMid(uint16 message_id, int32 status, uint8 command_code, bool device_error,
+                                        const void *read_data, uint16 read_size);
 
 #endif

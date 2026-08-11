@@ -178,7 +178,8 @@ CFE_Status_t ADCS_AppInit(void)
         /*
         ** Subscribe to ADCS beacon command
         */
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(ADCS_SEND_BCN_MID), ADCS_AppData.CommandPipe);
+        status = CFE_SB_SubscribeEx(CFE_SB_ValueToMsgId(ADCS_SEND_BCN_MID), ADCS_AppData.CommandPipe,
+                                    CFE_SB_DEFAULT_QOS, ADCS_BCN_MSG_LIMIT);
         if (status != CFE_SUCCESS)
         {
             CFE_EVS_SendEvent(ADCS_SUB_HK_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -199,15 +200,10 @@ CFE_Status_t ADCS_AppInit(void)
         }
     }
 
-    if (status == CFE_SUCCESS) {
+    if (status == CFE_SUCCESS)
+    {
         // CAN Endpoint init
         CUBE_EndpointInit();
-        /**
-         * Create CubeADCS Event Listen Task...
-         */
-        status = CFE_ES_CreateChildTask(&ADCS_AppData.TaskId, "ADCS_EVS_TASK",
-                                        ADCS_ListenEventTask, CFE_ES_TASK_STACK_ALLOCATE,
-                                        ADCS_EVS_TASK_STACK_SIZE, ADCS_EVS_TASK_STACK_PRIORITY, 0);
     }
 
     if (status == CFE_SUCCESS)

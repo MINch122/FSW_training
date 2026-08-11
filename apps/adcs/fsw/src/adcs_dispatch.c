@@ -90,6 +90,10 @@ bool ADCS_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength
         }
         /* End of RPT */
     }
+    else
+    {
+        ADCS_AppData.CmdCounter++;
+    }
 cleanup:
     return result;
 }
@@ -132,44 +136,6 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
         
-        /*
-         * ADCS UTILS
-        */
-        case ADCS_GPIO_ENABLE_HIGH_CC:
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GpioEnHighCmd_t)))
-            {
-                // ADCS_EN_HighCmd();
-            }            
-            break;
-
-        case ADCS_GPIO_ENABLE_LOW_CC:
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GpioEnLowCmd_t)))
-            {
-                // ADCS_EN_LowCmd();
-            } 
-            break;
-
-        case ADCS_GPIO_BOOT_HIGH_CC:
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GpioBootHighCmd_t)))
-            {
-                // ADCS_Boot_HighCmd();
-            } 
-            break;
-        
-        case ADCS_GPIO_BOOT_LOW_CC:
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GpioBootLowCmd_t)))
-            {
-                // ADCS_Boot_LowCmd();
-            } 
-            break;
-
-        case ADCS_EXIT_BOOTLOADER_CC:
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_ExitBootLoaderCmd_t)))
-            {
-                // ADCS_ExitBootloader();
-            }
-            break;
-
         /* * * * < ADCS Command Code for TC > * * * */
         case ADCS_SET_RESET_CC:
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_ResetCmd_t)))
@@ -402,13 +368,6 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
-        case ADCS_SET_UNSOLICIT_EVENT_MSG_SETUP_CC:
-            // ID 116
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_UnsolicitEventMsgSetupCmd_t))) {
-                ADCS_SetUnsolicitEventMsgSetupCmd((const ADCS_UnsolicitEventMsgSetupCmd_t *)SBBufPtr);
-            }
-            break;
-
         case ADCS_SET_INITIATE_EVENT_LOG_TRANSFER_CC:
             // ID 120
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_InitiateEventLogTransferCmd_t))) {
@@ -482,10 +441,10 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
-        case ADCS_GET_RAW_CUBESENSE_SUN_CC:
+        case ADCS_GET_RAW_CALIBRATED_CUBESENSE_SUN_CC:
             // ID 170
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRawCubeSenseSunCmd_t))) {
-                ADCS_GetRawCubeSenseSunCmd();
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRawCalibratedCubeSenseSunCmd_t))) {
+                ADCS_GetRawCalibratedCubeSenseSunCmd();
             }
             break;
 
@@ -615,24 +574,24 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
-        case ADCS_GET_RAW_CSS_SENSOR_CC:
+        case ADCS_GET_RAW_CALIBRATED_CSS_SENSOR_CC:
             // ID 203
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRawCSSSensorCmd_t))) {
-                ADCS_GetRawCSSSensorCmd();
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRawCalibratedCSSSensorCmd_t))) {
+                ADCS_GetRawCalibratedCSSSensorCmd();
             }
             break;
 
-        case ADCS_GET_RAW_GYR_SENSOR_CC:
+        case ADCS_GET_RAW_CALIBRATED_GYR_SENSOR_CC:
             // ID 204
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRawGYRSensorCmd_t))) {
-                ADCS_GetRawGYRSensorCmd();
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRawCalibratedGYRSensorCmd_t))) {
+                ADCS_GetRawCalibratedGYRSensorCmd();
             }
             break;
 
-        case ADCS_GET_RAW_RWL_SENSOR_CC:
+        case ADCS_GET_RAW_CALIBRATED_RWL_SENSOR_CC:
             // ID 205
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRawRWLSensorCmd_t))) {
-                ADCS_GetRawRWLSensorCmd();
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetRawCalibratedRWLSensorCmd_t))) {
+                ADCS_GetRawCalibratedRWLSensorCmd();
             }
             break;
 
@@ -664,13 +623,6 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
-        case ADCS_GET_UNSOLICIT_EVENT_MSG_SETUP_CC:
-            // ID 233
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetUnsolicitEventMsgSetupCmd_t))) {
-                ADCS_GetUnsolicitEventMsgSetupCmd();
-            }
-            break;
-
         case ADCS_GET_EVENT_LOG_STATUS_RESPONSE_CC:
             // ID 235
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetEventLogStatusReponseCmd_t))) {
@@ -697,27 +649,21 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
-		case ADCS_SEQ_VELPT_CC:
-			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdVpointingCmd_t))) {
-                ADCS_SequenceCmd_Vpointing();
+        case ADCS_SEQ_SUN_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdSunCmd_t))) {
+                ADCS_SequenceCmd_Sunpointing();
             }
             break;
 
-		case ADCS_SEQ_KSCPT_CC:
-			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdKSCpointingCmd_t))) {
-                ADCS_SequenceCmd_KSCpointing();
+        case ADCS_SEQ_TGT_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdTGTpointingCmd_t))) {
+                ADCS_SequenceCmd_TGTpointing((const ADCS_SequenceCmdTGTpointingCmd_t *)SBBufPtr);
             }
             break;
 
-		case ADCS_SEQ_LGCPT_CC:
-			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdLGCpointingCmd_t))) {
-                ADCS_SequenceCmd_LGCpointing();
-            }
-            break;
-
-		case ADCS_SEQ_RPYPT_CC:
-			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdRPYpointingCmd_t))) {
-                ADCS_SequenceCmd_RPYpointing((const ADCS_SequenceCmdRPYpointingCmd_t *)SBBufPtr);
+        case ADCS_SEQ_NADIR_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_SequenceCmdNadirpointingCmd_t))) {
+                ADCS_SequenceCmd_Nadirpointing((const ADCS_SequenceCmdNadirpointingCmd_t *)SBBufPtr);
             }
             break;
 
@@ -726,13 +672,6 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
                 ADCS_SetErrorLogClearCmd((const ADCS_ErrorLogClearCmd_t *)SBBufPtr);
             }
             break;
-
-        case ADCS_GET_CURRENT_UNIX_TIME_INTERNAL_CC:
-            // ID 133
-			if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_GetCurrentUnixTimeCmd_t))) {
-                ADCS_GetCurrentUnixTimeInternalCmd();
-            }
-            break;		
 
         /* ADCS commissioning commands. */
         case ADCS_COMM_01_CC:
@@ -783,15 +722,15 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
-        case ADCS_COMM_09_CC:
-            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm09Cmd_t))) {
-                ADCS_Comm09Cmd((const ADCS_Comm09Cmd_t *)SBBufPtr);
-            }
-            break;
-
         case ADCS_COMM_10_CC:
             if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm10Cmd_t))) {
                 ADCS_Comm10Cmd((const ADCS_Comm10Cmd_t *)SBBufPtr);
+            }
+            break;
+
+        case ADCS_COMM_11_CC:
+            if (ADCS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ADCS_Comm11Cmd_t))) {
+                ADCS_Comm11Cmd((const ADCS_Comm11Cmd_t *)SBBufPtr);
             }
             break;
 
@@ -799,6 +738,7 @@ void ADCS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
         default:
             CFE_EVS_SendEvent(ADCS_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
                               CommandCode);
+            ADCS_AppData.ErrCounter++;
 
 
             /* RPT */
@@ -853,6 +793,7 @@ void ADCS_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
         default:
             CFE_EVS_SendEvent(ADCS_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                               "ADCS: invalid command packet,MID = 0x%x", (unsigned int)CFE_SB_MsgIdToValue(MsgId));
+            ADCS_AppData.ErrCounter++;
 
 
              /* RPT */

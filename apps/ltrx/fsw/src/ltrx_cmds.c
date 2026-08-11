@@ -61,10 +61,7 @@ void LTRX_HandleReport(CFE_Status_t Status, uint8 CC, const void *Data, uint16 D
     }
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(Report->TelemetryHeader));
-    if (CFE_SB_TransmitBuffer(BufPtr, true) != CFE_SUCCESS)
-    {
-        CFE_SB_ReleaseMessageBuffer(BufPtr);
-    }
+    (void)CFE_SB_TransmitBuffer(BufPtr, true);
 }
 
 /* Helpers */
@@ -87,6 +84,8 @@ static void LTRX_ReportHousekeeping(void)
     Payload.HaveGnss = LTRX_AppData.HaveGnss ? 1 : 0;
     Payload.HaveBeaconStatus = LTRX_AppData.HaveBeaconStatus ? 1 : 0;
     Payload.DownstreamEnabled = LTRX_Downstream_IsEnabled() ? 1 : 0;
+    Payload.BusBeaconPeriod = LTRX_Downstream_GetBeaconPeriod();
+    Payload.BusBeaconCount  = LTRX_Downstream_GetBeaconCount();
 
     if (LTRX_AppData.HaveGnss)
     {
@@ -138,7 +137,6 @@ void LTRX_SendBcnTlm(void)
     {
         CFE_EVS_SendEvent(LTRX_HK_TX_ERR_EID, CFE_EVS_EventType_ERROR,
                           "LTRX: BCN TLM transmit failed");
-        CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
         return;
     }
 
@@ -183,6 +181,7 @@ CFE_Status_t LTRX_ResetCountersCmd(const LTRX_ResetCountersCmd_t *Msg)
 
     CFE_EVS_SendEvent(LTRX_RESET_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "LTRX: RESET_COUNTERS");
+    LTRX_HandleReport(CFE_SUCCESS, LTRX_RESET_COUNTERS_CC, NULL, 0);
     return CFE_SUCCESS;
 }
 
@@ -195,6 +194,7 @@ CFE_Status_t LTRX_ResetAppCmdCountersCmd(const LTRX_ResetAppCmdCountersCmd_t *Ms
 
     CFE_EVS_SendEvent(LTRX_RESET_APP_COUNTER_EID, CFE_EVS_EventType_INFORMATION,
                       "LTRX: RESET_APP_CMD_COUNTERS");
+    LTRX_HandleReport(CFE_SUCCESS, LTRX_RESET_APP_CMD_COUNTERS_CC, NULL, 0);
     return CFE_SUCCESS;
 }
 
@@ -206,6 +206,27 @@ CFE_Status_t LTRX_ResetDeviceCmdCountersCmd(const LTRX_ResetDeviceCmdCountersCmd
 
     CFE_EVS_SendEvent(LTRX_RESET_DEVICE_COUNTER_EID, CFE_EVS_EventType_INFORMATION,
                       "LTRX: RESET_DEVICE_CMD_COUNTERS");
+    LTRX_HandleReport(CFE_SUCCESS, LTRX_RESET_DEVICE_CMD_COUNTERS_CC, NULL, 0);
+    return CFE_SUCCESS;
+}
+
+CFE_Status_t LTRX_SetBusBeaconPeriodCmd(const LTRX_SetBusBeaconPeriodCmd_t *Msg)
+{
+    uint16 period = Msg->Payload.Period;
+
+    if (period == 0u)
+    {
+        CFE_EVS_SendEvent(LTRX_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "LTRX: SET_BUS_BEACON_PERIOD rejected, period must be at least 1");
+        LTRX_HandleReport(CFE_ES_BAD_ARGUMENT, LTRX_SET_BUS_BEACON_PERIOD_CC, &period, sizeof(period));
+        return CFE_ES_BAD_ARGUMENT;
+    }
+
+    LTRX_Downstream_SetBeaconPeriod(period);
+    CFE_EVS_SendEvent(LTRX_BUS_BCN_PERIOD_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "LTRX: bus beacon period set to %u", (unsigned)period);
+    LTRX_HandleReport(CFE_SUCCESS, LTRX_SET_BUS_BEACON_PERIOD_CC, &period, sizeof(period));
+
     return CFE_SUCCESS;
 }
 
@@ -213,28 +234,41 @@ CFE_Status_t LTRX_ResetDeviceCmdCountersCmd(const LTRX_ResetDeviceCmdCountersCmd
 
 CFE_Status_t LTRX_SessionStartDownlinkCmd(const LTRX_SessionStartDownlinkCmd_t *Msg)
 {
+    CFE_Status_t Status;
+
     (void)Msg;
 
     if (!LTRX_Downlink_IsReady() && !LTRX_Downlink_HasPending())
     {
         CFE_EVS_SendEvent(LTRX_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "LTRX: SESSION_START_DOWNLINK rejected - no message prepared");
+        LTRX_HandleReport(CFE_STATUS_EXTERNAL_RESOURCE_FAIL, LTRX_SESSION_START_DOWNLINK_CC, NULL, 0);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-    return LTRX_SessionRequestStartDownlink();
+    Status = LTRX_SessionRequestStartDownlink();
+    LTRX_HandleReport(Status, LTRX_SESSION_START_DOWNLINK_CC, NULL, 0);
+    return Status;
 }
 
 CFE_Status_t LTRX_SessionAbortCmd(const LTRX_SessionAbortCmd_t *Msg)
 {
+    CFE_Status_t Status;
+
     (void)Msg;
-    return LTRX_SessionRequestAbort();
+    Status = LTRX_SessionRequestAbort();
+    LTRX_HandleReport(Status, LTRX_SESSION_ABORT_CC, NULL, 0);
+    return Status;
 }
 
 CFE_Status_t LTRX_SessionResetStateCmd(const LTRX_SessionResetStateCmd_t *Msg)
 {
+    CFE_Status_t Status;
+
     (void)Msg;
-    return LTRX_SessionRequestReset();
+    Status = LTRX_SessionRequestReset();
+    LTRX_HandleReport(Status, LTRX_SESSION_RESET_STATE_CC, NULL, 0);
+    return Status;
 }
 
 /* ---- Downstream gating ---- */
@@ -247,6 +281,7 @@ CFE_Status_t LTRX_DownstreamEnableCmd(const LTRX_DownstreamEnableCmd_t *Msg)
 
     CFE_EVS_SendEvent(LTRX_DOWNSTREAM_ENABLE_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "LTRX: DOWNSTREAM_ENABLE");
+    LTRX_HandleReport(CFE_SUCCESS, LTRX_DOWNSTREAM_ENABLE_CC, NULL, 0);
     return CFE_SUCCESS;
 }
 
@@ -258,5 +293,6 @@ CFE_Status_t LTRX_DownstreamDisableCmd(const LTRX_DownstreamDisableCmd_t *Msg)
 
     CFE_EVS_SendEvent(LTRX_DOWNSTREAM_DISABLE_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "LTRX: DOWNSTREAM_DISABLE");
+    LTRX_HandleReport(CFE_SUCCESS, LTRX_DOWNSTREAM_DISABLE_CC, NULL, 0);
     return CFE_SUCCESS;
 }
