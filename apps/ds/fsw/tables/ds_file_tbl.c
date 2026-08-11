@@ -57,7 +57,8 @@
 */
 // #define FILE_ALL_EVENTS 0
 
-#define FILE_ALL_APP_BCN_PKTS  0
+#define FILE_ALL_APP_BCN_PKTS 0
+#define FILE_MISSION_PKTS     1
 
 /*
 ** Sample Destination File Table Data
@@ -76,21 +77,21 @@ DS_DestFileTable_t DS_DestFileTable = {
             /* .FileNameType  = */ DS_BY_COUNT,
             /* .EnableState   = */ DS_ENABLED,
             /* .MaxFileSize   = */ (200 * 100), /* 100 beacon packets*/
-            /* .MaxFileAge    = */ (60 * 60* 8),   /* 1 hour */
+            /* .MaxFileAge    = */ (60 * 60 * 8), /* 8 hours */
             /* .SequenceCount = */ 1000,
         },
-        /* File Index 01 */
+        /* File Index 01 -- MISSION telemetry packets */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ DS_EMPTY_STRING,
-            /* .Basename      = */ DS_EMPTY_STRING,
-            /* .Extension     = */ DS_EMPTY_STRING,
+            /* .Pathname      = */ "/cf/sdcard/mission",
+            /* .Basename      = */ "mission",
+            /* .Extension     = */ ".dat",
 
-            /* .FileNameType  = */ DS_UNUSED,
-            /* .EnableState   = */ DS_UNUSED,
-            /* .MaxFileSize   = */ DS_UNUSED,
-            /* .MaxFileAge    = */ DS_UNUSED,
-            /* .SequenceCount = */ DS_UNUSED,
+            /* .FileNameType  = */ DS_BY_COUNT,
+            /* .EnableState   = */ DS_ENABLED,
+            /* .MaxFileSize   = */ (600 * 100), /* approximately 100 MISSION report packets */
+            /* .MaxFileAge    = */ (60 * 60 * 8), /* 8 hours */
+            /* .SequenceCount = */ 1000,
         },
         /* File Index 02 */
         {

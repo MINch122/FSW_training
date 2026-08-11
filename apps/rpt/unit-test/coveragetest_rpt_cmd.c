@@ -42,6 +42,20 @@ void RPT_Command_Reset_Test_Nominal(void) {
     UtAssert_BOOL_TRUE(RPT_Data.ErrCounter == 0);
 }
 
+void RPT_Command_SendBeacon_Test_Nominal(void) {
+    RPT_Data.OpsData.BootCount = 7;
+    RPT_Data.OpsData.Sequence = 42;
+    RPT_Data.OpsData.ResetCause = 0x81;
+
+    UtAssert_INT32_EQ(RPT_SendBeaconCmd(), CFE_SUCCESS);
+
+    UtAssert_UINT16_EQ(RPT_Data.HkTlm.Payload.BootCount, 7);
+    UtAssert_UINT32_EQ(RPT_Data.HkTlm.Payload.Sequence, 42);
+    UtAssert_UINT8_EQ(RPT_Data.HkTlm.Payload.ResetCause, 0x81);
+    UtAssert_STUB_COUNT(CFE_SB_TimeStampMsg, 1);
+    UtAssert_STUB_COUNT(CFE_SB_TransmitMsg, 1);
+}
+
 void RPT_Command_Report_Test_Nominal(void) {
     /* Set to critical report case */
     UT_CmdBuf.ReportCmd.Payload.IsCritical = 1;
@@ -107,6 +121,51 @@ void RPT_Command_UpdateOpsData_Test_Nominal(void) {
     UtAssert_STUB_COUNT(OS_MutSemGive, 1);
     UtAssert_STUB_COUNT(RPT_CalculateCRC, 1);
     UtAssert_STUB_COUNT(RPT_WriteToFile, 1);
+    UtAssert_UINT8_EQ(RPT_Data.OpsCount, 1);
+}
+
+void RPT_Command_UpdateOpsData_Test_WriteBackupNominal(void) {
+    RPT_Data.OpsCount = RPT_OPS_STORE_BACKUP_COUNT - 1;
+    RPT_Data.OpsData.Sequence = 41;
+    UT_SetDefaultReturnValue(UT_KEY(RPT_OpenOpsBackupFile), 1);
+
+    UtAssert_VOIDCALL(RPT_UpdateOperationData());
+
+    UtAssert_STUB_COUNT(RPT_CalculateCRC, 2);
+    UtAssert_STUB_COUNT(RPT_WriteToFile, 3);
+    UtAssert_STUB_COUNT(RPT_OpenOpsBackupFile, 1);
+    UtAssert_STUB_COUNT(RPT_CloseFile, 1);
+    UtAssert_UINT32_EQ(RPT_Data.OpsData.Sequence, 42);
+    UtAssert_UINT8_EQ(RPT_Data.OpsCount, 0);
+}
+
+void RPT_Command_UpdateOpsData_Test_BackupOpenError(void) {
+    RPT_Data.OpsCount = RPT_OPS_STORE_BACKUP_COUNT - 1;
+    RPT_Data.OpsData.Sequence = 41;
+    UT_SetDefaultReturnValue(UT_KEY(RPT_OpenOpsBackupFile), OS_OBJECT_ID_UNDEFINED);
+
+    UtAssert_VOIDCALL(RPT_UpdateOperationData());
+
+    UtAssert_STUB_COUNT(RPT_WriteToFile, 1);
+    UtAssert_STUB_COUNT(RPT_OpenOpsBackupFile, 1);
+    UtAssert_STUB_COUNT(RPT_CloseFile, 0);
+    UtAssert_UINT32_EQ(RPT_Data.OpsData.Sequence, 41);
+    UtAssert_UINT8_EQ(RPT_Data.OpsCount, 0);
+}
+
+void RPT_Command_UpdateOpsData_Test_BackupWriteError(void) {
+    RPT_Data.OpsCount = RPT_OPS_STORE_BACKUP_COUNT - 1;
+    RPT_Data.OpsData.Sequence = 41;
+    UT_SetDefaultReturnValue(UT_KEY(RPT_OpenOpsBackupFile), 1);
+    UT_SetDeferredRetcode(UT_KEY(RPT_WriteToFile), 2, CFE_STATUS_EXTERNAL_RESOURCE_FAIL);
+
+    UtAssert_VOIDCALL(RPT_UpdateOperationData());
+
+    UtAssert_STUB_COUNT(RPT_WriteToFile, 2);
+    UtAssert_STUB_COUNT(RPT_OpenOpsBackupFile, 1);
+    UtAssert_STUB_COUNT(RPT_CloseFile, 1);
+    UtAssert_UINT32_EQ(RPT_Data.OpsData.Sequence, 41);
+    UtAssert_UINT8_EQ(RPT_Data.OpsCount, 0);
 }
 
 void RPT_Command_Report_Test_CriticalError(void) {
@@ -135,9 +194,13 @@ void RPT_Command_Report_Test_ReportError(void) {
 void UtTest_Setup(void) {
     UT_RPT_ADD_TEST(RPT_Command_Noop_Test_Nominal);
     UT_RPT_ADD_TEST(RPT_Command_Reset_Test_Nominal);
+    UT_RPT_ADD_TEST(RPT_Command_SendBeacon_Test_Nominal);
     UT_RPT_ADD_TEST(RPT_Command_Report_Test_Nominal);
     UT_RPT_ADD_TEST(RPT_Command_ClearQ_Test_Nominal);
     UT_RPT_ADD_TEST(RPT_Command_UpdateOpsData_Test_Nominal);
+    UT_RPT_ADD_TEST(RPT_Command_UpdateOpsData_Test_WriteBackupNominal);
+    UT_RPT_ADD_TEST(RPT_Command_UpdateOpsData_Test_BackupOpenError);
+    UT_RPT_ADD_TEST(RPT_Command_UpdateOpsData_Test_BackupWriteError);
     UT_RPT_ADD_TEST(RPT_Command_Report_Test_CriticalError);
     UT_RPT_ADD_TEST(RPT_Command_Report_Test_ReportError);
 }

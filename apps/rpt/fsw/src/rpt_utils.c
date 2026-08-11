@@ -11,6 +11,7 @@
 #include "rpt_eventids.h"
 #include "cfe_msgids.h"
 
+#include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -281,6 +282,38 @@ osal_id_t RPT_OpenOpsFile(void) {
     return FD;
 }
 
+osal_id_t RPT_OpenOpsBackupFile(uint32 Sequence) {
+    osal_id_t FD = OS_OBJECT_ID_UNDEFINED;
+    osal_id_t DirID = OS_OBJECT_ID_UNDEFINED;
+    char Path[OS_MAX_PATH_LEN];
+    int PathLength;
+    int32 OsStatus;
+
+    OsStatus = OS_DirectoryOpen(&DirID, RPT_OPS_BACKUP_PATH);
+    if (OsStatus == OS_SUCCESS) {
+        OS_DirectoryClose(DirID);
+    }
+    else {
+        OsStatus = OS_mkdir(RPT_OPS_BACKUP_PATH, OS_READ_WRITE);
+        if (OsStatus != OS_SUCCESS) {
+            return OS_OBJECT_ID_UNDEFINED;
+        }
+    }
+
+    PathLength = snprintf(Path, sizeof(Path), "%s/Ops-%032lu", RPT_OPS_BACKUP_PATH,
+                          (unsigned long)Sequence);
+    if (PathLength < 0 || (size_t)PathLength >= sizeof(Path)) {
+        return OS_OBJECT_ID_UNDEFINED;
+    }
+
+    OsStatus = OS_OpenCreate(&FD, Path, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    if (OsStatus != OS_SUCCESS) {
+        return OS_OBJECT_ID_UNDEFINED;
+    }
+
+    return FD;
+}
+
 
 /**
  * Data is guaranteed to `RPT_OperationData_t`
@@ -307,6 +340,14 @@ int32 RPT_ReadFromFile(osal_id_t FD, void *Data, size_t Size) {
     
     /* Size of readed data */
     return OsStatus;
+}
+
+int32 RPT_CloseFile(osal_id_t FD) {
+    if (OS_close(FD) != OS_SUCCESS) {
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    return CFE_SUCCESS;
 }
 
 /**********************************

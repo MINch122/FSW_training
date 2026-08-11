@@ -238,6 +238,14 @@ CFE_Status_t LTRX_SessionStartDownlinkCmd(const LTRX_SessionStartDownlinkCmd_t *
 
     (void)Msg;
 
+    if (LTRX_Downlink_IsInFlight())
+    {
+        CFE_EVS_SendEvent(LTRX_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "LTRX: SESSION_START_DOWNLINK rejected - transfer already in progress");
+        LTRX_HandleReport(CFE_STATUS_REQUEST_ALREADY_PENDING, LTRX_SESSION_START_DOWNLINK_CC, NULL, 0);
+        return CFE_STATUS_REQUEST_ALREADY_PENDING;
+    }
+
     if (!LTRX_Downlink_IsReady() && !LTRX_Downlink_HasPending())
     {
         CFE_EVS_SendEvent(LTRX_CMD_ERR_EID, CFE_EVS_EventType_ERROR,

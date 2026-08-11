@@ -319,8 +319,9 @@ static void TO_LAB_PrintHkCombinedPkt1Hardcoded(const char *Path, const CFE_SB_B
     memcpy(&Adcs, &Bytes[BCN_ADCS_OFFSET], sizeof(Adcs));
 
     TO_LAB_APP_printf("\n============[ TO_LAB %s HK COMBINED BCN ]============\n", Path);
-    TO_LAB_APP_printf("[RPT]  boot_count=%u | reset_cause=0x%02X\n",
-                      (unsigned int)Rpt.BootCount, (unsigned int)Rpt.ResetCause);
+    TO_LAB_APP_printf("[RPT]  boot_count=%u | seq=%lu | reset_cause=0x%02X\n",
+                      (unsigned int)Rpt.BootCount, (unsigned long)Rpt.Sequence,
+                      (unsigned int)Rpt.ResetCause);
     TO_LAB_APP_printf("[UTRX] active=%u | boot_count=%u\n",
                       (unsigned int)Utrx.ActiveConf, (unsigned int)Utrx.BootCount);
     TO_LAB_APP_printf("       boot_cause=0x%08lX | temp=%d\n",

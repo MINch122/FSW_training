@@ -50,14 +50,15 @@ void SCH_LAB_AppMain(void)
 
     CFE_ES_PerfLogEntry(SCH_LAB_MAIN_TASK_PERF_ID);
 
+    /* Let the other applications initialize before starting subscriptions and the scheduler timer. */
+    OS_TaskDelay(5000);
+
     Status = SCH_LAB_AppInit();
     if (Status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("SCH_LAB: Error Initializing RC = 0x%08lX\n", (unsigned long)Status);
         RunStatus = CFE_ES_RunStatus_APP_ERROR;
     }
-
-    OS_TaskDelay(5000);
 
     /* Loop Forever */
     while (CFE_ES_RunLoop(&RunStatus) == true)

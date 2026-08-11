@@ -31,6 +31,22 @@ CFE_Status_t RPT_ClearQueueCmd(const RPT_ClearQueueCmd_t *Msg)
 
 /*
  * ----------------------------------------------------
+ * Generated stub function for RPT_GetOpsDataCmd()
+ * ----------------------------------------------------
+ */
+CFE_Status_t RPT_GetOpsDataCmd(const RPT_GetOpsDataCmd_t *Msg)
+{
+    UT_GenStub_SetupReturnBuffer(RPT_GetOpsDataCmd, CFE_Status_t);
+
+    UT_GenStub_AddParam(RPT_GetOpsDataCmd, const RPT_GetOpsDataCmd_t *, Msg);
+
+    UT_GenStub_Execute(RPT_GetOpsDataCmd, Basic, NULL);
+
+    return UT_GenStub_GetReturnValue(RPT_GetOpsDataCmd, CFE_Status_t);
+}
+
+/*
+ * ----------------------------------------------------
  * Generated stub function for RPT_NoopCmd()
  * ----------------------------------------------------
  */

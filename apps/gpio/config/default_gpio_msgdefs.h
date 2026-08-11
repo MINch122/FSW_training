@@ -41,6 +41,10 @@ typedef struct GPIO_DigpiolayParam_Payload
 ** Type definition (Sample App housekeeping)
 */
 
+#define GPIO_DEP_BURN_CHANNEL_LTRX 0u
+#define GPIO_DEP_BURN_CHANNEL_DEP1 1u
+#define GPIO_DEP_BURN_CHANNEL_DEP2 2u
+
 typedef struct GPIO_DepBurn_Payload
 {
     uint8  Channel;

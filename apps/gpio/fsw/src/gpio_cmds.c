@@ -416,13 +416,19 @@ CFE_Status_t GPIO_DepBurnCmd(const GPIO_DepBurnCmd_t *Msg)
     Report.OnStatus        = CFE_SUCCESS;
     Report.OffStatus       = CFE_SUCCESS;
 
-    if (Channel == 1)
+    if (Channel == GPIO_DEP_BURN_CHANNEL_LTRX)
+    {
+        Name     = "LTRX_EN";
+        Index    = CFE_SRL_LTRX_EN_GPIO_INDEXER;
+        StateBit = GPIO_OUTPUT_LTRX_EN_BIT;
+    }
+    else if (Channel == GPIO_DEP_BURN_CHANNEL_DEP1)
     {
         Name     = "DEP1_EN";
         Index    = CFE_SRL_DEP1_EN_GPIO_INDEXER;
         StateBit = GPIO_OUTPUT_DEP1_EN_BIT;
     }
-    else if (Channel == 2)
+    else if (Channel == GPIO_DEP_BURN_CHANNEL_DEP2)
     {
         Name     = "DEP2_EN";
         Index    = CFE_SRL_DEP2_EN_GPIO_INDEXER;
@@ -432,7 +438,7 @@ CFE_Status_t GPIO_DepBurnCmd(const GPIO_DepBurnCmd_t *Msg)
     {
         GPIO_Data.ErrCounter++;
         CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "GPIO: invalid DEP burn channel %u, expected 1 or 2", (unsigned int)Channel);
+                          "GPIO: invalid burn channel %u, expected 0, 1 or 2", (unsigned int)Channel);
         FinalStatus = CFE_STATUS_BAD_COMMAND_CODE;
         GPIO_SendReport(GPIO_DEP_BURN_CC, FinalStatus, &Report, sizeof(Report),
                         GPIO_StatusToReportType(FinalStatus));

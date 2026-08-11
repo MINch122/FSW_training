@@ -12,10 +12,10 @@
 /* Pipe Depth */
 #define MISSION_PIPE_DEPTH      8
 
-#define MISSION_LEOP_INITIAL_WAIT_SEC         (45u * 60u)
-#define MISSION_LEOP_BURN_DURATION_SEC        90u
-#define MISSION_LEOP_POST_BURN_WAIT_SEC       (30u * 60u)
-#define MISSION_LEOP_SAVE_INTERVAL_SEC        10u
+#define MISSION_LEOP_INITIAL_WAIT_SEC         (45u * 60u) // 45
+#define MISSION_LEOP_BURN_DURATION_SEC        10u         
+#define MISSION_LEOP_POST_BURN_WAIT_SEC       (30u * 60u) // 30
+#define MISSION_LEOP_SAVE_INTERVAL_SEC        10u        
 #define MISSION_LEOP_WAIT_LOG_SEC             30u
 #define MISSION_LEOP_DATA_PATH                "/cf/leop.bin"
 #define MISSION_LEOP_TEMP_DATA_PATH           "/cf/leop.tmp"

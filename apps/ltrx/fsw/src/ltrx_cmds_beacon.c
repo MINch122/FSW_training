@@ -37,6 +37,7 @@ static uint16_t s_DownLen    = 0;
 static uint32_t s_DownMsgId  = 0;
 static uint32_t s_DownMsgCrc = 0;
 static bool     s_DownReady  = false;
+static bool     s_DownInFlight = false;
 
 static uint8_t  s_PendingDownBuf[LTRX_DOWNLINK_MAX_LEN];
 static uint16_t s_PendingDownLen   = 0;
@@ -104,14 +105,20 @@ int32_t LTRX_Downlink_SetMessage(uint32_t MessageID,
 void LTRX_Downlink_ClearMessage(void)
 {
     memset(s_DownBuf, 0, sizeof(s_DownBuf));
+    memset(s_PendingDownBuf, 0, sizeof(s_PendingDownBuf));
     s_DownLen    = 0;
     s_DownMsgId  = 0;
     s_DownMsgCrc = 0;
     s_DownReady  = false;
+    s_PendingDownLen   = 0;
+    s_PendingDownMsgId = 0;
+    s_PendingDownReady = false;
+    s_DownInFlight     = false;
 }
 
 bool     LTRX_Downlink_IsReady(void)      { return s_DownReady; }
 bool     LTRX_Downlink_HasPending(void)   { return s_PendingDownReady; }
+bool     LTRX_Downlink_IsInFlight(void)   { return s_DownInFlight; }
 uint32_t LTRX_Downlink_GetMessageId(void) { return s_DownMsgId; }
 uint16_t LTRX_Downlink_GetLength(void)    { return s_DownLen; }
 
@@ -389,6 +396,10 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
             {
                 LTRX_SessionSetDownlinkMsgId(s_DownMsgId);
                 rc = LTRX_SendMessageHeader(s_DownMsgId, s_DownLen, s_DownMsgCrc);
+                if (rc == LTRX_SUCCESS)
+                {
+                    s_DownInFlight = true;
+                }
             }
             else
             {
@@ -442,8 +453,6 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
                                   "LTRX: Type7 response SendMessagePart failed rc=%ld", (long)rc);
             }
 
-            LTRX_APP_printf(" hex dump %x\n", s_DownBuf[start]);
-
             LTRX_SessionOnIcdRx(type_id, (rc == LTRX_SUCCESS) ? 0 : 1);
             return rc;
         }
@@ -493,6 +502,10 @@ int32_t LTRX_BcnProcessOneRx(uint32_t timeout_ms)
             }
 
             uint32_t mid = ReadLe32(&payload[0]);
+            if (s_DownInFlight && mid == s_DownMsgId)
+            {
+                LTRX_Downlink_ClearMessage();
+            }
             LTRX_SessionOnIcdRxEx(type_id, 0, mid);
             return LTRX_SUCCESS;
         }
@@ -914,6 +927,13 @@ void LTRX_OnBusBeaconReceived(const CFE_SB_Buffer_t *SBBufPtr)
     if (!s_DownstreamEnabled)
     {
         LTRX_APP_printf("LTRX: bus beacon ignored, downstream disabled\n");
+        return;
+    }
+
+    if (s_DownInFlight)
+    {
+        LTRX_APP_printf("LTRX: bus beacon ignored while downlink msg_id=%u is in flight\n",
+                        (unsigned)s_DownMsgId);
         return;
     }
 

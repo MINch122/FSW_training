@@ -56,6 +56,7 @@
 /* #include "mm_msgids.h"  */
 /* #include "sch_msgids.h" */
 #include "hk_msgids.h"
+#include "mission_msgids.h"
 #include "pay_slt_msgids.h"
 /*
 ** Note: It is suggested that missions pre-define their file table
@@ -68,6 +69,7 @@
 // #define FILE_ALL_EVENTS 0
 
 #define FILE_ALL_APP_BCN_PKTS 0
+#define FILE_MISSION_PKTS     1
 /*
 ** Sample packet filter table data
 */
@@ -75,7 +77,7 @@ DS_FilterTable_t DS_FilterTable = {
     /* .Descriptor = */ "Sample filter table data",
     /* .Packet     = */
     {/* Packet Index 000 */
-     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT2_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
        {FILE_ALL_APP_BCN_PKTS, DS_BY_COUNT, 1, 10, 0},
@@ -97,18 +99,18 @@ DS_FilterTable_t DS_FilterTable = {
 
 
      /* Packet Index 002 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(MISSION_REPORT_TLM_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {FILE_MISSION_PKTS, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
      /* Packet Index 003 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(MISSION_HK_TLM_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {FILE_MISSION_PKTS, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},

@@ -192,11 +192,12 @@ static int32 PAY_SLT_UpdateIfbCache(void) {
 
 CFE_Status_t PAY_SLT_SendHkCmd(const PAY_SLT_SendHkCmd_t *Msg) {
     int32 status = CFE_SUCCESS;
+    PAY_SLT_HkTlm_Payload_t HkPayload;
 
     (void)Msg;
 
     if (PAY_SLT_Data.HkEnabled == 1) {
-    PAY_SLT_HkTlm_Payload_t *HkPkt = &PAY_SLT_Data.HkTlm.Payload;
+    PAY_SLT_HkTlm_Payload_t *HkPkt = &HkPayload;
     memset(HkPkt, 0, sizeof(*HkPkt));
 
     PAY_SLT_KeepFirstError(&status, PAY_SLT_UpdateIfbCache());
@@ -217,8 +218,18 @@ CFE_Status_t PAY_SLT_SendHkCmd(const PAY_SLT_SendHkCmd_t *Msg) {
     PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_IFB_NODE,
                                                               TABLE_TELEMETRY, 0x001A, 4, HkPkt->ntc_data_ifb));
 
+    if (status != CFE_SUCCESS)
+    {
+        PAY_SLT_Data.ErrCounter++;
+        CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAY_SLT HK collection failed, not transmitting partial packet, status=%ld",
+                          (long)status);
+        return status;
+    }
+
+    memcpy(&PAY_SLT_Data.HkTlm.Payload, HkPkt, sizeof(PAY_SLT_Data.HkTlm.Payload));
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(PAY_SLT_Data.HkTlm.TelemetryHeader));
-    PAY_SLT_KeepFirstError(&status, CFE_SB_TransmitMsg(CFE_MSG_PTR(PAY_SLT_Data.HkTlm.TelemetryHeader), true));
+    status = CFE_SB_TransmitMsg(CFE_MSG_PTR(PAY_SLT_Data.HkTlm.TelemetryHeader), true);
 
     }
 

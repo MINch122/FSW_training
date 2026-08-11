@@ -350,6 +350,7 @@ static int32 PAY_SLT_SetParamCompat(uint8 node, uint8 table, uint16 addr, uint8 
 int32 PAY_SLT_FetchParam_Simple(uint8 type, uint8 node, uint8 table, uint16 addr, uint8 len, void *out_ptr)
 {
     PAY_SLT_Params_t req;
+    uint8 requested_len = len;
     memset(&req, 0, sizeof(PAY_SLT_Params_t));
     
     req.type = type;
@@ -359,6 +360,15 @@ int32 PAY_SLT_FetchParam_Simple(uint8 type, uint8 node, uint8 table, uint16 addr
     req.len = len;
 
     int32 Status = PAY_SLT_FetchParam(&req);
+
+    if ((Status == CFE_SUCCESS) && (type != GS_PARAM_STRING) && (req.len != requested_len))
+    {
+        CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAY_SLT_FetchParam short reply: node=%u table=%u addr=0x%04X type=%u req=%u got=%u",
+                          (unsigned int)node, (unsigned int)table, (unsigned int)addr,
+                          (unsigned int)type, (unsigned int)requested_len, (unsigned int)req.len);
+        return GS_ERROR_DATA;
+    }
 
     if (Status == CFE_SUCCESS && out_ptr != NULL)
     {

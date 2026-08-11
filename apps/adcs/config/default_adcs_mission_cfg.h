@@ -34,7 +34,7 @@
 #include "adcs_interface_cfg.h"
 
 #ifndef DEBUG_ADCS
-#define DEBUG_ADCS false
+#define DEBUG_ADCS true
 #endif
 
 #if DEBUG_ADCS

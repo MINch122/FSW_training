@@ -54,14 +54,11 @@ void RPT_Util_Enqueue_Test_Nominal(void) {
     UtAssert_UINT8_EQ(RPT_Data.CritQueue.Head, 1);
     UtAssert_UINT32_EQ(RPT_Data.CritQueue.Entry[0].Time.Seconds, 123);
     UtAssert_UINT32_EQ(RPT_Data.CritQueue.Entry[0].Time.Subseconds, 456);
-    UtAssert_STUB_COUNT(CFE_ES_WriteToSysLog, 1);
 
     UtAssert_VOIDCALL(RPT_Enqueue(&Report, 0));
 
     UtAssert_UINT8_EQ(RPT_Data.RptQueue.Count, 1);
     UtAssert_UINT8_EQ(RPT_Data.RptQueue.Head, 1);
-
-    UtAssert_STUB_COUNT(CFE_ES_WriteToSysLog, 2);
 }
 
 void RPT_Util_Report_Test_Nominal(void) {
@@ -155,6 +152,26 @@ void RPT_UtilOpenOpsFile_Test_OpenError(void) {
     UtAssert_STUB_COUNT(OS_OpenCreate, 1);
 }
 
+void RPT_Util_OpenOpsBackupFile_Test_Nominal(void) {
+    UtAssert_True(OS_ObjectIdDefined(RPT_OpenOpsBackupFile(23)),
+                  "RPT_OpenOpsBackupFile return Valid id.");
+    UtAssert_STUB_COUNT(OS_DirectoryOpen, 1);
+    UtAssert_STUB_COUNT(OS_DirectoryClose, 1);
+    UtAssert_STUB_COUNT(OS_mkdir, 0);
+    UtAssert_STUB_COUNT(OS_OpenCreate, 1);
+}
+
+void RPT_Util_OpenOpsBackupFile_Test_CreateDirectory(void) {
+    UT_SetDeferredRetcode(UT_KEY(OS_DirectoryOpen), 1, OS_ERROR);
+
+    UtAssert_True(OS_ObjectIdDefined(RPT_OpenOpsBackupFile(23)),
+                  "RPT_OpenOpsBackupFile return Valid id after mkdir.");
+    UtAssert_STUB_COUNT(OS_DirectoryOpen, 1);
+    UtAssert_STUB_COUNT(OS_DirectoryClose, 0);
+    UtAssert_STUB_COUNT(OS_mkdir, 1);
+    UtAssert_STUB_COUNT(OS_OpenCreate, 1);
+}
+
 void RPT_Util_WriteToFile_Test_Nominal(void) {
     char data[23] = {0,};
     size_t WriteSize = 23;
@@ -191,6 +208,20 @@ void RPT_Util_ReadFromFile_Test_ReadError(void) {
     UtAssert_STUB_COUNT(OS_read, 1);
 }
 
+void RPT_Util_CloseFile_Test_Nominal(void) {
+    osal_id_t FakeId = UT_AllocStubObjId(OS_OBJECT_TYPE_OS_STREAM);
+
+    UtAssert_INT32_EQ(RPT_CloseFile(FakeId), CFE_SUCCESS);
+    UtAssert_STUB_COUNT(OS_close, 1);
+}
+
+void RPT_Util_CloseFile_Test_CloseError(void) {
+    UT_SetDeferredRetcode(UT_KEY(OS_close), 1, OS_ERROR);
+
+    UtAssert_INT32_EQ(RPT_CloseFile(1), CFE_STATUS_EXTERNAL_RESOURCE_FAIL);
+    UtAssert_STUB_COUNT(OS_close, 1);
+}
+
 void UtTest_Setup(void) {
     UT_RPT_ADD_TEST(RPT_Util_Subscribe_Test_Nominal);
     UT_RPT_ADD_TEST(RPT_Util_Enqueue_Test_Nominal);
@@ -201,8 +232,12 @@ void UtTest_Setup(void) {
     UT_RPT_ADD_TEST(RPT_Util_VerifyReportLength_Test_LenError);
     UT_RPT_ADD_TEST(RPT_Util_OpenOpsFile_Test_Nominal);
     UT_RPT_ADD_TEST(RPT_UtilOpenOpsFile_Test_OpenError);
+    UT_RPT_ADD_TEST(RPT_Util_OpenOpsBackupFile_Test_Nominal);
+    UT_RPT_ADD_TEST(RPT_Util_OpenOpsBackupFile_Test_CreateDirectory);
     UT_RPT_ADD_TEST(RPT_Util_WriteToFile_Test_Nominal);
     UT_RPT_ADD_TEST(RPT_Util_WriteToFile_Test_WriteError);
     UT_RPT_ADD_TEST(RPT_Util_ReadFromFile_Test_Nominal);
     UT_RPT_ADD_TEST(RPT_Util_ReadFromFile_Test_ReadError);
+    UT_RPT_ADD_TEST(RPT_Util_CloseFile_Test_Nominal);
+    UT_RPT_ADD_TEST(RPT_Util_CloseFile_Test_CloseError);
 }

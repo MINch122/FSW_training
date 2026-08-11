@@ -7248,12 +7248,13 @@
         "name": "GPIO DEP Burn",
         "mid": "0x182B",
         "fc": 17,
-        "description": "DEP burn command: channel 1 burns DEP1_EN, channel 2 burns DEP2_EN",
+        "description": "Timed ON then OFF command: channel 0 controls LTRX_EN, channel 1 controls DEP1_EN, channel 2 controls DEP2_EN",
         "params": [
           {
             "name": "Channel",
             "type": "uint8",
-            "default": "1"
+            "default": "1",
+            "description": "0=LTRX_EN, 1=DEP1_EN, 2=DEP2_EN"
           },
           {
             "name": "spare",

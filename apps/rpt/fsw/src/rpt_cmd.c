@@ -19,6 +19,7 @@ CFE_Status_t RPT_SendBeaconCmd(void) {
     OS_MutSemTake(RPT_Data.OpsMutexID);
     RPT_Data.HkTlm.Payload.ResetCause = RPT_Data.OpsData.ResetCause;
     RPT_Data.HkTlm.Payload.BootCount = RPT_Data.OpsData.BootCount;
+    RPT_Data.HkTlm.Payload.Sequence = RPT_Data.OpsData.Sequence;
     OS_MutSemGive(RPT_Data.OpsMutexID);
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(RPT_Data.HkTlm.TelemetryHeader));
@@ -105,6 +106,10 @@ CFE_Status_t RPT_GetOpsDataCmd(const RPT_GetOpsDataCmd_t *Msg) {
 void RPT_UpdateOperationData(void) {
 
     CFE_TIME_SysTime_t Time = CFE_TIME_GetTime();
+    RPT_OperationData_t BackupData;
+    osal_id_t BackupHandle;
+    int32 Status;
+    int32 CloseStatus;
 
     OS_MutSemTake(RPT_Data.OpsMutexID);
 
@@ -112,7 +117,63 @@ void RPT_UpdateOperationData(void) {
     RPT_Data.OpsData.TimeSubsec = Time.Subseconds;
     RPT_Data.OpsData.CRC = RPT_CalculateCRC(&RPT_Data.OpsData, sizeof(RPT_OperationData_t) - sizeof(uint32_t));
 
-    RPT_WriteToFile(RPT_Data.OpsDataHandle, &RPT_Data.OpsData, sizeof(RPT_OperationData_t));
-    
+    Status = RPT_WriteToFile(RPT_Data.OpsDataHandle, &RPT_Data.OpsData, sizeof(RPT_OperationData_t));
+    if (Status != CFE_SUCCESS) {
+        CFE_EVS_SendEvent(RPT_DATA_WRITE_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "RPT operation data write failed, RC=0x%08lX", (unsigned long)Status);
+        OS_MutSemGive(RPT_Data.OpsMutexID);
+        return;
+    }
+
+    if (RPT_Data.OpsCount < RPT_OPS_STORE_BACKUP_COUNT) {
+        RPT_Data.OpsCount++;
+    }
+
+    if (RPT_Data.OpsCount < RPT_OPS_STORE_BACKUP_COUNT) {
+        OS_MutSemGive(RPT_Data.OpsMutexID);
+        return;
+    }
+
+    BackupData = RPT_Data.OpsData;
+    BackupData.Sequence++;
+    BackupData.CRC = RPT_CalculateCRC(&BackupData, sizeof(RPT_OperationData_t) - sizeof(uint32_t));
+
+    BackupHandle = RPT_OpenOpsBackupFile(BackupData.Sequence);
+    if (BackupHandle == OS_OBJECT_ID_UNDEFINED) {
+        CFE_EVS_SendEvent(RPT_DATA_BACKUP_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "RPT operation data backup open failed, sequence=%lu",
+                          (unsigned long)BackupData.Sequence);
+        RPT_Data.OpsCount = 0;
+        OS_MutSemGive(RPT_Data.OpsMutexID);
+        return;
+    }
+
+    Status = RPT_WriteToFile(BackupHandle, &BackupData, sizeof(BackupData));
+    CloseStatus = RPT_CloseFile(BackupHandle);
+    if (Status != CFE_SUCCESS || CloseStatus != CFE_SUCCESS) {
+        CFE_EVS_SendEvent(RPT_DATA_BACKUP_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "RPT operation data backup failed, sequence=%lu write=0x%08lX close=0x%08lX",
+                          (unsigned long)BackupData.Sequence, (unsigned long)Status,
+                          (unsigned long)CloseStatus);
+        RPT_Data.OpsCount = 0;
+        OS_MutSemGive(RPT_Data.OpsMutexID);
+        return;
+    }
+
+    RPT_Data.OpsData = BackupData;
+    RPT_Data.OpsCount = 0;
+
+    Status = RPT_WriteToFile(RPT_Data.OpsDataHandle, &RPT_Data.OpsData, sizeof(RPT_OperationData_t));
+    if (Status != CFE_SUCCESS) {
+        CFE_EVS_SendEvent(RPT_DATA_WRITE_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "RPT backup sequence persist failed, sequence=%lu RC=0x%08lX",
+                          (unsigned long)RPT_Data.OpsData.Sequence, (unsigned long)Status);
+    }
+    else {
+        CFE_EVS_SendEvent(RPT_DATA_BACKUP_INF_EID, CFE_EVS_EventType_INFORMATION,
+                          "RPT operation data backup stored, sequence=%lu",
+                          (unsigned long)RPT_Data.OpsData.Sequence);
+    }
+
     OS_MutSemGive(RPT_Data.OpsMutexID);
 }

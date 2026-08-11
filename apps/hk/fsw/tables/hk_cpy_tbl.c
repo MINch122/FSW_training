@@ -211,7 +211,7 @@ hk_copy_table_entry_t HK_CopyTable[HK_COPY_TABLE_ENTRIES] = {
 /*********************************************************************/
 /*                  Start of Conbined Housekeeping                   */
 /*********************************************************************/
-    /* HK_COMBINED_PKT1 full packet (203 bytes) + PAY_SLT HK payload (32 bytes) */
+    /* HK_COMBINED_PKT1 full packet + PAY_SLT HK payload */
     /*  15 */
     {
         CFE_SB_MSGID_WRAP_VALUE(HK_COMBINED_PKT1_MID),

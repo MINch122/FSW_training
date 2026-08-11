@@ -233,10 +233,12 @@ void LTRX_SessionTick(void)
 
             case LTRX_REQ_ABORT:
                 s_WaitKind = LTRX_WAIT_NONE;
+                LTRX_Downlink_ClearMessage();
                 LTRX_SetState(LTRX_SESS_ABORTED);
                 break;
 
             case LTRX_REQ_RESET:
+                LTRX_Downlink_ClearMessage();
                 LTRX_SessionInit();
                 break;
 
