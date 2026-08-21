@@ -39,6 +39,7 @@
 #define CFE_SRL_MID_ERR_EID             9
 
 #define CFE_SRL_CC_ERR_EID              10
+#define CFE_SRL_REPORT_ERR_EID          11
 
 
 #define CFE_SRL_LEN_ERR_EID             114

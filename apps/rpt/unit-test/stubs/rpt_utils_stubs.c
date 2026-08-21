@@ -143,11 +143,11 @@ osal_id_t RPT_OpenOpsFile(void)
  * Generated stub function for RPT_OpenOpsBackupFile()
  * ----------------------------------------------------
  */
-osal_id_t RPT_OpenOpsBackupFile(uint32 Sequence)
+osal_id_t RPT_OpenOpsBackupFile(uint32 Timestamp)
 {
     UT_GenStub_SetupReturnBuffer(RPT_OpenOpsBackupFile, osal_id_t);
 
-    UT_GenStub_AddParam(RPT_OpenOpsBackupFile, uint32, Sequence);
+    UT_GenStub_AddParam(RPT_OpenOpsBackupFile, uint32, Timestamp);
 
     UT_GenStub_Execute(RPT_OpenOpsBackupFile, Basic, NULL);
 

@@ -12,6 +12,7 @@
 #include "paybee_kisscam_eventids.h"
 #include "paybee_kisscam_msgids.h"
 #include "paybee_kisscam_msg.h"
+#include "paybee_kisscam_utils.h"
 
 #include <string.h>
 
@@ -44,35 +45,10 @@ bool paybee_kisscam_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t Expe
 
         paybee_kisscam_Data.ErrCounter ++;
 
-        /* RPT */
-        paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
-        if (BufPtr == NULL) goto cleanup;
-        memset(BufPtr, 0, sizeof(*BufPtr));
-
-        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
-        sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
-            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-            goto cleanup;
-        }
-        BufPtr->Report.MsgID = (uint16_t)CFE_SB_MsgIdToValue(MsgId);
-        BufPtr->Report.CommandCode = (uint8_t)FcnCode;
-        BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
-        BufPtr->Report.ReturnCode = CFE_STATUS_WRONG_MSG_LENGTH; // Error code of `Length error`
-        BufPtr->Report.ReturnDataSize = 2 * sizeof(uint32_t);
-        
-        uint32_t Temp32 = (uint32_t)ActualLength;
-        memcpy(BufPtr->Report.ReturnValue, &Temp32, sizeof(uint32_t));
-        Temp32 = (uint32_t)ExpectedLength;
-        memcpy(BufPtr->Report.ReturnValue + sizeof(uint32_t), &Temp32, sizeof(uint32_t));
-
-        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
-        if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
-            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-            goto cleanup;
-        }
-        /* End of RPT */
+        uint32_t Lengths[2] = {(uint32_t)ActualLength, (uint32_t)ExpectedLength};
+        paybee_kisscam_SendReport((uint8_t)FcnCode, RPT_RETTYPE_APP,
+                                  CFE_STATUS_WRONG_MSG_LENGTH, Lengths, sizeof(Lengths));
     }
-cleanup:
     return Result;
 }
 
@@ -175,26 +151,9 @@ void paybee_kisscam_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr) {
     default:
         CFE_EVS_SendEvent(paybee_kisscam_CC_ERR_EID, CFE_EVS_EventType_ERROR, "%s: Invalid ground command code - CC = %d",
                             __func__, CommandCode);
-        /* RPT */
-        paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
-        if (BufPtr == NULL) break;
-        memset(BufPtr, 0, sizeof(*BufPtr));
-        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
-                         sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
-            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-            break;
-        }
-        BufPtr->Report.MsgID = paybee_kisscam_CMD_MID;
-        BufPtr->Report.CommandCode = (uint8_t)CommandCode;
-        BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
-        BufPtr->Report.ReturnCode = CFE_STATUS_BAD_COMMAND_CODE;
-        BufPtr->Report.ReturnDataSize = 0;
-        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
-        if(CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
-            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-            break;
-        }
-        /* End of RPT */
+        paybee_kisscam_Data.ErrCounter++;
+        paybee_kisscam_SendReport((uint8_t)CommandCode, RPT_RETTYPE_APP,
+                                  CFE_STATUS_BAD_COMMAND_CODE, NULL, 0);
         break;
     }
     
@@ -231,27 +190,9 @@ void paybee_kisscam_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
         CFE_EVS_SendEvent(paybee_kisscam_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                             "paybee_kisscam: Invalid command packet, MID = 0x%X",
                             (unsigned int)CFE_SB_MsgIdToValue(MsgId));
-        /* RPT */
-        paybee_kisscam_ReportTlm_t *BufPtr = (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
-        if (BufPtr == NULL) break;
-        memset(BufPtr, 0, sizeof(*BufPtr));
-        if (CFE_MSG_Init(CFE_MSG_PTR(BufPtr->TelemetryHeader), CFE_SB_ValueToMsgId(paybee_kisscam_REPORT_TLM_MID),
-                         sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS) {
-            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-            break;
-        }
-        BufPtr->Report.MsgID = paybee_kisscam_CMD_MID;
-        BufPtr->Report.CommandCode = 0;
-        BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
-        BufPtr->Report.ReturnCode = CFE_STATUS_UNKNOWN_MSG_ID;
-        BufPtr->Report.ReturnDataSize = sizeof(CFE_SB_MsgId_Atom_t);
-        memcpy(BufPtr->Report.ReturnValue, &MsgId.Value, sizeof(CFE_SB_MsgId_Atom_t));
-        CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
-        if(CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS) {
-            CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-            break;
-        }
-        /* End of RPT */
+        paybee_kisscam_Data.ErrCounter++;
+        paybee_kisscam_SendReport(0, RPT_RETTYPE_APP, CFE_STATUS_UNKNOWN_MSG_ID,
+                                  &MsgId.Value, sizeof(MsgId.Value));
         break;
     }
 }

@@ -71,10 +71,10 @@ DS_DestFileTable_t DS_DestFileTable = {
         {
             /* .Movename      = */ DS_EMPTY_STRING,
             /* .Pathname      = */ "/cf/sdcard/beacon",
-            /* .Basename      = */ "beacon",
+            /* .Basename      = */ "b",
             /* .Extension     = */ ".dat",
 
-            /* .FileNameType  = */ DS_BY_COUNT,
+            /* .FileNameType  = */ DS_BY_TIME,
             /* .EnableState   = */ DS_ENABLED,
             /* .MaxFileSize   = */ (200 * 100), /* 100 beacon packets*/
             /* .MaxFileAge    = */ (60 * 60 * 8), /* 8 hours */
@@ -84,12 +84,12 @@ DS_DestFileTable_t DS_DestFileTable = {
         {
             /* .Movename      = */ DS_EMPTY_STRING,
             /* .Pathname      = */ "/cf/sdcard/mission",
-            /* .Basename      = */ "mission",
+            /* .Basename      = */ "m",
             /* .Extension     = */ ".dat",
 
-            /* .FileNameType  = */ DS_BY_COUNT,
+            /* .FileNameType  = */ DS_BY_TIME,
             /* .EnableState   = */ DS_ENABLED,
-            /* .MaxFileSize   = */ (600 * 100), /* approximately 100 MISSION report packets */
+            /* .MaxFileSize   = */ (600 * 100), /* approximately packets */
             /* .MaxFileAge    = */ (60 * 60 * 8), /* 8 hours */
             /* .SequenceCount = */ 1000,
         },

@@ -8,9 +8,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <termios.h>
 #include "rpt_interface_cfg.h"
 
-static void paybee_kisscam_SendReport(uint8_t CC, uint8 ReturnType, int32 ReturnCode, const void *Data, ssize_t DataSize)
+CFE_Status_t paybee_kisscam_SendReport(uint8_t CC, uint8 ReturnType, int32 ReturnCode,
+                                       const void *Data, size_t DataSize)
 {
     paybee_kisscam_ReportTlm_t *BufPtr =
         (paybee_kisscam_ReportTlm_t *)CFE_SB_AllocateMessageBuffer(sizeof(paybee_kisscam_ReportTlm_t));
@@ -18,7 +20,9 @@ static void paybee_kisscam_SendReport(uint8_t CC, uint8 ReturnType, int32 Return
 
     if (BufPtr == NULL)
     {
-        return;
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "KissCAM RPT allocation failed: CC=0x%02X", CC);
+        return CFE_SB_BUF_ALOC_ERR;
     }
 
     memset(BufPtr, 0, sizeof(*BufPtr));
@@ -28,7 +32,9 @@ static void paybee_kisscam_SendReport(uint8_t CC, uint8 ReturnType, int32 Return
                      sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS)
     {
         CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-        return;
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "KissCAM RPT init failed: CC=0x%02X", CC);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
     BufPtr->Report.MsgID       = paybee_kisscam_CMD_MID;
@@ -45,10 +51,16 @@ static void paybee_kisscam_SendReport(uint8_t CC, uint8 ReturnType, int32 Return
     BufPtr->Report.ReturnDataSize = CopySize;
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(BufPtr->TelemetryHeader));
-    if (CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true) != CFE_SUCCESS)
+    CFE_Status_t Status = CFE_SB_TransmitBuffer((CFE_SB_Buffer_t *)BufPtr, true);
+    if (Status != CFE_SUCCESS)
     {
         CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "KissCAM RPT transmit failed: CC=0x%02X RC=0x%08lX",
+                          CC, (unsigned long)Status);
     }
+
+    return Status;
 }
 
 void paybee_kisscam_SetLineTrue(uint8_t MemSlot, uint16_t Line) {
@@ -183,87 +195,6 @@ void paybee_kisscam_Inspection(uint8_t MemorySlot) {
  * Refer the description of each function
  * 
  ***********************************************/
-
-/**************************************************
- * Serial Comm success, but H/W error packet came.
- **************************************************/
-void paybee_kisscam_HandleErrorPacket(void *ErrPkt, ssize_t Size, uint8_t CC) {
-    int32 Status;
-
-    if (ErrPkt == NULL || Size <= 0 || Size > paybee_kisscam_ERROR_TLM_SIZE) return;
-    
-    if (Size < paybee_kisscam_ERROR_TLM_SIZE) {
-        // Read residual data
-        uint8_t Residual = paybee_kisscam_ERROR_TLM_SIZE - Size;
-        CFE_SRL_IO_Param_t Params = {0,};
-        Params.TxData = NULL;
-        Params.TxSize = 0;
-        Params.RxData = (uint8_t *)ErrPkt + Size;
-        Params.RxSize = Residual;
-        Params.Timeout = 100;
-
-        Status = CFE_SRL_ApiRead(paybee_kisscam_Data.Handle, &Params);
-        if (Status != CFE_SUCCESS || Params.ReadBytes != Residual) {
-            paybee_kisscam_Data.DeviceErrCounter ++;
-            Status = (Status != CFE_SUCCESS) ? Status : CFE_SRL_PARTIAL_READ_ERR;
-            paybee_kisscam_HandleErrorSerial(Status, CC, ErrPkt, Size + Params.ReadBytes);
-            return;
-        }
-    }
-
-    // uint8_t MD, CMD, ERR, RXF;
-    
-    // if (((uint8_t *)ErrPkt)[0] != '@' || ((uint8_t *)ErrPkt)[8] != '\r') return;
-    
-    // MD  = ((uint8_t *)ErrPkt)[2];
-    // CMD = ((uint8_t *)ErrPkt)[5];
-    // ERR = ((uint8_t *)ErrPkt)[6];
-    // RXF = ((uint8_t *)ErrPkt)[7];
-    // PAYBEE_KISSCAM_APP_printf("MD: 0x%02X CMD: 0x%02X ERR: 0x%02X RXF: 0x%02X\n", MD, CMD, ERR, RXF);
-
-    paybee_kisscam_SendReport(CC, RPT_RETTYPE_HW, 0x23, ErrPkt, paybee_kisscam_ERROR_TLM_SIZE);
-    
-    CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
-                      "KissCAM HW Error: CC = 0x%02X", CC);
-                      
-    PAYBEE_KISSCAM_APP_printf("[KissCAM] HW Error Packet Received! CC: 0x%02X\n", CC);
-
-    return;
-}
-
-/************************************************
- * Serial Comm. failed
- ************************************************/
-void paybee_kisscam_HandleErrorSerial(int32 Status, uint8 CC, void *ReadData, ssize_t ReadSize) {
-    
-    paybee_kisscam_Data.ErrCounter ++;
-
-    paybee_kisscam_SendReport(CC, RPT_RETTYPE_CFE, Status, ReadData, ReadSize);
-    
-    CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
-                      "KissCAM Serial Error: CC = 0x%02X, Status = %d", CC, Status);
-                      
-    PAYBEE_KISSCAM_APP_printf("[KissCAM] Serial Comm Error! CC: 0x%02X, Status: %d\n", CC, Status);
-
-    return;
-}
-
-/*************************************************
- * All success - Report to RPT
- * **Special case**
- * Noop cmd report the **CmdCounter & ErrCounter**
- ************************************************/
-void paybee_kisscam_HandleSuccess(uint8_t CC, void *ReadData, ssize_t ReadSize) {
-    paybee_kisscam_SendReport(CC, RPT_RETTYPE_SUCCESS, CFE_SUCCESS, ReadData, ReadSize);
-    
-    /* 지상국에 텍스트 로그 형태로 성공했음을 알림 */
-    CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
-                      "KissCAM Command Success: CC = 0x%02X", CC);
-                      
-    PAYBEE_KISSCAM_APP_printf("[KissCAM] Command Success! CC: 0x%02X\n", CC);
-
-    return;
-}
 
 /***********************************************
  * 
@@ -429,12 +360,56 @@ void paybee_kisscam_ConfigurePacket(const void *Payload, void *Packet, uint8 Par
  * Sequencial read
  * 
  **************************************************/
-void paybee_kisscam_Transaction(void *Tx, void *Rx, uint8_t CC) {
+paybee_kisscam_TransactionResult_t paybee_kisscam_Transaction(const void *Tx, void *Rx,
+                                                              size_t RxCapacity, size_t ExpectedRxSize,
+                                                              uint8_t CC) {
     int32 Status;
     CFE_SRL_IO_Param_t Params = {0,};
-    ssize_t ReadByte = 0;
+    size_t ReadByte = 0;
+    paybee_kisscam_TransactionResult_t Result = {
+        .ReturnCode = CFE_SUCCESS,
+        .ReturnType = RPT_RETTYPE_SUCCESS,
+        .ReadSize = 0
+    };
 
-    Params.TxData = Tx;
+    if (Tx == NULL || Rx == NULL || RxCapacity < paybee_kisscam_ERROR_TLM_SIZE ||
+        ExpectedRxSize < paybee_kisscam_HDR_TAIL_SIZE || ExpectedRxSize > RxCapacity) {
+        Result.ReturnCode = CFE_SRL_BAD_ARGUMENT;
+        Result.ReturnType = RPT_RETTYPE_APP;
+        return Result;
+    }
+
+#define PAYBEE_KISSCAM_SERIAL_FAILURE(Code)                                           \
+    do {                                                                               \
+        if (paybee_kisscam_Data.Handle != NULL) {                                       \
+            tcflush(paybee_kisscam_Data.Handle->FD, TCIFLUSH);                          \
+        }                                                                              \
+        Result.ReturnCode = (Code);                                                     \
+        Result.ReturnType = RPT_RETTYPE_CFE;                                            \
+        Result.ReadSize = (ReadByte > RxCapacity) ? RxCapacity : ReadByte;              \
+        paybee_kisscam_Data.ErrCounter++;                                               \
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,    \
+                          "KissCAM Serial Error: CC=0x%02X Status=%ld Read=%lu",        \
+                          CC, (long)(Code), (unsigned long)ReadByte);                    \
+        return Result;                                                                  \
+    } while (0)
+
+#define PAYBEE_KISSCAM_HW_FAILURE(Code)                                                \
+    do {                                                                               \
+        if (paybee_kisscam_Data.Handle != NULL) {                                       \
+            tcflush(paybee_kisscam_Data.Handle->FD, TCIFLUSH);                          \
+        }                                                                              \
+        Result.ReturnCode = (Code);                                                     \
+        Result.ReturnType = RPT_RETTYPE_HW;                                             \
+        Result.ReadSize = (ReadByte > RxCapacity) ? RxCapacity : ReadByte;              \
+        paybee_kisscam_Data.DeviceErrCounter++;                                         \
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,    \
+                          "KissCAM response validation failed: CC=0x%02X RC=0x%08lX",  \
+                          CC, (unsigned long)(Code));                                    \
+        return Result;                                                                  \
+    } while (0)
+
+    Params.TxData = (void *)Tx;
     Params.TxSize = paybee_kisscam_CMD_PKT_SIZE;
     Params.RxData = Rx;
     Params.RxSize = 3; // Read Start byte, Ack, Mode
@@ -442,19 +417,38 @@ void paybee_kisscam_Transaction(void *Tx, void *Rx, uint8_t CC) {
 
     // Read Start byte, Ack, Mode
     Status = CFE_SRL_ApiRead(paybee_kisscam_Data.Handle, &Params);
-    ReadByte += Params.ReadBytes;
+    if (Params.ReadBytes > 0) ReadByte += (size_t)Params.ReadBytes;
     if (Status != CFE_SUCCESS) {
-        paybee_kisscam_HandleErrorSerial(Status, CC, Rx, ReadByte);
-        return;
+        PAYBEE_KISSCAM_SERIAL_FAILURE(Status);
     }
     if (Params.ReadBytes != 3) {
-        paybee_kisscam_HandleErrorSerial(CFE_SRL_PARTIAL_READ_ERR, CC, Rx, ReadByte);
-        return;
+        PAYBEE_KISSCAM_SERIAL_FAILURE(CFE_SRL_PARTIAL_READ_ERR);
+    }
+    if (((uint8_t *)Rx)[0] != paybee_kisscam_PKT_START_BYTE) {
+        PAYBEE_KISSCAM_HW_FAILURE(CFE_STATUS_VALIDATION_FAILURE);
     }
 
     if (((uint8_t *)Rx)[1] == paybee_kisscam_TLM_ERR_FLAG) {
-        paybee_kisscam_HandleErrorPacket(Rx, ReadByte, CC);
-        return;
+        memset(&Params, 0, sizeof(Params));
+        Params.RxData = (uint8_t *)Rx + ReadByte;
+        Params.RxSize = paybee_kisscam_ERROR_TLM_SIZE - ReadByte;
+        Params.Timeout = 100;
+        Status = CFE_SRL_ApiRead(paybee_kisscam_Data.Handle, &Params);
+        if (Params.ReadBytes > 0) ReadByte += (size_t)Params.ReadBytes;
+        if (Status != CFE_SUCCESS) PAYBEE_KISSCAM_SERIAL_FAILURE(Status);
+        if (ReadByte != paybee_kisscam_ERROR_TLM_SIZE) {
+            PAYBEE_KISSCAM_SERIAL_FAILURE(CFE_SRL_PARTIAL_READ_ERR);
+        }
+        if (((uint8_t *)Rx)[ReadByte - 1] != paybee_kisscam_PKT_TERMINATE_BYTE) {
+            PAYBEE_KISSCAM_HW_FAILURE(CFE_STATUS_VALIDATION_FAILURE);
+        }
+        Result.ReturnCode = 0x23;
+        Result.ReturnType = RPT_RETTYPE_HW;
+        Result.ReadSize = ReadByte;
+        paybee_kisscam_Data.DeviceErrCounter++;
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "KissCAM HW Error: CC=0x%02X", CC);
+        return Result;
     }
 
     /* Read Tlm payload length */
@@ -466,16 +460,19 @@ void paybee_kisscam_Transaction(void *Tx, void *Rx, uint8_t CC) {
     Params.Timeout = 100;
     
     Status = CFE_SRL_ApiRead(paybee_kisscam_Data.Handle, &Params);
-    ReadByte += Params.ReadBytes;
+    if (Params.ReadBytes > 0) ReadByte += (size_t)Params.ReadBytes;
     if (Status != CFE_SUCCESS) {
-        paybee_kisscam_HandleErrorSerial(Status, CC, Rx, ReadByte);
-        return;
+        PAYBEE_KISSCAM_SERIAL_FAILURE(Status);
     }
     if (Params.ReadBytes != 2) {
-        paybee_kisscam_HandleErrorSerial(CFE_SRL_PARTIAL_READ_ERR, CC, Rx, ReadByte);
-        return;
+        PAYBEE_KISSCAM_SERIAL_FAILURE(CFE_SRL_PARTIAL_READ_ERR);
     }
     uint16_t Len = ((uint8_t *)Params.RxData)[0] << 8 | ((uint8_t *)Params.RxData)[1];
+    size_t TotalSize = paybee_kisscam_HDR_TAIL_SIZE + (size_t)Len;
+
+    if (TotalSize != ExpectedRxSize || TotalSize > RxCapacity) {
+        PAYBEE_KISSCAM_HW_FAILURE(CFE_STATUS_RANGE_ERROR);
+    }
 
     /* Read Tlm Payload length */
     memset(&Params, 0, sizeof(Params));
@@ -488,19 +485,26 @@ void paybee_kisscam_Transaction(void *Tx, void *Rx, uint8_t CC) {
         Params.Interval = 1000 * 70;
     }
     Status = CFE_SRL_ApiRead(paybee_kisscam_Data.Handle, &Params);
-    ReadByte += Params.ReadBytes;
+    if (Params.ReadBytes > 0) ReadByte += (size_t)Params.ReadBytes;
     if (Status != CFE_SUCCESS) {
-        paybee_kisscam_HandleErrorSerial(Status, CC, Rx, ReadByte);
-        return;
+        PAYBEE_KISSCAM_SERIAL_FAILURE(Status);
     }
     if (Params.ReadBytes != (ssize_t)(Len + 1)) {
-        paybee_kisscam_HandleErrorSerial(CFE_SRL_PARTIAL_READ_ERR, CC, Rx, ReadByte);
-        return;
+        PAYBEE_KISSCAM_SERIAL_FAILURE(CFE_SRL_PARTIAL_READ_ERR);
+    }
+    if (((uint8_t *)Rx)[ReadByte - 1] != paybee_kisscam_PKT_TERMINATE_BYTE) {
+        PAYBEE_KISSCAM_HW_FAILURE(CFE_STATUS_VALIDATION_FAILURE);
     }
 
-    paybee_kisscam_HandleSuccess(CC, Rx, ReadByte);
+    Result.ReadSize = ReadByte;
+    CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "KissCAM Command Success: CC=0x%02X Read=%lu", CC,
+                      (unsigned long)ReadByte);
 
-    return;
+    return Result;
+
+#undef PAYBEE_KISSCAM_SERIAL_FAILURE
+#undef PAYBEE_KISSCAM_HW_FAILURE
 }
 
 /*************************************************

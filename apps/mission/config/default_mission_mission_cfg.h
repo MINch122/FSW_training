@@ -8,6 +8,11 @@
 #define MISSION_ENABLE_LEOP_SEQUENCE false
 #endif
 
+/* Send the ADCS detumbling sequence command immediately after loading LEOP state. */
+#ifndef MISSION_ENABLE_ADCS_DETUMBLE
+#define MISSION_ENABLE_ADCS_DETUMBLE true
+#endif
+
 #ifndef DEBUG_MISSION
 #define DEBUG_MISSION false
 #endif

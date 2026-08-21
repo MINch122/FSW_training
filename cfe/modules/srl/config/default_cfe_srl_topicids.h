@@ -15,6 +15,7 @@
  * cFE Portable Message Numbers for Telemetry
  */
 #define CFE_MISSION_SRL_HK_TLM_TOPICID  0x0E
+#define CFE_MISSION_SRL_REPORT_TLM_TOPICID 0x28
 
 
 #endif /* CFE_SRL_TOPICIDS_H */

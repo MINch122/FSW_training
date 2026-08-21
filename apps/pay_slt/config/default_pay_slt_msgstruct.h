@@ -90,6 +90,12 @@ typedef struct __attribute__((__packed__))
 
 typedef struct __attribute__((__packed__))
 {
+    CFE_MSG_CommandHeader_t           CommandHeader;
+    PAY_SLT_ParSetArray_Payload_t     Payload;
+} PAY_SLT_ParSetArrayCmd_t;
+
+typedef struct __attribute__((__packed__))
+{
     CFE_MSG_CommandHeader_t       CommandHeader;
     PAY_SLT_ScanFiles_Payload_t   Payload;
 } PAY_SLT_ScanFilesCmd_t;

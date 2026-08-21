@@ -39,20 +39,20 @@
 #define GPIO_RESET_COUNTERS_CC 1
 #define GPIO_PROCESS_CC        2
 #define GPIO_DIGPIOLAY_PARAM_CC  3
-#define GPIO_LTRX_EN_ON_CC     4
-#define GPIO_LTRX_EN_OFF_CC    5
-#define GPIO_DEP1_EN_ON_CC     6
-#define GPIO_DEP1_EN_OFF_CC    7
-#define GPIO_DEP2_EN_ON_CC     8
-#define GPIO_DEP2_EN_OFF_CC    9
+#define GPIO_LTRX_EN_HIGH_CC   4
+#define GPIO_LTRX_EN_LOW_CC    5
+#define GPIO_DEP1_EN_HIGH_CC   6
+#define GPIO_DEP1_EN_LOW_CC    7
+#define GPIO_DEP2_EN_HIGH_CC   8
+#define GPIO_DEP2_EN_LOW_CC    9
 #define GPIO_SP_IN_READ_5S_CC  10
-#define GPIO_STX_EN_ON_CC      11
-#define GPIO_STX_EN_OFF_CC     12
-#define GPIO_ADCS_EN_ON_CC     13
-#define GPIO_ADCS_EN_OFF_CC    14
-#define GPIO_ADCS_BOOT_ON_CC   15
-#define GPIO_ADCS_BOOT_OFF_CC  16
-#define GPIO_DEP_BURN_CC      17
+#define GPIO_STX_EN_HIGH_CC    11
+#define GPIO_STX_EN_LOW_CC     12
+#define GPIO_ADCS_EN_HIGH_CC   13
+#define GPIO_ADCS_EN_LOW_CC    14
+#define GPIO_ADCS_BOOT_HIGH_CC 15
+#define GPIO_ADCS_BOOT_LOW_CC  16
+#define GPIO_DEP_BURN_CC       17
 
 
 #endif

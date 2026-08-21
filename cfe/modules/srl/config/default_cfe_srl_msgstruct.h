@@ -22,6 +22,7 @@
 #include "cfe_mission_cfg.h"
 #include "cfe_srl_extern_typedefs.h"
 #include "cfe_srl_mission_cfg.h"
+#include "rpt_interface_cfg.h"
 
 /****************************
 **  SRL Command Formats     **
@@ -96,6 +97,11 @@ typedef struct CFE_SRL_HousekeepingTlm {
     CFE_SRL_HousekeepingTlm_Payload_t Payload;
 
 } CFE_SRL_HousekeepingTlm_t;
+
+typedef struct CFE_SRL_ReportTlm {
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    RPT_Report_t Report;
+} CFE_SRL_ReportTlm_t;
 
 
 #endif /* CFE_SRL_MSGSTRUCT_H */

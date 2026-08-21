@@ -42,6 +42,7 @@ CFE_Status_t PAY_SLT_IFB_CSP_GNDWDT_Cmd(const PAY_SLT_IFB_CSP_GNDWDT_Cmd_t *Msg)
 
 CFE_Status_t PAY_SLT_ParGetCmd(const PAY_SLT_ParGetCmd_t *Msg);
 CFE_Status_t PAY_SLT_ParSetCmd(const PAY_SLT_ParSetCmd_t *Msg);
+CFE_Status_t PAY_SLT_ParSetArrayCmd(const PAY_SLT_ParSetArrayCmd_t *Msg);
 CFE_Status_t PAY_SLT_ScanFilesCmd(const PAY_SLT_ScanFilesCmd_t *Msg);
 CFE_Status_t PAY_SLT_DownloadFileI2CCmd(const PAY_SLT_DownloadFileCmd_t *Msg);
 CFE_Status_t PAY_SLT_DownloadFileRS422Cmd(const PAY_SLT_DownloadFileCmd_t *Msg);

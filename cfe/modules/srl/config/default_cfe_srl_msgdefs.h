@@ -89,4 +89,16 @@ typedef struct CFE_SRL_HousekeepingTlm_Payload {
     
 }__attribute__((packed)) CFE_SRL_HousekeepingTlm_Payload_t;
 
+/** Returned by GET_HANDLE_STATUS and by handle-mutating command reports. */
+typedef struct CFE_SRL_HandleStatusReport {
+    uint8 Indexer;
+    uint8 Status;
+    uint8 DevType;
+    uint8 Reserved;
+    int32 FD;
+    CFE_PSP_IODriver_Serial_cnt_Payload_t Counters;
+    char Name[CFE_SRL_HANDLE_NAME_LENGTH];
+    char DevName[CFE_SRL_HANDLE_NAME_LENGTH];
+} CFE_SRL_HandleStatusReport_t;
+
 #endif /* CFE_SRL_MSGDEFS_H */

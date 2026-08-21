@@ -2,6 +2,18 @@
 #define paybee_kisscam_UTILS_H
 
 #include "common_types.h"
+#include "rpt_interface_cfg.h"
+
+typedef struct
+{
+    int32  ReturnCode;
+    uint8  ReturnType;
+    size_t ReadSize;
+} paybee_kisscam_TransactionResult_t;
+
+/// @brief Publish one command result for the RPT application.
+CFE_Status_t paybee_kisscam_SendReport(uint8_t CC, uint8 ReturnType, int32 ReturnCode,
+                                       const void *Data, size_t DataSize);
 
 
 /// @brief Set bit table true for downloaded line
@@ -54,31 +66,16 @@ void paybee_kisscam_Inspection(uint8_t MemorySlot);
 
 
 
-/// @brief Handle H/W Error packet. (i.e. serial comm. success) If Data is insufficient, read residual bytes.
-/// @param ErrPkt Received error packet pointer
-/// @param Size Read size before this function
-/// @param CC Command Code where error occur
-void paybee_kisscam_HandleErrorPacket(void *ErrPkt, ssize_t Size, uint8_t CC);
-
-
-/// @brief Handle Error situation. (i.e. serial comm. failed)
-/// @param Status Error status code
-/// @param CC Command code where error occur
-/// @param ReadData Readed data from communication
-/// @param ReadSize Readed data size from communication
-void paybee_kisscam_HandleErrorSerial(int32 Status, uint8 CC, void *ReadData, ssize_t ReadSize);
-
-/// @brief Handle Success situation (Just report the result)
-/// @param CC Command code which is executed
-/// @param ReadData Readed data from communication
-/// @param ReadSize Readed data size from communication
-void paybee_kisscam_HandleSuccess(uint8_t CC, void *ReadData, ssize_t ReadSize);
-
-/// @brief Do comprehensive transaction with KissCAM. This function handle all case
-/// @param Tx Tx data buffer pointer
-/// @param Rx Rx data buffer pointer
-/// @param CC Command Code which is invoked
-void paybee_kisscam_Transaction(void *Tx, void *Rx, uint8_t CC);
+/// @brief Execute one KissCAM transaction without publishing a report.
+/// @param Tx Command packet buffer.
+/// @param Rx Receive buffer.
+/// @param RxCapacity Physical size of Rx.
+/// @param ExpectedRxSize Expected success response size including header and terminator.
+/// @param CC Command code, used for event logging and download timing.
+/// @return Transaction result to be reported once by the command handler.
+paybee_kisscam_TransactionResult_t paybee_kisscam_Transaction(const void *Tx, void *Rx,
+                                                              size_t RxCapacity, size_t ExpectedRxSize,
+                                                              uint8_t CC);
 // void paybee_kisscam_TransactionWithoutReport(void *Tx, void *Rx, uint8_t CC);
 
 /// @brief Configure the Command packet for KissCAM

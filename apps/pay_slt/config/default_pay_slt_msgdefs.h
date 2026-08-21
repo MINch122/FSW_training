@@ -105,7 +105,7 @@ typedef struct __attribute__((__packed__)) {
 
 typedef struct __attribute__((__packed__)) {
     uint8  node;      // 11(PAY-EXP-A7), 12(PAY-EXP-M7), 13(PAY-IFB) 중 하나
-    uint8  table;     // 0, 3, 4 중 하나
+    uint8  table;     // 0..7 중 하나
     uint16 addr;      // table의 address, 0xNNNN 형식
     
     uint8  type;      // GS_PARAM 참조
@@ -114,7 +114,7 @@ typedef struct __attribute__((__packed__)) {
 
 typedef struct __attribute__((__packed__)) {
     uint8  node;         // 11(PAY-EXP-A7), 12(PAY-EXP-M7), 13(PAY-IFB) 중 하나
-    uint8  table;        // 0, 3 중 하나
+    uint8  table;        // 0..7 중 하나
     uint16 addr;         // table의 address, 0xNNNN 형식
     
     uint8  type;         // GS_PARAM 참조
@@ -126,6 +126,22 @@ typedef struct __attribute__((__packed__)) {
     }data;    // 바꾸려고 하는 값
     
 } PAY_SLT_ParSet_Payload_t;
+
+#define PAY_SLT_PAR_SET_ARRAY_MAX_LEN 8U
+
+typedef struct __attribute__((__packed__)) {
+    uint8  node;
+    uint8  table;
+    uint16 addr;         // 첫 번째 요소의 시작 주소
+    uint8  type;         // GS_PARAM_UINT8 / UINT16 / UINT32
+    uint8  len;          // 요소 개수 (1 .. PAY_SLT_PAR_SET_ARRAY_MAX_LEN)
+    uint8  padding[2];   // data union을 4-byte 경계(offset 8)에 맞추기 위한 패딩
+    union {
+        uint8  u8[PAY_SLT_PAR_SET_ARRAY_MAX_LEN];
+        uint16 u16[PAY_SLT_PAR_SET_ARRAY_MAX_LEN];
+        uint32 u32[PAY_SLT_PAR_SET_ARRAY_MAX_LEN];
+    } data;
+} PAY_SLT_ParSetArray_Payload_t;
 
 typedef struct __attribute__((__packed__)) {
     uint8 node;          // file scan을 진행할 payload node: 11(PAY-EXP-A7) or 12(PAY-EXP-M7)

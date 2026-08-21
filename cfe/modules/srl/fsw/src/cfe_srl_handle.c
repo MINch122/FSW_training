@@ -140,6 +140,7 @@ int CFE_SRL_ConfigHandle(uint8_t DevType, CFE_PSP_IODriver_Serial_cfg_t *Config)
             Location.SubchannelId = CFE_PSP_IODriver_SERIAL_CAN_SUBCH;
             break;
         case SRL_DEVTYPE_UART:
+        case SRL_DEVTYPE_RS422:
             Location.SubchannelId = CFE_PSP_IODriver_SERIAL_UART_SUBCH;
             break;
         default:
@@ -177,16 +178,25 @@ int CFE_SRL_HandleInit(CFE_SRL_IO_Handle_t **Handle, const char *Name, const cha
     CFE_SRL_IO_Handle_t *TempHandle;
     CFE_PSP_IODriver_Location_t Location;
 
+    if (Handle == NULL || Name == NULL || Devname == NULL ||
+        memchr(Name, '\0', CFE_SRL_HANDLE_NAME_LENGTH) == NULL ||
+        memchr(Devname, '\0', CFE_SRL_HANDLE_NAME_LENGTH) == NULL)
+    {
+        return CFE_SRL_BAD_ARGUMENT;
+    }
+
+    if (*Handle != NULL)
+    {
+        CFE_ES_WriteToSysLog("%s: %s Handle already initialized.",
+                             __func__, ((CFE_SRL_Global_Handle_t *)*Handle)->DevName);
+        return CFE_SUCCESS;
+    }
+
     // GlobalHandle Init
     Status = CFE_SRL_GlobalHandleInit(&TempHandle, Name, Devname, DevType);
     if (Status != CFE_SUCCESS) return Status;     // Revise `1` to `OK`
 
-    if (*Handle != NULL) { // Which means, 'already initialized'
-        CFE_ES_WriteToSysLog("%s: %s Handle alreay initialized.", 
-            __func__, ((CFE_SRL_Global_Handle_t *)*Handle)->DevName);
-        return CFE_SUCCESS;
-    }
-    else {
+    {
         Location.PspModuleId = CFE_SRL_Global.IOdriverSerialModuleId;
         Location.SubsystemId = CFE_PSP_IODriver_OPEN_SUBSYSTEM;
         switch (DevType)
@@ -201,6 +211,7 @@ int CFE_SRL_HandleInit(CFE_SRL_IO_Handle_t **Handle, const char *Name, const cha
                 Location.SubchannelId = CFE_PSP_IODriver_SERIAL_CAN_SUBCH;
                 break;
             case SRL_DEVTYPE_UART:
+            case SRL_DEVTYPE_RS422:
                 Location.SubchannelId = CFE_PSP_IODriver_SERIAL_UART_SUBCH;
                 break;
             default:
@@ -234,6 +245,7 @@ int CFE_SRL_HandleInit(CFE_SRL_IO_Handle_t **Handle, const char *Name, const cha
     if (Config) {
         Config->FD = TempHandle->FD;
         Status = CFE_SRL_ConfigHandle(DevType, Config);
+        if (Status != CFE_SUCCESS) return Status;
     }
     
     /* If open & config successfully done, set handle status to `FD_INIT` */
@@ -255,12 +267,13 @@ int CFE_SRL_HandleInit(CFE_SRL_IO_Handle_t **Handle, const char *Name, const cha
 
 int CFE_SRL_HandleClose(CFE_SRL_IO_Handle_t **Handle) {
     int Status;
+    int MutexStatus;
     CFE_SRL_Global_Handle_t *Entry;
     CFE_PSP_IODriver_Location_t Location = {0};
     CFE_PSP_IODriver_SerialXfer_t Xfer = {0};
     const char *Name = NULL;
 
-    if (*Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
+    if (Handle == NULL || *Handle == NULL) return CFE_SRL_BAD_ARGUMENT;
 
     Entry = (CFE_SRL_Global_Handle_t *)*Handle;
     Name = Entry->DevName;
@@ -281,8 +294,8 @@ int CFE_SRL_HandleClose(CFE_SRL_IO_Handle_t **Handle) {
         Status = CFE_SRL_CLOSE_ERR;
     }
 
-    Status = CFE_SRL_MutexDestroy(*Handle);
-    if (Status != CFE_SUCCESS) Status = CFE_SRL_MUTEX_ERR;
+    MutexStatus = CFE_SRL_MutexDestroy(*Handle);
+    if (Status >= 0 && MutexStatus != CFE_SUCCESS) Status = CFE_SRL_MUTEX_ERR;
 
     Entry->Status = CFE_SRL_HANDLE_STATUS_NONE;
     memset(Entry, 0, sizeof(CFE_SRL_Global_Handle_t));

@@ -6,6 +6,8 @@
 #include "gpio_msg.h"
 #include "to_lab_msgids.h"
 #include "to_lab_msg.h"
+#include "adcs_msgids.h"
+#include "adcs_msg.h"
 
 CFE_Status_t MISSION_LEOP_Lock(void);
 void         MISSION_LEOP_Unlock(void);

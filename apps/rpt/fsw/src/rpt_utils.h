@@ -55,7 +55,7 @@ int32 RPT_MultipleCritical(uint8_t StartIdx, uint8_t TotNum);
 bool RPT_VerifyReportLength(const CFE_MSG_Message_t *MsgPtr);
 
 osal_id_t RPT_OpenOpsFile(void);
-osal_id_t RPT_OpenOpsBackupFile(uint32 Sequence);
+osal_id_t RPT_OpenOpsBackupFile(uint32 Timestamp);
 int32 RPT_WriteToFile(osal_id_t FD, const void *Data, size_t Size);
 int32 RPT_ReadFromFile(osal_id_t FD, void *Data, size_t Size);
 int32 RPT_CloseFile(osal_id_t FD);

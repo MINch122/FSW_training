@@ -125,6 +125,11 @@ void PAY_SLT_ProcessCommand(const CFE_SB_Buffer_t *SBBufPtr)
                 PAY_SLT_ParSetCmd((const PAY_SLT_ParSetCmd_t *)SBBufPtr);
             }
             break;
+        case PAY_SLT_PAR_SET_ARRAY_CC:
+            if (PAY_SLT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(PAY_SLT_ParSetArrayCmd_t))) {
+                PAY_SLT_ParSetArrayCmd((const PAY_SLT_ParSetArrayCmd_t *)SBBufPtr);
+            }
+            break;
         case PAY_SLT_SCAN_FILES_CC:
             if (PAY_SLT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(PAY_SLT_ScanFilesCmd_t))) {
                 PAY_SLT_ScanFilesCmd((const PAY_SLT_ScanFilesCmd_t *)SBBufPtr);

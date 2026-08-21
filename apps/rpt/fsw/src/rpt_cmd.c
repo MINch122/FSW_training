@@ -138,7 +138,7 @@ void RPT_UpdateOperationData(void) {
     BackupData.Sequence++;
     BackupData.CRC = RPT_CalculateCRC(&BackupData, sizeof(RPT_OperationData_t) - sizeof(uint32_t));
 
-    BackupHandle = RPT_OpenOpsBackupFile(BackupData.Sequence);
+    BackupHandle = RPT_OpenOpsBackupFile(BackupData.TimeSec);
     if (BackupHandle == OS_OBJECT_ID_UNDEFINED) {
         CFE_EVS_SendEvent(RPT_DATA_BACKUP_ERR_EID, CFE_EVS_EventType_ERROR,
                           "RPT operation data backup open failed, sequence=%lu",

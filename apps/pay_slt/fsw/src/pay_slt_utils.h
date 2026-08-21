@@ -44,7 +44,7 @@
 
 typedef struct __attribute__((packed)) {
     uint8  node;        // 11(PAY-EXP-A7), 12(PAY-EXP-M7), 13(PAY-IFB) 중 하나
-    uint8  table;       // 0, 3, 4 중 하나
+    uint8  table;       // 0..7 중 하나
     uint16 addr;        // table의 address, 0xNNNN 형식
     
     uint8  type;        // GS_PARAM 참조

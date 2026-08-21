@@ -58,6 +58,9 @@ typedef struct {
 
 int32 CFE_SRL_TaskInit(void);
 
+CFE_Status_t CFE_SRL_SendReport(const void *Cmd, uint8 ReturnType, int32 ReturnCode,
+                                const void *Data, size_t DataSize);
+
 int32 CFE_SRL_NoopCmd(const CFE_SRL_NoopCmd_t *Cmd);
 
 int32 CFE_SRL_ResetCounterCmd(const CFE_SRL_ResetCounterCmd_t *Cmd);

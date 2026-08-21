@@ -27,9 +27,9 @@
 #define MEOW_MISSION_MAX_WRITE_LEN         MEOW_MISSION_CFGVAL(MAX_WRITE_LEN)
 #define DEFAULT_MEOW_MISSION_MAX_WRITE_LEN 80
 
-/** Maximum bytes returned in a read/tail/checksum telemetry packet. */
+/** Maximum bytes returned by one read/tail command, split across report packets. */
 #define MEOW_MISSION_MAX_READ_LEN          MEOW_MISSION_CFGVAL(MAX_READ_LEN)
-#define DEFAULT_MEOW_MISSION_MAX_READ_LEN  450
+#define DEFAULT_MEOW_MISSION_MAX_READ_LEN  4096
 
 /** Maximum bytes carried in report telemetry, matching the RPT app report ABI. */
 #define MEOW_MISSION_MAX_REPORT_LEN         MEOW_MISSION_CFGVAL(MAX_REPORT_LEN)

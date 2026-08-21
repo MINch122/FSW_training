@@ -30,6 +30,9 @@ bool CFE_SRL_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLen
                         (unsigned int)ExpectedLength);
         result = false;
         CFE_SRL_Global.HKTlmMsg.Payload.CommandErrorCounter++;
+        uint32 Lengths[2] = {(uint32)ActualLength, (uint32)ExpectedLength};
+        CFE_SRL_SendReport(MsgPtr, RPT_RETTYPE_APP, CFE_STATUS_WRONG_MSG_LENGTH,
+                           Lengths, sizeof(Lengths));
     }
 
     return result;
@@ -106,6 +109,8 @@ void CFE_SRL_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
             CFE_EVS_SendEvent(CFE_SRL_CC_ERR_EID, CFE_EVS_EventType_ERROR,
                                 "%s: Invalid CC, Unexpected Command Code %u", __func__, CommandCode);
             CFE_SRL_Global.HKTlmMsg.Payload.CommandErrorCounter++;
+            CFE_SRL_SendReport(SBBufPtr, RPT_RETTYPE_APP, CFE_STATUS_BAD_COMMAND_CODE,
+                               NULL, 0);
             break;
         }
         break;
@@ -115,6 +120,8 @@ void CFE_SRL_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
                             "%s: Invalid MID, Unexpected Msg ID: 0x%X", __func__, 
                             (unsigned int)CFE_SB_MsgIdToValue(MessageID));
         CFE_SRL_Global.HKTlmMsg.Payload.CommandErrorCounter++;
+        CFE_SRL_SendReport(SBBufPtr, RPT_RETTYPE_APP, CFE_STATUS_UNKNOWN_MSG_ID,
+                           &MessageID.Value, sizeof(MessageID.Value));
         break;
     }
 }

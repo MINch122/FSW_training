@@ -2906,35 +2906,100 @@
         "mid": "0x180D",
         "fc": 2,
         "description": "CFE_SRL_RESET_HANDLE_COUNTERS_CC",
-        "params": []
+        "params": [
+          {
+            "name": "Indexer",
+            "type": "enum",
+            "storage": "int32",
+            "values": {
+              "I2C1": 0,
+              "RS485": 1,
+              "CAN0": 2,
+              "I2C2": 3,
+              "RS422": 4,
+              "UART": 5
+            }
+          }
+        ]
       },
       {
         "name": "Get Handle Status",
         "mid": "0x180D",
         "fc": 3,
-        "description": "CFE_SRL_GET_HANDLE_STATUS_CC",
-        "params": []
+        "description": "Return handle status, FD, device type, counters, name and device path through RPT.",
+        "params": [
+          {
+            "name": "Indexer",
+            "type": "enum",
+            "storage": "int32",
+            "values": {
+              "I2C1": 0,
+              "RS485": 1,
+              "CAN0": 2,
+              "I2C2": 3,
+              "RS422": 4,
+              "UART": 5
+            }
+          }
+        ]
       },
       {
         "name": "Init Handle",
         "mid": "0x180D",
         "fc": 4,
         "description": "CFE_SRL_INIT_HANDLE_CC",
-        "params": []
+        "params": [
+          {
+            "name": "Indexer",
+            "type": "enum",
+            "storage": "int32",
+            "values": {"I2C1": 0, "RS485": 1, "CAN0": 2, "I2C2": 3, "RS422": 4, "UART": 5}
+          },
+          {"name": "Name", "type": "string", "length": "CFE_SRL_HANDLE_NAME_LENGTH"},
+          {"name": "DevName", "type": "string", "length": "CFE_SRL_HANDLE_NAME_LENGTH"},
+          {
+            "name": "DevType",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {"I2C": 1, "SPI": 2, "CAN": 3, "UART": 4, "RS422": 5}
+          },
+          {"name": "Padding", "type": "bytes", "length": 3, "hidden": true}
+        ]
       },
       {
         "name": "Close Handle",
         "mid": "0x180D",
         "fc": 5,
         "description": "CFE_SRL_CLOSE_HANDLE_CC",
-        "params": []
+        "params": [
+          {
+            "name": "Indexer",
+            "type": "enum",
+            "storage": "int32",
+            "values": {"I2C1": 0, "RS485": 1, "CAN0": 2, "I2C2": 3, "RS422": 4, "UART": 5}
+          }
+        ]
       },
       {
         "name": "Config Handle",
         "mid": "0x180D",
         "fc": 6,
         "description": "CFE_SRL_CONFIG_HANDLE_CC",
-        "params": []
+        "params": [
+          {
+            "name": "Indexer",
+            "type": "enum",
+            "storage": "int32",
+            "values": {"I2C1": 0, "RS485": 1, "CAN0": 2, "I2C2": 3, "RS422": 4, "UART": 5}
+          },
+          {
+            "name": "Config",
+            "type": "bytes",
+            "length": "CFE_SRL_CONFIG_SIZE",
+            "description": "Packed CFE_PSP_IODriver_Serial_cfg_t: FD byte followed by device-specific configuration."
+          },
+          {"name": "_StructPadding", "type": "bytes", "length": 3, "hidden": true}
+        ]
       },
       {
         "name": "Request HK",
@@ -7167,37 +7232,37 @@
         ]
       },
       {
-        "name": "LTRX EN On",
+        "name": "LTRX EN High",
         "mid": "0x182B",
         "fc": 4,
         "params": []
       },
       {
-        "name": "LTRX EN Off",
+        "name": "LTRX EN Low",
         "mid": "0x182B",
         "fc": 5,
         "params": []
       },
       {
-        "name": "DEP1 EN On",
+        "name": "DEP1 EN High",
         "mid": "0x182B",
         "fc": 6,
         "params": []
       },
       {
-        "name": "DEP1 EN Off",
+        "name": "DEP1 EN Low",
         "mid": "0x182B",
         "fc": 7,
         "params": []
       },
       {
-        "name": "DEP2 EN On",
+        "name": "DEP2 EN High",
         "mid": "0x182B",
         "fc": 8,
         "params": []
       },
       {
-        "name": "DEP2 EN Off",
+        "name": "DEP2 EN Low",
         "mid": "0x182B",
         "fc": 9,
         "params": []
@@ -7209,37 +7274,37 @@
         "params": []
       },
       {
-        "name": "STX EN On",
+        "name": "STX EN High",
         "mid": "0x182B",
         "fc": 11,
         "params": []
       },
       {
-        "name": "STX EN Off",
+        "name": "STX EN Low",
         "mid": "0x182B",
         "fc": 12,
         "params": []
       },
       {
-        "name": "ADCS EN On",
+        "name": "ADCS EN High",
         "mid": "0x182B",
         "fc": 13,
         "params": []
       },
       {
-        "name": "ADCS EN Off",
+        "name": "ADCS EN Low",
         "mid": "0x182B",
         "fc": 14,
         "params": []
       },
       {
-        "name": "ADCS Boot On",
+        "name": "ADCS Boot High",
         "mid": "0x182B",
         "fc": 15,
         "params": []
       },
       {
-        "name": "ADCS Boot Off",
+        "name": "ADCS Boot Low",
         "mid": "0x182B",
         "fc": 16,
         "params": []
@@ -7248,7 +7313,7 @@
         "name": "GPIO DEP Burn",
         "mid": "0x182B",
         "fc": 17,
-        "description": "Timed ON then OFF command: channel 0 controls LTRX_EN, channel 1 controls DEP1_EN, channel 2 controls DEP2_EN",
+        "description": "Timed HIGH then LOW command: channel 0 controls LTRX_EN, channel 1 controls DEP1_EN, channel 2 controls DEP2_EN",
         "params": [
           {
             "name": "Channel",
@@ -7551,6 +7616,170 @@
             "type": "string",
             "length": 96,
             "default": ""
+          }
+        ]
+      },
+      {
+        "name": "Param Set Array U8",
+        "mid": "0x1830",
+        "fc": 11,
+        "params": [
+          {
+            "name": "node",
+            "type": "uint8",
+            "default": "11"
+          },
+          {
+            "name": "table",
+            "type": "uint8",
+            "default": "3"
+          },
+          {
+            "name": "addr",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "type",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "UINT8": 0
+            },
+            "default": "UINT8",
+            "hidden": true
+          },
+          {
+            "name": "len",
+            "type": "uint8",
+            "default": "8"
+          },
+          {
+            "name": "padding",
+            "type": "bytes",
+            "length": 2,
+            "default": "",
+            "hidden": true
+          },
+          {
+            "name": "values",
+            "type": "uint8",
+            "count": 8,
+            "default": "0"
+          },
+          {
+            "name": "data_padding",
+            "type": "bytes",
+            "length": 24,
+            "default": "",
+            "hidden": true
+          }
+        ]
+      },
+      {
+        "name": "Param Set Array U16",
+        "mid": "0x1830",
+        "fc": 11,
+        "params": [
+          {
+            "name": "node",
+            "type": "uint8",
+            "default": "11"
+          },
+          {
+            "name": "table",
+            "type": "uint8",
+            "default": "3"
+          },
+          {
+            "name": "addr",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "type",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "UINT16": 1
+            },
+            "default": "UINT16",
+            "hidden": true
+          },
+          {
+            "name": "len",
+            "type": "uint8",
+            "default": "8"
+          },
+          {
+            "name": "padding",
+            "type": "bytes",
+            "length": 2,
+            "default": "",
+            "hidden": true
+          },
+          {
+            "name": "values",
+            "type": "uint16",
+            "count": 8,
+            "default": "0"
+          },
+          {
+            "name": "data_padding",
+            "type": "bytes",
+            "length": 16,
+            "default": "",
+            "hidden": true
+          }
+        ]
+      },
+      {
+        "name": "Param Set Array U32",
+        "mid": "0x1830",
+        "fc": 11,
+        "params": [
+          {
+            "name": "node",
+            "type": "uint8",
+            "default": "11"
+          },
+          {
+            "name": "table",
+            "type": "uint8",
+            "default": "3"
+          },
+          {
+            "name": "addr",
+            "type": "uint16",
+            "default": "0"
+          },
+          {
+            "name": "type",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "UINT32": 2
+            },
+            "default": "UINT32",
+            "hidden": true
+          },
+          {
+            "name": "len",
+            "type": "uint8",
+            "default": "8"
+          },
+          {
+            "name": "padding",
+            "type": "bytes",
+            "length": 2,
+            "default": "",
+            "hidden": true
+          },
+          {
+            "name": "values",
+            "type": "uint32",
+            "count": 8,
+            "default": "0"
           }
         ]
       },

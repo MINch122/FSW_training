@@ -40,8 +40,8 @@ typedef struct GPIO_DepBurnReport
     uint8  Channel;
     uint8  Reserved[3];
     uint32 BurnTimeSeconds;
-    int32  OnStatus;
-    int32  OffStatus;
+    int32  HighStatus;
+    int32  LowStatus;
 } GPIO_DepBurnReport_t;
 
 static void GPIO_SendReport(uint8 CC, int32 Status, const void *Data, uint16 DataSize, uint8 ReturnType)
@@ -122,13 +122,13 @@ static CFE_Status_t GPIO_SetOutput(const char *Name, CFE_SRL_GPIO_Indexer_t Inde
     {
         GPIO_Data.ErrCounter++;
         CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set %s %s, RC=0x%08lX", Name,
-                          Value ? "ON" : "OFF", (unsigned long)Status);
+                          Value ? "HIGH" : "LOW", (unsigned long)Status);
         return Status;
     }
 
     GPIO_Data.CmdCounter++;
     CFE_EVS_SendEvent(GPIO_VALUE_INF_EID, CFE_EVS_EventType_INFORMATION, "GPIO: %s %s", Name,
-                      Value ? "ON" : "OFF");
+                      Value ? "HIGH" : "LOW");
 
     return CFE_SUCCESS;
 }
@@ -147,32 +147,32 @@ void GPIO_InitOutputDefaults(void)
     if (LtrxEn != NULL && CFE_SRL_ApiGpioSet(LtrxEn, false) != CFE_SUCCESS)
     {
         GPIO_Data.ErrCounter++;
-        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set LTRX_EN default OFF");
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set LTRX_EN default LOW");
     }
     if (Dep1En != NULL && CFE_SRL_ApiGpioSet(Dep1En, false) != CFE_SUCCESS)
     {
         GPIO_Data.ErrCounter++;
-        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set DEP1_EN default OFF");
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set DEP1_EN default LOW");
     }
     if (Dep2En != NULL && CFE_SRL_ApiGpioSet(Dep2En, false) != CFE_SUCCESS)
     {
         GPIO_Data.ErrCounter++;
-        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set DEP2_EN default OFF");
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set DEP2_EN default LOW");
     }
     if (AdcsBoot != NULL && CFE_SRL_ApiGpioSet(AdcsBoot, false) != CFE_SUCCESS)
     {
         GPIO_Data.ErrCounter++;
-        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set ADCS_BOOT default OFF");
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set ADCS_BOOT default LOW");
     }
     if (StxEn != NULL && CFE_SRL_ApiGpioSet(StxEn, true) != CFE_SUCCESS)
     {
         GPIO_Data.ErrCounter++;
-        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set STX_EN default ON");
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set STX_EN default HIGH");
     }
     if (AdcsEn != NULL && CFE_SRL_ApiGpioSet(AdcsEn, true) != CFE_SUCCESS)
     {
         GPIO_Data.ErrCounter++;
-        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set ADCS_EN default ON");
+        CFE_EVS_SendEvent(GPIO_CC_ERR_EID, CFE_EVS_EventType_ERROR, "GPIO: failed to set ADCS_EN default HIGH");
     }
 }
 
@@ -358,45 +358,45 @@ CFE_Status_t GPIO_DigpiolayParamCmd(const GPIO_DigpiolayParamCmd_t *Msg)
     return CFE_SUCCESS;
 }
 
-CFE_Status_t GPIO_LtrxEnOnCmd(const GPIO_LtrxEnOnCmd_t *Msg)
+CFE_Status_t GPIO_LtrxEnHighCmd(const GPIO_LtrxEnHighCmd_t *Msg)
 {
     CFE_Status_t Status = GPIO_SetOutput("LTRX_EN", CFE_SRL_LTRX_EN_GPIO_INDEXER, GPIO_OUTPUT_LTRX_EN_BIT, true);
-    GPIO_SendReport(GPIO_LTRX_EN_ON_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    GPIO_SendReport(GPIO_LTRX_EN_HIGH_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
 }
 
-CFE_Status_t GPIO_LtrxEnOffCmd(const GPIO_LtrxEnOffCmd_t *Msg)
+CFE_Status_t GPIO_LtrxEnLowCmd(const GPIO_LtrxEnLowCmd_t *Msg)
 {
     CFE_Status_t Status = GPIO_SetOutput("LTRX_EN", CFE_SRL_LTRX_EN_GPIO_INDEXER, GPIO_OUTPUT_LTRX_EN_BIT, false);
-    GPIO_SendReport(GPIO_LTRX_EN_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    GPIO_SendReport(GPIO_LTRX_EN_LOW_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
 }
 
-CFE_Status_t GPIO_Dep1EnOnCmd(const GPIO_Dep1EnOnCmd_t *Msg)
+CFE_Status_t GPIO_Dep1EnHighCmd(const GPIO_Dep1EnHighCmd_t *Msg)
 {
     CFE_Status_t Status = GPIO_SetOutput("DEP1_EN", CFE_SRL_DEP1_EN_GPIO_INDEXER, GPIO_OUTPUT_DEP1_EN_BIT, true);
-    GPIO_SendReport(GPIO_DEP1_EN_ON_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    GPIO_SendReport(GPIO_DEP1_EN_HIGH_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
 }
 
-CFE_Status_t GPIO_Dep1EnOffCmd(const GPIO_Dep1EnOffCmd_t *Msg)
+CFE_Status_t GPIO_Dep1EnLowCmd(const GPIO_Dep1EnLowCmd_t *Msg)
 {
     CFE_Status_t Status = GPIO_SetOutput("DEP1_EN", CFE_SRL_DEP1_EN_GPIO_INDEXER, GPIO_OUTPUT_DEP1_EN_BIT, false);
-    GPIO_SendReport(GPIO_DEP1_EN_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    GPIO_SendReport(GPIO_DEP1_EN_LOW_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
 }
 
-CFE_Status_t GPIO_Dep2EnOnCmd(const GPIO_Dep2EnOnCmd_t *Msg)
+CFE_Status_t GPIO_Dep2EnHighCmd(const GPIO_Dep2EnHighCmd_t *Msg)
 {
     CFE_Status_t Status = GPIO_SetOutput("DEP2_EN", CFE_SRL_DEP2_EN_GPIO_INDEXER, GPIO_OUTPUT_DEP2_EN_BIT, true);
-    GPIO_SendReport(GPIO_DEP2_EN_ON_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    GPIO_SendReport(GPIO_DEP2_EN_HIGH_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
 }
 
-CFE_Status_t GPIO_Dep2EnOffCmd(const GPIO_Dep2EnOffCmd_t *Msg)
+CFE_Status_t GPIO_Dep2EnLowCmd(const GPIO_Dep2EnLowCmd_t *Msg)
 {
     CFE_Status_t Status = GPIO_SetOutput("DEP2_EN", CFE_SRL_DEP2_EN_GPIO_INDEXER, GPIO_OUTPUT_DEP2_EN_BIT, false);
-    GPIO_SendReport(GPIO_DEP2_EN_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    GPIO_SendReport(GPIO_DEP2_EN_LOW_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
 }
 
@@ -413,8 +413,8 @@ CFE_Status_t GPIO_DepBurnCmd(const GPIO_DepBurnCmd_t *Msg)
     memset(&Report, 0, sizeof(Report));
     Report.Channel         = Channel;
     Report.BurnTimeSeconds = BurnTimeSeconds;
-    Report.OnStatus        = CFE_SUCCESS;
-    Report.OffStatus       = CFE_SUCCESS;
+    Report.HighStatus      = CFE_SUCCESS;
+    Report.LowStatus       = CFE_SUCCESS;
 
     if (Channel == GPIO_DEP_BURN_CHANNEL_LTRX)
     {
@@ -458,20 +458,20 @@ CFE_Status_t GPIO_DepBurnCmd(const GPIO_DepBurnCmd_t *Msg)
     }
 
     CFE_EVS_SendEvent(GPIO_VALUE_INF_EID, CFE_EVS_EventType_INFORMATION,
-                      "GPIO: %s burn ON for %lu sec sequence started", Name, (unsigned long)BurnTimeSeconds);
+                      "GPIO: %s burn HIGH for %lu sec sequence started", Name, (unsigned long)BurnTimeSeconds);
 
-    Report.OnStatus = GPIO_SetOutput(Name, Index, StateBit, true);
-    FinalStatus     = Report.OnStatus;
+    Report.HighStatus = GPIO_SetOutput(Name, Index, StateBit, true);
+    FinalStatus       = Report.HighStatus;
 
-    if (Report.OnStatus == CFE_SUCCESS)
+    if (Report.HighStatus == CFE_SUCCESS)
     {
         OS_TaskDelay(BurnTimeSeconds * 1000u);
     }
 
-    Report.OffStatus = GPIO_SetOutput(Name, Index, StateBit, false);
-    if (Report.OffStatus != CFE_SUCCESS && FinalStatus == CFE_SUCCESS)
+    Report.LowStatus = GPIO_SetOutput(Name, Index, StateBit, false);
+    if (Report.LowStatus != CFE_SUCCESS && FinalStatus == CFE_SUCCESS)
     {
-        FinalStatus = Report.OffStatus;
+        FinalStatus = Report.LowStatus;
     }
 
     CFE_EVS_SendEvent(GPIO_VALUE_INF_EID, CFE_EVS_EventType_INFORMATION,
@@ -482,45 +482,45 @@ CFE_Status_t GPIO_DepBurnCmd(const GPIO_DepBurnCmd_t *Msg)
     return FinalStatus;
 }
 
-CFE_Status_t GPIO_StxEnOnCmd(const GPIO_StxEnOnCmd_t *Msg)
+CFE_Status_t GPIO_StxEnHighCmd(const GPIO_StxEnHighCmd_t *Msg)
 {
     CFE_Status_t Status = GPIO_SetOutput("STX_EN", CFE_SRL_STX_EN_GPIO_INDEXER, GPIO_OUTPUT_STX_EN_BIT, true);
-    GPIO_SendReport(GPIO_STX_EN_ON_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    GPIO_SendReport(GPIO_STX_EN_HIGH_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
 }
 
-CFE_Status_t GPIO_StxEnOffCmd(const GPIO_StxEnOffCmd_t *Msg)
+CFE_Status_t GPIO_StxEnLowCmd(const GPIO_StxEnLowCmd_t *Msg)
 {
     CFE_Status_t Status = GPIO_SetOutput("STX_EN", CFE_SRL_STX_EN_GPIO_INDEXER, GPIO_OUTPUT_STX_EN_BIT, false);
-    GPIO_SendReport(GPIO_STX_EN_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    GPIO_SendReport(GPIO_STX_EN_LOW_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
 }
 
-CFE_Status_t GPIO_AdcsEnOnCmd(const GPIO_AdcsEnOnCmd_t *Msg)
+CFE_Status_t GPIO_AdcsEnHighCmd(const GPIO_AdcsEnHighCmd_t *Msg)
 {
     CFE_Status_t Status = GPIO_SetOutput("ADCS_EN", CFE_SRL_ADCS_EN_GPIO_INDEXER, GPIO_OUTPUT_ADCS_EN_BIT, true);
-    GPIO_SendReport(GPIO_ADCS_EN_ON_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    GPIO_SendReport(GPIO_ADCS_EN_HIGH_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
 }
 
-CFE_Status_t GPIO_AdcsEnOffCmd(const GPIO_AdcsEnOffCmd_t *Msg)
+CFE_Status_t GPIO_AdcsEnLowCmd(const GPIO_AdcsEnLowCmd_t *Msg)
 {
     CFE_Status_t Status = GPIO_SetOutput("ADCS_EN", CFE_SRL_ADCS_EN_GPIO_INDEXER, GPIO_OUTPUT_ADCS_EN_BIT, false);
-    GPIO_SendReport(GPIO_ADCS_EN_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    GPIO_SendReport(GPIO_ADCS_EN_LOW_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
 }
 
-CFE_Status_t GPIO_AdcsBootOnCmd(const GPIO_AdcsBootOnCmd_t *Msg)
+CFE_Status_t GPIO_AdcsBootHighCmd(const GPIO_AdcsBootHighCmd_t *Msg)
 {
     CFE_Status_t Status = GPIO_SetOutput("ADCS_BOOT", CFE_SRL_ADCS_BOOT_GPIO_INDEXER, GPIO_OUTPUT_ADCS_BOOT_BIT, true);
-    GPIO_SendReport(GPIO_ADCS_BOOT_ON_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    GPIO_SendReport(GPIO_ADCS_BOOT_HIGH_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
 }
 
-CFE_Status_t GPIO_AdcsBootOffCmd(const GPIO_AdcsBootOffCmd_t *Msg)
+CFE_Status_t GPIO_AdcsBootLowCmd(const GPIO_AdcsBootLowCmd_t *Msg)
 {
     CFE_Status_t Status = GPIO_SetOutput("ADCS_BOOT", CFE_SRL_ADCS_BOOT_GPIO_INDEXER, GPIO_OUTPUT_ADCS_BOOT_BIT, false);
-    GPIO_SendReport(GPIO_ADCS_BOOT_OFF_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
+    GPIO_SendReport(GPIO_ADCS_BOOT_LOW_CC, Status, NULL, 0, GPIO_StatusToReportType(Status));
     return Status;
 }
 

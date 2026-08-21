@@ -282,7 +282,7 @@ osal_id_t RPT_OpenOpsFile(void) {
     return FD;
 }
 
-osal_id_t RPT_OpenOpsBackupFile(uint32 Sequence) {
+osal_id_t RPT_OpenOpsBackupFile(uint32 Timestamp) {
     osal_id_t FD = OS_OBJECT_ID_UNDEFINED;
     osal_id_t DirID = OS_OBJECT_ID_UNDEFINED;
     char Path[OS_MAX_PATH_LEN];
@@ -300,8 +300,8 @@ osal_id_t RPT_OpenOpsBackupFile(uint32 Sequence) {
         }
     }
 
-    PathLength = snprintf(Path, sizeof(Path), "%s/Ops-%032lu", RPT_OPS_BACKUP_PATH,
-                          (unsigned long)Sequence);
+    PathLength = snprintf(Path, sizeof(Path), "%s/Ops-%010lu", RPT_OPS_BACKUP_PATH,
+                          (unsigned long)Timestamp);
     if (PathLength < 0 || (size_t)PathLength >= sizeof(Path)) {
         return OS_OBJECT_ID_UNDEFINED;
     }

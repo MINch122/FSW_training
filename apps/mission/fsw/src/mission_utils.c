@@ -315,10 +315,32 @@ static CFE_Status_t MISSION_LEOP_EnableTo(void)
     return Status;
 }
 
+static CFE_Status_t MISSION_LEOP_StartAdcsDetumble(void)
+{
+    CFE_Status_t                    Status;
+    ADCS_SequenceCmdDetumblingCmd_t Cmd;
+
+    memset(&Cmd, 0, sizeof(Cmd));
+    Status = CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(ADCS_CMD_MID), sizeof(Cmd));
+    if (Status != CFE_SUCCESS)
+    {
+        return Status;
+    }
+
+    Status = CFE_MSG_SetFcnCode(CFE_MSG_PTR(Cmd.CommandHeader), ADCS_SEQ_DTUMB_CC);
+    if (Status != CFE_SUCCESS)
+    {
+        return Status;
+    }
+
+    MISSION_APP_printf("MISSION LEOP: ADCS detumble transmit\n");
+    return CFE_SB_TransmitMsg(CFE_MSG_PTR(Cmd.CommandHeader), true);
+}
+
 static CFE_Status_t MISSION_LEOP_SendGpioDeployCmd(CFE_MSG_FcnCode_t FcnCode)
 {
-    CFE_Status_t       Status;
-    GPIO_Dep1EnOnCmd_t Cmd;
+    CFE_Status_t         Status;
+    GPIO_Dep1EnHighCmd_t Cmd;
 
     memset(&Cmd, 0, sizeof(Cmd));
     Status = CFE_MSG_Init(CFE_MSG_PTR(Cmd.CommandHeader), CFE_SB_ValueToMsgId(GPIO_CMD_MID), sizeof(Cmd));
@@ -340,7 +362,7 @@ static CFE_Status_t MISSION_LEOP_GpioHigh(void)
 {
     CFE_Status_t Status;
 
-    Status = MISSION_LEOP_SendGpioDeployCmd(GPIO_DEP1_EN_ON_CC);
+    Status = MISSION_LEOP_SendGpioDeployCmd(GPIO_DEP1_EN_HIGH_CC);
     if (Status != CFE_SUCCESS)
     {
         return Status;
@@ -348,7 +370,7 @@ static CFE_Status_t MISSION_LEOP_GpioHigh(void)
 
     MISSION_LEOP_Wait(MISSION_LEOP_BURN_DURATION_SEC);
 
-    Status = MISSION_LEOP_SendGpioDeployCmd(GPIO_DEP1_EN_OFF_CC);
+    Status = MISSION_LEOP_SendGpioDeployCmd(GPIO_DEP1_EN_LOW_CC);
     if (Status != CFE_SUCCESS)
     {
         return Status;
@@ -448,6 +470,21 @@ void MISSION_LEOP_Process(void)
         MISSION_LEOP_SetDefaults();
         MISSION_APP_printf("MISSION LEOP: state load failed status=0x%08lX; continuing with defaults\n",
                            (unsigned long)Status);
+    }
+
+    if (MISSION_ENABLE_ADCS_DETUMBLE)
+    {
+        Status = MISSION_LEOP_StartAdcsDetumble();
+        if (Status != CFE_SUCCESS)
+        {
+            MISSION_Data.ErrCounter++;
+            MISSION_APP_printf("MISSION LEOP: ADCS detumble transmit failed status=0x%08lX\n",
+                               (unsigned long)Status);
+        }
+    }
+    else
+    {
+        MISSION_APP_printf("MISSION LEOP: ADCS detumble disabled by config\n");
     }
 
     if (MISSION_Data.LEOPState == MISSION_LEOP_STATE_COMPLETE)

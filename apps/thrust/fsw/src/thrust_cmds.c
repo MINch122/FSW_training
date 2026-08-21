@@ -71,6 +71,33 @@ static void THRUST_UpdateModeTracking(uint32_t currentMode, uint8_t lastMsgId,
     THRUST_AppData.LastResult  = lastResult;
 }
 
+static void THRUST_BuildHkReport(THRUST_HkReport_Payload_t *report,
+                                 const THRUST_HKData_Payload_t *reply)
+{
+    report->Pressure_CH0 = reply->Pressure_CH0;
+    report->Pressure_CH1 = reply->Pressure_CH1;
+    report->Pressure_CH2 = reply->Pressure_CH2;
+    report->Pressure_CH3 = reply->Pressure_CH3;
+    report->Temp_CH0     = reply->Temp_CH0;
+    report->Temp_CH1     = reply->Temp_CH1;
+    report->Temp_CH2     = reply->Temp_CH2;
+    report->Temp_CH3     = reply->Temp_CH3;
+    report->Temp_CH4     = reply->Temp_CH4;
+    report->Temp_CH5     = reply->Temp_CH5;
+    report->Status       = reply->Status;
+}
+
+static void THRUST_BuildStatusReport(THRUST_StatusReport_Payload_t *report,
+                                     const THRUST_StatusData_Payload_t *reply)
+{
+    report->CurrentMode    = reply->CurrentMode;
+    report->CurrentStatus  = reply->CurrentStatus;
+    report->FaultFlags     = reply->FaultFlags;
+    report->InterlockFlags = reply->InterlockFlags;
+    report->LastMsgId      = reply->LastMsgId;
+    report->LastResult     = reply->LastResult;
+}
+
 
 /* -------------------------------------------------- */
 /* NoopCmd: 아무것도 하지 않음 — 통신 확인용          */
@@ -137,6 +164,11 @@ void THRUST_HandleReportForMid(uint16_t msgId, int32 status, uint8_t cc, const v
         BufPtr->Report.ReturnType = RPT_RETTYPE_APP;
     }
     BufPtr->Report.ReturnCode     = status;
+    if (data == NULL)
+    {
+        dataSize = 0;
+    }
+
     BufPtr->Report.ReturnDataSize = (dataSize > sizeof(BufPtr->Report.ReturnValue)) ?
                                         sizeof(BufPtr->Report.ReturnValue) : dataSize;
 
@@ -161,6 +193,7 @@ void THRUST_HandleReport(int32 status, uint8_t cc, const void *data, uint16_t da
 /* -------------------------------------------------- */
 CFE_Status_t THRUST_SendHkCmd(const THRUST_SendHkCmd_t *Msg) {
     THRUST_HKData_Payload_t hkData = {0};
+    THRUST_HkReport_Payload_t reportData = {0};
     CFE_SB_MsgId_t msgId = CFE_SB_INVALID_MSG_ID;
     uint16 reportMsgId = (uint16)THRUST_CMD_MID;
     uint8 reportCc = THRUST_REQ_HK_CC;
@@ -175,7 +208,14 @@ CFE_Status_t THRUST_SendHkCmd(const THRUST_SendHkCmd_t *Msg) {
         }
     }
 
-    THRUST_HandleReportForMid(reportMsgId, status, reportCc, &hkData, sizeof(hkData));
+    if (status == CFE_SUCCESS)
+    {
+        THRUST_BuildHkReport(&reportData, &hkData);
+    }
+
+    THRUST_HandleReportForMid(reportMsgId, status, reportCc,
+                              (status == CFE_SUCCESS) ? &reportData : NULL,
+                              (status == CFE_SUCCESS) ? sizeof(reportData) : 0);
     THRUST_LogCmdResult("Send HK", status);
     if (status != CFE_SUCCESS) { THRUST_AppData.ErrCounter++; return status; }
     THRUST_AppData.CmdCounter++;
@@ -325,13 +365,23 @@ CFE_Status_t THRUST_DisarmCmd(const THRUST_DisarmCmd_t *Msg) {
 /* -------------------------------------------------- */
 CFE_Status_t THRUST_ReqStatusCmd(const THRUST_ReqStatusCmd_t *Msg) {
     THRUST_StatusData_Payload_t statusData = {0};
+    THRUST_StatusReport_Payload_t reportData = {0};
     int32 status = THRUST_GetStatus(&statusData);
-    THRUST_HandleReport(status, THRUST_REQ_STATUS_CC, &statusData, sizeof(statusData));
+    if (status == CFE_SUCCESS)
+    {
+        THRUST_BuildStatusReport(&reportData, &statusData);
+    }
+    THRUST_HandleReport(status, THRUST_REQ_STATUS_CC,
+                        (status == CFE_SUCCESS) ? &reportData : NULL,
+                        (status == CFE_SUCCESS) ? sizeof(reportData) : 0);
     THRUST_LogCmdResult("Request Status", status);
     if (status != CFE_SUCCESS) { THRUST_AppData.ErrCounter++; return status; }
 
     /* AppData 동기화 */
     THRUST_AppData.CurrentMode    = statusData.CurrentMode;
+    THRUST_AppData.CurrentStatus  = statusData.CurrentStatus;
+    THRUST_AppData.FaultFlags     = statusData.FaultFlags;
+    THRUST_AppData.InterlockFlags = statusData.InterlockFlags;
     THRUST_AppData.LastMsgId      = statusData.LastMsgId;
     THRUST_AppData.LastResult     = statusData.LastResult;
 
@@ -390,7 +440,8 @@ CFE_Status_t THRUST_ReqFaultLogCmd(const THRUST_ReqFaultLogCmd_t *Msg) {
     THRUST_FaultLogData_Payload_t faultLog = {0};
     CFE_Status_t status = THRUST_GetFaultLog(&faultLog);
     THRUST_HandleReport(status, THRUST_REQ_FAULT_LOG_CC,
-                        &faultLog, sizeof(faultLog));
+                        (status == CFE_SUCCESS) ? faultLog.Reserved : NULL,
+                        (status == CFE_SUCCESS) ? sizeof(faultLog.Reserved) : 0);
     THRUST_LogCmdResult("Request Fault Log", status);
     if (status != CFE_SUCCESS) { THRUST_AppData.ErrCounter++; return status; }
     THRUST_AppData.CmdCounter++;

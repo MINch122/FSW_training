@@ -22,7 +22,12 @@
 #define TABLE_BOARD_PARAM          0
 #define TABLE_DATA_CONTROL_PARAM   3
 #define TABLE_TELEMETRY            4
+#define PAY_SLT_PARAM_TABLE_MAX    7U
+#define PAY_SLT_GET_FULL_TABLE_MAX_ATTEMPTS 3U
+#define PAY_SLT_GET_FULL_TABLE_TIMEOUT_MS 1000U
+#define PAY_SLT_GET_FULL_TABLE_RETRY_DELAY_MS 100U
 #define PAY_SLT_DOWNLOAD_FLUSH_INTERVAL 20U
+#define PAY_SLT_RS422_PART_LATCH_DELAY_MS 100U
 
 static uint16 PAY_SLT_GetParamElementSize(uint8 type)
 {
@@ -53,7 +58,12 @@ static bool PAY_SLT_IsValidNode(uint8 node)
 
 static bool PAY_SLT_IsValidTable(uint8 table)
 {
-    return (table == TABLE_BOARD_PARAM) || (table == TABLE_DATA_CONTROL_PARAM) || (table == TABLE_TELEMETRY);
+    return table <= PAY_SLT_PARAM_TABLE_MAX;
+}
+
+static bool PAY_SLT_IsRetryableFullTableError(gs_error_t err)
+{
+    return (err == GS_ERROR_IO) || (err == GS_ERROR_TIMEOUT) || (err == GS_ERROR_DATA);
 }
 
 // getpar 명령의 Request/Report 구조체의 크기를 계산하는 함수
@@ -161,8 +171,7 @@ static void PAY_SLT_MakeDownloadPath(uint32 file_index, const char *src_name, ch
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 static void PAY_SLT_KeepFirstError(int32 *result, int32 status)
 {
-    if ((*result == CFE_SUCCESS) && (status != CFE_SUCCESS))
-    {
+    if ((*result == CFE_SUCCESS) && (status != CFE_SUCCESS)) {
         *result = status;
     }
 }
@@ -454,8 +463,7 @@ CFE_Status_t PAY_SLT_ParSetCmd(const PAY_SLT_ParSetCmd_t *Msg) {
 
     PAY_SLT_ParSet_Payload_t Payload = Msg->Payload;
 
-    if (!PAY_SLT_IsValidNode(Payload.node) ||
-        ((Payload.table != TABLE_BOARD_PARAM) && (Payload.table != TABLE_DATA_CONTROL_PARAM)))
+    if (!PAY_SLT_IsValidNode(Payload.node) || !PAY_SLT_IsValidTable(Payload.table))
     {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "PAY_SLT_ParSetCmd rejected: node=%u table=%u", (unsigned)Payload.node,
@@ -464,26 +472,15 @@ CFE_Status_t PAY_SLT_ParSetCmd(const PAY_SLT_ParSetCmd_t *Msg) {
     }
 
     switch (Payload.type) {
-        case GS_PARAM_UINT8: {
-            uint8 value = (uint8)Payload.data.value;
-            Status = PAY_SLT_SetParam(Payload.node, Payload.table, Payload.addr, Payload.type, &value);
-            break;
-        }
-        case GS_PARAM_UINT16: {
-            uint16 value = (uint16)Payload.data.value;
-            Status = PAY_SLT_SetParam(Payload.node, Payload.table, Payload.addr, Payload.type, &value);
-            break;
-        }
-        case GS_PARAM_UINT32: {
-            uint32 value = Payload.data.value;
-            Status = PAY_SLT_SetParam(Payload.node, Payload.table, Payload.addr, Payload.type, &value);
-            break;
-        }
-        case GS_PARAM_STRING: {
+        case GS_PARAM_STRING:
             Payload.data.str[sizeof(Payload.data.str) - 1] = '\0';
             Status = PAY_SLT_SetParam(Payload.node, Payload.table, Payload.addr, Payload.type, Payload.data.str);
             break;
-        }
+        case GS_PARAM_UINT8:
+        case GS_PARAM_UINT16:
+        case GS_PARAM_UINT32:
+            Status = PAY_SLT_SetParam(Payload.node, Payload.table, Payload.addr, Payload.type, &Payload.data.value);
+            break;
         default:
             CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                               "PAY_SLT_ParSetCmd err: Unsupported type %d", Payload.type);
@@ -493,6 +490,71 @@ CFE_Status_t PAY_SLT_ParSetCmd(const PAY_SLT_ParSetCmd_t *Msg) {
     }
 
     return PAY_SLT_HandleReport(Status, PAY_SLT_PAR_SET_CC, device_error, NULL, 0);
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* Set Array Parameter                                                        */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+CFE_Status_t PAY_SLT_ParSetArrayCmd(const PAY_SLT_ParSetArrayCmd_t *Msg)
+{
+    int32  Status      = CFE_SUCCESS;
+    bool   device_error = true;
+    const PAY_SLT_ParSetArray_Payload_t *Payload = &Msg->Payload;
+    uint16 element_size;
+
+    if (!PAY_SLT_IsValidNode(Payload->node) || !PAY_SLT_IsValidTable(Payload->table))
+    {
+        CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAY_SLT_ParSetArrayCmd rejected: node=%u table=%u",
+                          (unsigned)Payload->node, (unsigned)Payload->table);
+        return PAY_SLT_HandleReport(CFE_ES_BAD_ARGUMENT, PAY_SLT_PAR_SET_ARRAY_CC, false, NULL, 0);
+    }
+
+    if ((Payload->type != GS_PARAM_UINT8) &&
+        (Payload->type != GS_PARAM_UINT16) &&
+        (Payload->type != GS_PARAM_UINT32))
+    {
+        CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAY_SLT_ParSetArrayCmd rejected: unsupported type=%u", (unsigned)Payload->type);
+        return PAY_SLT_HandleReport(CFE_ES_BAD_ARGUMENT, PAY_SLT_PAR_SET_ARRAY_CC, false, NULL, 0);
+    }
+
+    if ((Payload->len == 0U) || (Payload->len > PAY_SLT_PAR_SET_ARRAY_MAX_LEN))
+    {
+        CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "PAY_SLT_ParSetArrayCmd rejected: len=%u (max=%u)",
+                          (unsigned)Payload->len, (unsigned)PAY_SLT_PAR_SET_ARRAY_MAX_LEN);
+        return PAY_SLT_HandleReport(CFE_ES_BAD_ARGUMENT, PAY_SLT_PAR_SET_ARRAY_CC, false, NULL, 0);
+    }
+
+    element_size = PAY_SLT_GetParamElementSize(Payload->type);
+
+    for (uint8 i = 0; i < Payload->len; i++)
+    {
+        uint16 element_addr = (uint16)(Payload->addr + ((uint16)element_size * (uint16)i));
+        void  *value_ptr;
+
+        switch (Payload->type) {
+            case GS_PARAM_UINT8:  value_ptr = (void *)&Payload->data.u8[i];  break;
+            case GS_PARAM_UINT16: value_ptr = (void *)&Payload->data.u16[i]; break;
+            case GS_PARAM_UINT32: value_ptr = (void *)&Payload->data.u32[i]; break;
+            default:              value_ptr = NULL; break;
+        }
+
+        Status = PAY_SLT_SetParam(Payload->node, Payload->table, element_addr, Payload->type, value_ptr);
+        if (Status != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "PAY_SLT_ParSetArrayCmd: idx=%u addr=0x%04X failed, status=0x%08X",
+                              (unsigned)i, (unsigned)element_addr, (unsigned)Status);
+            break;
+        }
+    }
+
+    return PAY_SLT_HandleReport(Status, PAY_SLT_PAR_SET_ARRAY_CC, device_error, NULL, 0);
 }
 
 
@@ -692,7 +754,11 @@ CFE_Status_t PAY_SLT_GetFullTableCmd(const PAY_SLT_GetFullTableCmd_t *Msg) {
     gs_param_table_instance_t tinst = {0};
     uint8 table_data[sizeof(PAY_SLT_Data.RptPkt.Report.ReturnValue)] = {0};
     size_t table_data_size;
-    gs_error_t err;
+    gs_error_t err = GS_ERROR_UNKNOWN;
+    uint8 attempt;
+    uint8 attempts_used = 0U;
+
+    OS_printf("[PAY-SLT] 1 GET_FULL_TABLE CMD: node=%u table=%u\n", Msg->Payload.node, Msg->Payload.table);
 
     if (!PAY_SLT_IsValidNode(Msg->Payload.node) || !PAY_SLT_IsValidTable(Msg->Payload.table))
     {
@@ -700,16 +766,47 @@ CFE_Status_t PAY_SLT_GetFullTableCmd(const PAY_SLT_GetFullTableCmd_t *Msg) {
                                     sizeof(Msg->Payload));
     }
 
-    err = PAY_SLT_GetFullTable(Msg->Payload.node, Msg->Payload.table, &tinst, 1000); // 1000ms timeout
+
+    for (attempt = 1U; attempt <= PAY_SLT_GET_FULL_TABLE_MAX_ATTEMPTS; ++attempt) {
+        attempts_used = attempt;
+        err = PAY_SLT_GetFullTable(Msg->Payload.node, Msg->Payload.table, &tinst,
+                                   PAY_SLT_GET_FULL_TABLE_TIMEOUT_MS);
+        if (err == GS_OK) {
+            break;
+        }
+
+        PAY_SLT_APP_printf("[PAY-SLT] RParam Get Full Table attempt %u/%u FAILED: node=%u table=%u err=%d\n",
+                           (unsigned int)attempt, (unsigned int)PAY_SLT_GET_FULL_TABLE_MAX_ATTEMPTS,
+                           (unsigned int)Msg->Payload.node, (unsigned int)Msg->Payload.table, err);
+
+        if ((attempt >= PAY_SLT_GET_FULL_TABLE_MAX_ATTEMPTS) || !PAY_SLT_IsRetryableFullTableError(err)) {
+            break;
+        }
+
+        OS_TaskDelay(PAY_SLT_GET_FULL_TABLE_RETRY_DELAY_MS);
+    }
+
     if (err != GS_OK) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "PAY_SLT: RParam Get Full Table command failed, err=%d", err);
-        PAY_SLT_APP_printf("[PAY-SLT] RParam Get Full Table FAILED: node=%u table=%u err=%d\n", Msg->Payload.node, Msg->Payload.table, err);
+                          "PAY_SLT: RParam Get Full Table command failed after %u attempt(s), err=%d",
+                          (unsigned int)attempts_used, err);
+        PAY_SLT_APP_printf("[PAY-SLT] RParam Get Full Table FAILED: node=%u table=%u attempts=%u err=%d\n",
+                           Msg->Payload.node, Msg->Payload.table, attempts_used, err);
         return PAY_SLT_HandleReport(CFE_STATUS_EXTERNAL_RESOURCE_FAIL, PAY_SLT_GET_FULL_TABLE_CC, true, &err,
                                     sizeof(err));
     }
 
+    if (attempts_used > 1U) {
+        CFE_EVS_SendEvent(PAY_SLT_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
+                          "PAY_SLT: RParam Get Full Table succeeded after %u attempt(s)",
+                          (unsigned int)attempts_used);
+    }
+
+    OS_printf("[PAY-SLT] 2 GET_FULL_TABLE CMD: node=%u table=%u, getfulltable err: %d\n", Msg->Payload.node, Msg->Payload.table, err);
+
     PAY_SLT_PrintParamTable(Msg->Payload.node, Msg->Payload.table, &tinst);
+
+    OS_printf("[PAY-SLT] 3 GET_FULL_TABLE CMD: node=%u table=%u\n", Msg->Payload.node, Msg->Payload.table);
 
     err = PAY_SLT_GetTableDataSize(&tinst, &table_data_size);
     if (err != GS_OK) {
@@ -762,8 +859,8 @@ CFE_Status_t PAY_SLT_ScanFilesCmd(const PAY_SLT_ScanFilesCmd_t *Msg) {
         return PAY_SLT_HandleReport(CFE_ES_BAD_ARGUMENT, PAY_SLT_SCAN_FILES_CC, false, &node, sizeof(node));
     }
 
-    // [Table3 0x0040] ft_scan set 1
-    int32 Status = PAY_SLT_SetParam(node, TABLE_DATA_CONTROL_PARAM, 0x0040, GS_PARAM_UINT32, &scan_val);
+    // [Table3 0x0041] ft_scan set 1
+    int32 Status = PAY_SLT_SetParam(node, TABLE_DATA_CONTROL_PARAM, 0x0041, GS_PARAM_UINT32, &scan_val);
 
     if (Status == CFE_SUCCESS) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_INF_EID, CFE_EVS_EventType_INFORMATION, "Payload File Scan Success. scanned node: %d", node);
@@ -776,11 +873,11 @@ CFE_Status_t PAY_SLT_ScanFilesCmd(const PAY_SLT_ScanFilesCmd_t *Msg) {
 
     PAY_SLT_ScanFileRpl_t Reply = {0};
 
-    // ft_snap_id: uint32, table3, 0x0044
-    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, node, TABLE_DATA_CONTROL_PARAM, 0x0044, 1,
+    // ft_snap_id: uint32, table3, 0x0045
+    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, node, TABLE_DATA_CONTROL_PARAM, 0x0045, 1,
                                        &Reply.snap_id);
-    // ft_file_ccount: uint32, table3, 0x0048
-    int32 Status1 = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, node, TABLE_DATA_CONTROL_PARAM, 0x0048, 1,
+    // ft_file_count: uint32, table3, 0x0049
+    int32 Status1 = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, node, TABLE_DATA_CONTROL_PARAM, 0x0049, 1,
                                               &Reply.file_count);
 
     if (Status == CFE_SUCCESS && Status1 == CFE_SUCCESS) {
@@ -843,14 +940,14 @@ void PAY_SLT_DownloadChildTask_I2C(void) {
     uint32 expected_file_size = 0U;
     int32  file_fd = -1;
     uint8 chunk_buffer[1024]; // default: 1024바이트 조각 버퍼. 일단 크게 받고 이후에 chunk_size만큼 잘라쓰기
-    char ft_file_name[64] = {0};
+    char ft_file_name[65] = {0}; // STR(64) 필드: 64바이트 + null 보장
     char filepath[128] = {0};
     bool download_completed = false;
     bool report_device_error = true;
 
     // 0. Chunk size(ft_chunk_size, addr 0x009C)
     uint32 chunk_size = 0;
-    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x009C, 1, &chunk_size);
+    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x009D, 1, &chunk_size);
     if (Status != CFE_SUCCESS) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "DownloadChildTask: Get RParam(ft_chunk_size) failed. Status: 0x%06X", Status);
         goto TASK_EXIT;
@@ -863,8 +960,8 @@ void PAY_SLT_DownloadChildTask_I2C(void) {
         goto TASK_EXIT;
     }
 
-    // 1. Load file at <index> (ft_file_load, addr 0x004C)
-    Status = PAY_SLT_SetParam(PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x004C, GS_PARAM_UINT32,
+    // 1. Load file at <index> (ft_file_load, addr 0x004D)
+    Status = PAY_SLT_SetParam(PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x004D, GS_PARAM_UINT32,
                               &file_index);
     if (Status != CFE_SUCCESS) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -875,8 +972,8 @@ void PAY_SLT_DownloadChildTask_I2C(void) {
     // 탑재체가 파일을 로드할 시간을 잠깐
     OS_TaskDelay(100); 
 
-    // 2. 총 조각 수(ft_file_npart, addr 0x0094) 읽기 (FetchParam 사용)
-    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x0094, 1, &file_npart);
+    // 2. 총 조각 수(ft_file_npart, addr 0x0095) 읽기 (FetchParam 사용)
+    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x0095, 1, &file_npart);
     if (Status != CFE_SUCCESS) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "DownloadChildTask: Get RParam(ft_file_npart) failed. Status: 0x%06X", Status);
         goto FILE_CLEANUP;
@@ -893,7 +990,7 @@ void PAY_SLT_DownloadChildTask_I2C(void) {
 
     // 3. OBC 로컬 파일 시스템에 빈 파일 열기 (OSAL API)
     // 파일명: /cf/payload_data.bin? ft_file_name(str, 0x0050)?
-    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_STRING, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x0050, sizeof(ft_file_name) - 1, ft_file_name);
+    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_STRING, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x0051, sizeof(ft_file_name) - 1, ft_file_name);
     if (Status != CFE_SUCCESS) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "DownloadChildTask: Get RParam(ft_file_name) failed. Status: 0x%06X", Status);
@@ -931,7 +1028,7 @@ void PAY_SLT_DownloadChildTask_I2C(void) {
     // 전체 파일 CRC 누적용 초기값
     uint32 total_crc = 0xFFFFFFFF;
     uint32 total_written_bytes = 0U;
-    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x0090, 1, &expected_file_size);
+    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x0091, 1, &expected_file_size);
     if (Status != CFE_SUCCESS) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "DownloadChildTask: Get RParam(ft_file_size) failed. Status: 0x%06X", Status);
@@ -950,8 +1047,8 @@ CHUNK_RETRY:
                 goto FILE_CLEANUP; // 3번 연속 실패하면 다운로드 중단
         }
 
-        // 4-1. Load part/chunk at <index> (ft_part_load, addr 0x00A0)
-        Status = PAY_SLT_SetParam(PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00A0, GS_PARAM_UINT32, &i);
+        // 4-1. Load part/chunk at <index> (ft_part_load, addr 0x00A1)
+        Status = PAY_SLT_SetParam(PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00A1, GS_PARAM_UINT32, &i);
         if (Status != CFE_SUCCESS) {
             retry_count++;
             CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -966,8 +1063,8 @@ CHUNK_RETRY:
         uint32 timeout_cnt = 0;
         OS_TaskDelay(100); // give payload time to latch the new part index and update the I2C buffer
         do {
-            // ft_part_ready(0x00AC): 0 = loading, 1 = ready, 2 = error
-            Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00AC, 1, &part_ready);
+            // ft_part_ready(0x00AD): 0 = loading, 1 = ready, 2 = error
+            Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00AD, 1, &part_ready);
             if (Status != CFE_SUCCESS) {
                 retry_count++;
                 CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -994,8 +1091,9 @@ CHUNK_RETRY:
         uint32 data_buffer_addr = 0x00000000; // ICD: Memory address is start from 0x00000000
 
         uint32 part_size = 0;
-        // ft_part_size(0x00A4)
-        Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00A4, 1, &part_size);
+        uint32 valid_data_len = 0;
+        // ft_part_size(0x00A5)
+        Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00A5, 1, &part_size);
         if (Status != CFE_SUCCESS) {
             retry_count++;
             CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -1012,6 +1110,26 @@ CHUNK_RETRY:
             goto FILE_CLEANUP;
         }
 
+        if ((i * chunk_size) >= expected_file_size) {
+            Status = CFE_ES_BAD_ARGUMENT;
+            CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "Invalid I2C chunk range at chunk %d. Offset=%lu, FileSize=%lu",
+                              i, (unsigned long)(i * chunk_size), (unsigned long)expected_file_size);
+            goto FILE_CLEANUP;
+        }
+
+        valid_data_len = expected_file_size - (i * chunk_size);
+        if (valid_data_len > part_size) {
+            valid_data_len = part_size;
+        }
+
+        if (valid_data_len == 0U) {
+            Status = CFE_ES_BAD_ARGUMENT;
+            CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "Invalid I2C valid data length at chunk %d. PartSize=%lu, FileSize=%lu",
+                              i, (unsigned long)part_size, (unsigned long)expected_file_size);
+            goto FILE_CLEANUP;
+        }
 
         // I2C 실제 데이터 = [쓰레기 값 1 byte] + 실제 데이터
         Status = PAY_SLT_ReadExpI2CChunk(PAY_SLT_Data.I2c1Handle, data_buffer_addr, chunk_buffer, part_size+1);
@@ -1030,18 +1148,31 @@ CHUNK_RETRY:
 
         // 4-4. CRC check - chunk data
         uint32 chunk_crc = PAY_SLT_CalculateCRC32(chunk_buffer, part_size);
+        uint32 valid_chunk_crc = chunk_crc;
 
         // ft_part_crc32, addr 0x00A8
         uint32 ft_part_crc32 = 0;
-        Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00A8, 1, &ft_part_crc32);
+        Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00A9, 1, &ft_part_crc32);
         if (Status != CFE_SUCCESS) {
             CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "DownloadChildTask: Get RParam(ft_part_crc32) failed. Status: 0x%06X", Status);
             goto FILE_CLEANUP; // Rparam 실패는 바로 끝냄
         }
-        
-        PAY_SLT_APP_printf("Chunk CRC Check: Calc: 0x%08X, Payload: 0x%08X\n", chunk_crc, ft_part_crc32);
 
-        if (chunk_crc != ft_part_crc32) {
+        if (valid_data_len != part_size) {
+            valid_chunk_crc = PAY_SLT_CalculateCRC32(chunk_buffer, valid_data_len);
+            CFE_EVS_SendEvent(PAY_SLT_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
+                              "I2C last chunk trimmed at chunk %d. ReadLen=%lu, ValidLen=%lu",
+                              i, (unsigned long)part_size, (unsigned long)valid_data_len);
+        }
+        
+        if (valid_data_len != part_size) {
+            PAY_SLT_APP_printf("Chunk CRC Check: Calc: 0x%08X, ValidCalc: 0x%08X, Payload: 0x%08X\n",
+                               chunk_crc, valid_chunk_crc, ft_part_crc32);
+        } else {
+            PAY_SLT_APP_printf("Chunk CRC Check: Calc: 0x%08X, Payload: 0x%08X\n", chunk_crc, ft_part_crc32);
+        }
+
+        if ((chunk_crc != ft_part_crc32) && (valid_chunk_crc != ft_part_crc32)) {
             // CRC가 불일치하는 경우 다운로드 재시도
             retry_count ++;
             CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "CRC Mismatch at chunk %d. Calc: 0x%08X, Payload: 0x%08X. Download Retry", i, chunk_crc, ft_part_crc32);
@@ -1050,17 +1181,17 @@ CHUNK_RETRY:
 
 
         // 4-5. 파일에 직접 쓰기
-        int32 bytes_written = OS_write(file_fd, chunk_buffer, part_size);
-        if ((bytes_written < 0) || ((size_t)bytes_written != part_size)) {
+        int32 bytes_written = OS_write(file_fd, chunk_buffer, valid_data_len);
+        if ((bytes_written < 0) || ((size_t)bytes_written != valid_data_len)) {
             report_device_error = false;
             CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                               "DownloadChildTask: File write failed at chunk %u. Written=%d, Expected=%u",
-                              (unsigned int)i, (int)bytes_written, part_size);
+                              (unsigned int)i, (int)bytes_written, valid_data_len);
             goto FILE_CLEANUP;
         }
 
         // 4-6. 전체 CRC 변수에 현재 청크 데이터 누적 (청크 검증이 통과된 찐 데이터만 기록)
-        total_crc = PAY_SLT_UpdateCRC32(total_crc, chunk_buffer, part_size);
+        total_crc = PAY_SLT_UpdateCRC32(total_crc, chunk_buffer, valid_data_len);
 
         // 4-7. 파일 핸들을 계속 유지하며 실제로 쓴 바이트 수 누적
         total_written_bytes += (uint32)bytes_written;
@@ -1101,10 +1232,10 @@ CHUNK_RETRY:
         // 처음부터 다운로드한 경우에만 전체 CRC 검사 수행
         total_crc ^= 0xFFFFFFFF; // 다운로드가 끝났으므로 최종 반전(XOR Out)
 
-        // ft_file_crc32, addr 0x0098
+        // ft_file_crc32, addr 0x0099
         uint32 ft_file_crc32 = 0;
         Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM,
-                                           0x0098, 1, &ft_file_crc32);
+                                           0x0099, 1, &ft_file_crc32);
         if (Status != CFE_SUCCESS) {
             CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                               "DownloadChildTask: Get ft_file_crc32 failed. Status: 0x%06X", Status);
@@ -1175,7 +1306,7 @@ CHUNK_RETRY:
 
     // 8. Release loaded file (ft_release, addr 0x00B0)
     uint32 release_val = 1;
-    int32 release_status = PAY_SLT_SetParam(PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00B0,
+    int32 release_status = PAY_SLT_SetParam(PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00B2,
                                              GS_PARAM_UINT32, &release_val);
     if ((release_status != CFE_SUCCESS) && download_completed) {
         download_completed = false;
@@ -1248,14 +1379,14 @@ void PAY_SLT_DownloadChildTask_RS422(void) {
     uint32 expected_file_size = 0U;
     int32  file_fd = -1;
     uint8 chunk_buffer[1024]; // default: 1024바이트 조각 버퍼. 일단 크게 받고 이후에 chunk_size만큼 잘라쓰기
-    char ft_file_name[64] = {0};
+    char ft_file_name[65] = {0}; // STR(64) 필드: 64바이트 + null 보장
     char filepath[128] = {0};
     bool download_completed = false;
     bool report_device_error = true;
 
     // 0. Chunk size(ft_chunk_size, addr 0x009C)
     uint32 chunk_size = 0;
-    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x009C, 1, &chunk_size);
+    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x009D, 1, &chunk_size);
     if (Status != CFE_SUCCESS) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "DownloadChildTask: Get RParam(ft_chunk_size) failed. Status: 0x%06X", Status);
         goto TASK_EXIT;
@@ -1269,7 +1400,7 @@ void PAY_SLT_DownloadChildTask_RS422(void) {
     }
 
     // 1. Load file at <index> (ft_file_load, addr 0x004C)
-    Status = PAY_SLT_SetParam(PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x004C, GS_PARAM_UINT32,
+    Status = PAY_SLT_SetParam(PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x004D, GS_PARAM_UINT32,
                               &file_index);
     if (Status != CFE_SUCCESS) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -1281,7 +1412,7 @@ void PAY_SLT_DownloadChildTask_RS422(void) {
     // OS_TaskDelay(100);
 
     // 2. 총 조각 수(ft_file_npart, addr 0x0094) 읽기 (FetchParam 사용)
-    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x0094, 1, &file_npart);
+    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x0095, 1, &file_npart);
     if (Status != CFE_SUCCESS) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "DownloadChildTask: Get RParam(ft_file_npart) failed. Status: 0x%06X", Status);
         goto FILE_CLEANUP;
@@ -1298,7 +1429,7 @@ void PAY_SLT_DownloadChildTask_RS422(void) {
 
     // 3. OBC 로컬 파일 시스템에 빈 파일 열기 (OSAL API)
     // 파일명: /cf/payload_data.bin? ft_file_name(str, 0x0050)?
-    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_STRING, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x0050, sizeof(ft_file_name) - 1, ft_file_name);
+    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_STRING, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x0051, sizeof(ft_file_name) - 1, ft_file_name);
     if (Status != CFE_SUCCESS) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "DownloadChildTask: Get RParam(ft_file_name) failed. Status: 0x%06X", Status);
@@ -1336,7 +1467,7 @@ void PAY_SLT_DownloadChildTask_RS422(void) {
     // 전체 파일 CRC 누적용 초기값
     uint32 total_crc = 0xFFFFFFFF;
     uint32 total_written_bytes = 0U;
-    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x0090, 1, &expected_file_size);
+    Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x0091, 1, &expected_file_size);
     if (Status != CFE_SUCCESS) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "DownloadChildTask: Get RParam(ft_file_size) failed. Status: 0x%06X", Status);
@@ -1356,7 +1487,7 @@ CHUNK_RETRY:
         }
 
         // 4-1. Load part/chunk at <index> (ft_part_load, addr 0x00A0)
-        Status = PAY_SLT_SetParam(PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00A0, GS_PARAM_UINT32, &i);
+        Status = PAY_SLT_SetParam(PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00A1, GS_PARAM_UINT32, &i);
         if (Status != CFE_SUCCESS) {
             retry_count++;
             CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -1366,13 +1497,15 @@ CHUNK_RETRY:
             goto CHUNK_RETRY;
         }
 
+        /* Let the payload latch the new part index before reading ready/data. */
+        OS_TaskDelay(PAY_SLT_RS422_PART_LATCH_DELAY_MS);
+
         // 4-2. 조각이 준비될 때까지 기다림 (상태 체크 루프)
         part_ready = 0;
         uint32 timeout_cnt = 0;
-        // OS_TaskDelay(100); // give payload time to latch the new part index and update the RS422 buffer
         do {
             // ft_part_ready(0x00AC): 0 = loading, 1 = ready, 2 = error
-            Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00AC, 1, &part_ready);
+            Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00AD, 1, &part_ready);
             if (Status != CFE_SUCCESS) {
                 retry_count++;
                 CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -1397,7 +1530,7 @@ CHUNK_RETRY:
         // 4-3. RS422 데이터 읽기 (이 부분은 하드웨어 통신 API 사용)
         uint32 part_size = 0;
         // ft_part_size(0x00A4)
-        Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00A4, 1, &part_size);
+        Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00A5, 1, &part_size);
         if (Status != CFE_SUCCESS) {
             retry_count++;
             CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -1496,6 +1629,7 @@ CHUNK_RETRY:
             CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                               "RS422 part mismatch. Requested=%u, Received=%u. Download Retry",
                               (unsigned int)i, received_part);
+            OS_TaskDelay(PAY_SLT_RS422_PART_LATCH_DELAY_MS);
             goto CHUNK_RETRY;
         }
 
@@ -1514,7 +1648,7 @@ CHUNK_RETRY:
 
         // ft_part_crc32, addr 0x00A8
         uint32 ft_part_crc32 = 0;
-        Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00A8, 1, &ft_part_crc32);
+        Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00A9, 1, &ft_part_crc32);
         if (Status != CFE_SUCCESS) {
             CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR, "DownloadChildTask: Get RParam(ft_part_crc32) failed. Status: 0x%06X", Status);
             goto FILE_CLEANUP; // Rparam 실패는 바로 끝냄
@@ -1582,10 +1716,10 @@ CHUNK_RETRY:
         // 처음부터 다운로드한 경우에만 전체 CRC 검사 수행
         total_crc ^= 0xFFFFFFFF; // 다운로드가 끝났으므로 최종 반전(XOR Out)
 
-        // ft_file_crc32, addr 0x0098
+        // ft_file_crc32, addr 0x0099
         uint32 ft_file_crc32 = 0;
         Status = PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM,
-                                           0x0098, 1, &ft_file_crc32);
+                                           0x0099, 1, &ft_file_crc32);
         if (Status != CFE_SUCCESS) {
             CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                               "DownloadChildTask: Get ft_file_crc32 failed. Status: 0x%06X", Status);
@@ -1656,7 +1790,7 @@ FILE_CLEANUP:
 
     // 8. Release loaded file (ft_release, addr 0x00B0)
     uint32 release_val = 1;
-    int32 release_status = PAY_SLT_SetParam(PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00B0,
+    int32 release_status = PAY_SLT_SetParam(PAY_SLT_EXP_A7_NODE, TABLE_DATA_CONTROL_PARAM, 0x00B2,
                                              GS_PARAM_UINT32, &release_val);
     if ((release_status != CFE_SUCCESS) && download_completed) {
         download_completed = false;

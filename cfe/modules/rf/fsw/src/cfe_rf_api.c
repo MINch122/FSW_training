@@ -12,7 +12,7 @@
 #include "cfe_rf_msgids.h"
 #include "cfe_msg.h"
 #include "cfe_sb.h"
-#include "rpt_msgids.h"
+#include "hk_msgids.h"
 #include "osapi.h"
 /**
  * Global data
@@ -185,14 +185,14 @@ int32 CFE_RF_TelemetryEmit(void *BufPtr, size_t Size, uint8_t Port) {
     int32 Status;
     uint16_t TotSendByte = 0;
     uint16_t SendByte = 0;
-    uint16_t MaxMtu = RF_MAX_MTU;
+    uint16_t MaxMtu = RF_RPT_MAX_MTU;
 
     if (BufPtr != NULL) {
         CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
         if (CFE_MSG_GetMsgId((CFE_MSG_Message_t *)BufPtr, &MsgId) == CFE_SUCCESS) {
             CFE_SB_MsgId_Atom_t MsgIdValue = CFE_SB_MsgIdToValue(MsgId);
-            if (MsgIdValue == (CFE_SB_MsgId_Atom_t)RPT_REPORT_TLM_MID || MsgIdValue == (CFE_SB_MsgId_Atom_t)RPT_CRITICAL_TLM_MID) {
-                MaxMtu = RF_RPT_MAX_MTU;
+            if (MsgIdValue == (CFE_SB_MsgId_Atom_t)HK_COMBINED_PKT1_MID) {
+                MaxMtu = RF_MAX_MTU;
             }
         }
     }

@@ -50,5 +50,6 @@
 #define MEOW_CSP_FTP_ERR_EID          37
 #define MEOW_CSP_ROUTE_ERR_EID        38
 #define MEOW_CSP_REROUTE_ERR_EID      39
+#define MEOW_REPORT_TX_ERR_EID        40
 
 #endif /* MEOW_EVENTS_H */

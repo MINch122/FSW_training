@@ -70,32 +70,32 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} GPIO_LtrxEnOnCmd_t;
+} GPIO_LtrxEnHighCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} GPIO_LtrxEnOffCmd_t;
+} GPIO_LtrxEnLowCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} GPIO_Dep1EnOnCmd_t;
+} GPIO_Dep1EnHighCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} GPIO_Dep1EnOffCmd_t;
+} GPIO_Dep1EnLowCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} GPIO_Dep2EnOnCmd_t;
+} GPIO_Dep2EnHighCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} GPIO_Dep2EnOffCmd_t;
+} GPIO_Dep2EnLowCmd_t;
 
 typedef struct
 {
@@ -106,32 +106,32 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} GPIO_StxEnOnCmd_t;
+} GPIO_StxEnHighCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} GPIO_StxEnOffCmd_t;
+} GPIO_StxEnLowCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} GPIO_AdcsEnOnCmd_t;
+} GPIO_AdcsEnHighCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} GPIO_AdcsEnOffCmd_t;
+} GPIO_AdcsEnLowCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} GPIO_AdcsBootOnCmd_t;
+} GPIO_AdcsBootHighCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} GPIO_AdcsBootOffCmd_t;
+} GPIO_AdcsBootLowCmd_t;
 
 typedef struct
 {

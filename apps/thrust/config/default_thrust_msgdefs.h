@@ -81,6 +81,24 @@ typedef struct {
     uint8_t  LastResult;       /* 마지막 Result Code (진단) */
 } __attribute__((packed)) THRUST_StatusTlm_Payload_t;
 
+/** REQUEST HK의 RPT ReturnValue — 장치/CCSDS 헤더와 중복 timestamp 제외 */
+typedef struct {
+    float    Pressure_CH0;
+    float    Pressure_CH1;
+    float    Pressure_CH2;
+    float    Pressure_CH3;
+    float    Temp_CH0;
+    float    Temp_CH1;
+    float    Temp_CH2;
+    float    Temp_CH3;
+    float    Temp_CH4;
+    float    Temp_CH5;
+    uint32_t Status;
+} __attribute__((packed)) THRUST_HkReport_Payload_t;
+
+/** REQUEST STATUS의 RPT ReturnValue — ResultCode/Reserved 제외 */
+typedef THRUST_StatusTlm_Payload_t THRUST_StatusReport_Payload_t;
+
 /* ==========================================================
  * App-Level Error Codes
  * ========================================================== */

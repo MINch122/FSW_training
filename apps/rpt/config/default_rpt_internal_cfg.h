@@ -7,7 +7,7 @@
 #define RPT_PIPE_DEPTH      16
 
 #define RPT_CRITICAL_MSG_DEPTH  5
-#define RPT_REPORT_MSG_DEPTH    3
+#define RPT_REPORT_MSG_DEPTH    10
 
 
 /**

@@ -110,45 +110,45 @@ void GPIO_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
-        case GPIO_LTRX_EN_ON_CC:
-            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_LtrxEnOnCmd_t)))
+        case GPIO_LTRX_EN_HIGH_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_LtrxEnHighCmd_t)))
             {
-                GPIO_LtrxEnOnCmd((const GPIO_LtrxEnOnCmd_t *)SBBufPtr);
+                GPIO_LtrxEnHighCmd((const GPIO_LtrxEnHighCmd_t *)SBBufPtr);
             }
             break;
-        case GPIO_LTRX_EN_OFF_CC:
+        case GPIO_LTRX_EN_LOW_CC:
 
-            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_LtrxEnOffCmd_t)))
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_LtrxEnLowCmd_t)))
             {
-                GPIO_LtrxEnOffCmd((const GPIO_LtrxEnOffCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case GPIO_DEP1_EN_ON_CC:
-            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_Dep1EnOnCmd_t)))
-            {
-                GPIO_Dep1EnOnCmd((const GPIO_Dep1EnOnCmd_t *)SBBufPtr);
+                GPIO_LtrxEnLowCmd((const GPIO_LtrxEnLowCmd_t *)SBBufPtr);
             }
             break;
 
-        case GPIO_DEP1_EN_OFF_CC:
-            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_Dep1EnOffCmd_t)))
+        case GPIO_DEP1_EN_HIGH_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_Dep1EnHighCmd_t)))
             {
-                GPIO_Dep1EnOffCmd((const GPIO_Dep1EnOffCmd_t *)SBBufPtr);
+                GPIO_Dep1EnHighCmd((const GPIO_Dep1EnHighCmd_t *)SBBufPtr);
             }
             break;
 
-        case GPIO_DEP2_EN_ON_CC:
-            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_Dep2EnOnCmd_t)))
+        case GPIO_DEP1_EN_LOW_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_Dep1EnLowCmd_t)))
             {
-                GPIO_Dep2EnOnCmd((const GPIO_Dep2EnOnCmd_t *)SBBufPtr);
+                GPIO_Dep1EnLowCmd((const GPIO_Dep1EnLowCmd_t *)SBBufPtr);
             }
             break;
 
-        case GPIO_DEP2_EN_OFF_CC:
-            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_Dep2EnOffCmd_t)))
+        case GPIO_DEP2_EN_HIGH_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_Dep2EnHighCmd_t)))
             {
-                GPIO_Dep2EnOffCmd((const GPIO_Dep2EnOffCmd_t *)SBBufPtr);
+                GPIO_Dep2EnHighCmd((const GPIO_Dep2EnHighCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case GPIO_DEP2_EN_LOW_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_Dep2EnLowCmd_t)))
+            {
+                GPIO_Dep2EnLowCmd((const GPIO_Dep2EnLowCmd_t *)SBBufPtr);
             }
             break;
 
@@ -159,45 +159,45 @@ void GPIO_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             }
             break;
 
-        case GPIO_STX_EN_ON_CC:
-            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_StxEnOnCmd_t)))
+        case GPIO_STX_EN_HIGH_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_StxEnHighCmd_t)))
             {
-                GPIO_StxEnOnCmd((const GPIO_StxEnOnCmd_t *)SBBufPtr);
+                GPIO_StxEnHighCmd((const GPIO_StxEnHighCmd_t *)SBBufPtr);
             }
             break;
 
-        case GPIO_STX_EN_OFF_CC:
-            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_StxEnOffCmd_t)))
+        case GPIO_STX_EN_LOW_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_StxEnLowCmd_t)))
             {
-                GPIO_StxEnOffCmd((const GPIO_StxEnOffCmd_t *)SBBufPtr);
+                GPIO_StxEnLowCmd((const GPIO_StxEnLowCmd_t *)SBBufPtr);
             }
             break;
 
-        case GPIO_ADCS_EN_ON_CC:
-            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_AdcsEnOnCmd_t)))
+        case GPIO_ADCS_EN_HIGH_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_AdcsEnHighCmd_t)))
             {
-                GPIO_AdcsEnOnCmd((const GPIO_AdcsEnOnCmd_t *)SBBufPtr);
+                GPIO_AdcsEnHighCmd((const GPIO_AdcsEnHighCmd_t *)SBBufPtr);
             }
             break;
 
-        case GPIO_ADCS_EN_OFF_CC:
-            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_AdcsEnOffCmd_t)))
+        case GPIO_ADCS_EN_LOW_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_AdcsEnLowCmd_t)))
             {
-                GPIO_AdcsEnOffCmd((const GPIO_AdcsEnOffCmd_t *)SBBufPtr);
+                GPIO_AdcsEnLowCmd((const GPIO_AdcsEnLowCmd_t *)SBBufPtr);
             }
             break;
 
-        case GPIO_ADCS_BOOT_ON_CC:
-            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_AdcsBootOnCmd_t)))
+        case GPIO_ADCS_BOOT_HIGH_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_AdcsBootHighCmd_t)))
             {
-                GPIO_AdcsBootOnCmd((const GPIO_AdcsBootOnCmd_t *)SBBufPtr);
+                GPIO_AdcsBootHighCmd((const GPIO_AdcsBootHighCmd_t *)SBBufPtr);
             }
             break;
 
-        case GPIO_ADCS_BOOT_OFF_CC:
-            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_AdcsBootOffCmd_t)))
+        case GPIO_ADCS_BOOT_LOW_CC:
+            if (GPIO_VerifyCmdLength(&SBBufPtr->Msg, sizeof(GPIO_AdcsBootLowCmd_t)))
             {
-                GPIO_AdcsBootOffCmd((const GPIO_AdcsBootOffCmd_t *)SBBufPtr);
+                GPIO_AdcsBootLowCmd((const GPIO_AdcsBootLowCmd_t *)SBBufPtr);
             }
             break;
 

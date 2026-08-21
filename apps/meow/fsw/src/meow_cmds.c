@@ -9,31 +9,62 @@
 
 void MEOW_SendReport(const void* cmd,
                      const void* data,
-                     uint16 dataSize,
+                     size_t dataSize,
                      int32 retCode,
                      uint8 retType)
 {
     CFE_SB_MsgId_t cmdMid;
     CFE_MSG_FcnCode_t cmdCode;
+    const uint8 *cursor = (const uint8 *)data;
+    size_t offset = 0;
+    CFE_Status_t status;
 
     CFE_MSG_GetMsgId(cmd, &cmdMid);
     CFE_MSG_GetFcnCode(cmd, &cmdCode);
 
-    CFE_MSG_Init(CFE_MSG_PTR(MEOW_AppData.Report.TelemetryHeader),
-                 CFE_SB_ValueToMsgId(MEOW_REPORT_TLM_MID),
-                 sizeof(MEOW_AppData.Report));
-    MEOW_AppData.Report.Payload.MsgID = (uint16_t)CFE_SB_MsgIdToValue(cmdMid);
-    MEOW_AppData.Report.Payload.CommandCode = cmdCode;
-    MEOW_AppData.Report.Payload.ReturnType = retType;
-    MEOW_AppData.Report.Payload.ReturnCode = retCode;
-    uint16 CopySize = dataSize > MEOW_MISSION_MAX_REPORT_LEN ? MEOW_MISSION_MAX_REPORT_LEN : dataSize;
-    MEOW_AppData.Report.Payload.ReturnDataSize = CopySize;
-    memset(MEOW_AppData.Report.Payload.ReturnValue, 0, sizeof(MEOW_AppData.Report.Payload.ReturnValue));
-    if (data && CopySize)
-        memcpy(MEOW_AppData.Report.Payload.ReturnValue,
-               data,
-               CopySize);
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(MEOW_AppData.Report.TelemetryHeader), true);
+    /* A zero-length result still produces one report. Larger results are
+     * emitted as consecutive 512-byte RPT-compatible packets. */
+    do
+    {
+        size_t remaining = dataSize - offset;
+        uint16 copySize = (remaining > MEOW_MISSION_MAX_REPORT_LEN)
+                              ? MEOW_MISSION_MAX_REPORT_LEN
+                              : (uint16)remaining;
+
+        memset(&MEOW_AppData.Report, 0, sizeof(MEOW_AppData.Report));
+        status = CFE_MSG_Init(CFE_MSG_PTR(MEOW_AppData.Report.TelemetryHeader),
+                              CFE_SB_ValueToMsgId(MEOW_REPORT_TLM_MID),
+                              sizeof(MEOW_AppData.Report));
+        if (status != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(MEOW_REPORT_TX_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "MEOW: report init failed CC=%u offset=%lu RC=0x%08lX",
+                              (unsigned)cmdCode, (unsigned long)offset, (unsigned long)status);
+            break;
+        }
+
+        MEOW_AppData.Report.Payload.MsgID = (uint16_t)CFE_SB_MsgIdToValue(cmdMid);
+        MEOW_AppData.Report.Payload.CommandCode = cmdCode;
+        MEOW_AppData.Report.Payload.ReturnType = retType;
+        MEOW_AppData.Report.Payload.ReturnCode = retCode;
+        MEOW_AppData.Report.Payload.ReturnDataSize = copySize;
+        if (cursor != NULL && copySize > 0)
+        {
+            memcpy(MEOW_AppData.Report.Payload.ReturnValue, cursor + offset, copySize);
+        }
+
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(MEOW_AppData.Report.TelemetryHeader));
+        status = CFE_SB_TransmitMsg(CFE_MSG_PTR(MEOW_AppData.Report.TelemetryHeader), true);
+        if (status != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(MEOW_REPORT_TX_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "MEOW: report transmit failed CC=%u offset=%lu RC=0x%08lX",
+                              (unsigned)cmdCode, (unsigned long)offset, (unsigned long)status);
+            break;
+        }
+
+        offset += copySize;
+    } while (offset < dataSize);
 }
 
 /* -------------------------------------------------------------------------
@@ -238,7 +269,7 @@ void MEOW_FileReadCmd(const MEOW_FileReadCmd_t* msg)
     int ret = meow_file_read(msg->Payload.path, msg->Payload.offset,
                               buf, req_size, &bytes_read);
     if (ret == MEOW_FILE_OK) {
-        MEOW_SendReport(msg, buf, (uint16)bytes_read, ret, 0);
+        MEOW_SendReport(msg, buf, bytes_read, ret, 0);
     }
     else {
         int32 os_errno = (int32)meow_file_errno();
@@ -367,7 +398,7 @@ void MEOW_FileTailCmd(const MEOW_FileTailCmd_t* msg)
     int ret = meow_file_tail(msg->Payload.path, msg->Payload.n_bytes,
                               buf, req_size, &bytes_read);
     if (ret == MEOW_FILE_OK) {
-        MEOW_SendReport(msg, buf, (uint16)bytes_read, ret, 0);
+        MEOW_SendReport(msg, buf, bytes_read, ret, 0);
     }
     else {
         int32 os_errno = (int32)meow_file_errno();

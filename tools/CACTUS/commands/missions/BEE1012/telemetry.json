@@ -600,6 +600,32 @@
       "fields": []
     },
     {
+      "app": "CFE_SRL",
+      "name": "Report",
+      "mid": "0x0828",
+      "description": "CFE_SRL command result; GET_HANDLE_STATUS ReturnValue contains CFE_SRL_HandleStatusReport_t.",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        {"name": "MsgID", "type": "uint16", "format": "hex", "hex_digits": 4},
+        {"name": "CommandCode", "type": "uint8", "format": "hex", "hex_digits": 2},
+        {
+          "name": "ReturnType",
+          "type": "enum",
+          "storage": "uint8",
+          "values": {"SUCCESS": 0, "OSAL": 1, "CFE": 2, "LIB": 3, "APP": 4, "HW": 5}
+        },
+        {"name": "ReturnCode", "type": "int32"},
+        {"name": "ReturnDataSize", "type": "uint16"},
+        {
+          "name": "ReturnValue",
+          "type": "bytes",
+          "length": "RPT_RET_VALUE_BUF_SIZE",
+          "display_length_from": "ReturnDataSize"
+        },
+        {"name": "_StructPadding", "type": "bytes", "length": 2, "hidden": true}
+      ]
+    },
+    {
       "app": "RF",
       "name": "Telemetry",
       "mid": "0x080F",
