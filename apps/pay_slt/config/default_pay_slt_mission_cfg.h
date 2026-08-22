@@ -55,4 +55,12 @@
 #define PAY_SLT_HK_ENABLED 0
 #endif
 
+#ifndef PAY_SLT_IFB_ENABLED
+#define PAY_SLT_IFB_ENABLED 0
+#endif
+
+#ifndef PAY_SLT_EXP_ENABLED
+#define PAY_SLT_EXP_ENABLED 0
+#endif
+
 #endif

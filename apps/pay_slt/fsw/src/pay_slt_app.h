@@ -64,6 +64,8 @@ typedef struct
 
     uint8 HkEnabled;
     uint8 BcnEnabled;
+    uint8 IfbEnabled;
+    uint8 ExpEnabled;
 
     PAY_SLT_HkTlm_t HkTlm;
     PAY_SLT_BcnTlm_t BcnTlm;

@@ -28,6 +28,7 @@
 #include "stx_eventids.h"
 #include "stx_tbl.h"
 #include "stx_utils.h"
+#include "enduro_stx.h"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                 */
@@ -72,4 +73,75 @@ void STX_GetCrc(const char *TableName)
         Crc = TblInfoPtr.Crc;
         CFE_ES_WriteToSysLog("Sample App: CRC: 0x%08lX\n\n", (unsigned long)Crc);
     }
+}
+
+static const char* engine_ret_str(esup_ret_t ret)
+{
+    switch (ESUP_RET_ENGINE(ret)) {
+    case ESUP_OK:                   return NULL;
+    case ESUP_SESSION_EXEC_ERROR:   return "device execution error";
+    case ESUP_SESSION_REJECTED:     return "rejected (NOT_ACK)";
+    case ESUP_SESSION_EXPIRED:      return "result expired or never enqueued";
+    case ESUP_SESSION_BUSY_TIMEOUT: return "device stayed busy";
+    case ESUP_SESSION_UNREACHABLE:  return "no reply (link or device fault)";
+    case ESUP_SESSION_IO_ERROR:     return "host I/O error";
+    case ESUP_SESSION_ABORTED:      return "aborted or engine not ready";
+    case ESUP_SESSION_DESYNC:       return "reply desync";
+    case ESUP_SESSION_PENDING:      return "pending (timed out)";
+    case ESUP_SESSION_FULL:         return "no free container cell";
+    case ESUP_SESSION_DUP:          return "duplicate selector active";
+    case ESUP_SESSION_ACK_FAILED:
+        return "result received, result ACK failed";
+    case ESUP_SESSION_RESULT_TOO_LARGE:
+        return "result exceeded caller buffer";
+    default:
+        return "engine error";
+    }
+}
+
+static const char* device_ret_str(esup_ret_t ret)
+{
+    switch (ESUP_RET_DEVICE_LOCAL(ret)) {
+    case ESUP_OK:      return NULL;
+    case STX_ERR_ARG:   return "bad argument";
+    case STX_ERR_RANGE: return "value out of range";
+    case STX_ERR_REPLY: return "short or invalid reply";
+    default:            return "device error";
+    }
+}
+
+void print_status(const char* op, esup_ret_t ret)
+{
+    if (ret == ESUP_OK) {
+        OS_printf("%s: ok\n", op);
+        return;
+    }
+
+    const char* dev = device_ret_str(ret);
+    const char* eng = engine_ret_str(ret);
+    uint8_t exec = ESUP_RET_EXEC_STATUS(ret);
+    bool printed = false;
+
+    OS_printf("%s: error: ", op);
+
+    if (dev != NULL) {
+        OS_printf("%s", dev);
+        printed = true;
+    }
+    if (exec != ESUP_EXEC_OK) {
+        if (printed)
+            OS_printf(" / ");
+        OS_printf("execution status 0x%02X", exec);
+        printed = true;
+    }
+    if (eng != NULL) {
+        if (printed)
+            OS_printf(" / ");
+        OS_printf("%s", eng);
+        printed = true;
+    }
+    if (!printed)
+        OS_printf("transport fault");
+
+    OS_printf(" (0x%08X)\n", (unsigned)ret);
 }

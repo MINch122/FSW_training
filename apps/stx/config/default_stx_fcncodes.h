@@ -37,8 +37,10 @@
 */
 #define STX_NOOP_CC           0
 #define STX_RESET_COUNTERS_CC 1
-#define STX_PARAM_INIT_CC     2
+#define STX_INITIALIZE_CC     2
 #define STX_SET_MODULE_ID_CC  3
+#define STX_PARAM_INIT_CC     4
+#define STX_GET_FILEHANDLE_CC 5
 
 /**set**/
 #define STX_SET_SYMBOLRATE      10
@@ -65,7 +67,6 @@
 #define STX_GET_ALL_PRAMETERS           38
 #define STX_GET_REPORT                  39
 #define STX_GET_MODULATOR_DATA_INTERFACE 40
-
 #define STX_FILESYS_CC_DIR               50
 #define STX_FILESYS_CC_DIRNEXT           51
 #define STX_FILESYS_CC_DELFILE           52
@@ -81,11 +82,5 @@
 #define STX_SYSCONF_CC_IDLEMODE          63
 #define STX_SYSCONF_CC_UPDATEFW          64
 #define STX_SYSCONF_CC_SAFESHUTDOWN      65
-
-#define STX_GETRES_CC_GETRES             66
-
-#define STX_HK_CC             67
-#define STX_BCN_CC             68
-
 
 #endif

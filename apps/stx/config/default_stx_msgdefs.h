@@ -28,14 +28,7 @@
 
 #include "common_types.h"
 #include "stx_fcncodes.h"
-#include "esup.h"
-
-
-typedef struct {
-        uint8_t index;
-        size_t size;
-        char path[100];
-} stx_custom_dir_entry_t;
+#include "enduro_stx.h"
 
 // telemetry send gs -> obc
 typedef struct STX_DisplayParam_Payload
@@ -44,11 +37,6 @@ typedef struct STX_DisplayParam_Payload
     int16  ValI16;                            /**< 16 bit signed integer value */
     char   ValStr[STX_STRING_VAL_LEN]; /**< An example string */
 } STX_DisplayParam_Payload_t;
-
-typedef struct STX_Set_Payload
-{
-    uint8 data;                            /**< 32 bit unsigned integer value */
-} STX_Set_Payload_t;
 
 typedef struct STX_SetModuleId_Payload
 {
@@ -107,29 +95,11 @@ typedef struct __attribute__((__packed__)){
 } STX_OPENFILE_Payload_t;
 
 typedef struct __attribute__((__packed__)){
-    char filename_max[30];  // Null-terminated string
-    int8_t filename_len;
-    uint32_t  file_size;                       // 파일 크기 (bytes)
-    uint32_t packet_number;
-} STX_CREATEFILE_W_Payload_t;
-
-typedef struct __attribute__((__packed__)){        // __attribute__((__packed__))
-    uint16_t data_length;                           // 2-byte
-    int32_t  file_handle;                           // 4-byte
-    uint32_t packet_number;                         // 4-byte
-    uint8_t  packet_data[ESUP_MAX_WRITE_LENGTH];
-} STX_ESUP_WRITEFILE_Payload_t;
-
-typedef struct __attribute__((__packed__)){
     char filename[64];
     uint32_t size;
     uint32_t offset;
     uint8_t interpacket_delay;
 } STX_TLM_WRITEFILE_Payload_t;
-
-// typedef struct {
-//     int32_t file_handle;  // File handle from Open_File
-// } STX_READFILE_Payload_t;
 
 typedef struct
 {
@@ -137,76 +107,12 @@ typedef struct
     int8_t filename_len;
 } STX_SENDFILE_Payload_t;
 
-/*************************************************************************/
-/*
-** Type definition (Sample App housekeeping)
-** command send stx_app <-> obc 
-*/
 typedef struct __attribute__((__packed__)){
-
-    uint8_t  commad_status;
-    uint8_t  flag_MoreFiles;
-    uint16_t file_cnt;
-    uint8_t  listfile[ESUP_MAX_DATA_LENGTH];
-} STX_DIR_t;
-
-typedef struct __attribute__((__packed__)){
-    char filename[31];   // 최대 30 + NULL
-    uint32_t length;
-} file_info_t;
-
-typedef struct __attribute__((__packed__))
-{
-    uint8_t  commad_status;
-    uint32_t  file_handle; 
-} STX_FILE_CREATE_t;
-
-typedef struct __attribute__((__packed__))
-{
-    uint8_t  commad_status;
-    uint32_t  file_handle; 
-    uint32_t  file_length; 
-} STX_FILE_OPEN_t;
-
-typedef struct __attribute__((__packed__))
-{
-    uint8_t  commad_status;
-    uint16_t  Packet_length;
-    uint32_t  Packet_number; 
-    uint8_t  file_data[ESUP_MAX_WRITE_LENGTH]; 
-} STX_FILE_READ_t;
-
-typedef struct STX_GET_U8
-{
-    uint8  commad_status;
-    uint8  rxdata_val;
-} STX_GET_U8_t;
-
-typedef struct STX_GET_U16
-{
-    uint8  commad_status;
-    uint16  rxdata_val;
-} STX_GET_U16_t;
-
-typedef struct STX_GET_FLOAT
-{
-    uint8  commad_status;
-    float  rxdata_val;
-} STX_GET_FLOAT_t;
+    char filename[30];
+    int8_t filename_len;
+} STX_FWUPDATE_Payload_t;
 
 /*  TLM COMMAND  */
-
-typedef struct STX_SET_Tlm_Payload
-{
-    uint8 cstatus;
-    uint8 Getresult;
-}STX_SET_Tlm_Payload_t;
-
-typedef struct STX_FILE_Tlm_Payload
-{
-    uint8 cstatus;
-    uint8 Getresult;
-}STX_FILE_Tlm_Payload_t;
 
 typedef struct STX_GET_ALLPRAM
 {
@@ -221,39 +127,11 @@ typedef struct STX_GET_ALLPRAM
     float    center_frequency;
 } STX_GET_ALLPRAM_t;
 
-typedef struct STX_GET_Report
-{
-    uint8_t command_status;
-    uint8 SystemState;  
-    uint8 StatusFlags;  
-    uint16 Reserved;   
-    float cputemperature;   
-    uint32 Fmwversion;               
-} STX_GET_Report_t;
-
 typedef struct STX_GET_ModulationInterface
 {
     uint8 modulator_interface_type;  
     uint8 lvds_io_type;              
 } STX_GET_ModulationInterface_t;
-
-
-typedef struct STX_GET_Tlm_Payload
-{
-    uint8 cstatus;
-    uint8 symbolrate;
-    uint8 txpower;
-    float centerFreq;
-    uint8 modcod;
-    uint8 rolloff;
-    uint8 pilotSignal;
-    uint8 FECframesize;
-    uint16 PretxDelay;
-    STX_GET_ALLPRAM_t allpram;
-    STX_GET_Report_t report;
-    STX_GET_ModulationInterface_t Modulation;
-    
-}STX_GET_Tlm_Payload_t;
 
 typedef struct STX_HkTlm_Payload
 {
@@ -264,13 +142,106 @@ typedef struct STX_HkTlm_Payload
     float cputemperature;   
 } STX_HkTlm_Payload_t;
 
-typedef struct STX_BCNTlm_Payload
+/* REPLY */
+typedef struct __attribute__((packed))
 {
-    STX_GET_ALLPRAM_t ALLPRAM;
-    STX_GET_ModulationInterface_t Modulator;
-    uint8 SystemState;  
-    uint8 StatusFlags;  
-    float cputemperature;   
-} STX_BCNTlm_Payload_t;
+    esup_ret_t ret;
+    stx_dir_entry_t entries[STX_DIR_ENTRIES_MAX];
+} DIR_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    uint32_t file_handle;
+} CREATEFILE_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    uint32_t file_handle;
+    uint32_t remaining;
+    uint32_t packet_number;
+    uint8_t err_count;
+} WRITEFILE_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    stx_rep_file_open_t orp;
+} OPENFILE_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    uint16_t packet_len;
+    uint32_t packet_number;
+    uint8_t data[ESUP_DATA_MAX];
+} READFILE_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    uint8_t msps;
+} GET_SYMBOLRATE_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    uint8_t dbm;
+} GET_TX_POWER_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    float mhz;
+} GET_CENTERFREQ_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    uint8_t modcod;
+} GET_MODCOD_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    uint8_t roll_off;
+} GET_ROLLOFF_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    uint8_t pilot;
+} GET_PILOT_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    uint8_t frame;
+} GET_FECFRAME_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    uint16_t ms;
+} GET_PRETXDELAY_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    stx_params_t params;
+} GET_ALLPARAM_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    stx_report_t report;
+} GET_REPORT_REPLY_t;
+
+typedef struct __attribute__((packed))
+{
+    esup_ret_t ret;
+    stx_mod_data_iface_t iface;
+} GET_MODDATAIFACE_REPLY_t;
 
 #endif

@@ -176,25 +176,65 @@ static void PAY_SLT_KeepFirstError(int32 *result, int32 status)
     }
 }
 
-static int32 PAY_SLT_UpdateIfbCache(void) {
+static int32 PAY_SLT_CopyFullTableValue(const gs_param_table_instance_t *tinst, uint16 addr,
+                                        void *destination, size_t value_size)
+{
+    if ((tinst == NULL) || (tinst->memory == NULL) || (destination == NULL)) {
+        return GS_ERROR_ARG;
+    }
+
+    if (((size_t)addr > tinst->memory_size) ||
+        (value_size > ((size_t)tinst->memory_size - (size_t)addr))) {
+        return GS_ERROR_DATA;
+    }
+
+    memcpy(destination, ((const uint8 *)tinst->memory) + addr, value_size);
+    return CFE_SUCCESS;
+}
+
+static int32 PAY_SLT_LoadFullTelemetryTable(uint8 node, gs_param_table_instance_t *tinst)
+{
+    gs_error_t err = GS_ERROR_UNKNOWN;
+
+    for (uint8 attempt = 1U; attempt <= PAY_SLT_GET_FULL_TABLE_MAX_ATTEMPTS; ++attempt) {
+        err = PAY_SLT_GetFullTable(node, TABLE_TELEMETRY, tinst, PAY_SLT_GET_FULL_TABLE_TIMEOUT_MS);
+        if (err == GS_OK) {
+            return CFE_SUCCESS;
+        }
+
+        PAY_SLT_APP_printf("[PAY-SLT] telemetry full-table attempt %u/%u failed: node=%u err=%d\n",
+                           (unsigned int)attempt, (unsigned int)PAY_SLT_GET_FULL_TABLE_MAX_ATTEMPTS,
+                           (unsigned int)node, (int)err);
+
+        if ((attempt >= PAY_SLT_GET_FULL_TABLE_MAX_ATTEMPTS) || !PAY_SLT_IsRetryableFullTableError(err)) {
+            break;
+        }
+
+        OS_TaskDelay(PAY_SLT_GET_FULL_TABLE_RETRY_DELAY_MS);
+    }
+
+    return err;
+}
+
+static int32 PAY_SLT_UpdateIfbCache(const gs_param_table_instance_t *tinst) {
     int32 status = CFE_SUCCESS;
 
     // SLT-IFB data (node 13)
     // [ICD 0x0000] sys_status (INT16, 길이 1)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_IFB_NODE, TABLE_TELEMETRY,
-                                                              0x0000, 1, &PAY_SLT_Data.sys_status));
+    PAY_SLT_KeepFirstError(&status, PAY_SLT_CopyFullTableValue(tinst, 0x0000, &PAY_SLT_Data.sys_status,
+                                                               sizeof(PAY_SLT_Data.sys_status)));
     // [ICD 0x0002] sys_uptime (UINT32, 길이 1)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_IFB_NODE, TABLE_TELEMETRY,
-                                                              0x0002, 1, &PAY_SLT_Data.sys_uptime));
+    PAY_SLT_KeepFirstError(&status, PAY_SLT_CopyFullTableValue(tinst, 0x0002, &PAY_SLT_Data.sys_uptime,
+                                                               sizeof(PAY_SLT_Data.sys_uptime)));
     // [ICD 0x0006] sys_now (UINT32, 길이 1)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_IFB_NODE, TABLE_TELEMETRY,
-                                                              0x0006, 1, &PAY_SLT_Data.sys_now));
+    PAY_SLT_KeepFirstError(&status, PAY_SLT_CopyFullTableValue(tinst, 0x0006, &PAY_SLT_Data.sys_now,
+                                                               sizeof(PAY_SLT_Data.sys_now)));
     // [ICD 0x000A] boot_cnt (UINT16, 길이 1)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_IFB_NODE, TABLE_TELEMETRY,
-                                                              0x000A, 1, &PAY_SLT_Data.boot_cnt));
+    PAY_SLT_KeepFirstError(&status, PAY_SLT_CopyFullTableValue(tinst, 0x000A, &PAY_SLT_Data.boot_cnt,
+                                                               sizeof(PAY_SLT_Data.boot_cnt)));
     // [ICD 0x000C] boot_his (UINT8, 길이 8)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT8, PAY_SLT_IFB_NODE, TABLE_TELEMETRY,
-                                                              0x000C, 8, PAY_SLT_Data.boot_his));
+    PAY_SLT_KeepFirstError(&status, PAY_SLT_CopyFullTableValue(tinst, 0x000C, PAY_SLT_Data.boot_his,
+                                                               sizeof(PAY_SLT_Data.boot_his)));
 
     return status;
 }
@@ -209,23 +249,41 @@ CFE_Status_t PAY_SLT_SendHkCmd(const PAY_SLT_SendHkCmd_t *Msg) {
     PAY_SLT_HkTlm_Payload_t *HkPkt = &HkPayload;
     memset(HkPkt, 0, sizeof(*HkPkt));
 
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_UpdateIfbCache());
+    if (PAY_SLT_Data.ExpEnabled == 1U)
+    {
+        gs_param_table_instance_t exp_table = {0};
+        int32 exp_status = PAY_SLT_LoadFullTelemetryTable(PAY_SLT_EXP_A7_NODE, &exp_table);
 
-    // PAY-EXP
-    // [ICD 0x0000] sys_status (INT8, 길이 2)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT8, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x0000, 2, HkPkt->sys_status));
-    // [ICD 0x0026] brm_data (INT16, 길이 3)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x0026, 3, HkPkt->brm_data));
-    // [ICD 0x003C] ntc_data (INT16, 길이 8)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x003C, 8, HkPkt->ntc_data));
+        if (exp_status == CFE_SUCCESS) {
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x0000,
+                                                                           HkPkt->sys_status,
+                                                                           sizeof(HkPkt->sys_status)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x0026,
+                                                                           HkPkt->brm_data,
+                                                                           sizeof(HkPkt->brm_data)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x003C,
+                                                                           HkPkt->ntc_data,
+                                                                           sizeof(HkPkt->ntc_data)));
+            gs_param_table_free(&exp_table);
+        }
 
-    // PAY-IFB
-    // [ICD 0x001A] ntc_data_ifb (INT16, 길이 4)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x001A, 4, HkPkt->ntc_data_ifb));
+        PAY_SLT_KeepFirstError(&status, exp_status);
+    }
+
+    if (PAY_SLT_Data.IfbEnabled == 1U)
+    {
+        gs_param_table_instance_t ifb_table = {0};
+        int32 ifb_status = PAY_SLT_LoadFullTelemetryTable(PAY_SLT_IFB_NODE, &ifb_table);
+
+        if (ifb_status == CFE_SUCCESS) {
+            PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x001A,
+                                                                           HkPkt->ntc_data_ifb,
+                                                                           sizeof(HkPkt->ntc_data_ifb)));
+            gs_param_table_free(&ifb_table);
+        }
+
+        PAY_SLT_KeepFirstError(&status, ifb_status);
+    }
 
     if (status != CFE_SUCCESS)
     {
@@ -254,54 +312,56 @@ CFE_Status_t PAY_SLT_SendBeaconCmd(const PAY_SLT_SendBcnCmd_t *Msg) {
     PAY_SLT_BcnTlm_Payload_t *BcnPkt = &PAY_SLT_Data.BcnTlm.Payload;
     memset(BcnPkt, 0, sizeof(*BcnPkt));
 
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_UpdateIfbCache());
-
     BcnPkt->CmdCounter = PAY_SLT_Data.CmdCounter;
     BcnPkt->ErrCounter = PAY_SLT_Data.ErrCounter;
 
-    // PAY-EXP-A7
-    // System status [MPU MCU] (I8 Array[2], Addr: 0x0000)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT8, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x0000, 2, BcnPkt->sys_status_a7));
-    // System uptime in sec (U32, Addr: 0x0002)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x0002, 1, &BcnPkt->sys_uptime_a7));
-    // System current time (U32, Addr: 0x0006)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x0006, 1, &BcnPkt->sys_now_a7));
-    // System boot count - MPU (U16, Addr: 0x000A)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x000A, 1, &BcnPkt->boot_cnt_p));
-    // System boot cause code - MPU (U8 Array[8], Addr: 0x000C)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT8, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x000C, 8, BcnPkt->boot_his_p));
-    // System boot count - MCU (U16, Addr: 0x0014)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x0014, 1, &BcnPkt->boot_cnt_c));
-    // System boot cause code - MCU (U8 Array[8], Addr: 0x0016)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT8, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x0016, 8, BcnPkt->boot_his_c));
-    // Board temperature (I16, Addr: 0x001E)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x001E, 1, &BcnPkt->brd_temp_a7));
-    // SLF sensor data (I16 Array[3], Addr: 0x0020)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x0020, 3, BcnPkt->slf_data));
-    // Barometric sensor data (I16 Array[3], Addr: 0x0026)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x0026, 3, BcnPkt->brm_data));
-    // IMU sensor data (I16 Array[8], Addr: 0x002C)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x002C, 8, BcnPkt->imu_data));
-    // NTC sensor data (I16 Array[8], Addr: 0x003C)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x003C, 8, BcnPkt->ntc_data_a7));
-    // System power voltage measures in mV (U16 Array[8], Addr: 0x004C)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x004C, 8, BcnPkt->pwr_volt));
-    // System power current measures in mA (U16 Array[8], Addr: 0x005C)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_EXP_A7_NODE,
-                                                              TABLE_TELEMETRY, 0x005C, 8, BcnPkt->pwr_current));
+    if (PAY_SLT_Data.ExpEnabled == 1U)
+    {
+        gs_param_table_instance_t exp_table = {0};
+        int32 exp_status = PAY_SLT_LoadFullTelemetryTable(PAY_SLT_EXP_A7_NODE, &exp_table);
+
+        if (exp_status == CFE_SUCCESS) {
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x0000, BcnPkt->sys_status_a7,
+                                                                           sizeof(BcnPkt->sys_status_a7)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x0002, &BcnPkt->sys_uptime_a7,
+                                                                           sizeof(BcnPkt->sys_uptime_a7)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x0006, &BcnPkt->sys_now_a7,
+                                                                           sizeof(BcnPkt->sys_now_a7)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x000A, &BcnPkt->boot_cnt_p,
+                                                                           sizeof(BcnPkt->boot_cnt_p)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x000C, BcnPkt->boot_his_p,
+                                                                           sizeof(BcnPkt->boot_his_p)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x0014, &BcnPkt->boot_cnt_c,
+                                                                           sizeof(BcnPkt->boot_cnt_c)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x0016, BcnPkt->boot_his_c,
+                                                                           sizeof(BcnPkt->boot_his_c)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x001E, &BcnPkt->brd_temp_a7,
+                                                                           sizeof(BcnPkt->brd_temp_a7)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x0020, BcnPkt->slf_data,
+                                                                           sizeof(BcnPkt->slf_data)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x0026, BcnPkt->brm_data,
+                                                                           sizeof(BcnPkt->brm_data)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x002C, BcnPkt->imu_data,
+                                                                           sizeof(BcnPkt->imu_data)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x003C, BcnPkt->ntc_data_a7,
+                                                                           sizeof(BcnPkt->ntc_data_a7)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x004C, BcnPkt->pwr_volt,
+                                                                           sizeof(BcnPkt->pwr_volt)));
+            PAY_SLT_KeepFirstError(&exp_status, PAY_SLT_CopyFullTableValue(&exp_table, 0x005C, BcnPkt->pwr_current,
+                                                                           sizeof(BcnPkt->pwr_current)));
+            gs_param_table_free(&exp_table);
+        }
+
+        PAY_SLT_KeepFirstError(&status, exp_status);
+    }
+
+    if (PAY_SLT_Data.IfbEnabled == 1U)
+    {
+        gs_param_table_instance_t ifb_table = {0};
+        int32 ifb_status = PAY_SLT_LoadFullTelemetryTable(PAY_SLT_IFB_NODE, &ifb_table);
+
+        if (ifb_status == CFE_SUCCESS) {
+        PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_UpdateIfbCache(&ifb_table));
 
     // PAY-IFB 
     // System status (I16, Addr: 0x0000)
@@ -315,44 +375,49 @@ CFE_Status_t PAY_SLT_SendBeaconCmd(const PAY_SLT_SendBcnCmd_t *Msg) {
     // System current time (Unix epoch, sec) (U32, Addr: 0x0006)
     BcnPkt->sys_now_ifb = PAY_SLT_Data.sys_now;
     // Time left before WDT causes reboot (U32, Addr: 0x0014)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT32, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x0014, 1, &BcnPkt->wdt_left_ifb));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x0014, &BcnPkt->wdt_left_ifb,
+                                                                   sizeof(BcnPkt->wdt_left_ifb)));
     // Board temperature (val/10 °C) (I16, Addr: 0x0018)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x0018, 1, &BcnPkt->brd_temp_ifb));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x0018, &BcnPkt->brd_temp_ifb,
+                                                                   sizeof(BcnPkt->brd_temp_ifb)));
     // NTC sensor data (val/10 °C) (I16 Array[4], Addr: 0x001A)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_INT16, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x001A, 4, BcnPkt->ntc_data_ifb));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x001A, BcnPkt->ntc_data_ifb,
+                                                                   sizeof(BcnPkt->ntc_data_ifb)));
     // System power current measures in mA (U16 Array[2], Addr: 0x0022)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x0022, 2, BcnPkt->pw_cur));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x0022, BcnPkt->pw_cur,
+                                                                   sizeof(BcnPkt->pw_cur)));
     // System power voltage measures in mV (U16 Array[2], Addr: 0x0026)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x0026, 2, BcnPkt->pw_vol));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x0026, BcnPkt->pw_vol,
+                                                                   sizeof(BcnPkt->pw_vol)));
     // Sensor data: sen_online (U8, Addr: 0x002A)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT8, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x002A, 1, &BcnPkt->sen_online));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x002A, &BcnPkt->sen_online,
+                                                                   sizeof(BcnPkt->sen_online)));
     // Sensor data: sen_qlvl (U8, Addr: 0x002B)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT8, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x002B, 1, &BcnPkt->sen_qlvl));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x002B, &BcnPkt->sen_qlvl,
+                                                                   sizeof(BcnPkt->sen_qlvl)));
     // Sensor data: att_ql (U8, Addr: 0x002C)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT8, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x002C, 1, &BcnPkt->att_ql));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x002C, &BcnPkt->att_ql,
+                                                                   sizeof(BcnPkt->att_ql)));
     // Sensor data: att_q (F32 Array[4], Addr: 0x002D)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_FLOAT, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x002D, 4, BcnPkt->att_q));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x002D, BcnPkt->att_q,
+                                                                   sizeof(BcnPkt->att_q)));
     // Sensor data: rot_r (F32 Array[3], Addr: 0x003D)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_FLOAT, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x003D, 3, BcnPkt->rot_r));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x003D, BcnPkt->rot_r,
+                                                                   sizeof(BcnPkt->rot_r)));
     // Sensor data: lin_acc (F32 Array[3], Addr: 0x0049)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_FLOAT, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x0049, 3, BcnPkt->lin_acc));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x0049, BcnPkt->lin_acc,
+                                                                   sizeof(BcnPkt->lin_acc)));
     // Sensor data: fld_vec (F32 Array[3], Addr: 0x0055)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_FLOAT, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x0055, 3, BcnPkt->fld_vec));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x0055, BcnPkt->fld_vec,
+                                                                   sizeof(BcnPkt->fld_vec)));
     // Sensor data: sen_rst (U16, Addr: 0x0061)
-    PAY_SLT_KeepFirstError(&status, PAY_SLT_FetchParam_Simple(GS_PARAM_UINT16, PAY_SLT_IFB_NODE,
-                                                              TABLE_TELEMETRY, 0x0061, 1, &BcnPkt->sen_rst));
+    PAY_SLT_KeepFirstError(&ifb_status, PAY_SLT_CopyFullTableValue(&ifb_table, 0x0061, &BcnPkt->sen_rst,
+                                                                   sizeof(BcnPkt->sen_rst)));
+            gs_param_table_free(&ifb_table);
+        }
+
+        PAY_SLT_KeepFirstError(&status, ifb_status);
+    }
 
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(PAY_SLT_Data.BcnTlm.TelemetryHeader));
     PAY_SLT_KeepFirstError(&status, CFE_SB_TransmitMsg(CFE_MSG_PTR(PAY_SLT_Data.BcnTlm.TelemetryHeader), true));
@@ -427,7 +492,8 @@ CFE_Status_t PAY_SLT_ResetCountersCmd(const PAY_SLT_ResetCountersCmd_t *Msg) {
 
 CFE_Status_t PAY_SLT_OutputEnabledCmd(const PAY_SLT_OutputEnabledCmd_t *Msg) {
     // 값 검증
-    if (Msg->Payload.HkEnabled > 1U || Msg->Payload.BcnEnabled > 1U) {
+    if (Msg->Payload.HkEnabled > 1U || Msg->Payload.BcnEnabled > 1U ||
+        Msg->Payload.IfbEnabled > 1U || Msg->Payload.ExpEnabled > 1U) {
         CFE_EVS_SendEvent(PAY_SLT_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
                           "PAY_SLT: OUTPUT_ENABLED rejected, Args must be 0 or 1");
         return PAY_SLT_HandleReport(CFE_ES_BAD_ARGUMENT, PAY_SLT_OUTPUT_ENABLED_CC, false, NULL, 0);
@@ -435,12 +501,16 @@ CFE_Status_t PAY_SLT_OutputEnabledCmd(const PAY_SLT_OutputEnabledCmd_t *Msg) {
 
     PAY_SLT_Data.HkEnabled = Msg->Payload.HkEnabled;
     PAY_SLT_Data.BcnEnabled = Msg->Payload.BcnEnabled;
+    PAY_SLT_Data.IfbEnabled = Msg->Payload.IfbEnabled;
+    PAY_SLT_Data.ExpEnabled = Msg->Payload.ExpEnabled;
 
     CFE_EVS_SendEvent(PAY_SLT_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
-                  "PAY_SLT: Output Cmd success (HK:%u, BCN:%u)", 
-                  PAY_SLT_Data.HkEnabled, PAY_SLT_Data.BcnEnabled);
+                  "PAY_SLT: Output Cmd success (HK:%u, BCN:%u, IFB:%u, EXP:%u)",
+                  PAY_SLT_Data.HkEnabled, PAY_SLT_Data.BcnEnabled,
+                  PAY_SLT_Data.IfbEnabled, PAY_SLT_Data.ExpEnabled);
 
-    uint8 result[2] = {PAY_SLT_Data.HkEnabled, PAY_SLT_Data.BcnEnabled};
+    uint8 result[4] = {PAY_SLT_Data.HkEnabled, PAY_SLT_Data.BcnEnabled,
+                       PAY_SLT_Data.IfbEnabled, PAY_SLT_Data.ExpEnabled};
 
     return PAY_SLT_HandleReport(CFE_SUCCESS, PAY_SLT_OUTPUT_ENABLED_CC, false, result, sizeof(result));
 }

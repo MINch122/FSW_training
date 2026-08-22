@@ -4409,34 +4409,6 @@
         "params": []
       },
       {
-        "name": "Get Counters",
-        "mid": "0x1894",
-        "fc": 2,
-        "description": "GPS_GET_COUNTERS_CC",
-        "params": []
-      },
-      {
-        "name": "Get Appdata",
-        "mid": "0x1894",
-        "fc": 3,
-        "description": "GPS_GET_APPDATA_CC",
-        "params": []
-      },
-      {
-        "name": "Driver Report HK",
-        "mid": "0x1894",
-        "fc": 4,
-        "description": "GPS_DRIVER_REPORT_HK_CC",
-        "params": []
-      },
-      {
-        "name": "Driver Clear HK",
-        "mid": "0x1894",
-        "fc": 5,
-        "description": "GPS_DRIVER_CLEAR_HK_CC",
-        "params": []
-      },
-      {
         "name": "OEM Cmd Log",
         "mid": "0x1894",
         "fc": 12,
@@ -5949,9 +5921,16 @@
         "description": "STX_RESET_COUNTERS_CC"
       },
       {
-        "name": "Param Init",
+        "name": "Initialize",
         "mid": "0x1854",
         "fc": 2,
+        "params": [],
+        "description": "STX_INITIALIZE_CC"
+      },
+      {
+        "name": "Param Init",
+        "mid": "0x1854",
+        "fc": 4,
         "params": [],
         "description": "STX_PARAM_INIT_CC"
       },
@@ -5959,14 +5938,21 @@
         "name": "Set Module ID",
         "mid": "0x1854",
         "fc": 3,
-        "description": "STX_SET_MODULE_ID_CC",
+        "description": "Set the active STX module ID to any uint16 value.",
         "params": [
           {
             "name": "ModuleId",
             "type": "uint16",
-            "default": "0x1212"
+            "default": "0x1229"
           }
         ]
+      },
+      {
+        "name": "Get File Handle",
+        "mid": "0x1854",
+        "fc": 5,
+        "params": [],
+        "description": "STX_GET_FILEHANDLE_CC"
       },
       {
         "name": "Set Symbol Rate",
@@ -6414,39 +6400,11 @@
         "description": "STX_SYSCONF_CC_SAFESHUTDOWN"
       },
       {
-        "name": "Get Result",
-        "mid": "0x1854",
-        "fc": 66,
-        "params": [],
-        "description": "STX_GETRES_CC_GETRES"
-      },
-      {
-        "name": "HK",
-        "mid": "0x1854",
-        "fc": 67,
-        "params": [],
-        "description": "STX_HK_CC"
-      },
-      {
-        "name": "Beacon",
-        "mid": "0x1854",
-        "fc": 68,
-        "params": [],
-        "description": "STX_BCN_CC"
-      },
-      {
         "name": "Request HK",
         "mid": "0x1855",
         "fc": 0,
         "params": [],
         "description": "STX_SEND_HK_MID"
-      },
-      {
-        "name": "Request Beacon",
-        "mid": "0x1856",
-        "fc": 0,
-        "params": [],
-        "description": "STX_SEND_BCN_MID"
       }
     ]
   },
@@ -6548,30 +6506,6 @@
         "name": "Create Child Task",
         "mid": "0x1823",
         "fc": 21,
-        "params": []
-      },
-      {
-        "name": "Set No Emission",
-        "mid": "0x1823",
-        "fc": 22,
-        "params": []
-      },
-      {
-        "name": "Set S-Only Emission",
-        "mid": "0x1823",
-        "fc": 23,
-        "params": []
-      },
-      {
-        "name": "Set U-Only Emission",
-        "mid": "0x1823",
-        "fc": 24,
-        "params": []
-      },
-      {
-        "name": "Set Dual Emission",
-        "mid": "0x1823",
-        "fc": 27,
         "params": []
       },
       {
@@ -7458,19 +7392,49 @@
         "params": []
       },
       {
-        "name": "Output Enabled",
+        "name": "SLT Output Enable",
         "mid": "0x1830",
         "fc": 3,
         "params": [
           {
             "name": "HkEnabled",
-            "type": "uint8",
-            "default": "0"
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "OFF": 0,
+              "ON": 1
+            },
+            "default": "OFF"
           },
           {
             "name": "BcnEnabled",
-            "type": "uint8",
-            "default": "0"
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "OFF": 0,
+              "ON": 1
+            },
+            "default": "OFF"
+          },
+          {
+            "name": "IfbEnabled",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "OFF": 0,
+              "ON": 1
+            },
+            "default": "OFF"
+          },
+          {
+            "name": "ExpEnabled",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "OFF": 0,
+              "ON": 1
+            },
+            "default": "OFF"
           }
         ]
       },

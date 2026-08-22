@@ -59,14 +59,24 @@ typedef struct
 
 typedef struct
 {
-    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
-} STX_ParamInitCmd_t;
+    CFE_MSG_CommandHeader_t CommandHeader;
+} STX_InitializeCmd_t;
 
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
     STX_SetModuleId_Payload_t Payload;
 } STX_SetModuleIdCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+} STX_ParamInitCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+} STX_GET_FILEHANDLECmd_t;
 
 typedef struct
 {
@@ -189,6 +199,12 @@ typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
 } STX_SendHkCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader;
+    STX_FWUPDATE_Payload_t Payload;
+} STX_FWUPDATE_t;
 /*************************************************************************/
 /*
 ** Type definition
@@ -201,30 +217,6 @@ typedef struct
     CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
     STX_HkTlm_Payload_t Payload;         /**< \brief Telemetry payload */
 } STX_HkTlm_t;
-
-typedef struct
-{
-    CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
-    STX_BCNTlm_Payload_t Payload;         /**< \brief Telemetry payload */
-} STX_BCNTlm_t;
-
-typedef struct
-{
-    CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
-    STX_SET_Tlm_Payload_t Payload;         /**< \brief Telemetry payload */
-} STX_SetTlm_t;
-
-typedef struct
-{
-    CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
-    STX_GET_Tlm_Payload_t Payload;         /**< \brief Telemetry payload */
-} STX_GetTlm_t;
-
-typedef struct
-{
-    CFE_MSG_TelemetryHeader_t  TelemetryHeader; /**< \brief Telemetry header */
-    STX_FILE_Tlm_Payload_t Payload;         /**< \brief Telemetry payload */
-} STX_FileTlm_t;
 
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;

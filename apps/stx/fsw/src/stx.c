@@ -32,11 +32,12 @@
 #include "stx_tbl.h"
 #include "stx_version.h"
 
+#include "enduro_stx.h"
+
 /*
 ** global data
 */
 STX_Data_t STX_Data;
-CFE_SRL_IO_Handle_t *Handle =NULL;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * *  * * * * **/
 /*                                                                            */
@@ -111,7 +112,6 @@ CFE_Status_t STX_Init(void)
 {
     CFE_Status_t status;
 
-    Handle = CFE_SRL_ApiGetHandle(CFE_SRL_RS485_HANDLE_INDEXER);
     char         VersionString[STX_CFG_MAX_VERSION_STR_LEN];
 
     /* Zero out the global data structure */
@@ -148,9 +148,6 @@ CFE_Status_t STX_Init(void)
 
         CFE_MSG_Init(CFE_MSG_PTR(STX_Data.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(STX_HK_TLM_MID),
                      sizeof(STX_Data.HkTlm));
-
-        CFE_MSG_Init(CFE_MSG_PTR(STX_Data.BCNTlm.TelemetryHeader), CFE_SB_ValueToMsgId(STX_BCN_TLM_MID),
-                     sizeof(STX_Data.BCNTlm));
         
         CFE_MSG_Init(CFE_MSG_PTR(STX_Data.RptPkt.TelemetryHeader), CFE_SB_ValueToMsgId(STX_APP_RPT_TLM_MID),
                      sizeof(STX_Data.RptPkt));
@@ -182,51 +179,12 @@ CFE_Status_t STX_Init(void)
     if (status == CFE_SUCCESS)
     {
         /*
-        ** Subscribe to Housekeeping request commands
-        */
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(STX_SEND_BCN_MID), STX_Data.CommandPipe);
-        if (status != CFE_SUCCESS)
-        {
-            CFE_EVS_SendEvent(STX_SUB_BCN_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "Stx App: Error Subscribing to BCN request, RC = 0x%08lX", (unsigned long)status);
-        }
-    }
-
-    if (status == CFE_SUCCESS)
-    {
-        /*
         ** Subscribe to ground command packets
         */
         status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(STX_CMD_MID), STX_Data.CommandPipe);
         if (status != CFE_SUCCESS)
         {
             CFE_EVS_SendEvent(STX_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "Stx App: Error Subscribing to Commands, RC = 0x%08lX", (unsigned long)status);
-        }
-    }
-
-    if (status == CFE_SUCCESS)
-    {
-        /*
-        ** Subscribe to ground command packets
-        */
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(STX_CMD_MID), STX_Data.CommandPipe);
-        if (status != CFE_SUCCESS)
-        {
-            CFE_EVS_SendEvent(STX_SUB_ACK_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "Stx App: Error Subscribing to Commands, RC = 0x%08lX", (unsigned long)status);
-        }
-    }
-
-        if (status == CFE_SUCCESS)
-    {
-        /*
-        ** Subscribe to ground command packets
-        */
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(STX_CMD_MID), STX_Data.CommandPipe);
-        if (status != CFE_SUCCESS)
-        {
-            CFE_EVS_SendEvent(STX_SUB_TLM_ERR_EID, CFE_EVS_EventType_ERROR,
                               "Stx App: Error Subscribing to Commands, RC = 0x%08lX", (unsigned long)status);
         }
     }
@@ -240,6 +198,8 @@ CFE_Status_t STX_Init(void)
         CFE_EVS_SendEvent(STX_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "Stx App Initialized.%s",
                           VersionString);
     }
+
+    STX_InitializeCmd();
 
     return status;
 }

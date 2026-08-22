@@ -101,6 +101,8 @@ typedef struct __attribute__((__packed__)) {
 typedef struct __attribute__((__packed__)) {
     uint8 HkEnabled;      // 0: disable, 1: enable
     uint8 BcnEnabled;     // 0: disable, 1: enable
+    uint8 IfbEnabled;     // 0: do not communicate with PAY-IFB, 1: enable
+    uint8 ExpEnabled;     // 0: do not communicate with PAY-EXP, 1: enable
 } PAY_SLT_OutputEnabled_Payload_t;
 
 typedef struct __attribute__((__packed__)) {

@@ -58,11 +58,7 @@ typedef struct
     ** telemetry packet...
     */
 
-    STX_GetTlm_t GetTlm;
-    STX_SetTlm_t SetTlm;
-    STX_FileTlm_t FileTlm;
     STX_HkTlm_t HkTlm;
-    STX_BCNTlm_t BCNTlm;
 
     STX_ReportTlm_t RptPkt;
 

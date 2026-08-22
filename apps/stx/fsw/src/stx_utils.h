@@ -31,5 +31,6 @@
 
 CFE_Status_t STX_TblValidationFunc(void *TblData);
 void         STX_GetCrc(const char *TableName);
+void print_status(const char* op, esup_ret_t ret);
 
 #endif /* STX_UTILS_H */

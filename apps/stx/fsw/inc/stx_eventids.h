@@ -101,11 +101,10 @@ STK_rpt_tpye_ACK_ERROR
 #define STX_SYSCONF_SAFESHUTDOWN_ERR_EID                 54
 
 
-#define STX_rpt_type_RESULT                              56
-#define STX_rpt_type_CFE_ERROR                           57
-#define STX_rpt_type_ACK_ERROR                           58
-#define STX_rpt_type_FINAL_ACK_ERROR                     59
-
-#define STX_MODULEID_INIT_EID                            60
+#define STX_WIRE_INIT_EID                                60
+#define STX_MODULE_INIT_EID                              61
+#define STX_MODULEID_EID                                 62
+#define STX_FOPEN_EID                                    63
+#define STX_FREAD_EID                                    64
 
 #endif /* STX_EVENTS_H */

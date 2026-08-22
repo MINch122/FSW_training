@@ -30,11 +30,15 @@
 #include "cfe_error.h"
 #include "stx_msg.h"
 
+void STX_SendReportForMid(uint16 MsgId, uint8 CommandCode, uint8 ReturnType, int32 ReturnCode,
+                          size_t DataLength, const void *Data);
+
 void STX_SendHkCmd(void);
-void STX_SendBCNCmd(void);
 CFE_Status_t STX_ResetCountersCmd(const STX_ResetCountersCmd_t *Msg);
 CFE_Status_t STX_NoopCmd(const STX_NoopCmd_t *Msg);
-CFE_Status_t STX_SetModuleIdCmd(const STX_SetModuleIdCmd_t *Msg);
+void STX_InitializeCmd(void);
+void STX_SetModuleIdCmd(const STX_SetModuleIdCmd_t *Msg);
+void STX_GET_FileHandleCmd(const STX_GET_FILEHANDLECmd_t *Msg);
 
 /* SET COMMAND */
 void STX_SET_SYMBOLRATECmd(const STX_Set_SYMBOLRAtE_t *Msg);
@@ -65,6 +69,7 @@ void STX_SENDFILE_WITH_ERROR_Cmd(const STX_SENDFILE_t * Msg);
 void STX_SYSCONF_CC_TRANSMITMODECmd(void);
 void STX_SYSCONF_CC_IDLEMODECmd(void);
 void STX_SYSCONF_CC_SAFESHUTDOWNCmd(void);
+void STX_SYSCONF_CC_UPDATEFWCmd(const STX_FWUPDATE_t *Msg);
 
 /* Get command*/
 void STX_GET_SYMBOL_RATECmd(void);

@@ -54,6 +54,8 @@ CFE_Status_t PAY_SLT_Init(void)
     PAY_SLT_Data.PipeDepth = PAY_SLT_PIPE_DEPTH;
     PAY_SLT_Data.BcnEnabled = PAY_SLT_BCN_ENABLED;
     PAY_SLT_Data.HkEnabled = PAY_SLT_HK_ENABLED;
+    PAY_SLT_Data.IfbEnabled = PAY_SLT_IFB_ENABLED;
+    PAY_SLT_Data.ExpEnabled = PAY_SLT_EXP_ENABLED;
 
     strncpy(PAY_SLT_Data.PipeName, "PAY_SLT_CMD_PIPE", sizeof(PAY_SLT_Data.PipeName));
     PAY_SLT_Data.PipeName[sizeof(PAY_SLT_Data.PipeName) - 1] = 0;

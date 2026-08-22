@@ -25,10 +25,8 @@
 // ground set inout value if you want to use
 #define CFE_MISSION_STX_CMD_TOPICID       0x54
 #define CFE_MISSION_STX_SEND_HK_TOPICID   0x55
-#define CFE_MISSION_STX_SEND_BCN_TOPICID   0x56
 
 #define CFE_MISSION_STX_HK_TLM_TOPICID    0x53
-#define CFE_MISSION_STX_BCN_TLM_TOPICID    0x54
 #define CFE_MISSION_STX_APP_RPT_TLM_TOPICID 0x55
 
 #endif

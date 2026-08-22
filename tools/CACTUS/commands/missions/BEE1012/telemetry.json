@@ -597,7 +597,12 @@
       "mid": "0x080E",
       "description": "CFE_SRL Housekeeping telemetry",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
+      "fields": [
+        {"name": "CommandCounter", "type": "uint8"},
+        {"name": "CommandErrorCounter", "type": "uint8"},
+        {"name": "IOHandleStatus", "type": "uint8", "count": 6},
+        {"name": "IOHandleTxCount", "type": "uint16", "count": 6}
+      ]
     },
     {
       "app": "CFE_SRL",
@@ -831,19 +836,53 @@
     },
     {
       "app": "STX",
-      "name": "Beacon",
-      "mid": "0x0854",
-      "description": "STX Beacon telemetry",
-      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
-    },
-    {
-      "app": "STX",
       "name": "Report",
       "mid": "0x0855",
       "description": "STX Report telemetry",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
+      "fields": [
+        {
+          "name": "MsgID",
+          "type": "uint16",
+          "format": "hex",
+          "hex_digits": 4
+        },
+        {
+          "name": "CommandCode",
+          "type": "uint8",
+          "format": "hex",
+          "hex_digits": 2
+        },
+        {
+          "name": "ReturnType",
+          "type": "enum",
+          "storage": "uint8",
+          "values": {
+            "SUCCESS": 0,
+            "OSAL": 1,
+            "CFE": 2,
+            "LIB": 3,
+            "APP": 4,
+            "HW": 5
+          }
+        },
+        {
+          "name": "ReturnCode",
+          "type": "int32",
+          "format": "hex",
+          "hex_digits": 8
+        },
+        {
+          "name": "ReturnDataSize",
+          "type": "uint16"
+        },
+        {
+          "name": "ReturnValue",
+          "type": "bytes",
+          "length": 512,
+          "display_length_from": "ReturnDataSize"
+        }
+      ]
     },
     {
       "app": "ADCS",

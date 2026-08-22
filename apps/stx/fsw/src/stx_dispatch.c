@@ -31,6 +31,7 @@
 #include "stx_msgids.h"
 #include "stx_msg.h"
 #include "esup.h"
+#include "rpt_interface_cfg.h"
 #include <stdio.h>
 #include <stdint.h>
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
@@ -52,8 +53,13 @@ bool STX_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
     */
     if (ExpectedLength != ActualLength)
     {
+        uint32 Lengths[2];
+
         CFE_MSG_GetMsgId(MsgPtr, &MsgId);
         CFE_MSG_GetFcnCode(MsgPtr, &FcnCode);
+
+        Lengths[0] = (uint32)ActualLength;
+        Lengths[1] = (uint32)ExpectedLength;
 
         CFE_EVS_SendEvent(STX_CMD_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
                           "Invalid Msg length: ID = 0x%X,  CC = %u, Len = %u, Expected = %u",
@@ -63,6 +69,8 @@ bool STX_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
         result = false;
 
         STX_Data.ErrCounter++;
+        STX_SendReportForMid((uint16)CFE_SB_MsgIdToValue(MsgId), (uint8)FcnCode, RPT_RETTYPE_APP,
+                             CFE_STATUS_WRONG_MSG_LENGTH, sizeof(Lengths), Lengths);
     }
 
     return result;
@@ -99,9 +107,10 @@ void STX_Basic_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
             }
             break;
 
-        case STX_PARAM_INIT_CC :
-            if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_ParamInitCmd_t))){
-                STX_Param_init();
+        case STX_INITIALIZE_CC:
+            if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_InitializeCmd_t)))
+            {
+                STX_InitializeCmd();
             }
             break;
 
@@ -109,6 +118,19 @@ void STX_Basic_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
             if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_SetModuleIdCmd_t)))
             {
                 STX_SetModuleIdCmd((const STX_SetModuleIdCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case STX_GET_FILEHANDLE_CC :
+            if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_GET_FILEHANDLECmd_t)))
+            {
+                STX_GET_FileHandleCmd((const STX_GET_FILEHANDLECmd_t *)SBBufPtr);
+            }
+            break;
+
+        case STX_PARAM_INIT_CC :
+            if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_ParamInitCmd_t))){
+                STX_Param_init();
             }
             break;
 
@@ -272,6 +294,7 @@ void STX_Basic_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
             {
                 STX_SENDFILE_WITH_ERROR_Cmd((const STX_SENDFILE_t *)SBBufPtr);
             }
+            break;
 
         /**************************************************************************************************** */
 
@@ -295,31 +318,13 @@ void STX_Basic_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
                 STX_SYSCONF_CC_SAFESHUTDOWNCmd();
             }
             break;
-
-        // case STX_GETRES_CC_GETRES:
-        //     if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_Set_t)))
-        //     {
-        //         const STX_Set_t *cmd = (const STX_Set_t *)SBBufPtr;
-        //         status  = ESUP_INSIG;
-        //         command = GETRES_CC_GETRES;
-        //         type    = CONFIG_TP_MODULATORDTIFC;
-
-        //         ESUP(status, command, type, (void *)&cmd->Payload.data, (uint16_t)cmd->Payload.length);
-        //     }
-        //     break;
         /* default case already found during FC vs length test */
 
         case STX_SYSCONF_CC_UPDATEFW:
-            // if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_Set_t)))
-            // {
-            //     const STX_Set_t *cmd = (const STX_Set_t *)SBBufPtr;
-
-            //     status  = ESUP_INSIG;
-            //     command = SYSCONF_CC_UPDATEFW;
-            //     type    = SYSCONF_TP_NA;
-
-            //     ESUP(status, command, type, (void *)&cmd->Payload.data, (uint16_t)cmd->Payload.length);
-            // }
+            if (STX_VerifyCmdLength(&SBBufPtr->Msg, sizeof(STX_FWUPDATE_t)))
+            {
+                STX_SYSCONF_CC_UPDATEFWCmd((const STX_FWUPDATE_t *)SBBufPtr);
+            }
             break;
 
         /************************************************************************************************************* */
@@ -398,6 +403,9 @@ void STX_Basic_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
         default:
             CFE_EVS_SendEvent(STX_CC_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
                               CommandCode);
+            STX_Data.ErrCounter++;
+            STX_SendReportForMid(STX_CMD_MID, (uint8)CommandCode, RPT_RETTYPE_APP,
+                                 CFE_STATUS_BAD_COMMAND_CODE, sizeof(CommandCode), &CommandCode);
             break;
     }
 
@@ -416,8 +424,10 @@ void STX_Basic_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr){
 void STX_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
 {
     CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
+    CFE_MSG_FcnCode_t FcnCode = 0;
 
     CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
+    CFE_MSG_GetFcnCode(&SBBufPtr->Msg, &FcnCode);
     switch (CFE_SB_MsgIdToValue(MsgId))
     {
         case STX_CMD_MID:
@@ -426,14 +436,13 @@ void STX_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
         case STX_SEND_HK_MID:
             STX_SendHkCmd();
             break;
-        case STX_SEND_BCN_MID:
-            STX_SendBCNCmd();
-            break;
 
         default:
             CFE_EVS_SendEvent(STX_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                               "SAMPLE: invalid command packet,MID = 0x%x", (unsigned int)CFE_SB_MsgIdToValue(MsgId));
+            STX_Data.ErrCounter++;
+            STX_SendReportForMid((uint16)CFE_SB_MsgIdToValue(MsgId), (uint8)FcnCode, RPT_RETTYPE_APP,
+                                 CFE_STATUS_UNKNOWN_MSG_ID, 0, NULL);
             break;
     }
 }
-
