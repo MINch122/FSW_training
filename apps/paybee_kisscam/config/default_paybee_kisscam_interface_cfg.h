@@ -58,10 +58,6 @@
 #define paybee_kisscam_WRITE_REGISTER_TLM_SIZE         paybee_kisscam_GET_TLM_SIZE(0)
 #define paybee_kisscam_MOSAIC_TLM_SIZE                 paybee_kisscam_GET_TLM_SIZE(0)
 
-#define paybee_kisscam_ERROR_TLM_SIZE                  paybee_kisscam_GET_TLM_SIZE(3)
-
-
-
 /*******************************************
  * Download Table Define
  *******************************************/

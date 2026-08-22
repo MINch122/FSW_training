@@ -7957,6 +7957,7 @@
         "name": "Download",
         "mid": "0x1833",
         "fc": 7,
+        "description": "Emits STARTED phase 1 and FINISHED phase 2 reports; image response bytes are not relayed in RPT.",
         "params": [
           {
             "name": "MEM",
@@ -8028,6 +8029,7 @@
         "name": "Download All",
         "mid": "0x1833",
         "fc": 10,
+        "description": "Emits one STARTED phase 1 and one FINISHED phase 2 report for the whole operation; image response bytes are not relayed in RPT.",
         "params": [
           {
             "name": "MEM",

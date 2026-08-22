@@ -59,11 +59,6 @@
 // #define paybee_kisscam_MOSAIC_PARAM_SIZE         1
 
 /**
- * Define Tlm Error flag
- */
-#define paybee_kisscam_TLM_ERR_FLAG                0xFF
-
-/**
  * Download Image flag
  * Only used for Download command
  */

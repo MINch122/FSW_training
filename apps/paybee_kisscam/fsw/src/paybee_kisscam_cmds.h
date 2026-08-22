@@ -11,6 +11,9 @@
 #include "cfe_error.h"
 #include "paybee_kisscam_msg.h"
 
+#define paybee_kisscam_RPT_PHASE_STARTED  1u
+#define paybee_kisscam_RPT_PHASE_FINISHED 2u
+
 // CFE_Status_t paybee_kisscam_SendHkCmd(const paybee_kisscam_SendHkCmd_t *Msg);
 // CFE_Status_t paybee_kisscam_SendBcnCmd(const paybee_kisscam_SendBcnCmd_t *Msg);
 

@@ -448,6 +448,7 @@ int32 CFE_SRL_ReadUART(CFE_SRL_IO_Handle_t *Handle, CFE_SRL_IO_Param_t *Params) 
     Xfer.Params = *Params;
 
     Status = CFE_PSP_IODriver_Command(&Location, 0, CFE_PSP_IODriver_VPARG(&Xfer));
+    Params->ReadBytes = Xfer.Params.ReadBytes;
     if (Status < 0) {
         Status = CFE_SRL_HANDLE_PSP_SERIAL_ERR(Status);
         goto error;

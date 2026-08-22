@@ -70,12 +70,10 @@ void paybee_kisscam_Inspection(uint8_t MemorySlot);
 /// @param Tx Command packet buffer.
 /// @param Rx Receive buffer.
 /// @param RxCapacity Physical size of Rx.
-/// @param ExpectedRxSize Expected success response size including header and terminator.
 /// @param CC Command code, used for event logging and download timing.
 /// @return Transaction result to be reported once by the command handler.
 paybee_kisscam_TransactionResult_t paybee_kisscam_Transaction(const void *Tx, void *Rx,
-                                                              size_t RxCapacity, size_t ExpectedRxSize,
-                                                              uint8_t CC);
+                                                              size_t RxCapacity, uint8_t CC);
 // void paybee_kisscam_TransactionWithoutReport(void *Tx, void *Rx, uint8_t CC);
 
 /// @brief Configure the Command packet for KissCAM

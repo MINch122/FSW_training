@@ -99,8 +99,11 @@ CFE_Status_t MISSION_Init(void) {
         }
     }
 
-    OS_TaskDelay(10000);
-
+    for (int i = 0; i < 10; i++) {
+        OS_printf("MISSION LEOP start count %d/10\n", i + 1);
+        OS_TaskDelay(1000);
+    }
+ 
     if (Status == CFE_SUCCESS && MISSION_ENABLE_LEOP_SEQUENCE) {
         MISSION_APP_printf("MISSION: creating LEOP child task\n");
         Status = CFE_ES_CreateChildTask(&MISSION_Data.LEOPTaskId, MISSION_LEOP_TASK_NAME, MISSION_LEOP_Task,

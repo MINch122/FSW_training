@@ -1080,9 +1080,50 @@
       "app": "PAY_KISSCAM",
       "name": "Report",
       "mid": "0x0835",
-      "description": "PAY_KISSCAM Report telemetry",
+      "description": "PAY_KISSCAM command report. DOWNLOAD FC7 and DOWNLOAD_ALL FC10 use ReturnValue[0]: 1=STARTED, 2=FINISHED; other serial commands relay raw response bytes.",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
+      "fields": [
+        {
+          "name": "MsgID",
+          "type": "uint16",
+          "format": "hex",
+          "hex_digits": 4
+        },
+        {
+          "name": "CommandCode",
+          "type": "uint8"
+        },
+        {
+          "name": "ReturnType",
+          "type": "enum",
+          "storage": "uint8",
+          "values": {
+            "SUCCESS": 0,
+            "OSAL": 1,
+            "CFE": 2,
+            "LIB": 3,
+            "APP": 4,
+            "HW": 5
+          }
+        },
+        {
+          "name": "ReturnCode",
+          "type": "int32",
+          "format": "hex",
+          "hex_digits": 8
+        },
+        {
+          "name": "ReturnDataSize",
+          "type": "uint16"
+        },
+        {
+          "name": "ReturnValue",
+          "type": "bytes",
+          "length": 512,
+          "display_length_from": "ReturnDataSize",
+          "description": "Raw response for relay commands. For DOWNLOAD/DOWNLOAD_ALL, one-byte phase: 1=STARTED, 2=FINISHED."
+        }
+      ]
     },
     {
       "app": "LTRX",

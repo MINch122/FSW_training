@@ -681,6 +681,14 @@ int32_t linux_serial_read_can(CFE_PSP_IODriver_SerialXfer_t *Arg) {
 }
 int32_t linux_serial_read_uart(CFE_PSP_IODriver_SerialXfer_t *Arg) {
     int32 StatusCode;
+
+    /*
+     * ReadBytes is part of the public SRL transfer result.  A successful
+     * linux_serial_poll_read() guarantees that the complete requested length
+     * was read, so publish that length to the caller.  Clear it first so an
+     * error cannot leave a stale byte count from a reused transfer object.
+     */
+    Arg->Params.ReadBytes = 0;
     
     if (Arg->Params.TxData && Arg->Params.TxSize) {
         StatusCode = ioctl(Arg->FD, TCFLSH, TCIOFLUSH);
@@ -704,8 +712,9 @@ int32_t linux_serial_read_uart(CFE_PSP_IODriver_SerialXfer_t *Arg) {
         LINUX_SERIAL_INCREASE_RXERR(Arg->FD);
     }
     else {
+        Arg->Params.ReadBytes = (ssize_t)Arg->Params.RxSize;
         LINUX_SERIAL_INCREASE_RXOPS(Arg->FD);
-        LINUX_SERIAL_INCREASE_RXCNT(Arg->FD, Arg->Params.TxSize);
+        LINUX_SERIAL_INCREASE_RXCNT(Arg->FD, Arg->Params.RxSize);
     }
     return StatusCode;
 }

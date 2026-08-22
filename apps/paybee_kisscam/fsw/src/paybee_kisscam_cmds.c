@@ -30,8 +30,9 @@
 #include <errno.h>
 #include <termios.h>
 
+#define PAYBEE_KISSCAM_MIN_RX_BUF_SIZE 9u
 #define PAYBEE_KISSCAM_RX_BUF_SIZE(ExpectedSize) \
-    (((ExpectedSize) > paybee_kisscam_ERROR_TLM_SIZE) ? (ExpectedSize) : paybee_kisscam_ERROR_TLM_SIZE)
+    (((ExpectedSize) > PAYBEE_KISSCAM_MIN_RX_BUF_SIZE) ? (ExpectedSize) : PAYBEE_KISSCAM_MIN_RX_BUF_SIZE)
 
 static void paybee_kisscam_ReportTransaction(uint8 CC,
                                              const paybee_kisscam_TransactionResult_t *Result,
@@ -45,6 +46,21 @@ static void paybee_kisscam_ReportAppError(uint8 CC, int32 ReturnCode)
 {
     paybee_kisscam_Data.ErrCounter++;
     paybee_kisscam_SendReport(CC, RPT_RETTYPE_APP, ReturnCode, NULL, 0);
+}
+
+static void paybee_kisscam_ReportDownloadPhase(uint8 CC, uint8 Phase,
+                                               const paybee_kisscam_TransactionResult_t *Result)
+{
+    uint8 ReturnType = RPT_RETTYPE_SUCCESS;
+    int32 ReturnCode = CFE_SUCCESS;
+
+    if (Result != NULL)
+    {
+        ReturnType = Result->ReturnType;
+        ReturnCode = Result->ReturnCode;
+    }
+
+    paybee_kisscam_SendReport(CC, ReturnType, ReturnCode, &Phase, sizeof(Phase));
 }
 
 
@@ -186,8 +202,7 @@ CFE_Status_t paybee_kisscam_PingCmd(const paybee_kisscam_PingCmd_t *Msg) {
     // else paybee_kisscam_HandleSuccess(paybee_kisscam_PING_CC, Params.RxData, Params.ReadBytes);
 
     paybee_kisscam_TransactionResult_t Result =
-        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_PING_TLM_SIZE,
-                                   paybee_kisscam_PING_CC);
+        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_PING_CC);
     paybee_kisscam_ReportTransaction(paybee_kisscam_PING_CC, &Result, RxBuf);
 
     /* for test - CMD Packet을 OBC에서 출력  */
@@ -247,8 +262,7 @@ CFE_Status_t paybee_kisscam_SetModeCmd(const paybee_kisscam_SetModeCmd_t *Msg) {
     // else paybee_kisscam_HandleSuccess(paybee_kisscam_SET_MODE_CC, Params.RxData, Params.ReadBytes);
 
     paybee_kisscam_TransactionResult_t Result =
-        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_SET_MODE_TLM_SIZE,
-                                   paybee_kisscam_SET_MODE_CC);
+        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_SET_MODE_CC);
     paybee_kisscam_ReportTransaction(paybee_kisscam_SET_MODE_CC, &Result, RxBuf);
 
     // for (int i = 0; i < sizeof(RxBuf); i++) {
@@ -306,8 +320,7 @@ CFE_Status_t paybee_kisscam_MemoryStatusCmd(const paybee_kisscam_MemoryStatusCmd
     // else paybee_kisscam_HandleSuccess(paybee_kisscam_MEMORY_STATUS_CC, Params.RxData, Params.ReadBytes);
 
     paybee_kisscam_TransactionResult_t Result =
-        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_MEMORY_STATUS_TLM_SIZE,
-                                   paybee_kisscam_MEMORY_STATUS_CC);
+        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_MEMORY_STATUS_CC);
     paybee_kisscam_ReportTransaction(paybee_kisscam_MEMORY_STATUS_CC, &Result, RxBuf);
 
     // for (int i = 0; i < sizeof(RxBuf); i++) {
@@ -366,8 +379,7 @@ CFE_Status_t paybee_kisscam_SetExposureCmd(const paybee_kisscam_SetExposureCmd_t
     // else paybee_kisscam_HandleSuccess(paybee_kisscam_SET_EXPOSURE_CC, Params.RxData, Params.ReadBytes);
 
     paybee_kisscam_TransactionResult_t Result =
-        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_SET_EXPOSURE_TLM_SIZE,
-                                   paybee_kisscam_SET_EXPOSURE_CC);
+        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_SET_EXPOSURE_CC);
     paybee_kisscam_ReportTransaction(paybee_kisscam_SET_EXPOSURE_CC, &Result, RxBuf);
 
     // for (int i = 0; i < sizeof(RxBuf); i++) {
@@ -432,8 +444,7 @@ CFE_Status_t paybee_kisscam_CaptureCmd(const paybee_kisscam_CaptureCmd_t *Msg) {
     // else paybee_kisscam_HandleSuccess(paybee_kisscam_CAPTURE_CC, Params.RxData, Params.ReadBytes);
 
     paybee_kisscam_TransactionResult_t Result =
-        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_CAPTURE_TLM_SIZE,
-                                   paybee_kisscam_CAPTURE_CC);
+        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_CAPTURE_CC);
 
     /**
      * Clear Memory Slot Status
@@ -507,8 +518,9 @@ CFE_Status_t paybee_kisscam_DownloadCmd(const paybee_kisscam_DownloadCmd_t *Msg)
                                       : paybee_kisscam_DOWNLOAD_TLM_SIZE;
     paybee_kisscam_ConfigurePacket(&Msg->Payload, &Cmd, paybee_kisscam_DOWNLOAD_PARAM_SIZE,
                                     paybee_kisscam_DOWNLOAD_CMD_CODE);
-    Result = paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), ExpectedRxSize,
-                                        paybee_kisscam_DOWNLOAD_CC);
+    paybee_kisscam_ReportDownloadPhase(paybee_kisscam_DOWNLOAD_CC,
+                                       paybee_kisscam_RPT_PHASE_STARTED, NULL);
+    Result = paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_DOWNLOAD_CC);
     if (Result.ReturnType != RPT_RETTYPE_SUCCESS) goto report;
 
     FD = paybee_kisscam_OpenFile(Msg->Payload.MEM, Line, 0);
@@ -554,14 +566,15 @@ CFE_Status_t paybee_kisscam_DownloadCmd(const paybee_kisscam_DownloadCmd_t *Msg)
 
 report:
     if (FD >= 0) paybee_kisscam_CloseFile(FD);
-    paybee_kisscam_ReportTransaction(paybee_kisscam_DOWNLOAD_CC, &Result, RxBuf);
+    paybee_kisscam_ReportDownloadPhase(paybee_kisscam_DOWNLOAD_CC,
+                                       paybee_kisscam_RPT_PHASE_FINISHED, &Result);
     return CFE_SUCCESS;
 }
 
 
 /*****************************************************
- * Download-all emits one final report for the whole command.
- * Serial image data is intentionally omitted from the report.
+ * Download-all emits one STARTED and one FINISHED report.
+ * Image response bytes are stored locally and omitted from RPT.
  *****************************************************/
 CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t *Msg) {
     paybee_kisscam_Data.CmdCounter++;
@@ -596,6 +609,8 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
     EndLine = Msg->Payload.StartLine + LineCount;
     ExpectedRxSize = Msg->Payload.PRE ? paybee_kisscam_DOWNLOAD_THUMBNAIL_TLM_SIZE
                                       : paybee_kisscam_DOWNLOAD_TLM_SIZE;
+    paybee_kisscam_ReportDownloadPhase(paybee_kisscam_DOWNLOAD_ALL_CC,
+                                       paybee_kisscam_RPT_PHASE_STARTED, NULL);
 
     /**
      * Open New file - If already exist, truncate it
@@ -620,8 +635,7 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
                             paybee_kisscam_DOWNLOAD_CMD_CODE);
         
         memset(RxBuf, 0, sizeof(RxBuf));
-        Result = paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), ExpectedRxSize,
-                                            paybee_kisscam_DOWNLOAD_ALL_CC);
+        Result = paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_DOWNLOAD_ALL_CC);
         if (Result.ReturnType != RPT_RETTYPE_SUCCESS) break;
         
         /**
@@ -688,7 +702,8 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
 
 report:
     if (FD >= 0) paybee_kisscam_CloseFile(FD);
-    paybee_kisscam_ReportTransaction(paybee_kisscam_DOWNLOAD_ALL_CC, &Result, RxBuf);
+    paybee_kisscam_ReportDownloadPhase(paybee_kisscam_DOWNLOAD_ALL_CC,
+                                       paybee_kisscam_RPT_PHASE_FINISHED, &Result);
     return CFE_SUCCESS;
 }
 
@@ -784,8 +799,7 @@ CFE_Status_t paybee_kisscam_ReadRegisterCmd(const paybee_kisscam_ReadRegisterCmd
     // else paybee_kisscam_HandleSuccess(paybee_kisscam_READ_REGISTER_CC, Params.RxData, Params.ReadBytes);
 
     paybee_kisscam_TransactionResult_t Result =
-        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_READ_REGISTER_TLM_SIZE,
-                                   paybee_kisscam_READ_REGISTER_CC);
+        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_READ_REGISTER_CC);
     paybee_kisscam_ReportTransaction(paybee_kisscam_READ_REGISTER_CC, &Result, RxBuf);
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
@@ -810,8 +824,7 @@ CFE_Status_t paybee_kisscam_WriteRegisterCmd(const paybee_kisscam_WriteRegisterC
     paybee_kisscam_ConfigurePacket(&Msg->Payload, &Cmd, paybee_kisscam_WRITE_REGISTER_PARAM_SIZE, paybee_kisscam_WRITE_REGISTER_CMD_CODE);
 
     paybee_kisscam_TransactionResult_t Result =
-        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_WRITE_REGISTER_TLM_SIZE,
-                                   paybee_kisscam_WRITE_REGISTER_CC);
+        paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_WRITE_REGISTER_CC);
     paybee_kisscam_ReportTransaction(paybee_kisscam_WRITE_REGISTER_CC, &Result, RxBuf);
 
     for (int i = 0; i < sizeof(RxBuf); i++) {
