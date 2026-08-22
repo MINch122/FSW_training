@@ -2981,10 +2981,10 @@
         ]
       },
       {
-        "name": "Config Handle",
+        "name": "Config Handle Raw",
         "mid": "0x180D",
         "fc": 6,
-        "description": "CFE_SRL_CONFIG_HANDLE_CC",
+        "description": "CFE_SRL_CONFIG_HANDLE_CC using raw packed CFE_PSP_IODriver_Serial_cfg_t.",
         "params": [
           {
             "name": "Indexer",
@@ -2996,8 +2996,57 @@
             "name": "Config",
             "type": "bytes",
             "length": "CFE_SRL_CONFIG_SIZE",
-            "description": "Packed CFE_PSP_IODriver_Serial_cfg_t: FD byte followed by device-specific configuration."
+            "description": "Packed CFE_PSP_IODriver_Serial_cfg_t: FD byte followed by the device-specific union."
           },
+          {"name": "_StructPadding", "type": "bytes", "length": 3, "hidden": true}
+        ]
+      },
+      {
+        "name": "Config Handle UART",
+        "mid": "0x180D",
+        "fc": 6,
+        "description": "CFE_SRL_CONFIG_HANDLE_CC for UART/RS422-style handles. FD must match Get Handle Status.",
+        "params": [
+          {
+            "name": "Indexer",
+            "type": "enum",
+            "storage": "int32",
+            "values": {"RS485": 1, "RS422": 4, "UART": 5}
+          },
+          {
+            "name": "FD",
+            "type": "uint8",
+            "default": "0",
+            "description": "Current file descriptor from CFE_SRL Get Handle Status."
+          },
+          {
+            "name": "Baud",
+            "type": "uint32",
+            "default": "115200",
+            "description": "CFE_PSP_UART_cfg_t baud."
+          },
+          {
+            "name": "DataBits",
+            "type": "uint8",
+            "default": "8",
+            "description": "UART data bits, normally 8."
+          },
+          {
+            "name": "Parity",
+            "type": "enum",
+            "storage": "uint8",
+            "default": "None",
+            "values": {"None": 0, "Even": 1, "Odd": 2}
+          },
+          {
+            "name": "StopBits",
+            "type": "enum",
+            "storage": "uint8",
+            "default": "1",
+            "values": {"1": 1, "2": 2}
+          },
+          {"name": "_UartPadding", "type": "uint8", "hidden": true},
+          {"name": "_ConfigUnionPadding", "type": "bytes", "length": 8, "hidden": true},
           {"name": "_StructPadding", "type": "bytes", "length": 3, "hidden": true}
         ]
       },

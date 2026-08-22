@@ -12,12 +12,16 @@
 #include "cfe_rf_msgids.h"
 #include "cfe_msg.h"
 #include "cfe_sb.h"
-#include "hk_msgids.h"
 #include "osapi.h"
+
+#include <string.h>
 /**
  * Global data
  */
 static csp_socket_t *Socket = NULL;
+
+static const char CFE_RF_MAX_MTU_PREFIX[] = "BEE1012";
+#define CFE_RF_MAX_MTU_PREFIX_SIZE (sizeof(CFE_RF_MAX_MTU_PREFIX) - 1)
 
 /* Forward Declaration */
 void CFE_RF_CommandIngestTask(void);
@@ -187,14 +191,10 @@ int32 CFE_RF_TelemetryEmit(void *BufPtr, size_t Size, uint8_t Port) {
     uint16_t SendByte = 0;
     uint16_t MaxMtu = RF_RPT_MAX_MTU;
 
-    if (BufPtr != NULL) {
-        CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
-        if (CFE_MSG_GetMsgId((CFE_MSG_Message_t *)BufPtr, &MsgId) == CFE_SUCCESS) {
-            CFE_SB_MsgId_Atom_t MsgIdValue = CFE_SB_MsgIdToValue(MsgId);
-            if (MsgIdValue == (CFE_SB_MsgId_Atom_t)HK_COMBINED_PKT1_MID) {
-                MaxMtu = RF_MAX_MTU;
-            }
-        }
+    if (BufPtr != NULL &&
+        Size >= CFE_RF_MAX_MTU_PREFIX_SIZE &&
+        memcmp(BufPtr, CFE_RF_MAX_MTU_PREFIX, CFE_RF_MAX_MTU_PREFIX_SIZE) == 0) {
+        MaxMtu = RF_MAX_MTU;
     }
 
     while (TotSendByte < Size) {

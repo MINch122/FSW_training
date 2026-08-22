@@ -16,7 +16,7 @@
 #include "paybee_kisscam_interface_cfg.h"
 
 #ifndef PAYBEE_KISSCAM_DEBUG
-#define PAYBEE_KISSCAM_DEBUG false 
+#define PAYBEE_KISSCAM_DEBUG true 
 #endif
 
 #ifndef DEBUG_PAYBEE_KISSCAM
