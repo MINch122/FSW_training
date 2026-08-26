@@ -23,4 +23,6 @@ int oem_io_driver_serial_read(int iface_idx,
                               size_t size,
                               uint16_t timeout);
 
+int oem_io_driver_serial_close(int iface_idx);
+
 #endif

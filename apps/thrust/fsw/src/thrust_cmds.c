@@ -87,6 +87,24 @@ static void THRUST_BuildHkReport(THRUST_HkReport_Payload_t *report,
     report->Status       = reply->Status;
 }
 
+static void THRUST_BuildHkTlm(THRUST_HkTlm_Payload_t *tlm,
+                              const THRUST_HKData_Payload_t *reply)
+{
+    tlm->Pressure_CH0 = reply->Pressure_CH0;
+    tlm->Pressure_CH1 = reply->Pressure_CH1;
+    tlm->Pressure_CH2 = reply->Pressure_CH2;
+    tlm->Pressure_CH3 = reply->Pressure_CH3;
+    tlm->Temp_CH0     = reply->Temp_CH0;
+    tlm->Temp_CH1     = reply->Temp_CH1;
+    tlm->Temp_CH2     = reply->Temp_CH2;
+    tlm->Temp_CH3     = reply->Temp_CH3;
+    tlm->Temp_CH4     = reply->Temp_CH4;
+    tlm->Temp_CH5     = reply->Temp_CH5;
+    tlm->Status       = reply->Status;
+    tlm->CmdCounter   = THRUST_AppData.CmdCounter;
+    tlm->ErrCounter   = THRUST_AppData.ErrCounter;
+}
+
 static void THRUST_BuildStatusReport(THRUST_StatusReport_Payload_t *report,
                                      const THRUST_StatusData_Payload_t *reply)
 {
@@ -188,7 +206,7 @@ void THRUST_HandleReport(int32 status, uint8_t cc, const void *data, uint16_t da
 
 /* -------------------------------------------------- */
 /* SendHkCmd: HK 데이터 읽기 → HandleReport로 SB 전송 */
-/* 입력: SCH 또는 지상국 HK 요청 메시지               */
+/* 입력: 지상국 HK 요청 메시지                        */
 /* 출력: SB Report TLM → 지상국                       */
 /* -------------------------------------------------- */
 CFE_Status_t THRUST_SendHkCmd(const THRUST_SendHkCmd_t *Msg) {
@@ -219,6 +237,36 @@ CFE_Status_t THRUST_SendHkCmd(const THRUST_SendHkCmd_t *Msg) {
     THRUST_LogCmdResult("Send HK", status);
     if (status != CFE_SUCCESS) { THRUST_AppData.ErrCounter++; return status; }
     THRUST_AppData.CmdCounter++;
+    return CFE_SUCCESS;
+}
+
+/* -------------------------------------------------- */
+/* SCH Send HK: 장치 HK 읽기 -> HK TLM 전송 (RPT 없음) */
+/* -------------------------------------------------- */
+CFE_Status_t THRUST_SendScheduledHkCmd(const THRUST_SendHkCmd_t *Msg)
+{
+    THRUST_HKData_Payload_t hkData = {0};
+    CFE_Status_t status;
+
+    (void)Msg;
+
+    status = THRUST_GetHKData(&hkData);
+    if (status != CFE_SUCCESS)
+    {
+        THRUST_AppData.ErrCounter++;
+        return THRUST_LogCmdResult("Scheduled HK", status);
+    }
+
+    THRUST_BuildHkTlm(&THRUST_AppData.HkTlm.Payload, &hkData);
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(THRUST_AppData.HkTlm.TelemetryHeader));
+
+    status = CFE_SB_TransmitMsg(CFE_MSG_PTR(THRUST_AppData.HkTlm.TelemetryHeader), true);
+    if (status != CFE_SUCCESS)
+    {
+        THRUST_AppData.ErrCounter++;
+        return THRUST_LogCmdResult("Scheduled HK telemetry", status);
+    }
+
     return CFE_SUCCESS;
 }
 

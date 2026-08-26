@@ -461,7 +461,6 @@ void TO_LAB_ForwardTelemetryRF(void) {
     const void      *NetBufPtr;
     size_t           NetBufSize;
     uint8            HkCombinedPkt1RfBuf[TO_LAB_RF_MAX_AVAILABLE_BYTES];
-    uint32_t         BCN_PktCount = 0;
     uint8_t         beacon_delay_pattern[] = {2,5,10,20};   // BEE  
     CFE_SB_MsgId_t   MsgId = CFE_SB_INVALID_MSG_ID;
     uint8_t          Port = CFE_RF_DPORT_BCN;
@@ -510,9 +509,28 @@ void TO_LAB_ForwardTelemetryRF(void) {
                     break;
                 case (CFE_SB_MsgId_Atom_t)HK_COMBINED_PKT1_MID:
                     Port = CFE_RF_DPORT_BCN;
-                    BeaconSlot = BCN_PktCount % 20;
+
+                    Status = OS_MutSemTake(TO_LAB_Global.MutexId);
+                    if (Status != OS_SUCCESS)
+                    {
+                        CFE_EVS_SendEvent(TO_LAB_BCN_RESET_ERR_EID, CFE_EVS_EventType_ERROR,
+                                          "TO: Failed to lock RF BCN counter, RC=0x%08X",
+                                          (unsigned int)Status);
+                        continue;
+                    }
+
+                    BeaconSlot = TO_LAB_Global.BCN_PktCount % 20;
                     HasBeaconSlot = true;
-                    BCN_PktCount++;
+                    TO_LAB_Global.BCN_PktCount++;
+
+                    Status = OS_MutSemGive(TO_LAB_Global.MutexId);
+                    if (Status != OS_SUCCESS)
+                    {
+                        CFE_EVS_SendEvent(TO_LAB_BCN_RESET_ERR_EID, CFE_EVS_EventType_ERROR,
+                                          "TO: Failed to unlock RF BCN counter, RC=0x%08X",
+                                          (unsigned int)Status);
+                        continue;
+                    }
 
                     if (BeaconSlot != beacon_delay_pattern[0] &&
                         BeaconSlot != beacon_delay_pattern[1] &&

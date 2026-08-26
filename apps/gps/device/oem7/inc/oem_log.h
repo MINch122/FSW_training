@@ -52,7 +52,7 @@ typedef struct {
 /**
  * @brief Log handler housekeeping.
  */
-typedef struct {
+typedef struct __attribute__((packed)) {
     oem_ushort  message_id;
     oem_ushort  message_length;
     uint32_t    recent_msg_timestamp;

@@ -21,7 +21,7 @@
   "CFE_MISSION_EVS_MAX_MESSAGE_LENGTH": 122,
   "RPT_RET_VALUE_BUF_SIZE":             512,
   "CFE_SRL_HANDLE_NAME_LENGTH":         16,
-  "CFE_SRL_CONFIG_SIZE":                17,
+  "CFE_SRL_CONFIG_SIZE":                13,
 
   "MEOW_MISSION_MAX_CMD_LEN":           80,
   "MEOW_MISSION_MAX_PATH_LEN":          80,

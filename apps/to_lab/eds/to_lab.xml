@@ -134,6 +134,12 @@
         </ConstraintSet>
       </ContainerDataType>
 
+      <ContainerDataType name="ResetBcnPktCountCmd" baseType="CMD">
+        <ConstraintSet>
+          <ValueConstraint entry="Sec.FunctionCode" value="8" />
+        </ConstraintSet>
+      </ContainerDataType>
+
       <ContainerDataType name="AddPacketCmd" baseType="CMD">
         <ConstraintSet>
           <ValueConstraint entry="Sec.FunctionCode" value="2" />

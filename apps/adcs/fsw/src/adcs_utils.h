@@ -20,7 +20,7 @@
 
 
 
-#define COMMS_BUFFER_SIZE	((uint32)256)
+#define COMMS_BUFFER_SIZE	((uint32)258u)
 
 /**
  * @brief Telemetry Start ID
@@ -60,7 +60,8 @@
 #define ADCS_UART_SOM_ACK_PASS				((uint8)0x06u)
 #define ADCS_UART_FLUSH_TIMEOUT_MS			((uint32)0u)
 #define ADCS_UART_RX_NEXT_BYTE_TIMEOUT_MS	((uint32)5u)
-#define ADCS_UART_PROTOCOL_BUFFER_SIZE		((uint32)512u)
+#define ADCS_UART_PROTOCOL_BUFFER_SIZE \
+	(ADCS_UART_HEADER_SIZE_PLAIN + ADCS_UART_FOOTER_SIZE + (COMMS_BUFFER_SIZE * 2u))
 
 /*
 // CubeADCS Log Frame Max Entry Number

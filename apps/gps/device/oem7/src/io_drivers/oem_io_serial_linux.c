@@ -13,6 +13,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
+#include <poll.h>
+#include <time.h>
 
 #include <sys/select.h>
 #include <sys/ioctl.h>
@@ -36,6 +38,7 @@ static speed_t get_baud(uint32_t baud)
         case 9600: return B9600;
         case 19200: return B19200;
         case 38400: return B38400;
+        case 57600: return B57600;
         case 115200: return B115200;
         case 230400: return B230400;
         case 460800: return B460800;
@@ -132,8 +135,13 @@ int oem_io_driver_serial_write(int iface_idx,
 
     if (iface_idx < 0 || iface_idx >= OEM_IO_INTERFACES)
         return OEM_ERR_IO_IFACE_INDEX;
+        
+    if (!ports[iface_idx].initialized)
+        return OEM_ERR_IO_IFACE_UNSET;
 
-    b = write(ports[iface_idx].fd, buf, size);
+    do {
+        b = write(ports[iface_idx].fd, buf, size);
+    } while (b < 0 && errno == EINTR);
 
     if (b < 0) {
         fprintf(stderr,
@@ -145,37 +153,75 @@ int oem_io_driver_serial_write(int iface_idx,
     return b;
 }
 
+/**
+ * @brief Wait for readability, retrying across signals without extending the
+ *        caller's deadline. poll() is never restarted by SA_RESTART, so EINTR
+ *        must be handled here.
+ */
+static int wait_readable(int fd, uint16_t timeout)
+{
+    struct timespec deadline, now;
+    struct pollfd   pfd = { .fd = fd, .events = POLLIN };
+
+    clock_gettime(CLOCK_MONOTONIC, &deadline);
+    deadline.tv_sec  += timeout / 1000;
+    deadline.tv_nsec += (timeout % 1000) * 1000000L;
+    if (deadline.tv_nsec >= 1000000000L) {
+        deadline.tv_sec++;
+        deadline.tv_nsec -= 1000000000L;
+    }
+
+    for (;;) {
+        long remaining;
+        int  n;
+
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        remaining = (deadline.tv_sec - now.tv_sec) * 1000
+                  + (deadline.tv_nsec - now.tv_nsec) / 1000000;
+        if (remaining < 0)
+            remaining = 0;
+
+        n = poll(&pfd, 1, (int)remaining);
+        if (n > 0)
+            return OEM_OK;
+        if (n == 0)
+            return OEM_ERR_IO_TIMEOUT;
+        if (errno != EINTR)
+            return OEM_ERR_IO_READ;
+    }
+}
+
 int oem_io_driver_serial_read(int iface_idx,
                               void* buf,
                               size_t size,
                               uint16_t timeout)
 {
-    int fd;
-    fd_set fdset;
-    struct timeval tv;
     ssize_t b;
+    int     ret;
 
     if (iface_idx < 0 || iface_idx >= OEM_IO_INTERFACES)
         return OEM_ERR_IO_IFACE_INDEX;
 
-    FD_ZERO(&fdset);
-    FD_SET(ports[iface_idx].fd, &fdset);
+    if (!ports[iface_idx].initialized)
+        return OEM_ERR_IO_IFACE_UNSET;
 
-    tv.tv_sec = timeout / 1000;
-    tv.tv_usec = (timeout % 1000) * 1000;
+    ret = wait_readable(ports[iface_idx].fd, timeout);
+    if (ret != OEM_OK)
+        return ret;
 
-    fd = ports[iface_idx].fd;
+    do {
+        b = read(ports[iface_idx].fd, buf, size);
+    } while (b < 0 && errno == EINTR);
 
-    if (select(fd + 1, &fdset, NULL, NULL, &tv) > 0) {
-        b = read(fd, buf, size);
-        if (b < 0)
-            fprintf(stderr,
-                    "read error for %s: %s\n",
-                    ports[iface_idx].dev, strerror(errno));
-        return b <= 0 ? OEM_ERR_IO_READ : b;
+    if (b < 0) {
+        fprintf(stderr,
+                "read error for %s: %s\n",
+                ports[iface_idx].dev, strerror(errno));
+        return OEM_ERR_IO_READ;
     }
 
-    return OEM_ERR_IO_TIMEOUT;
+    /* Zero bytes after readability means the port went away. */
+    return b == 0 ? OEM_ERR_IO_READ : (int)b;
 }
 
 int oem_io_driver_serial_close(int iface_idx)

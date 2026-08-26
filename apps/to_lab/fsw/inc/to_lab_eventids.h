@@ -47,6 +47,8 @@
 #define TO_LAB_NOOP_INF_EID          18
 #define TO_LAB_TBL_ERR_EID           19
 #define TO_LAB_ENCODE_ERR_EID        20
+#define TO_LAB_BCN_RESET_ERR_EID     21
+#define TO_LAB_BCN_RESET_INF_EID     22
 
 #define TO_LAB_END_CHILD_CRIT_EID    41
 /******************************************************************************/

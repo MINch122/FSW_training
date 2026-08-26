@@ -38,7 +38,7 @@ void THRUST_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
             break;
 
         case THRUST_SEND_HK_MID:
-            THRUST_SendHkCmd((const THRUST_SendHkCmd_t *)SBBufPtr);
+            THRUST_SendScheduledHkCmd((const THRUST_SendHkCmd_t *)SBBufPtr);
             break;
 
         default:

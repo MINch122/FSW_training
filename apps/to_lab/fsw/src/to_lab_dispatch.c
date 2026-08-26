@@ -51,6 +51,10 @@ void TO_LAB_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             TO_LAB_ResetCountersCmd((const TO_LAB_ResetCountersCmd_t *)SBBufPtr);
             break;
 
+        case TO_LAB_RESET_BCN_COUNT_CC:
+            TO_LAB_ResetBcnPktCountCmd((const TO_LAB_ResetBcnPktCountCmd_t *)SBBufPtr);
+            break;
+
         case TO_LAB_SEND_DATA_TYPES_CC:
             TO_LAB_SendDataTypesCmd((const TO_LAB_SendDataTypesCmd_t *)SBBufPtr);
             break;

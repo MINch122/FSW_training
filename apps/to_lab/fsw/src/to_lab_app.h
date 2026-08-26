@@ -64,6 +64,7 @@ typedef struct
 
     osal_id_t MutexId;
     CFE_ES_TaskId_t ChildId;
+    uint32          BCN_PktCount;
 
 } TO_LAB_GlobalData_t;
 

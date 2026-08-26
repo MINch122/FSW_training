@@ -115,36 +115,45 @@ int oem_log_handler_register(const char* name,
         oem_debug_error("Handler for MID %d has already been registered.\n",
                         id);
         ret = OEM_ERR_EXISTS;
+        goto handler_register_end;
     }
-    else if ((newHandler = get_empty_handler_slot()) == NULL) {
+
+    newHandler = get_empty_handler_slot();
+    if (newHandler == NULL) {
         oem_debug_error("Handler queue is full: mid %d.\n",
                         id);
         ret = OEM_ERR_FULL;
+        goto handler_register_end;
     }
-    else if ((newHandler->callbacks = oem_list_create()) == NULL) {
+
+    newHandler->callbacks = oem_list_create();
+    if (newHandler->callbacks == NULL) {
         ret = OEM_ERR_NOMEM;
+        goto handler_register_end;
     }
-    else if (
-        (newHandler->recent_message = malloc(mlen > 0 ?
-                                             mlen :
-                                             OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE)
-        ) == NULL
-    ) {
+
+    newHandler->recent_message = malloc(mlen > 0 ?
+                                        mlen :
+                                        OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE);
+    if (newHandler->recent_message == NULL) {
         oem_debug_error("malloc failed for handler ID %d.\n",
                         id);
         oem_list_free(newHandler->callbacks);
+        newHandler->callbacks = NULL;
         ret = OEM_ERR_NOMEM;
-    }
-    else {
-        strncpy(newHandler->name, name ? name : "", sizeof(newHandler->name));
-        newHandler->name[sizeof(newHandler->name) - 1] = '\0';
-        memset(&newHandler->stat, 0, sizeof(newHandler->stat));
-        newHandler->message_id = id;
-        newHandler->message_length = mlen;
-        newHandler->status = HANDLER_INACTIVE;
-        newHandler->has_recent_message = false;
+        goto handler_register_end;
     }
 
+    strncpy(newHandler->name, name ? name : "", sizeof(newHandler->name));
+    newHandler->name[sizeof(newHandler->name) - 1] = '\0';
+    memset(&newHandler->stat, 0, sizeof(newHandler->stat));
+    newHandler->message_id = id;
+    newHandler->message_length = mlen;
+    newHandler->status = HANDLER_INACTIVE;
+    newHandler->has_recent_message = false;
+    ret = OEM_OK;
+
+handler_register_end:
     oem_log_handler_unlock();
     return ret;
 
@@ -442,6 +451,7 @@ int oem_log_get_handler_hk(oem_ushort id,
     hk->log_err_count = h->stat.log_err_count;
     hk->error_cause = h->stat.error_cause;
     hk->status = h->status;
+    hk->ignore_checksum = h->ignore_missing_crc;
     memcpy(hk->name, h->name, OEM_LOG_HANDLER_NAME_LEN);
 
     oem_log_handler_unlock();
@@ -473,10 +483,11 @@ int oem_log_get_recent_message(oem_ushort id,
         return OEM_ERR_EMPTY;
     }
 
-    total_message_length = sizeof(oem_binary_header_t);
-    total_message_length += h->message_length == OEM_LOG_HANDLER_MLEN_VARIABLE             ?
-                            ((const oem_binary_header_t*)h->recent_message)->messageLength :
-                            h->message_length;
+    if (h->message_length == OEM_LOG_HANDLER_MLEN_VARIABLE)
+        total_message_length = sizeof(oem_binary_header_t)
+                             + ((const oem_binary_header_t*)h->recent_message)->messageLength;
+    else
+        total_message_length = h->message_length;
 
     if (offset > total_message_length) {
         oem_log_handler_unlock();
@@ -691,14 +702,16 @@ int oem_log_do_handle(void* msg,
         goto early_return_log;  
     }
 
-    if (ctx->crc_read_skipped && handler->ignore_missing_crc == false) {
-        /* CRC was not read */
-        ret = handler->stat.error_cause = OEM_ERR_LOG_MISSING_CRC;
-        goto early_return_log;
+    if (ctx->crc_read_skipped) {
+        if (handler->ignore_missing_crc == false) {
+            /* CRC was not read */
+            ret = handler->stat.error_cause = OEM_ERR_LOG_MISSING_CRC;
+            goto early_return_log;
+        } else {
+            oem_debug_warning("Log %d CRC verification skipped: handler %s\n",
+                              handler->message_id, handler->name);
+        }
     }
-    else
-        oem_debug_warning("Log %d CRC verification skipped: handler %s\n",
-                          handler->message_id, handler->name);
 
     /** 
      * Store the recent message.

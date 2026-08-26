@@ -96,6 +96,8 @@
 #include "hk_msgids.h"
 #include "hk_msg.h"
 
+#include "thrust_msgids.h"
+
 /*
 ** SCH Lab schedule table
 ** When populating this table:
@@ -127,18 +129,8 @@ SCH_LAB_ScheduleTable_t SCH_LAB_ScheduleTable = {
 
         {CFE_SB_MSGID_WRAP_VALUE(PAY_SLT_SEND_BCN_MID), SCH_LAB_TICK_RATE * 30, 0},
         {CFE_SB_MSGID_WRAP_VALUE(TTC_ONEHZ_WAKEUP_MID), SCH_LAB_TICK_RATE, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(THRUST_SEND_HK_MID), SCH_LAB_TICK_RATE * 5, 0},
         // /* Periodic wakeups for apps with internal timed work */
-        // {CFE_SB_MSGID_WRAP_VALUE(ADCS_LOOP_MID), SCH_LAB_TICK_RATE, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(LGBAT_WAKEUP_MID), SCH_LAB_TICK_RATE * 5, 0},
-
-        /* Example of including additional open source apps */
-        // {CFE_SB_MSGID_WRAP_VALUE(CFE_ES_SEND_HK_MID), 100, 0}, /* Example of a 1hz packet */
-        // {CFE_SB_MSGID_WRAP_VALUE(CFE_TBL_SEND_HK_MID), 50, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(CFE_TIME_SEND_HK_MID), 98, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(CFE_SB_SEND_HK_MID), 97, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(CFE_EVS_SEND_HK_MID), 96, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(PAYUZUC_SEND_HK_MID), 1000, 0},
-        // {CFE_SB_MSGID_WRAP_VALUE(CI_LAB_WAKEUP_MID), SCH_LAB_TICK_RATE * 10, 0}, // 10 sec per wakeup
 
 /* Example of including additional open source apps */
 #ifdef HAVE_CI_LAB

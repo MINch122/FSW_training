@@ -42,6 +42,7 @@ static const EdsDispatchTable_TO_LAB_Application_CFE_SB_Telecommand_t TO_LAB_TC_
             .RemoveAllCmd_indication     = TO_LAB_RemoveAllCmd,
             .RemovePacketCmd_indication  = TO_LAB_RemovePacketCmd,
             .ResetCountersCmd_indication = TO_LAB_ResetCountersCmd,
+            .ResetBcnPktCountCmd_indication = TO_LAB_ResetBcnPktCountCmd,
             .SendDataTypesCmd_indication = TO_LAB_SendDataTypesCmd},
     .SEND_HK = {.indication = TO_LAB_SendHkCmd}};
 

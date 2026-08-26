@@ -72,7 +72,7 @@ void CFE_SRL_ConfigHost(csp_conf_t *Conf) {
 	Conf->hostname = "OBC";
 	Conf->model = "BASE5TH";
 	Conf->revision = "mozart";
-	Conf->conn_max = 10;
+	Conf->conn_max = 24;
 	Conf->conn_queue_length = 10;
 	Conf->fifo_length = 25;
 	Conf->port_max_bind = 32;

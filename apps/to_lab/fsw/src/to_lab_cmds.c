@@ -107,6 +107,48 @@ CFE_Status_t TO_LAB_ResetCountersCmd(const TO_LAB_ResetCountersCmd_t *data)
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                 */
+/* TO_LAB_ResetBcnPktCountCmd() -- Reset RF beacon packet counter */
+/*                                                                 */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+CFE_Status_t TO_LAB_ResetBcnPktCountCmd(const TO_LAB_ResetBcnPktCountCmd_t *data)
+{
+    int32        OsStatus;
+    const uint32 ResetCount = 0;
+
+    (void)data;
+
+    OsStatus = OS_MutSemTake(TO_LAB_Global.MutexId);
+    if (OsStatus != OS_SUCCESS)
+    {
+        ++TO_LAB_Global.HkTlm.Payload.CommandErrorCounter;
+        CFE_EVS_SendEvent(TO_LAB_BCN_RESET_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "TO: Failed to lock RF BCN counter, RC=0x%08X", (unsigned int)OsStatus);
+        TO_HandleReport((CFE_Status_t)OsStatus, TO_LAB_RESET_BCN_COUNT_CC, NULL, 0);
+        return (CFE_Status_t)OsStatus;
+    }
+
+    TO_LAB_Global.BCN_PktCount = ResetCount;
+
+    OsStatus = OS_MutSemGive(TO_LAB_Global.MutexId);
+    if (OsStatus != OS_SUCCESS)
+    {
+        ++TO_LAB_Global.HkTlm.Payload.CommandErrorCounter;
+        CFE_EVS_SendEvent(TO_LAB_BCN_RESET_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "TO: Failed to unlock RF BCN counter, RC=0x%08X", (unsigned int)OsStatus);
+        TO_HandleReport((CFE_Status_t)OsStatus, TO_LAB_RESET_BCN_COUNT_CC, NULL, 0);
+        return (CFE_Status_t)OsStatus;
+    }
+
+    ++TO_LAB_Global.HkTlm.Payload.CommandCounter;
+    CFE_EVS_SendEvent(TO_LAB_BCN_RESET_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "TO: RF BCN packet counter reset to 0");
+    TO_HandleReport(CFE_SUCCESS, TO_LAB_RESET_BCN_COUNT_CC, &ResetCount, sizeof(ResetCount));
+
+    return CFE_SUCCESS;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/*                                                                 */
 /* TO_LAB_SendDataTypes()  -- Output data types                    */
 /*                                                                 */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

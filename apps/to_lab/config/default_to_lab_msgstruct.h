@@ -81,6 +81,11 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
+} TO_LAB_ResetBcnPktCountCmd_t;
+
+typedef struct
+{
+    CFE_MSG_CommandHeader_t CommandHeader; /**< \brief Command header */
 } TO_LAB_RemoveAllCmd_t;
 
 typedef struct

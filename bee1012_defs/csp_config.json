@@ -6,7 +6,7 @@
         "hostname": "OBC",
         "model": "BASE5TH",
         "revision": "mozart",
-        "conn_max": 10,
+        "conn_max": 24,
         "conn_queue_length": 10,
         "fifo_length": 25,
         "port_max_bind": 32,

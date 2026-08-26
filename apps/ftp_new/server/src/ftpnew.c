@@ -1518,7 +1518,7 @@ int ftp_server_start(void)
         return -1;
     }
 
-    if (csp_bind(socket, 19) != CSP_ERR_NONE) {
+    if (csp_bind(socket, 9) != CSP_ERR_NONE) {
         ftp_debug_error("error binding CSP socket\n");
         csp_close(socket);
         return -1;

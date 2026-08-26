@@ -16,7 +16,7 @@ typedef enum {
     TASK_LOG        = 3, /* Returned from oem_log_do_handle (log handler). */
     TASK_CALLBACK   = 4, /* Returned from a log handler callback. */
 } oem_task_tasklevel;
-
+ 
 typedef struct {
     /* handling context */
     uint8_t     task_level;     /* Last called handling procedure. See oem_task_tasklevel. */
@@ -37,10 +37,10 @@ typedef struct {
 
 /**
  * @brief Process a single reply message from the OEM receiver.
- *
+ * 
  * @details
  *       - Drives the full reply pipeline for a single message: pulls bytes
- *         from the I/O interface buffer, assembles them into a complete
+ *         from the I/O interface buffer, assembles them into a complete 
  *         packet via the state machine, then dispatches the packet either as
  *         a response or through the matching log handler and its registered
  *         callbacks.
@@ -49,9 +49,10 @@ typedef struct {
  *         return depends on where it gave up. Inspect @a ctx after the call:
  *         @c ctx->task_level identifies the layer (TASK_MAIN / TASK_RESPONSE /
  *         TASK_LOG / TASK_CALLBACK), and the remaining ctx fields carry
- *         whatever the layer learned before bailing out. Pass NULL for @a ctx
- *         if you don't need the introspection; an internal scratch context
- *         is used.
+ *         whatever the layer learned before returning.
+ * 
+ *       - The state machine does not hold any state between calls, i.e., each
+ *         call resets the previous parsing process.
  *
  * @param iface_idx  I/O interface index to read from. Use the designated
  *                   indices from oem_io_init_interface().
@@ -65,29 +66,27 @@ typedef struct {
  *         OEM_ERR_IO_IFACE_INDEX: Invalid @a iface_idx.
  *         OEM_ERR_IO_IFACE_UNSET: The interface is not initialized.
  *         OEM_ERR_IO_TIMEOUT: No complete message was read before the timeout.
- *         OEM_ERR_LOG_HEADER_SIZE: header.headerLength field does not match
+ *         OEM_ERR_LOG_HEADER_SIZE: encoded header size field does not match
  *                                  the expected size.
- *         OEM_ERR_LOG_RESP_SIZE: Response message shorter than the minimum
- *                                (header + responseId).
- *         OEM_ERR_LOG_TOO_LARGE: Declared message length exceeds
- *                                OEM_TASK_STATE_MACHINE_BUF_SIZE.
+ *         OEM_ERR_LOG_RESP_SIZE: Response message shorter than the minimum.
+ *         OEM_ERR_LOG_TOO_LARGE: message length exceeds the SM buffer size.
  *         OEM_ERR_LOG_CRC: CRC mismatch.
- *         Any other negative code returned by the underlying read callback.
- *
+ *         Or any other negative code returned by the underlying read callback.
+ * 
  *       - If returned from the response handler (ctx->task_level == TASK_RESPONSE):
  *         Currently no error is returned from this layer.
- *
+ * 
  *       - If returned from the handler layer (ctx->task_level == TASK_LOG):
  *         OEM_ERR_LOG_STRAY: No handler registered for this log message.
- *         OEM_ERR_LOG_BODY_SIZE: Message size does not match the handler's expectation.
+ *         OEM_ERR_LOG_BODY_SIZE: Message size doesn't match the handler's expectation.
  *         OEM_ERR_LOG_MISSING_CRC: CRC was expected but did not arrive within timeout.
  *         OEM_ERR_NOBUF: Handler's recent message buffer is not set (critical).
- *
+ *         
  *       - If returned from a log handler callback (ctx->task_level == TASK_CALLBACK):
  *         OEM_ERR_NOT_FOUND: Callback node exists but the callback is null (critical).
  *         OEM_ERR_UTILS_LIST_NULL: Callback list is null (critical).
- *         Any other error code returned by the callback itself.
- *
+ *         Or any other error code returned by the callback itself.
+ * 
  *       - Unexpected error codes during normal operation:
  *         OEM_ERR_NULL: required pointer argument is null.
  *         OEM_ERR_LOG_SM_STATE: invalid sm->state encountered.

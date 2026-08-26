@@ -43,6 +43,7 @@
 #define TO_LAB_REMOVE_ALL_PKT_CC  5 /*  remove all packet */
 #define TO_LAB_OUTPUT_ENABLE_CC   6 /*  output enable     */
 #define TO_LAB_OUTPUT_DISABLE_CC  7 /*  output disable    */
+#define TO_LAB_RESET_BCN_COUNT_CC 8 /*  reset RF BCN count */
 
 #define TO_CREATE_CHILD_CC           21
 #define TO_SET_NO_EMISSION_CC        22

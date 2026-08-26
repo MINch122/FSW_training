@@ -1985,7 +1985,7 @@
           },
           {
             "name": "StackSize",
-            "type": "uint64",
+            "type": "uint32",
             "default": "8192",
             "description": "Task stack size in bytes (CFE_ES_MemOffset_t)"
           },
@@ -1999,6 +1999,13 @@
             },
             "default": "RESTART_APP",
             "description": "Action on exception. RESTART_APP: restarts the App, PROC_RESTART: perform processor reboot."
+          },
+          {
+            "name": "_PriorityPadding",
+            "type": "uint8",
+            "default": "0",
+            "hidden": true,
+            "description": "Alignment before CFE_ES_TaskPriority_Atom_t"
           },
           {
             "name": "Priority",
@@ -2786,6 +2793,14 @@
             "default": "0",
             "hidden": true,
             "description": "Pad to word boundary"
+          },
+          {
+            "name": "_StructPadding",
+            "type": "bytes",
+            "length": 3,
+            "default": "",
+            "hidden": true,
+            "description": "Tail padding for CFE_SB_RouteCmd_Payload_t"
           }
         ]
       },
@@ -2813,6 +2828,14 @@
             "default": "0",
             "hidden": true,
             "description": "Pad to word boundary"
+          },
+          {
+            "name": "_StructPadding",
+            "type": "bytes",
+            "length": 3,
+            "default": "",
+            "hidden": true,
+            "description": "Tail padding for CFE_SB_RouteCmd_Payload_t"
           }
         ]
       },
@@ -3046,7 +3069,7 @@
             "values": {"1": 1, "2": 2}
           },
           {"name": "_UartPadding", "type": "uint8", "hidden": true},
-          {"name": "_ConfigUnionPadding", "type": "bytes", "length": 8, "hidden": true},
+          {"name": "_ConfigUnionPadding", "type": "bytes", "length": 4, "hidden": true},
           {"name": "_StructPadding", "type": "bytes", "length": 3, "hidden": true}
         ]
       },
@@ -3602,91 +3625,153 @@
         "mid": "0x1813",
         "fc": 2,
         "description": "DS_SET_APP_STATE_CC",
-        "params": []
+        "params": [
+          {
+            "name": "EnableState",
+            "type": "enum",
+            "storage": "uint16",
+            "values": {"DISABLED": 0, "ENABLED": 1},
+            "default": "ENABLED"
+          },
+          {"name": "Padding", "type": "uint16", "default": "0", "hidden": true}
+        ]
       },
       {
         "name": "Set Filter File",
         "mid": "0x1813",
         "fc": 3,
         "description": "DS_SET_FILTER_FILE_CC",
-        "params": []
+        "params": [
+          {"name": "MessageID", "type": "uint32", "default": "0x0800"},
+          {"name": "FilterParmsIndex", "type": "uint16", "default": "0"},
+          {"name": "FileTableIndex", "type": "uint16", "default": "0"}
+        ]
       },
       {
         "name": "Set Filter Type",
         "mid": "0x1813",
         "fc": 4,
         "description": "DS_SET_FILTER_TYPE_CC",
-        "params": []
+        "params": [
+          {"name": "MessageID", "type": "uint32", "default": "0x0800"},
+          {"name": "FilterParmsIndex", "type": "uint16", "default": "0"},
+          {"name": "FilterType", "type": "uint16", "default": "0"}
+        ]
       },
       {
         "name": "Set Filter Parms",
         "mid": "0x1813",
         "fc": 5,
         "description": "DS_SET_FILTER_PARMS_CC",
-        "params": []
+        "params": [
+          {"name": "MessageID", "type": "uint32", "default": "0x0800"},
+          {"name": "FilterParmsIndex", "type": "uint16", "default": "0"},
+          {"name": "Algorithm_N", "type": "uint16", "default": "1"},
+          {"name": "Algorithm_X", "type": "uint16", "default": "1"},
+          {"name": "Algorithm_O", "type": "uint16", "default": "0"}
+        ]
       },
       {
         "name": "Set Dest Type",
         "mid": "0x1813",
         "fc": 6,
         "description": "DS_SET_DEST_TYPE_CC",
-        "params": []
+        "params": [
+          {"name": "FileTableIndex", "type": "uint16", "default": "0"},
+          {"name": "FileNameType", "type": "uint16", "default": "0"}
+        ]
       },
       {
         "name": "Set Dest State",
         "mid": "0x1813",
         "fc": 7,
         "description": "DS_SET_DEST_STATE_CC",
-        "params": []
+        "params": [
+          {"name": "FileTableIndex", "type": "uint16", "default": "0"},
+          {
+            "name": "EnableState",
+            "type": "enum",
+            "storage": "uint16",
+            "values": {"DISABLED": 0, "ENABLED": 1},
+            "default": "ENABLED"
+          }
+        ]
       },
       {
         "name": "Set Dest Path",
         "mid": "0x1813",
         "fc": 8,
         "description": "DS_SET_DEST_PATH_CC",
-        "params": []
+        "params": [
+          {"name": "FileTableIndex", "type": "uint16", "default": "0"},
+          {"name": "Padding", "type": "uint16", "default": "0", "hidden": true},
+          {"name": "Pathname", "type": "string", "length": "OS_MAX_PATH_LEN", "default": "/cf"}
+        ]
       },
       {
         "name": "Set Dest Base",
         "mid": "0x1813",
         "fc": 9,
         "description": "DS_SET_DEST_BASE_CC",
-        "params": []
+        "params": [
+          {"name": "FileTableIndex", "type": "uint16", "default": "0"},
+          {"name": "Padding", "type": "uint16", "default": "0", "hidden": true},
+          {"name": "Basename", "type": "string", "length": "OS_MAX_PATH_LEN", "default": "data"}
+        ]
       },
       {
         "name": "Set Dest Ext",
         "mid": "0x1813",
         "fc": 10,
         "description": "DS_SET_DEST_EXT_CC",
-        "params": []
+        "params": [
+          {"name": "FileTableIndex", "type": "uint16", "default": "0"},
+          {"name": "Padding", "type": "uint16", "default": "0", "hidden": true},
+          {"name": "Extension", "type": "string", "length": 8, "default": ".dat"}
+        ]
       },
       {
         "name": "Set Dest Size",
         "mid": "0x1813",
         "fc": 11,
         "description": "DS_SET_DEST_SIZE_CC",
-        "params": []
+        "params": [
+          {"name": "FileTableIndex", "type": "uint16", "default": "0"},
+          {"name": "Padding", "type": "uint16", "default": "0", "hidden": true},
+          {"name": "MaxFileSize", "type": "uint32", "default": "0"}
+        ]
       },
       {
         "name": "Set Dest Age",
         "mid": "0x1813",
         "fc": 12,
         "description": "DS_SET_DEST_AGE_CC",
-        "params": []
+        "params": [
+          {"name": "FileTableIndex", "type": "uint16", "default": "0"},
+          {"name": "Padding", "type": "uint16", "default": "0", "hidden": true},
+          {"name": "MaxFileAge", "type": "uint32", "default": "0"}
+        ]
       },
       {
         "name": "Set Dest Count",
         "mid": "0x1813",
         "fc": 13,
         "description": "DS_SET_DEST_COUNT_CC",
-        "params": []
+        "params": [
+          {"name": "FileTableIndex", "type": "uint16", "default": "0"},
+          {"name": "Padding", "type": "uint16", "default": "0", "hidden": true},
+          {"name": "SequenceCount", "type": "uint32", "default": "0"}
+        ]
       },
       {
         "name": "Close File",
         "mid": "0x1813",
         "fc": 14,
         "description": "DS_CLOSE_FILE_CC",
-        "params": []
+        "params": [
+          {"name": "FileTableIndex", "type": "uint16", "default": "0"},
+          {"name": "Padding", "type": "uint16", "default": "0", "hidden": true}
+        ]
       },
       {
         "name": "Get File Info",
@@ -3700,7 +3785,9 @@
         "mid": "0x1813",
         "fc": 16,
         "description": "DS_ADD_MID_CC",
-        "params": []
+        "params": [
+          {"name": "MessageID", "type": "uint32", "default": "0x0800"}
+        ]
       },
       {
         "name": "Close All",
@@ -3714,7 +3801,9 @@
         "mid": "0x1813",
         "fc": 18,
         "description": "DS_REMOVE_MID_CC",
-        "params": []
+        "params": [
+          {"name": "MessageID", "type": "uint32", "default": "0x0800"}
+        ]
       },
       {
         "name": "Request HK",
@@ -4269,14 +4358,46 @@
         "mid": "0x1815",
         "fc": 8,
         "description": "FM_DECOMPRESS_FILE_CC",
-        "params": []
+        "params": [
+          {
+            "name": "Source",
+            "type": "string",
+            "length": "OS_MAX_PATH_LEN",
+            "default": "/cf/source.gz"
+          },
+          {
+            "name": "Target",
+            "type": "string",
+            "length": "OS_MAX_PATH_LEN",
+            "default": "/cf/target.dat"
+          }
+        ]
       },
       {
         "name": "Concat Files",
         "mid": "0x1815",
         "fc": 9,
         "description": "FM_CONCAT_FILES_CC",
-        "params": []
+        "params": [
+          {
+            "name": "Source1",
+            "type": "string",
+            "length": "OS_MAX_PATH_LEN",
+            "default": "/cf/source1.dat"
+          },
+          {
+            "name": "Source2",
+            "type": "string",
+            "length": "OS_MAX_PATH_LEN",
+            "default": "/cf/source2.dat"
+          },
+          {
+            "name": "Target",
+            "type": "string",
+            "length": "OS_MAX_PATH_LEN",
+            "default": "/cf/target.dat"
+          }
+        ]
       },
       {
         "name": "Get File Info",
@@ -5027,6 +5148,14 @@
             "default": "0"
           },
           {
+            "name": "_OptionsPadding",
+            "type": "bytes",
+            "length": 2,
+            "default": "",
+            "hidden": true,
+            "description": "Alignment before int32 options"
+          },
+          {
             "name": "options",
             "type": "int32",
             "default": "0"
@@ -5207,7 +5336,14 @@
         "name": "Send Combined Packet",
         "mid": "0x1819",
         "fc": 0,
-        "params": []
+        "params": [
+          {
+            "name": "OutMsgToSend",
+            "type": "uint32",
+            "default": "0x081A",
+            "description": "Combined telemetry MID to emit"
+          }
+        ]
       }
     ]
   },
@@ -6438,7 +6574,19 @@
         "name": "Update FW",
         "mid": "0x1854",
         "fc": 64,
-        "params": [],
+        "params": [
+          {
+            "name": "filename",
+            "type": "string",
+            "length": 30,
+            "default": ""
+          },
+          {
+            "name": "filename_len",
+            "type": "int8",
+            "default": "0"
+          }
+        ],
         "description": "STX_SYSCONF_CC_UPDATEFW"
       },
       {
@@ -6549,6 +6697,13 @@
         "name": "Output Disable",
         "mid": "0x1823",
         "fc": 7,
+        "params": []
+      },
+      {
+        "name": "Reset BCN Packet Count",
+        "mid": "0x1823",
+        "fc": 8,
+        "description": "TO_LAB_RESET_BCN_COUNT_CC",
         "params": []
       },
       {
@@ -8070,20 +8225,6 @@
             "default": "0"
           }
         ]
-      },
-      {
-        "name": "Request HK",
-        "mid": "0x1834",
-        "fc": 0,
-        "params": [],
-        "description": "Reserved; enable app SEND_HK handler before use"
-      },
-      {
-        "name": "Request Beacon",
-        "mid": "0x1835",
-        "fc": 0,
-        "params": [],
-        "description": "Reserved; enable app SEND_BCN handler before use"
       }
     ]
   },

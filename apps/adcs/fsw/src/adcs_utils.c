@@ -344,6 +344,11 @@ static ErrorCode cubeObc_sendReceive(TctlmCommsMasterSvc_Endpoint *masterEndpoin
 	uint8 msgType;
 	uint8 dstPort;
 
+	if (datalen > COMMS_BUFFER_SIZE)
+	{
+		return CUBEOBC_ERROR_SIZEH;
+	}
+
 	if (masterEndpoint->id < V1_TLM_ID_START)
 	{
 		// Telecommand
@@ -407,13 +412,16 @@ static ErrorCode cubeObc_sendReceive(TctlmCommsMasterSvc_Endpoint *masterEndpoin
 		return CUBEOBC_ERROR_OK;
 	}
 
-	uint8_t txCspDataBuffer[COMMS_BUFFER_SIZE];
-	uint8_t rxCspDataBuffer[COMMS_BUFFER_SIZE];
+	uint8_t txCspDataBuffer[COMMS_BUFFER_SIZE + CSP_HEADER_SIZE] = {0,};
+	uint8_t rxCspDataBuffer[COMMS_BUFFER_SIZE + CSP_HEADER_SIZE] = {0,};
 	int32 res;
 
 	txCspDataBuffer[CSP_MSG_TYPE_IDX] = msgType;
 	txCspDataBuffer[CSP_TCTLM_ID_IDX] = masterEndpoint->id;
-	memcpy(txCspDataBuffer + CSP_HEADER_SIZE, handle[endpoint->type].buffer, datalen);
+	if ((msgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TC) && (datalen > 0u))
+	{
+		memcpy(txCspDataBuffer + CSP_HEADER_SIZE, handle[endpoint->type].buffer, datalen);
+	}
 
 	if(msgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TC) {
 		/**
@@ -423,8 +431,8 @@ static ErrorCode cubeObc_sendReceive(TctlmCommsMasterSvc_Endpoint *masterEndpoin
 			res = CFE_SRL_ApiTransactionCSP(endpoint->addr, dstPort,
 										txCspDataBuffer, datalen + CSP_HEADER_SIZE,
 										NULL, 0);
-			if (res == 1) result = CUBEOBC_ERROR_OK;
-			return result;
+			return (res == 1) ? CUBEOBC_ERROR_OK :
+				   ((res == CFE_SRL_TRANSACTION_ERR) ? CUBEOBC_ERROR_TOUT : CUBEOBC_ERROR_WRITE);
 		}
 		else {
 		/**
@@ -442,43 +450,80 @@ static ErrorCode cubeObc_sendReceive(TctlmCommsMasterSvc_Endpoint *masterEndpoin
 									rxCspDataBuffer, datalen + CSP_HEADER_SIZE);
 	}
 									
-	if (res) {
-		result = CUBEOBC_ERROR_OK;
-	}
-	else
-		return result;
-	// Check that the response is for the expected TCTLM ID
-	if (result == CUBEOBC_ERROR_OK)
+	if (res <= 0)
 	{
-		uint8 tctlmId = rxCspDataBuffer[CSP_TCTLM_ID_IDX];
+		return (res == CFE_SRL_TRANSACTION_ERR) ? CUBEOBC_ERROR_TOUT : CUBEOBC_ERROR_READ;
+	}
 
-		if (tctlmId != masterEndpoint->id)
+	if (res < (int32)CSP_HEADER_SIZE)
+	{
+		return CUBEOBC_ERROR_SIZEL;
+	}
+
+	if (rxCspDataBuffer[CSP_TCTLM_ID_IDX] != masterEndpoint->id)
+	{
+		return CUBEOBC_ERROR_TCTLM_ID;
+	}
+
+	V1TctlmCanTransport_Type rxMsgType =
+		(V1TctlmCanTransport_Type)rxCspDataBuffer[CSP_MSG_TYPE_IDX];
+
+	if ((rxMsgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TC_NACK) ||
+		(rxMsgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TLM_NACK))
+	{
+		if (((msgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TC) &&
+			 (rxMsgType != V1_TCTLM_CAN_TRANSPORT__TYPE_TC_NACK)) ||
+			((msgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TLM) &&
+			 (rxMsgType != V1_TCTLM_CAN_TRANSPORT__TYPE_TLM_NACK)))
 		{
-			result = CUBEOBC_ERROR_TCTLM_ID;
+			return CUBEOBC_ERROR_TCTLM_PROTOCOL;
 		}
-	}
-	// Check the response type
-	if (result == CUBEOBC_ERROR_OK)
-	{
-		V1TctlmCanTransport_Type rxMsgType;
 
-		rxMsgType = (V1TctlmCanTransport_Type)rxCspDataBuffer[CSP_MSG_TYPE_IDX];
-
-		/* Check for Nack */
-		if ((rxMsgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TC_NACK) ||
-			(rxMsgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TLM_NACK))
+		if (res <= (int32)CSP_HEADER_SIZE)
 		{
-			result = nack2ErrorCode(rxCspDataBuffer[CSP_HEADER_SIZE]);
+			return CUBEOBC_ERROR_SIZEL;
 		}
+
+		return nack2ErrorCode(rxCspDataBuffer[CSP_HEADER_SIZE]);
 	}
 
-	// Extract the data
-	if (result == CUBEOBC_ERROR_OK)
+	if (msgType == V1_TCTLM_CAN_TRANSPORT__TYPE_TC)
 	{
-		// Extract TCTLM data from CSP response data
-		memcpy(handle[endpoint->type].buffer, &rxCspDataBuffer[CSP_DATA_IDX], datalen);
+		if (rxMsgType != V1_TCTLM_CAN_TRANSPORT__TYPE_TC_RESP)
+		{
+			return CUBEOBC_ERROR_TCTLM_PROTOCOL;
+		}
+
+		if (res < 3)
+		{
+			return CUBEOBC_ERROR_SIZEL;
+		}
+		if (res > 3)
+		{
+			return CUBEOBC_ERROR_SIZEH;
+		}
+
+		return CUBEOBC_ERROR_OK;
 	}
-	return result;
+
+	if ((rxMsgType != V1_TCTLM_CAN_TRANSPORT__TYPE_TLM_RESP) &&
+		(rxMsgType != V1_TCTLM_CAN_TRANSPORT__TYPE_TLM_RESP_EXT))
+	{
+		return CUBEOBC_ERROR_TCTLM_PROTOCOL;
+	}
+
+	int32 expectedResponseSize = (int32)datalen + (int32)CSP_HEADER_SIZE;
+	if (res < expectedResponseSize)
+	{
+		return CUBEOBC_ERROR_SIZEL;
+	}
+	if (res > expectedResponseSize)
+	{
+		return CUBEOBC_ERROR_SIZEH;
+	}
+
+	memcpy(handle[endpoint->type].buffer, &rxCspDataBuffer[CSP_DATA_IDX], datalen);
+	return CUBEOBC_ERROR_OK;
 }
 
 
@@ -489,6 +534,15 @@ int32 ADCS_SetCommand_Common(uint16 cmdId, const void *setVal, uint16 size)
     int32_t status;
     TctlmCommsMasterSvc_Endpoint target;
     uint8_t *tx_buffer;
+
+    if (size > COMMS_BUFFER_SIZE)
+    {
+        return CUBEOBC_ERROR_SIZEH;
+    }
+    if ((size > 0u) && (setVal == NULL))
+    {
+        return CUBEOBC_ERROR_NULLPTR;
+    }
 
     ZERO_VAR(target);
     target.id = cmdId;
@@ -514,6 +568,15 @@ int32 ADCS_GetTelemetry_Common(uint16 tlmId, void *returnVal, uint16 bufferSize)
     int32_t status;
     TctlmCommsMasterSvc_Endpoint target;
     uint8_t *rx_buffer;
+
+    if (bufferSize > COMMS_BUFFER_SIZE)
+    {
+        return CUBEOBC_ERROR_SIZEH;
+    }
+    if ((bufferSize > 0u) && (returnVal == NULL))
+    {
+        return CUBEOBC_ERROR_NULLPTR;
+    }
 
     ZERO_VAR(target);
     target.id = tlmId;
@@ -2639,6 +2702,8 @@ void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSi
 
 	while ((flagLastFrame == false) && (result == CUBEOBC_ERROR_OK)) {
 		flagFrameSet = false;
+		flagFrameNumMatch = false;
+		flagFrameError = false;
 		flagExit = false;
 
 		ZERO_VAR(Frame_test);
@@ -2732,7 +2797,7 @@ void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSi
 			flagExit = false;
 			
 			while (flagExit == false) {	
-				status = ADCS_GetDataFrame(&RetVal_219);
+				result = ADCS_GetDataFrame(&RetVal_219);
 				OS_printf("Download Compelete! (FrameSize = %u)\n",RetVal_219.FrameSize);
 				
 				if (result == CUBEOBC_ERROR_OK) {
@@ -2746,6 +2811,12 @@ void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSi
 				}
 			}
 			
+			if ((result == CUBEOBC_ERROR_OK) &&
+				(RetVal_219.FrameSize > sizeof(RetVal_219.FrameByte)))
+			{
+				result = CUBEOBC_ERROR_SIZEH;
+			}
+
 			if (result == CUBEOBC_ERROR_OK) {
 				if ((RetVal_219.FrameSize == 0) && (flagLastFrame == false)) result = CUBEOBC_ERROR_UNKNOWN;
 			}
@@ -2770,20 +2841,39 @@ void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSi
 				}
 
 				// Handling Data in the current Frame
-				memcpy(&Frame_test,&RetVal_219.FrameByte,RetVal_219.FrameSize);
+				if (RetVal_219.FrameSize > sizeof(Frame_test))
+				{
+					result = CUBEOBC_ERROR_SIZEH;
+				}
+				else
+				{
+					memcpy(&Frame_test, RetVal_219.FrameByte, RetVal_219.FrameSize);
+				}
 
 
-				LocalFrameNumber++;
+				if (result == CUBEOBC_ERROR_OK)
+				{
+					LocalFrameNumber++;
+				}
 
 				status = result;
 			}
 		}
 
 		uint16 NumberofEntry = 0;
-		NumberofEntry = (RetVal_219.FrameSize - 5) / (14 + sizeof(ADCS_RawGYRSensorTlm_Paylaod_t));
+		uint16 FramePayloadSize = 0;
+		if (RetVal_219.FrameSize >= 5u)
+		{
+			FramePayloadSize = RetVal_219.FrameSize - 5u;
+		}
+		if (result == CUBEOBC_ERROR_OK)
+		{
+			NumberofEntry = FramePayloadSize /
+				(14u + sizeof(ADCS_RawGYRSensorTlm_Paylaod_t));
+		}
 		OS_printf("[Frame %u]\n",LocalFrameNumber-1);
 		OS_printf("Size of Frame         : %u\n", RetVal_219.FrameSize);
-		OS_printf("Size of Frame w/o mask: %u\n", RetVal_219.FrameSize-5);
+		OS_printf("Size of Frame w/o mask: %u\n", FramePayloadSize);
 		OS_printf("Size of TLM + metadata: %u\n", (uint32) (14 + sizeof(ADCS_RawGYRSensorTlm_Paylaod_t)));
 		OS_printf("Size of TLM           : %u\n", (uint32) sizeof(ADCS_RawGYRSensorTlm_Paylaod_t));
 
@@ -2810,7 +2900,7 @@ void ADCS_HandleReport(int32 Status, uint8_t CC, void *ReadData, uint16_t ReadSi
 	}
 
 	
-	return status;
+	return (result == CUBEOBC_ERROR_OK) ? status : result;
  }
 
 /*

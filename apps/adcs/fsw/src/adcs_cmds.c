@@ -45,6 +45,18 @@ static void ADCS_RecordFirstFailure(CFE_Status_t *OverallStatus, CFE_Status_t St
     }
 }
 
+static CFE_Status_t ADCS_ReportCommandCompletion(uint8 CommandCode, CFE_Status_t OverallStatus)
+{
+    if (OverallStatus != CFE_SUCCESS)
+    {
+        ADCS_HandleReport(OverallStatus, CommandCode, NULL, 0);
+        return OverallStatus;
+    }
+
+    ADCS_ReportCommandPhase(CommandCode, ADCS_RPT_PHASE_COMPLETED);
+    return CFE_SUCCESS;
+}
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
 /*  Purpose:                                                                  */
@@ -2711,6 +2723,7 @@ CFE_Status_t ADCS_Comm01Cmd(const ADCS_Comm01Cmd_t *msg) {
 
 	CFE_Status_t						status;
 	CFE_Status_t						interstatus;
+	CFE_Status_t                        OverallStatus = CFE_SUCCESS;
 
 	uint8 cnt_try = 0;
 	uint8 flag_tlmtype = msg->Payload.flag_tlmtype;
@@ -2871,14 +2884,18 @@ CFE_Status_t ADCS_Comm01Cmd(const ADCS_Comm01Cmd_t *msg) {
 
 		// 		6-1) Read Tlm of Main / Backup Estimator:	
 		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 		interstatus = ADCS_Comm_GetBackupEstTlm(&RetVal_173);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 
 		// 		6-2) Read Sensor Raw Values - Gyro & Magnetometer	
 		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 		interstatus = ADCS_Comm_GetRawGYRSensor(&RetVal_204);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 		
 		// 7) Write the Tlm to the file
@@ -2960,11 +2977,12 @@ CFE_Status_t ADCS_Comm01Cmd(const ADCS_Comm01Cmd_t *msg) {
 		
 	// 9) Go back to Step 6 until total time meets 300 sec
 	}
-	fclose(fp);
+	if (fclose(fp) != 0)
+	{
+		ADCS_RecordFirstFailure(&OverallStatus, CFE_STATUS_EXTERNAL_RESOURCE_FAIL);
+	}
 
-	ADCS_ReportCommandPhase(ADCS_COMM_01_CC, ADCS_RPT_PHASE_COMPLETED);
-
-	return CFE_SUCCESS;
+	return ADCS_ReportCommandCompletion(ADCS_COMM_01_CC, OverallStatus);
 }
 
 CFE_Status_t ADCS_Comm02Cmd(const ADCS_Comm02Cmd_t *msg) {
@@ -3003,6 +3021,7 @@ CFE_Status_t ADCS_Comm02Cmd(const ADCS_Comm02Cmd_t *msg) {
 
 	CFE_Status_t						status;
 	CFE_Status_t						interstatus;
+	CFE_Status_t                        OverallStatus = CFE_SUCCESS;
 
 	uint8 cnt_try = 0;
 	uint8 flag_tlmtype = msg->Payload.flag_tlmtype;
@@ -3173,18 +3192,23 @@ CFE_Status_t ADCS_Comm02Cmd(const ADCS_Comm02Cmd_t *msg) {
 
 		// 		6-1) Read Tlm of Main
 		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 
 		// 		6-2) Read Sensor Raw Values - Gyro & Magnetometer	
 		interstatus = ADCS_Comm_GetRawMAGSensor(&RetVal_180);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 		interstatus = ADCS_Comm_GetRawGYRSensor(&RetVal_204);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 		interstatus = ADCS_Comm_GetRawCSSSensor(&RetVal_203);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 
 		//		6-3) Read Tlm of Controller
 		interstatus = ADCS_Comm_GetControllerTlm(&RetVal_172);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 		
 		// 7) Write the Tlm to the file
@@ -3272,11 +3296,12 @@ CFE_Status_t ADCS_Comm02Cmd(const ADCS_Comm02Cmd_t *msg) {
 		
 	// 9) Go back to Step 6 until total time meets 600 sec
 	}
-	fclose(fp);
+	if (fclose(fp) != 0)
+	{
+		ADCS_RecordFirstFailure(&OverallStatus, CFE_STATUS_EXTERNAL_RESOURCE_FAIL);
+	}
 
-	ADCS_ReportCommandPhase(ADCS_COMM_02_CC, ADCS_RPT_PHASE_COMPLETED);
-
-	return CFE_SUCCESS;
+	return ADCS_ReportCommandCompletion(ADCS_COMM_02_CC, OverallStatus);
 }
 
 CFE_Status_t ADCS_Comm03Cmd(const ADCS_Comm03Cmd_t *msg) {
@@ -3311,6 +3336,7 @@ CFE_Status_t ADCS_Comm03Cmd(const ADCS_Comm03Cmd_t *msg) {
 
 	CFE_Status_t						status;
 	CFE_Status_t						interstatus;
+	CFE_Status_t                        OverallStatus = CFE_SUCCESS;
 
 	uint8 cnt_try = 0;
 	uint8 flag_tlmtype = msg->Payload.flag_tlmtype;
@@ -3468,10 +3494,12 @@ CFE_Status_t ADCS_Comm03Cmd(const ADCS_Comm03Cmd_t *msg) {
 
 		// 		6-1) Read Tlm of Main
 		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 
 		// 		6-2) Read Sensor Calibrated Values - Magnetometer
 		interstatus = ADCS_Comm_GetCalibratedMAGSensor(&RetVal_177);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 
 		
@@ -3529,11 +3557,12 @@ CFE_Status_t ADCS_Comm03Cmd(const ADCS_Comm03Cmd_t *msg) {
 		
 	// 9) Go back to Step 6 until total time meets 6000 sec
 	}
-	fclose(fp);
+	if (fclose(fp) != 0)
+	{
+		ADCS_RecordFirstFailure(&OverallStatus, CFE_STATUS_EXTERNAL_RESOURCE_FAIL);
+	}
 
-	ADCS_ReportCommandPhase(ADCS_COMM_03_CC, ADCS_RPT_PHASE_COMPLETED);
-
-	return CFE_SUCCESS;
+	return ADCS_ReportCommandCompletion(ADCS_COMM_03_CC, OverallStatus);
 }
 
 CFE_Status_t ADCS_Comm04Cmd(const ADCS_Comm04Cmd_t *msg) {
@@ -3560,6 +3589,7 @@ CFE_Status_t ADCS_Comm04Cmd(const ADCS_Comm04Cmd_t *msg) {
 
 	CFE_Status_t						status;
 	CFE_Status_t						interstatus;
+	CFE_Status_t                        OverallStatus = CFE_SUCCESS;
 
 	uint8 cnt_try = 0;
 	uint8 flag_tlmtype = msg->Payload.flag_tlmtype;
@@ -3716,20 +3746,25 @@ CFE_Status_t ADCS_Comm04Cmd(const ADCS_Comm04Cmd_t *msg) {
 
 		// 		6-1) Read Tlm of Main / Backup Estimator:	
 		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 		interstatus = ADCS_Comm_GetBackupEstTlm(&RetVal_173);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 
 		// 		6-2) Read Sensor Raw Values - CSS	
 		interstatus = ADCS_Comm_GetRawCSSSensor(&RetVal_203);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 
 		// 		6-3) Read Sensor Calibrated Values - CSS
 		interstatus = ADCS_Comm_GetCalibratedCSSSensor(&RetVal_206);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 
 		// 		6-4) Read Models Telemetery Values
 		interstatus = ADCS_Comm_GetModelsTlm(&RetVal_174);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(10);
 		
 		// 7) Write the Tlm to the file
@@ -3782,11 +3817,12 @@ CFE_Status_t ADCS_Comm04Cmd(const ADCS_Comm04Cmd_t *msg) {
 		
 	// 9) Go back to Step 6 until total time meets 6000 sec
 	}
-	fclose(fp);
+	if (fclose(fp) != 0)
+	{
+		ADCS_RecordFirstFailure(&OverallStatus, CFE_STATUS_EXTERNAL_RESOURCE_FAIL);
+	}
 
-	ADCS_ReportCommandPhase(ADCS_COMM_04_CC, ADCS_RPT_PHASE_COMPLETED);
-
-	return CFE_SUCCESS;
+	return ADCS_ReportCommandCompletion(ADCS_COMM_04_CC, OverallStatus);
 }
 
 CFE_Status_t ADCS_Comm05Cmd(const ADCS_Comm05Cmd_t *msg) {
@@ -3814,6 +3850,7 @@ CFE_Status_t ADCS_Comm05Cmd(const ADCS_Comm05Cmd_t *msg) {
 
 	CFE_Status_t						status;
 	CFE_Status_t						interstatus;
+	CFE_Status_t                        OverallStatus = CFE_SUCCESS;
 
 	uint8 cnt_try = 0;
 	// uint8 flag_tlmtype = msg->Payload.flag_tlmtype;
@@ -3978,22 +4015,27 @@ CFE_Status_t ADCS_Comm05Cmd(const ADCS_Comm05Cmd_t *msg) {
 
 		// 		6-1) Read Tlm of Main:	
 		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 
 		// 		6-2) Read Sensor Raw Values - CSS	
 		interstatus = ADCS_Comm_GetRawCSSSensor(&RetVal_203);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 
 		// 		6-3) Read Sensor Calibrated Values - CSS
 		interstatus = ADCS_Comm_GetCalibratedCSSSensor(&RetVal_206);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 
 		// 		6-4) Read Sensor Raw Values - FSS
 		interstatus = ADCS_Comm_GetRawCubeSenseSun(&RetVal_170);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 
 		// 		6-5) Read Sensor Calibrated Values - FSS
 		interstatus = ADCS_Comm_GetCalibratedFSSSensor(&RetVal_178);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 		
 		// 7) Write the Tlm to the file
@@ -4026,11 +4068,12 @@ CFE_Status_t ADCS_Comm05Cmd(const ADCS_Comm05Cmd_t *msg) {
 		
 	// 9) Go back to Step 6 until total time meets 6000 sec
 	}
-	fclose(fp);
+	if (fclose(fp) != 0)
+	{
+		ADCS_RecordFirstFailure(&OverallStatus, CFE_STATUS_EXTERNAL_RESOURCE_FAIL);
+	}
 
-	ADCS_ReportCommandPhase(ADCS_COMM_05_CC, ADCS_RPT_PHASE_COMPLETED);
-
-	return CFE_SUCCESS;
+	return ADCS_ReportCommandCompletion(ADCS_COMM_05_CC, OverallStatus);
 }
 
 CFE_Status_t ADCS_Comm06Cmd(const ADCS_Comm06Cmd_t *msg) {
@@ -4056,6 +4099,7 @@ CFE_Status_t ADCS_Comm06Cmd(const ADCS_Comm06Cmd_t *msg) {
 
 	CFE_Status_t						status;
 	CFE_Status_t						interstatus;
+	CFE_Status_t                        OverallStatus = CFE_SUCCESS;
 
 	uint8 cnt_try = 0;	
 	uint8 flag_estmode = msg->Payload.flag_estmode;
@@ -4287,6 +4331,7 @@ CFE_Status_t ADCS_Comm06Cmd(const ADCS_Comm06Cmd_t *msg) {
 			SetVal_042.ControlMode 			= 3;
 			SetVal_042.ControlTimeout		= 0;
 			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+			ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		}
 		else if ((dt300 > 150) && (phase_rw_50_set == false)) {
 			phase_rw_50_set = true;
@@ -4294,7 +4339,8 @@ CFE_Status_t ADCS_Comm06Cmd(const ADCS_Comm06Cmd_t *msg) {
 			SetVal_042.BackupEstimatorMode 	= 1;
 			SetVal_042.ControlMode 			= 50;
 			SetVal_042.ControlTimeout		= 80;
-			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);			
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+			ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		}
 		else if (dt300 > 140 && (phase_vec_0_set == false)) {
 			phase_vec_0_set = true;
@@ -4302,6 +4348,7 @@ CFE_Status_t ADCS_Comm06Cmd(const ADCS_Comm06Cmd_t *msg) {
 			SetVal_076.cmdHy = 0.0;
 			SetVal_076.cmdHz = 0.0;
 			interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+			ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		}
 		else if ((dt300 > 20) && (phase_rw_51_set == false)) {
 			phase_rw_51_set = true;
@@ -4309,7 +4356,8 @@ CFE_Status_t ADCS_Comm06Cmd(const ADCS_Comm06Cmd_t *msg) {
 			SetVal_042.BackupEstimatorMode 	= 1;
 			SetVal_042.ControlMode 			= 51;
 			SetVal_042.ControlTimeout		= 120;
-			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);			
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+			ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 
 			OS_TaskDelay(100);
 
@@ -4318,30 +4366,35 @@ CFE_Status_t ADCS_Comm06Cmd(const ADCS_Comm06Cmd_t *msg) {
 					SetVal_076.cmdHy = 0.0;
 					SetVal_076.cmdHz = 0.0;
 					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+					ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 				}
 				else if (flag_contmode == 1) {
 					SetVal_076.cmdHx = cmdH;
 					SetVal_076.cmdHy = 0.0;
 					SetVal_076.cmdHz = 0.0;
 					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+					ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 				}
 				else if (flag_contmode == 2) {
 					SetVal_076.cmdHx = 0.0;
 					SetVal_076.cmdHy = cmdH;
 					SetVal_076.cmdHz = 0.0;
-					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);		
+					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+					ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 				}
 				else if (flag_contmode == 3) {
 					SetVal_076.cmdHx = 0.0;
 					SetVal_076.cmdHy = 0.0;
 					SetVal_076.cmdHz = cmdH;
-					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);		
+					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+					ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 				}
 				else {
 					SetVal_076.cmdHx = 0.0;
 					SetVal_076.cmdHy = 0.0;
 					SetVal_076.cmdHz = 0.0;
-					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);		
+					interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+					ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 				}
 		}
 
@@ -4357,14 +4410,17 @@ CFE_Status_t ADCS_Comm06Cmd(const ADCS_Comm06Cmd_t *msg) {
 
 		// 		6-1) Read Tlm of Main:	
 		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 
 		// 		6-2) Read Sensor Raw Values - RWL	
 		interstatus = ADCS_Comm_GetRawRWLSensor(&RetVal_205);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 
 		// 		6-3) Read Sensor Calibrated Values - RWL
 		interstatus = ADCS_Comm_GetCalibratedRWLSensor(&RetVal_209);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 		
 		// 7) Write the Tlm to the file
@@ -4407,23 +4463,26 @@ CFE_Status_t ADCS_Comm06Cmd(const ADCS_Comm06Cmd_t *msg) {
 		
 	// 9) Go back to Step 6 until total time meets 180 sec
 	}
-	fclose(fp);
+	if (fclose(fp) != 0)
+	{
+		ADCS_RecordFirstFailure(&OverallStatus, CFE_STATUS_EXTERNAL_RESOURCE_FAIL);
+	}
 
 	SetVal_042.MainEstimatorMode 	= 6;
 	SetVal_042.BackupEstimatorMode 	= 5;
 	SetVal_042.ControlMode 			= 3;
 	SetVal_042.ControlTimeout		= 0;
 	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 
 	SetVal_056.RWL0		= 0;
 	SetVal_056.RWL1		= 0;
 	SetVal_056.RWL2		= 0;
 	SetVal_056.RWL3		= 0;
 	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+	ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 
-	ADCS_ReportCommandPhase(ADCS_COMM_06_CC, ADCS_RPT_PHASE_COMPLETED);
-
-	return CFE_SUCCESS;
+	return ADCS_ReportCommandCompletion(ADCS_COMM_06_CC, OverallStatus);
 }
 
 CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg) {
@@ -4450,6 +4509,7 @@ CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg) {
 
 	CFE_Status_t						status;
 	CFE_Status_t						interstatus;
+	CFE_Status_t                        OverallStatus = CFE_SUCCESS;
 
 	uint8 cnt_try = 0;
 		
@@ -4576,6 +4636,7 @@ CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg) {
 	SetVal_076.cmdHy = 0.0;
 	SetVal_076.cmdHz = 0.0;
 	interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+	ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 	
 	// 5) Start to count time ( Waiting time before Logging: 2800 sec / Tlm period: 1 sec / Comm. Duration: 720 sec )
 	CFE_TIME_SysTime_t		t0_10, t0_300, tnow;
@@ -4630,6 +4691,7 @@ CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg) {
 	SetVal_042.ControlMode 			= 51;
 	SetVal_042.ControlTimeout		= 125;
 	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 
 	t0_300 = CFE_TIME_GetTime();
 	uint32 dt300 = 0;
@@ -4647,6 +4709,7 @@ CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg) {
 			SetVal_042.ControlMode 			= 3;
 			SetVal_042.ControlTimeout		= 0;
 			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+			ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		}
 		else if ((dt300 > 720) && (phase_sun_50_set == false)) {
 			phase_sun_50_set = true;
@@ -4654,7 +4717,8 @@ CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg) {
 			SetVal_042.BackupEstimatorMode 	= 5;
 			SetVal_042.ControlMode 			= 50;
 			SetVal_042.ControlTimeout		= 80;
-			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);			
+			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+			ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		}
 
 		else if ((dt300 > 420) && (phase_sun_13_set == false)) {
@@ -4664,6 +4728,7 @@ CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg) {
 			SetVal_042.ControlMode 			= 13;
 			SetVal_042.ControlTimeout		= 305;
 			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+			ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		}
 		else if ((dt300 > 120) && (phase_sun_12_set == false)) {
 			phase_sun_12_set = true;
@@ -4671,6 +4736,7 @@ CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg) {
 			SetVal_054.Pitch = 0.0;
 			SetVal_054.Yaw = 0.0;
 			interstatus = ADCS_Comm_SetReferenceRPYValues(&SetVal_054);
+			ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 			OS_TaskDelay(10);
 
 			SetVal_042.MainEstimatorMode 	= 6;
@@ -4678,6 +4744,7 @@ CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg) {
 			SetVal_042.ControlMode 			= 12;
 			SetVal_042.ControlTimeout		= 305;
 			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+			ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		}
 
 		t0_10 = CFE_TIME_GetTime();	// Initialize 1 seconds Counter
@@ -4693,18 +4760,22 @@ CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg) {
 
 		// 		6-1) Read Tlm of Main:	
 		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 
 		// 		6-2) Read Sensor Raw Values - RWL	
 		interstatus = ADCS_Comm_GetRawRWLSensor(&RetVal_205);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 
 		// 		6-3) Read Sensor Calibrated Values - RWL
 		interstatus = ADCS_Comm_GetCalibratedRWLSensor(&RetVal_209);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 		
 		// 		6-4) Read Sensor Calibrated Values - FSS
 		interstatus = ADCS_Comm_GetCalibratedFSSSensor(&RetVal_178);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 		
 		// 7) Write the Tlm to the file
@@ -4748,23 +4819,26 @@ CFE_Status_t ADCS_Comm07Cmd(const ADCS_Comm07Cmd_t *msg) {
 		
 	// 9) Go back to Step 6 until total time meets 720 sec
 	}
-	fclose(fp);
+	if (fclose(fp) != 0)
+	{
+		ADCS_RecordFirstFailure(&OverallStatus, CFE_STATUS_EXTERNAL_RESOURCE_FAIL);
+	}
 
 	SetVal_042.MainEstimatorMode 	= 6;
 	SetVal_042.BackupEstimatorMode 	= 5;
 	SetVal_042.ControlMode 			= 3;
 	SetVal_042.ControlTimeout		= 0;
 	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 
 	SetVal_056.RWL0		= 0;
 	SetVal_056.RWL1		= 0;
 	SetVal_056.RWL2		= 0;
 	SetVal_056.RWL3		= 0;
 	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+	ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 
-	ADCS_ReportCommandPhase(ADCS_COMM_07_CC, ADCS_RPT_PHASE_COMPLETED);
-
-	return CFE_SUCCESS;
+	return ADCS_ReportCommandCompletion(ADCS_COMM_07_CC, OverallStatus);
 }
 
 CFE_Status_t ADCS_Comm08Cmd(const ADCS_Comm08Cmd_t *msg) {
@@ -4790,6 +4864,7 @@ CFE_Status_t ADCS_Comm08Cmd(const ADCS_Comm08Cmd_t *msg) {
 
 	CFE_Status_t						status;
 	CFE_Status_t						interstatus;
+	CFE_Status_t                        OverallStatus = CFE_SUCCESS;
 
 	uint8 cnt_try = 0;
 	
@@ -4884,6 +4959,7 @@ CFE_Status_t ADCS_Comm08Cmd(const ADCS_Comm08Cmd_t *msg) {
 	SetVal_054.Pitch = 0.0;
 	SetVal_054.Yaw = 0.0;
 	interstatus = ADCS_Comm_SetReferenceRPYValues(&SetVal_054);
+	ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 
 	SetVal_042.MainEstimatorMode 	= 6;
 	SetVal_042.BackupEstimatorMode 	= 5;
@@ -4990,14 +5066,17 @@ CFE_Status_t ADCS_Comm08Cmd(const ADCS_Comm08Cmd_t *msg) {
 
 		// 		6-1) Read Tlm of Main:	
 		interstatus = ADCS_Comm_GetMainEstTlm(&RetVal_210);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 
 		// 		6-2) Read Sensor Raw Values - HSS	
 		interstatus = ADCS_Comm_GetRawCubeSenseEarth(&RetVal_179);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 
 		// 		6-3) Read Sensor Calibrated Values - HSS
 		interstatus = ADCS_Comm_GetCalibratedHSSSensor(&RetVal_176);
+		ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		OS_TaskDelay(20);
 
 		
@@ -5042,13 +5121,17 @@ CFE_Status_t ADCS_Comm08Cmd(const ADCS_Comm08Cmd_t *msg) {
 		
 	// 9) Go back to Step 6 until total time meets 6000 sec
 	}
-	fclose(fp);
+	if (fclose(fp) != 0)
+	{
+		ADCS_RecordFirstFailure(&OverallStatus, CFE_STATUS_EXTERNAL_RESOURCE_FAIL);
+	}
 
 	SetVal_042.MainEstimatorMode 	= 6;
 	SetVal_042.BackupEstimatorMode 	= 5;
 	SetVal_042.ControlMode 			= 3;
 	SetVal_042.ControlTimeout		= 0;
 	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 
 	SetVal_056.HSS0		= 0;
 	SetVal_056.RWL0		= 0;
@@ -5056,10 +5139,9 @@ CFE_Status_t ADCS_Comm08Cmd(const ADCS_Comm08Cmd_t *msg) {
 	SetVal_056.RWL2		= 0;
 	SetVal_056.RWL3		= 0;
 	interstatus = ADCS_Comm_SetPowerState(&SetVal_056);		// Set RWLX --> OFF
+	ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 
-	ADCS_ReportCommandPhase(ADCS_COMM_08_CC, ADCS_RPT_PHASE_COMPLETED);
-
-	return CFE_SUCCESS;
+	return ADCS_ReportCommandCompletion(ADCS_COMM_08_CC, OverallStatus);
 }
 
 CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {
@@ -5075,6 +5157,7 @@ CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {
 
 	CFE_Status_t						status;
 	CFE_Status_t						interstatus;
+	CFE_Status_t                        OverallStatus = CFE_SUCCESS;
 
 	uint8 cnt_try = 0;
 		
@@ -5201,6 +5284,7 @@ CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {
 	SetVal_076.cmdHy = 0.0;
 	SetVal_076.cmdHz = 0.0;
 	interstatus = ADCS_Comm_SetOpenLoopCmdHxyzRW(&SetVal_076);
+	ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 	
 	// 5) Start to count time ( Waiting time before Logging: 2800 sec / Tlm period: 1 sec / Comm. Duration: 720 sec )
 	CFE_TIME_SysTime_t		t0_10, t0_300, tnow;
@@ -5220,6 +5304,7 @@ CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {
 	SetVal_042.ControlMode 			= 51;
 	SetVal_042.ControlTimeout		= 125;
 	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 
 	t0_300 = CFE_TIME_GetTime();
 	uint32 dt300 = 0;
@@ -5234,6 +5319,7 @@ CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {
 			SetVal_042.ControlMode 			= 13;
 			SetVal_042.ControlTimeout		= 0;
 			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+			ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		}
 		else if ((dt300 > 120) && (phase_ctrl_12_set == false)) {
 			phase_ctrl_12_set = true;
@@ -5241,6 +5327,7 @@ CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {
 			SetVal_054.Pitch = 0.0;
 			SetVal_054.Yaw = 0.0;
 			interstatus = ADCS_Comm_SetReferenceRPYValues(&SetVal_054);
+			ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 			OS_TaskDelay(10);
 
 			SetVal_042.MainEstimatorMode 	= 6;
@@ -5248,6 +5335,7 @@ CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {
 			SetVal_042.ControlMode 			= 12;
 			SetVal_042.ControlTimeout		= 305;
 			interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+			ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 		}
 
 		t0_10 = CFE_TIME_GetTime();	// Initialize 1 seconds Counter
@@ -5267,10 +5355,9 @@ CFE_Status_t ADCS_SequenceCmd_Sunpointing(void) {
 	SetVal_042.ControlMode 			= 13;
 	SetVal_042.ControlTimeout		= 0;
 	interstatus = ADCS_Comm_SetControlEstimationMode(&SetVal_042);
+	ADCS_RecordFirstFailure(&OverallStatus, interstatus);
 
-	ADCS_ReportCommandPhase(ADCS_SEQ_SUN_CC, ADCS_RPT_PHASE_COMPLETED);
-
-	return CFE_SUCCESS;
+	return ADCS_ReportCommandCompletion(ADCS_SEQ_SUN_CC, OverallStatus);
 }
 
 CFE_Status_t ADCS_Comm10Cmd(const ADCS_Comm10Cmd_t *msg)

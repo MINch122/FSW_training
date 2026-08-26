@@ -23,7 +23,7 @@ typedef struct {
     /**
      * @brief If set, also removes logs with the HOLD parameter.
      */
-    oem_bool    held;
+    oem_enum    held;
 
 } oem_cmd_unlog_all;
 

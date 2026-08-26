@@ -17,9 +17,10 @@ CFE_Status_t THRUST_NoopCmd(const THRUST_NoopCmd_t *Msg);
 CFE_Status_t THRUST_ResetCountersCmd(const THRUST_ResetCountersCmd_t *Msg);
 
 /* -------------------------------------------------------
- * SCH 트리거 명령
+ * HK 요청 명령
  * ------------------------------------------------------- */
 CFE_Status_t THRUST_SendHkCmd(const THRUST_SendHkCmd_t *Msg);
+CFE_Status_t THRUST_SendScheduledHkCmd(const THRUST_SendHkCmd_t *Msg);
 CFE_Status_t THRUST_ReqStatusCmd(const THRUST_ReqStatusCmd_t *Msg);
 
 /* -------------------------------------------------------

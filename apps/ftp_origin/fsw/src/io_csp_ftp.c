@@ -33,10 +33,10 @@
 
 
 #ifndef IO_CSP_FTP_DEBUG
-#define CSP_PORT_FTP        9 // originanally 16.
+#define CSP_PORT_FTP        19 // originanally 16.
 #else
 enum CSP_PORTS {
-    CSP_PORT_FTP            = 9,
+    CSP_PORT_FTP            = 19,
     CSP_PORT_FTP_BBB        = 17,
 };
 #endif
