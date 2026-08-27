@@ -5,7 +5,7 @@
 #include "mission_internal_cfg.h"
 
 #ifndef MISSION_ENABLE_LEOP_SEQUENCE
-#define MISSION_ENABLE_LEOP_SEQUENCE true
+#define MISSION_ENABLE_LEOP_SEQUENCE false
 #endif
 
 /* Send the ADCS detumbling sequence command immediately after loading LEOP state. */

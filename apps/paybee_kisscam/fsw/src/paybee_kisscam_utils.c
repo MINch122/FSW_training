@@ -11,6 +11,13 @@
 #include <termios.h>
 #include "rpt_interface_cfg.h"
 
+#define PAYBEE_KISSCAM_DOWNLOAD_RX_DELAY_MS 100u
+
+static bool paybee_kisscam_IsDownloadCommand(uint8_t CC)
+{
+    return CC == paybee_kisscam_DOWNLOAD_ALL_CC || CC == paybee_kisscam_DOWNLOAD_CC;
+}
+
 CFE_Status_t paybee_kisscam_SendReport(uint8_t CC, uint8 ReturnType, int32 ReturnCode,
                                        const void *Data, size_t DataSize)
 {
@@ -20,8 +27,12 @@ CFE_Status_t paybee_kisscam_SendReport(uint8_t CC, uint8 ReturnType, int32 Retur
 
     if (BufPtr == NULL)
     {
-        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "KissCAM RPT allocation failed: CC=0x%02X", CC);
+        if (paybee_kisscam_IsDownloadCommand(CC)) {
+            PAYBEE_KISSCAM_APP_printf("KissCAM RPT allocation failed: CC=0x%02X\n", CC);
+        } else {
+            CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "KissCAM RPT allocation failed: CC=0x%02X", CC);
+        }
         return CFE_SB_BUF_ALOC_ERR;
     }
 
@@ -32,8 +43,12 @@ CFE_Status_t paybee_kisscam_SendReport(uint8_t CC, uint8 ReturnType, int32 Retur
                      sizeof(paybee_kisscam_ReportTlm_t)) != CFE_SUCCESS)
     {
         CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "KissCAM RPT init failed: CC=0x%02X", CC);
+        if (paybee_kisscam_IsDownloadCommand(CC)) {
+            PAYBEE_KISSCAM_APP_printf("KissCAM RPT init failed: CC=0x%02X\n", CC);
+        } else {
+            CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "KissCAM RPT init failed: CC=0x%02X", CC);
+        }
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
@@ -54,9 +69,14 @@ CFE_Status_t paybee_kisscam_SendReport(uint8_t CC, uint8 ReturnType, int32 Retur
     if (Status != CFE_SUCCESS)
     {
         CFE_SB_ReleaseMessageBuffer((CFE_SB_Buffer_t *)BufPtr);
-        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "KissCAM RPT transmit failed: CC=0x%02X RC=0x%08lX",
-                          CC, (unsigned long)Status);
+        if (paybee_kisscam_IsDownloadCommand(CC)) {
+            PAYBEE_KISSCAM_APP_printf("KissCAM RPT transmit failed: CC=0x%02X RC=0x%08lX\n",
+                                       CC, (unsigned long)Status);
+        } else {
+            CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "KissCAM RPT transmit failed: CC=0x%02X RC=0x%08lX",
+                              CC, (unsigned long)Status);
+        }
     }
 
     return Status;
@@ -166,9 +186,8 @@ void paybee_kisscam_Inspection(uint8_t MemorySlot, uint16_t TotalLines) {
              (1u << (Line % 8))) == 0) {
             paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].MemoryState =
                 paybee_kisscam_DOWNLOAD_ON_GOING;
-            CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
-                              "[KissCAM] Download for MemorySlot %u finished with missing lines.",
-                              MemorySlot);
+            PAYBEE_KISSCAM_APP_printf("[KissCAM] Download for MemorySlot %u finished with missing lines.\n",
+                                       MemorySlot);
             return;
         }
     }
@@ -374,18 +393,28 @@ paybee_kisscam_TransactionResult_t paybee_kisscam_Transaction(const void *Tx, vo
         return Result;
     }
 
+    bool IsDownloadCmd = paybee_kisscam_IsDownloadCommand(CC);
+
 #define PAYBEE_KISSCAM_SERIAL_FAILURE(Code)                                           \
     do {                                                                               \
         if (paybee_kisscam_Data.Handle != NULL) {                                       \
+            if (IsDownloadCmd) {                                                        \
+                OS_TaskDelay(PAYBEE_KISSCAM_DOWNLOAD_RX_DELAY_MS);                      \
+            }                                                                           \
             tcflush(paybee_kisscam_Data.Handle->FD, TCIFLUSH);                          \
         }                                                                              \
         Result.ReturnCode = (Code);                                                     \
         Result.ReturnType = RPT_RETTYPE_CFE;                                            \
         Result.ReadSize = (ReadByte > RxCapacity) ? RxCapacity : ReadByte;              \
         paybee_kisscam_Data.ErrCounter++;                                               \
-        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,    \
-                          "KissCAM Serial Error: CC=0x%02X Status=%ld Read=%lu",        \
-                          CC, (long)(Code), (unsigned long)ReadByte);                    \
+        if (IsDownloadCmd) {                                                            \
+            PAYBEE_KISSCAM_APP_printf("KissCAM Serial Error: CC=0x%02X Status=%ld Read=%lu\n", \
+                                       CC, (long)(Code), (unsigned long)ReadByte);       \
+        } else {                                                                        \
+            CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR, \
+                              "KissCAM Serial Error: CC=0x%02X Status=%ld Read=%lu",     \
+                              CC, (long)(Code), (unsigned long)ReadByte);                \
+        }                                                                               \
         return Result;                                                                  \
     } while (0)
 
@@ -428,9 +457,22 @@ paybee_kisscam_TransactionResult_t paybee_kisscam_Transaction(const void *Tx, vo
         Result.ReturnType = RPT_RETTYPE_APP;
         Result.ReadSize = ReadByte;
         paybee_kisscam_Data.ErrCounter++;
-        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "KissCAM response exceeds buffer: CC=0x%02X Size=%lu Capacity=%lu",
-                          CC, (unsigned long)TotalSize, (unsigned long)RxCapacity);
+        if (paybee_kisscam_Data.Handle != NULL) {
+            if (IsDownloadCmd) {
+                OS_TaskDelay(PAYBEE_KISSCAM_DOWNLOAD_RX_DELAY_MS);
+            }
+            tcflush(paybee_kisscam_Data.Handle->FD, TCIFLUSH);
+        }
+        if (IsDownloadCmd) {
+            PAYBEE_KISSCAM_APP_printf("KissCAM response exceeds buffer: CC=0x%02X Size=%lu Capacity=%lu\n",
+                                       CC, (unsigned long)TotalSize,
+                                       (unsigned long)RxCapacity);
+        } else {
+            CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "KissCAM response exceeds buffer: CC=0x%02X Size=%lu Capacity=%lu",
+                              CC, (unsigned long)TotalSize,
+                              (unsigned long)RxCapacity);
+        }
         return Result;
     }
 
@@ -441,8 +483,8 @@ paybee_kisscam_TransactionResult_t paybee_kisscam_Transaction(const void *Tx, vo
     Params.RxData = (uint8_t *)Rx + 5;
     Params.RxSize = Len + 1; // Include Terminate byte
     Params.Timeout = 700;
-    if (CC == paybee_kisscam_DOWNLOAD_ALL_CC || CC == paybee_kisscam_DOWNLOAD_CC) {
-        Params.Interval = 1000 * 70;
+    if (IsDownloadCmd) {
+        OS_TaskDelay(PAYBEE_KISSCAM_DOWNLOAD_RX_DELAY_MS);
     }
     Status = CFE_SRL_ApiRead(paybee_kisscam_Data.Handle, &Params);
     if (Params.ReadBytes > 0) ReadByte += (size_t)Params.ReadBytes;
@@ -453,9 +495,14 @@ paybee_kisscam_TransactionResult_t paybee_kisscam_Transaction(const void *Tx, vo
         PAYBEE_KISSCAM_SERIAL_FAILURE(CFE_SRL_PARTIAL_READ_ERR);
     }
     Result.ReadSize = ReadByte;
-    CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
-                      "KissCAM response received: CC=0x%02X Read=%lu", CC,
-                      (unsigned long)ReadByte);
+    if (IsDownloadCmd) {
+        PAYBEE_KISSCAM_APP_printf("KissCAM response received: CC=0x%02X Read=%lu\n",
+                                   CC, (unsigned long)ReadByte);
+    } else {
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
+                          "KissCAM response received: CC=0x%02X Read=%lu", CC,
+                          (unsigned long)ReadByte);
+    }
 
     return Result;
 

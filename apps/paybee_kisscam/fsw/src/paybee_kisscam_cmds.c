@@ -104,10 +104,9 @@ static paybee_kisscam_TransactionResult_t paybee_kisscam_DownloadTransaction(
         }
 
         RetryCount++;
-        CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
-                          "KissCAM download retry: line=%u attempt=%u/%u status=0x%08lX",
-                          Line, RetryCount, paybee_kisscam_DOWNLOAD_MAX_RETRIES,
-                          (unsigned long)Result.ReturnCode);
+        PAYBEE_KISSCAM_APP_printf("KissCAM download retry: line=%u attempt=%u/%u status=0x%08lX\n",
+                                   Line, RetryCount, paybee_kisscam_DOWNLOAD_MAX_RETRIES,
+                                   (unsigned long)Result.ReturnCode);
     } while (true);
 
     return Result;
@@ -575,9 +574,9 @@ CFE_Status_t paybee_kisscam_DownloadCmd(const paybee_kisscam_DownloadCmd_t *Msg)
                                                 paybee_kisscam_DOWNLOAD_CC, Line);
     if (Result.ReturnType != RPT_RETTYPE_SUCCESS) goto report;
     if (Result.ReadSize != ExpectedRxSize) {
-        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "KissCAM download response size mismatch: line=%u expected=%lu read=%lu",
-                          Line, (unsigned long)ExpectedRxSize, (unsigned long)Result.ReadSize);
+        PAYBEE_KISSCAM_APP_printf("KissCAM download response size mismatch: line=%u expected=%lu read=%lu\n",
+                                   Line, (unsigned long)ExpectedRxSize,
+                                   (unsigned long)Result.ReadSize);
         goto report;
     }
 
@@ -640,7 +639,7 @@ report:
 CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t *Msg) {
     paybee_kisscam_Data.CmdCounter++;
 
-    CFE_EVS_SendEvent(paybee_kisscam_DOWNLOAD_START_INF_EID, CFE_EVS_EventType_INFORMATION, "paybee_kisscam_Donwload Start.");
+    PAYBEE_KISSCAM_APP_printf("paybee_kisscam_Download Start.\n");
 
     paybee_kisscam_Cmd_t Cmd = {0,};
     uint8 RxBuf[paybee_kisscam_DOWNLOAD_TLM_SIZE] = {0,};
@@ -699,9 +698,9 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
                                                     paybee_kisscam_DOWNLOAD_ALL_CC, line);
         if (Result.ReturnType != RPT_RETTYPE_SUCCESS) break;
         if (Result.ReadSize != ExpectedRxSize) {
-            CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "KissCAM download response size mismatch: line=%u expected=%lu read=%lu",
-                              line, (unsigned long)ExpectedRxSize, (unsigned long)Result.ReadSize);
+            PAYBEE_KISSCAM_APP_printf("KissCAM download response size mismatch: line=%u expected=%lu read=%lu\n",
+                                       line, (unsigned long)ExpectedRxSize,
+                                       (unsigned long)Result.ReadSize);
             break;
         }
         
