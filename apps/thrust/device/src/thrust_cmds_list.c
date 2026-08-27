@@ -38,6 +38,33 @@
 
 
 static THRUST_TransportFn_t thrust_transport = NULL;
+static uint8_t thrust_last_response[THRUST_RX_BUF_SIZE];
+static uint16_t thrust_last_response_size = 0;
+
+static void THRUST_ResetLastResponse(void)
+{
+    memset(thrust_last_response, 0, sizeof(thrust_last_response));
+    thrust_last_response_size = 0;
+}
+
+static void THRUST_RecordLastResponse(const uint8_t *data, uint16_t size)
+{
+    size_t copy_size;
+
+    if (data == NULL || size == 0 || thrust_last_response_size >= sizeof(thrust_last_response))
+    {
+        return;
+    }
+
+    copy_size = size;
+    if (copy_size > sizeof(thrust_last_response) - thrust_last_response_size)
+    {
+        copy_size = sizeof(thrust_last_response) - thrust_last_response_size;
+    }
+
+    memcpy(&thrust_last_response[thrust_last_response_size], data, copy_size);
+    thrust_last_response_size += (uint16_t)copy_size;
+}
 
 static uint16_t THRUST_ReadU16LE(const uint8_t *buf)
 {
@@ -157,6 +184,18 @@ void THRUST_RegisterTransport(THRUST_TransportFn_t fn)
     thrust_transport = fn;
 }
 
+void THRUST_GetLastResponse(const uint8_t **data, uint16_t *size)
+{
+    if (data != NULL)
+    {
+        *data = thrust_last_response;
+    }
+    if (size != NULL)
+    {
+        *size = thrust_last_response_size;
+    }
+}
+
 static int32 ValidatePacketMeta(const uint8_t *buf, uint8_t payload_len,
                                 uint8_t expected_msg_type,
                                 uint8_t expected_msg_id,
@@ -196,6 +235,8 @@ static int32 SendPacket(uint8_t msg_type, uint8_t msg_id,
     uint8_t  tx_buf[THRUST_TX_BUF_SIZE];
     uint32_t idx = 0;
     uint16_t crc;
+
+    THRUST_ResetLastResponse();
 
     tx_buf[idx++] = 0xAA;
     tx_buf[idx++] = 0x55;
@@ -274,6 +315,7 @@ static int32 RecvPacket(uint8_t *buf, uint8_t *out_payload_len)
         {
             return THRUST_ERR_TIMEOUT;
         }
+        THRUST_RecordLastResponse(&buf[i], 1);
     }
 
     // 2. 헤더 즉시 검증
@@ -290,6 +332,7 @@ static int32 RecvPacket(uint8_t *buf, uint8_t *out_payload_len)
         {
             return THRUST_ERR_TIMEOUT;
         }
+        THRUST_RecordLastResponse(&buf[i], 1);
     }
     payload_len = buf[5];
     if (payload_len > THRUST_N_MAX)
@@ -303,6 +346,7 @@ static int32 RecvPacket(uint8_t *buf, uint8_t *out_payload_len)
     {
         return THRUST_ERR_TIMEOUT;
     }
+    THRUST_RecordLastResponse(&buf[6], (uint16_t)(payload_len + 2));
 
     THRUST_DebugPrintHexLine("RX", buf[4], buf, 6 + payload_len + 2);
 

@@ -160,19 +160,17 @@ int32 paybee_kisscam_CloseFile(int ID) {
 //     return;
 // }
 
-// 완화 버젼
-void paybee_kisscam_Inspection(uint8_t MemorySlot) {
-    bool is_incomplete = false;
-    for (uint8_t i = 0; i < 60; i++) {
-        if (paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].LineState[i] != 0xFF) {
-            is_incomplete = true;
-            break;
+void paybee_kisscam_Inspection(uint8_t MemorySlot, uint16_t TotalLines) {
+    for (uint16_t Line = 0; Line < TotalLines; Line++) {
+        if ((paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].LineState[Line / 8] &
+             (1u << (Line % 8))) == 0) {
+            paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].MemoryState =
+                paybee_kisscam_DOWNLOAD_ON_GOING;
+            CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
+                              "[KissCAM] Download for MemorySlot %u finished with missing lines.",
+                              MemorySlot);
+            return;
         }
-    }
-
-    if (is_incomplete) {
-        CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
-                          "[KissCAM] Download for MemorySlot %u finished with missing lines.", MemorySlot);
     }
 
     paybee_kisscam_Data.MemSlotStatus.Entry[MemorySlot].MemoryState = paybee_kisscam_DOWNLOAD_DONE;

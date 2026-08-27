@@ -49,10 +49,13 @@ static void paybee_kisscam_ReportAppError(uint8 CC, int32 ReturnCode)
 }
 
 static void paybee_kisscam_ReportDownloadPhase(uint8 CC, uint8 Phase,
-                                               const paybee_kisscam_TransactionResult_t *Result)
+                                               const paybee_kisscam_TransactionResult_t *Result,
+                                               const void *RxData, size_t RxSize)
 {
+    uint8 ReportData[RPT_RET_VALUE_BUF_SIZE] = {0};
     uint8 ReturnType = RPT_RETTYPE_SUCCESS;
     int32 ReturnCode = CFE_SUCCESS;
+    size_t CopySize = 0;
 
     if (Result != NULL)
     {
@@ -60,7 +63,54 @@ static void paybee_kisscam_ReportDownloadPhase(uint8 CC, uint8 Phase,
         ReturnCode = Result->ReturnCode;
     }
 
-    paybee_kisscam_SendReport(CC, ReturnType, ReturnCode, &Phase, sizeof(Phase));
+    ReportData[0] = Phase;
+    if (RxData != NULL && RxSize > 0)
+    {
+        CopySize = RxSize;
+        if (CopySize > sizeof(ReportData) - 1)
+        {
+            CopySize = sizeof(ReportData) - 1;
+        }
+        memcpy(&ReportData[1], RxData, CopySize);
+    }
+
+    /* Byte 0 is the phase. Any following bytes are the unclassified camera response. */
+    paybee_kisscam_SendReport(CC, ReturnType, ReturnCode, ReportData, CopySize + 1);
+}
+
+static bool paybee_kisscam_IsRetryableDownloadError(
+    const paybee_kisscam_TransactionResult_t *Result)
+{
+    return Result->ReturnType == RPT_RETTYPE_CFE &&
+           (Result->ReturnCode == CFE_SRL_PARTIAL_READ_ERR ||
+            Result->ReturnCode == CFE_SRL_TIMEOUT);
+}
+
+static paybee_kisscam_TransactionResult_t paybee_kisscam_DownloadTransaction(
+    const paybee_kisscam_Cmd_t *Cmd, void *RxData, size_t RxCapacity, uint8 CC, uint16 Line)
+{
+    uint8 RetryCount = 0;
+    paybee_kisscam_TransactionResult_t Result;
+
+    do
+    {
+        memset(RxData, 0, RxCapacity);
+        Result = paybee_kisscam_Transaction(Cmd, RxData, RxCapacity, CC);
+        if (Result.ReturnType == RPT_RETTYPE_SUCCESS ||
+            !paybee_kisscam_IsRetryableDownloadError(&Result) ||
+            RetryCount >= paybee_kisscam_DOWNLOAD_MAX_RETRIES)
+        {
+            break;
+        }
+
+        RetryCount++;
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
+                          "KissCAM download retry: line=%u attempt=%u/%u status=0x%08lX",
+                          Line, RetryCount, paybee_kisscam_DOWNLOAD_MAX_RETRIES,
+                          (unsigned long)Result.ReturnCode);
+    } while (true);
+
+    return Result;
 }
 
 
@@ -449,7 +499,8 @@ CFE_Status_t paybee_kisscam_CaptureCmd(const paybee_kisscam_CaptureCmd_t *Msg) {
     /**
      * Clear Memory Slot Status
      */
-    if (Result.ReturnType == RPT_RETTYPE_SUCCESS) {
+    if (Result.ReturnType == RPT_RETTYPE_SUCCESS &&
+        Result.ReadSize == paybee_kisscam_CAPTURE_TLM_SIZE) {
         paybee_kisscam_Data.MemSlotStatus.Entry[Msg->Payload.MEM].MemoryState = paybee_kisscam_DOWNLOAD_NOT_STARTED;
         for (uint8_t i = 0; i < 60; i++) {
             paybee_kisscam_Data.MemSlotStatus.Entry[Msg->Payload.MEM].LineState[i] = 0x00;
@@ -519,9 +570,16 @@ CFE_Status_t paybee_kisscam_DownloadCmd(const paybee_kisscam_DownloadCmd_t *Msg)
     paybee_kisscam_ConfigurePacket(&Msg->Payload, &Cmd, paybee_kisscam_DOWNLOAD_PARAM_SIZE,
                                     paybee_kisscam_DOWNLOAD_CMD_CODE);
     paybee_kisscam_ReportDownloadPhase(paybee_kisscam_DOWNLOAD_CC,
-                                       paybee_kisscam_RPT_PHASE_STARTED, NULL);
-    Result = paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_DOWNLOAD_CC);
+                                       paybee_kisscam_RPT_PHASE_STARTED, NULL, NULL, 0);
+    Result = paybee_kisscam_DownloadTransaction(&Cmd, RxBuf, sizeof(RxBuf),
+                                                paybee_kisscam_DOWNLOAD_CC, Line);
     if (Result.ReturnType != RPT_RETTYPE_SUCCESS) goto report;
+    if (Result.ReadSize != ExpectedRxSize) {
+        CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "KissCAM download response size mismatch: line=%u expected=%lu read=%lu",
+                          Line, (unsigned long)ExpectedRxSize, (unsigned long)Result.ReadSize);
+        goto report;
+    }
 
     FD = paybee_kisscam_OpenFile(Msg->Payload.MEM, Line, 0);
     if (FD < 0) {
@@ -552,7 +610,7 @@ CFE_Status_t paybee_kisscam_DownloadCmd(const paybee_kisscam_DownloadCmd_t *Msg)
     if (Result.ReturnType == RPT_RETTYPE_SUCCESS) {
         paybee_kisscam_SetLineTrue(Msg->Payload.MEM, Line);
         paybee_kisscam_Data.MemSlotStatus.Entry[Msg->Payload.MEM].MemoryState = paybee_kisscam_DOWNLOAD_ON_GOING;
-        paybee_kisscam_Inspection(Msg->Payload.MEM);
+        paybee_kisscam_Inspection(Msg->Payload.MEM, TotLine);
         Status = paybee_kisscam_WriteToFile(paybee_kisscam_Data.TblHandle,
                                              &paybee_kisscam_Data.MemSlotStatus,
                                              sizeof(paybee_kisscam_Memory_Status_t), true);
@@ -567,14 +625,17 @@ CFE_Status_t paybee_kisscam_DownloadCmd(const paybee_kisscam_DownloadCmd_t *Msg)
 report:
     if (FD >= 0) paybee_kisscam_CloseFile(FD);
     paybee_kisscam_ReportDownloadPhase(paybee_kisscam_DOWNLOAD_CC,
-                                       paybee_kisscam_RPT_PHASE_FINISHED, &Result);
+                                       paybee_kisscam_RPT_PHASE_FINISHED, &Result,
+                                       (Result.ReadSize == ExpectedRxSize) ? NULL : RxBuf,
+                                       (Result.ReadSize == ExpectedRxSize) ? 0 : Result.ReadSize);
     return CFE_SUCCESS;
 }
 
 
 /*****************************************************
  * Download-all emits one STARTED and one FINISHED report.
- * Image response bytes are stored locally and omitted from RPT.
+ * Complete image responses are stored locally. An incomplete or non-image
+ * response is appended to the FINISHED report for ground-side interpretation.
  *****************************************************/
 CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t *Msg) {
     paybee_kisscam_Data.CmdCounter++;
@@ -610,7 +671,7 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
     ExpectedRxSize = Msg->Payload.PRE ? paybee_kisscam_DOWNLOAD_THUMBNAIL_TLM_SIZE
                                       : paybee_kisscam_DOWNLOAD_TLM_SIZE;
     paybee_kisscam_ReportDownloadPhase(paybee_kisscam_DOWNLOAD_ALL_CC,
-                                       paybee_kisscam_RPT_PHASE_STARTED, NULL);
+                                       paybee_kisscam_RPT_PHASE_STARTED, NULL, NULL, 0);
 
     /**
      * Open New file - If already exist, truncate it
@@ -633,10 +694,16 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
         Payload[3] = line & 0xFF;       // Line LSB
         paybee_kisscam_ConfigurePacket(Payload, &Cmd, paybee_kisscam_DOWNLOAD_PARAM_SIZE,
                             paybee_kisscam_DOWNLOAD_CMD_CODE);
-        
-        memset(RxBuf, 0, sizeof(RxBuf));
-        Result = paybee_kisscam_Transaction(&Cmd, RxBuf, sizeof(RxBuf), paybee_kisscam_DOWNLOAD_ALL_CC);
+
+        Result = paybee_kisscam_DownloadTransaction(&Cmd, RxBuf, sizeof(RxBuf),
+                                                    paybee_kisscam_DOWNLOAD_ALL_CC, line);
         if (Result.ReturnType != RPT_RETTYPE_SUCCESS) break;
+        if (Result.ReadSize != ExpectedRxSize) {
+            CFE_EVS_SendEvent(paybee_kisscam_CMD_FAIL_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "KissCAM download response size mismatch: line=%u expected=%lu read=%lu",
+                              line, (unsigned long)ExpectedRxSize, (unsigned long)Result.ReadSize);
+            break;
+        }
         
         /**
          * Write Image Data to file
@@ -665,15 +732,22 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
     Status = paybee_kisscam_CloseFile(FD);
     FD = -1;
 
+    if (Status != CFE_SUCCESS && Result.ReturnType == RPT_RETTYPE_SUCCESS) {
+        Result.ReturnType = RPT_RETTYPE_OSAL;
+        Result.ReturnCode = Status;
+        Result.ReadSize = 0;
+        paybee_kisscam_Data.ErrCounter++;
+    }
+
     /**
      * Update download state
      */
     paybee_kisscam_Data.MemSlotStatus.Entry[Msg->Payload.MEM].MemoryState = paybee_kisscam_DOWNLOAD_ON_GOING;
 
-    /**
-     * Inspection
-     */
-    paybee_kisscam_Inspection(Msg->Payload.MEM);
+    /* A failed range remains ON_GOING so completed-line state can be resumed. */
+    if (Result.ReturnType == RPT_RETTYPE_SUCCESS) {
+        paybee_kisscam_Inspection(Msg->Payload.MEM, TotLine);
+    }
     
     /* Debugging */
     // PAYBEE_KISSCAM_APP_printf("Line Status\n");
@@ -681,13 +755,6 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
     //     PAYBEE_KISSCAM_APP_printf("0x%02X\t",paybee_kisscam_Data.MemSlotStatus.Entry[Msg->Payload.MEM].LineState[i]);
     //     if (i%10 == 9) PAYBEE_KISSCAM_APP_printf("\n");
     // }
-
-    if (Status != CFE_SUCCESS && Result.ReturnType == RPT_RETTYPE_SUCCESS) {
-        Result.ReturnType = RPT_RETTYPE_OSAL;
-        Result.ReturnCode = Status;
-        Result.ReadSize = 0;
-        paybee_kisscam_Data.ErrCounter++;
-    }
 
     /**
      * Store Table State to File
@@ -703,7 +770,9 @@ CFE_Status_t paybee_kisscam_DownloadAllCmd(const paybee_kisscam_DownloadAllCmd_t
 report:
     if (FD >= 0) paybee_kisscam_CloseFile(FD);
     paybee_kisscam_ReportDownloadPhase(paybee_kisscam_DOWNLOAD_ALL_CC,
-                                       paybee_kisscam_RPT_PHASE_FINISHED, &Result);
+                                       paybee_kisscam_RPT_PHASE_FINISHED, &Result,
+                                       (Result.ReadSize == ExpectedRxSize) ? NULL : RxBuf,
+                                       (Result.ReadSize == ExpectedRxSize) ? 0 : Result.ReadSize);
     return CFE_SUCCESS;
 }
 

@@ -65,6 +65,9 @@
 #define paybee_kisscam_DOWNLOAD_ORIGINAL_FLAG      0x00
 #define paybee_kisscam_DOWNLOAD_THUMBNAIL_FLAG     0x01
 
+/* Retry transient UART receive failures for DOWNLOAD and DOWNLOAD_ALL. */
+#define paybee_kisscam_DOWNLOAD_MAX_RETRIES         5u
+
 
 /**
  * paybee_kisscam File Path Definition

@@ -62,7 +62,8 @@ int32 paybee_kisscam_CloseFile(int ID);
 
 /// @brief Check if Image data completely downloaded in specific memory slot
 /// @param MemorySlot Memory Slot
-void paybee_kisscam_Inspection(uint8_t MemorySlot);
+/// @param TotalLines Expected line count for the selected image type
+void paybee_kisscam_Inspection(uint8_t MemorySlot, uint16_t TotalLines);
 
 
 

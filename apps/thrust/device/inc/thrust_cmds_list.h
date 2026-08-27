@@ -58,6 +58,9 @@ typedef int32_t (*THRUST_TransportFn_t)(const void *tx_buf,
 // Register platform transport before calling any THRUST API
 void THRUST_RegisterTransport(THRUST_TransportFn_t fn);
 
+/* Return the raw response bytes received during the latest device transaction. */
+void THRUST_GetLastResponse(const uint8_t **data, uint16_t *size);
+
 
 /* ===================================================================
  * Group 1: 기본 제어

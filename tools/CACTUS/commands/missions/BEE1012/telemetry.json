@@ -1336,7 +1336,7 @@
       "app": "THRUST",
       "name": "Report",
       "mid": "0x0872",
-      "description": "THRUST command report telemetry",
+      "description": "THRUST command report. Device commands relay the raw RS-422 response bytes in ReturnValue even when CRC, NACK, header, packet, or timeout errors are reported.",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
       "fields": [
         {
@@ -1376,6 +1376,7 @@
           "name": "ReturnValue",
           "type": "bytes",
           "length": 512,
+          "description": "Raw device response for THRUST device commands; local commands may return app-specific data.",
           "display_length_from": "ReturnDataSize"
         }
       ]
