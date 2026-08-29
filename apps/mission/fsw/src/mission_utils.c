@@ -4,9 +4,52 @@
 #include "mission_dispatch.h"
 #include "cfe_error.h"
 
+#include <fcntl.h>
+#include <unistd.h>
+
 static uint32 MISSION_LEOP_CalculateCRC(const void *Data, size_t Size)
 {
     return CFE_ES_CalculateCRC(Data, Size, 0, CFE_MISSION_ES_DEFAULT_CRC);
+}
+
+static CFE_Status_t MISSION_LEOP_SyncPath(const char *VirtualPath, bool IsDirectory)
+{
+    char  LocalPath[OS_MAX_LOCAL_PATH_LEN];
+    int32 OsStatus;
+    int   Flags;
+    int   Fd;
+    int   SyncStatus;
+
+    OsStatus = OS_TranslatePath(VirtualPath, LocalPath);
+    if (OsStatus != OS_SUCCESS)
+    {
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    Flags = O_RDONLY;
+#ifdef O_DIRECTORY
+    if (IsDirectory)
+    {
+        Flags |= O_DIRECTORY;
+    }
+#else
+    (void)IsDirectory;
+#endif
+
+    Fd = open(LocalPath, Flags);
+    if (Fd < 0)
+    {
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    SyncStatus = fsync(Fd);
+    (void)close(Fd);
+    if (SyncStatus != 0)
+    {
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    return CFE_SUCCESS;
 }
 
 typedef enum
@@ -478,11 +521,25 @@ CFE_Status_t MISSION_LEOP_SaveState(void)
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
+    Status = MISSION_LEOP_SyncPath(MISSION_LEOP_TEMP_DATA_PATH, false);
+    if (Status != CFE_SUCCESS)
+    {
+        MISSION_LEOP_UnlockFile();
+        return Status;
+    }
+
     OsStatus = OS_rename(MISSION_LEOP_TEMP_DATA_PATH, MISSION_LEOP_DATA_PATH);
-    MISSION_LEOP_UnlockFile();
     if (OsStatus != OS_SUCCESS)
     {
+        MISSION_LEOP_UnlockFile();
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    Status = MISSION_LEOP_SyncPath(CFE_PLATFORM_ES_NONVOL_DISK_MOUNT_STRING, true);
+    MISSION_LEOP_UnlockFile();
+    if (Status != CFE_SUCCESS)
+    {
+        return Status;
     }
 
     return CFE_SUCCESS;

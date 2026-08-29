@@ -131,12 +131,12 @@ void CI_LAB_TaskInit(void)
                               "Error subscribing to SB HK Request, RC = 0x%08X", (unsigned int)status);
         }
 
-        status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(CFE_RF_TLM_MID), CI_LAB_Global.CommandPipe);
-        if (status != CFE_SUCCESS)
-        {
-            CFE_EVS_SendEvent(CI_LAB_SB_SUBSCRIBE_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "Error CFE RF Tlm, RC = 0x%08X", (unsigned int)status);
-        }
+        // status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(CFE_RF_TLM_MID), CI_LAB_Global.CommandPipe);
+        // if (status != CFE_SUCCESS)
+        // {
+        //     CFE_EVS_SendEvent(CI_LAB_SB_SUBSCRIBE_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+        //                       "Error CFE RF Tlm, RC = 0x%08X", (unsigned int)status);
+        // }
         
     }
     else
