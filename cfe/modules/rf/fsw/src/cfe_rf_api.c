@@ -205,6 +205,8 @@ int32 CFE_RF_TelemetryEmit(void *BufPtr, size_t Size, uint8_t Port) {
         }
 
         TotSendByte += SendByte;
+        OS_TaskDelay(10);
+        
     }
     
     return CFE_SUCCESS;
