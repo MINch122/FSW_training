@@ -9,6 +9,18 @@ static uint32 MISSION_LEOP_CalculateCRC(const void *Data, size_t Size)
     return CFE_ES_CalculateCRC(Data, Size, 0, CFE_MISSION_ES_DEFAULT_CRC);
 }
 
+typedef enum
+{
+    MISSION_LEOP_INVALID_SHORT_READ              = 0,
+    MISSION_LEOP_INVALID_CRC                     = 1,
+    MISSION_LEOP_INVALID_CYCLE_COUNT             = 2,
+    MISSION_LEOP_INVALID_STATE                   = 3,
+    MISSION_LEOP_INVALID_INITIAL_WAIT_CYCLE      = 4,
+    MISSION_LEOP_INVALID_COMPLETE_CYCLE          = 5,
+    MISSION_LEOP_INVALID_NON_COMPLETE_CYCLE      = 6,
+    MISSION_LEOP_INVALID_WAIT_ELAPSED            = 7
+} MISSION_LEOP_InvalidCode_t;
+
 static void MISSION_LEOP_SetDefaults(void)
 {
     MISSION_Data.LEOPProcessStarted     = false;
@@ -143,6 +155,9 @@ static CFE_Status_t MISSION_LEOP_LoadState(void)
     MISSION_LEOP_FileData_t FileData;
     int32                   OsStatus;
     uint32                  ExpectedCRC;
+    uint32                  WaitDurationSec;
+    MISSION_LEOP_InvalidCode_t InvalidCode;
+    bool                    IsInvalid;
 
     Status = MISSION_LEOP_LockFile();
     if (Status != CFE_SUCCESS)
@@ -174,24 +189,63 @@ static CFE_Status_t MISSION_LEOP_LoadState(void)
     if (OsStatus != (int32)sizeof(FileData))
     {
         MISSION_LEOP_SetDefaults();
-        MISSION_APP_printf("MISSION LEOP: state file missing, short, or invalid; defaults applied\n");
+        MISSION_APP_printf("MISSION LEOP: state file invalid code=%u read_size=%ld expected_size=%lu; defaults applied\n",
+                           (unsigned int)MISSION_LEOP_INVALID_SHORT_READ, (long)OsStatus,
+                           (unsigned long)sizeof(FileData));
         return MISSION_LEOP_SaveState();
     }
 
+    IsInvalid      = false;
+    InvalidCode    = MISSION_LEOP_INVALID_CRC;
+    WaitDurationSec = MISSION_LEOP_GetWaitDuration((MISSION_LEOP_State_t)FileData.LeopState);
     ExpectedCRC = MISSION_LEOP_CalculateCRC(&FileData, sizeof(FileData) - sizeof(FileData.CRC));
-    if (FileData.Signature != MISSION_LEOP_FILE_SIGNATURE || FileData.Version != MISSION_LEOP_FILE_VERSION ||
-        FileData.CRC != ExpectedCRC || FileData.LeopCycleCount > MISSION_LEOP_SEQUENCE_REPEAT_COUNT ||
-        FileData.LeopState > MISSION_LEOP_STATE_COMPLETE ||
-        (FileData.LeopState == MISSION_LEOP_STATE_INITIAL_WAIT && FileData.LeopCycleCount != 0u) ||
-        (FileData.LeopState == MISSION_LEOP_STATE_COMPLETE &&
-         FileData.LeopCycleCount != MISSION_LEOP_SEQUENCE_REPEAT_COUNT) ||
-        (FileData.LeopState != MISSION_LEOP_STATE_COMPLETE &&
-         FileData.LeopCycleCount >= MISSION_LEOP_SEQUENCE_REPEAT_COUNT) ||
-        FileData.LeopWaitElapsedSec >
-            MISSION_LEOP_GetWaitDuration((MISSION_LEOP_State_t)FileData.LeopState))
+
+    if (FileData.CRC != ExpectedCRC)
+    {
+        InvalidCode = MISSION_LEOP_INVALID_CRC;
+        IsInvalid   = true;
+    }
+    else if (FileData.LeopCycleCount > MISSION_LEOP_SEQUENCE_REPEAT_COUNT)
+    {
+        InvalidCode = MISSION_LEOP_INVALID_CYCLE_COUNT;
+        IsInvalid   = true;
+    }
+    else if (FileData.LeopState > MISSION_LEOP_STATE_COMPLETE)
+    {
+        InvalidCode = MISSION_LEOP_INVALID_STATE;
+        IsInvalid   = true;
+    }
+    else if (FileData.LeopState == MISSION_LEOP_STATE_INITIAL_WAIT && FileData.LeopCycleCount != 0u)
+    {
+        InvalidCode = MISSION_LEOP_INVALID_INITIAL_WAIT_CYCLE;
+        IsInvalid   = true;
+    }
+    else if (FileData.LeopState == MISSION_LEOP_STATE_COMPLETE &&
+             FileData.LeopCycleCount != MISSION_LEOP_SEQUENCE_REPEAT_COUNT)
+    {
+        InvalidCode = MISSION_LEOP_INVALID_COMPLETE_CYCLE;
+        IsInvalid   = true;
+    }
+    else if (FileData.LeopState != MISSION_LEOP_STATE_COMPLETE &&
+             FileData.LeopCycleCount >= MISSION_LEOP_SEQUENCE_REPEAT_COUNT)
+    {
+        InvalidCode = MISSION_LEOP_INVALID_NON_COMPLETE_CYCLE;
+        IsInvalid   = true;
+    }
+    else if (FileData.LeopWaitElapsedSec > WaitDurationSec)
+    {
+        InvalidCode = MISSION_LEOP_INVALID_WAIT_ELAPSED;
+        IsInvalid   = true;
+    }
+
+    if (IsInvalid)
     {
         MISSION_LEOP_SetDefaults();
-        MISSION_APP_printf("MISSION LEOP: state file missing, short, or invalid; defaults applied\n");
+        MISSION_APP_printf("MISSION LEOP: state file invalid code=%u state=%u cycle_count=%u wait_elapsed=%lu "
+                           "wait_duration=%lu crc=0x%08lX expected_crc=0x%08lX; defaults applied\n",
+                           (unsigned int)InvalidCode, (unsigned int)FileData.LeopState,
+                           (unsigned int)FileData.LeopCycleCount, (unsigned long)FileData.LeopWaitElapsedSec,
+                           (unsigned long)WaitDurationSec, (unsigned long)FileData.CRC, (unsigned long)ExpectedCRC);
         return MISSION_LEOP_SaveState();
     }
 

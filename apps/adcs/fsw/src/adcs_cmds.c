@@ -1744,6 +1744,10 @@ CFE_Status_t ADCS_GetRawCalibratedCSSSensorCmd(void) {
     OS_printf("CSS 0 : %u, 1 : %u, 2 : %u, 3 : %u, 4 : %u, 5 : %u, 6 : %u, 7 : %u, 8 : %u, 9 : %u",
                 RetVal.Raw.CSS0, RetVal.Raw.CSS1, RetVal.Raw.CSS2, RetVal.Raw.CSS3, RetVal.Raw.CSS4,
                 RetVal.Raw.CSS5, RetVal.Raw.CSS6, RetVal.Raw.CSS7, RetVal.Raw.CSS8, RetVal.Raw.CSS9);
+    OS_printf("Cal TimeSec : %u || TimeNanoSec : %u\n", RetVal.Calibrated.TimeSeconds, RetVal.Calibrated.TimeNanoSeconds);
+    OS_printf("CSS Cal UnitVec X: %d || UnitVec Y: %d || UnitVec Z: %d\n",
+              RetVal.Calibrated.CSSCalUnitVecX, RetVal.Calibrated.CSSCalUnitVecY, RetVal.Calibrated.CSSCalUnitVecZ);
+    OS_printf("Cal Valid Flag CSS : 0x%02X\n", RetVal.Calibrated.CSSValidFlag);
 
     return CFE_SUCCESS;
 }
@@ -1772,6 +1776,22 @@ CFE_Status_t ADCS_GetRawCalibratedGYRSensorCmd(void) {
     OS_printf("GYR0 RawRate X: %f || RawRate Y: %f || RawRate Z: %f\n", RetVal.Raw.GYR0RawRateX, RetVal.Raw.GYR0RawRateY, RetVal.Raw.GYR0RawRateZ);
     OS_printf("GYR1 RawRate X: %f || RawRate Y: %f || RawRate Z: %f\n", RetVal.Raw.GYR1RawRateX, RetVal.Raw.GYR1RawRateY, RetVal.Raw.GYR1RawRateZ);
     OS_printf("Valid Flag GYR0 : 0x%02X\n", RetVal.Raw.GYR0ValidFlag);
+    OS_printf("Cal TimeSec : %u || TimeNanoSec : %u\n", RetVal.Calibrated.TimeSeconds, RetVal.Calibrated.TimeNanoSeconds);
+    OS_printf("GYR0 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n",
+              RetVal.Calibrated.GYR0CalibratedRateX, RetVal.Calibrated.GYR0CalibratedRateY,
+              RetVal.Calibrated.GYR0CalibratedRateZ);
+    OS_printf("GYR1 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n",
+              RetVal.Calibrated.GYR1CalibratedRateX, RetVal.Calibrated.GYR1CalibratedRateY,
+              RetVal.Calibrated.GYR1CalibratedRateZ);
+    OS_printf("Ext GYR0 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n",
+              RetVal.Calibrated.ExtGYR0CalibratedRateX, RetVal.Calibrated.ExtGYR0CalibratedRateY,
+              RetVal.Calibrated.ExtGYR0CalibratedRateZ);
+    OS_printf("Ext GYR1 Cal Rate X: %f || Cal Rate Y: %f || Cal Rate Z: %f\n",
+              RetVal.Calibrated.ExtGYR1CalibratedRateX, RetVal.Calibrated.ExtGYR1CalibratedRateY,
+              RetVal.Calibrated.ExtGYR1CalibratedRateZ);
+    OS_printf("Cal Valid Flag GYR0 : 0x%02X || GYR1 : 0x%02X || EXTGYR0 : 0x%02X || EXTGYR1 : 0x%02X\n",
+              RetVal.Calibrated.GYR0ValidFlag, RetVal.Calibrated.GYR1ValidFlag,
+              RetVal.Calibrated.EXTGYR0ValidFlag, RetVal.Calibrated.EXTGYR1ValidFlag);
 
     return CFE_SUCCESS;
 }
@@ -1802,6 +1822,12 @@ CFE_Status_t ADCS_GetRawCalibratedRWLSensorCmd(void) {
     OS_printf("RWL3 Measured Speed: %f\n", RetVal.Raw.RWL3MeasuredSpeed);
     OS_printf("Valid Flag RWL0 : 0x%02X || RWL1 : 0x%02X || RWL2 : 0x%02X || RWL3 : 0x%02X\n",
               RetVal.Raw.RWL0ValidFlag, RetVal.Raw.RWL1ValidFlag, RetVal.Raw.RWL2ValidFlag, RetVal.Raw.RWL3ValidFlag);
+    OS_printf("Cal TimeSec : %u || TimeNanoSec : %u\n", RetVal.Calibrated.TimeSeconds, RetVal.Calibrated.TimeNanoSeconds);
+    OS_printf("WhlSBC Trq X: %f || Trq Y: %f || Trq Z: %f\n",
+              RetVal.Calibrated.WhlSBCTrqX, RetVal.Calibrated.WhlSBCTrqY, RetVal.Calibrated.WhlSBCTrqZ);
+    OS_printf("WhlSBC Mom X: %f || Mom Y: %f || Mom Z: %f\n",
+              RetVal.Calibrated.WhlSBCMomX, RetVal.Calibrated.WhlSBCMomY, RetVal.Calibrated.WhlSBCMomZ);
+    OS_printf("Cal Valid Flag RWL : 0x%02X\n", RetVal.Calibrated.RWLValidFlag);
 
     return CFE_SUCCESS;
 }

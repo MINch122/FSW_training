@@ -6,7 +6,7 @@
 
 // #define IO_CSP_FTP_DEBUG
 
-#define CSP_PORT_FTP_ORIGIN                 19
+#define CSP_PORT_FTP_ORIGIN                 9
 
 #define IO_CSP_FTP_RETCODE_LEN              5
 

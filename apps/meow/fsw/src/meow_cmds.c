@@ -18,18 +18,21 @@ void MEOW_SendReport(const void* cmd,
     const uint8 *cursor = (const uint8 *)data;
     size_t offset = 0;
     CFE_Status_t status;
+    (void)retType;
 
     CFE_MSG_GetMsgId(cmd, &cmdMid);
     CFE_MSG_GetFcnCode(cmd, &cmdCode);
 
     /* A zero-length result still produces one report. Larger results are
-     * emitted as consecutive 512-byte RPT-compatible packets. */
+     * emitted as consecutive 512-byte RPT-compatible packets.
+     * MEOW uses ReturnType as the zero-based chunk index. */
     do
     {
         size_t remaining = dataSize - offset;
         uint16 copySize = (remaining > MEOW_MISSION_MAX_REPORT_LEN)
                               ? MEOW_MISSION_MAX_REPORT_LEN
                               : (uint16)remaining;
+        uint8 chunkIndex = (uint8)(offset / MEOW_MISSION_MAX_REPORT_LEN);
 
         memset(&MEOW_AppData.Report, 0, sizeof(MEOW_AppData.Report));
         status = CFE_MSG_Init(CFE_MSG_PTR(MEOW_AppData.Report.TelemetryHeader),
@@ -45,7 +48,7 @@ void MEOW_SendReport(const void* cmd,
 
         MEOW_AppData.Report.Payload.MsgID = (uint16_t)CFE_SB_MsgIdToValue(cmdMid);
         MEOW_AppData.Report.Payload.CommandCode = cmdCode;
-        MEOW_AppData.Report.Payload.ReturnType = retType;
+        MEOW_AppData.Report.Payload.ReturnType = chunkIndex;
         MEOW_AppData.Report.Payload.ReturnCode = retCode;
         MEOW_AppData.Report.Payload.ReturnDataSize = copySize;
         if (cursor != NULL && copySize > 0)
