@@ -13,6 +13,7 @@ CFE_Status_t MISSION_LEOP_Lock(void);
 void         MISSION_LEOP_Unlock(void);
 CFE_Status_t MISSION_LEOP_SaveState(void);
 CFE_Status_t MISSION_LEOP_RequestComplete(void);
+CFE_Status_t MISSION_LEOP_ReadStateFile(void *Buffer, uint16 BufferSize, uint16 *BytesRead);
 void         MISSION_LEOP_Process(void);
 void         MISSION_LEOP_Task(void);
 

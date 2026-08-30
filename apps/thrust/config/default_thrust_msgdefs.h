@@ -46,6 +46,11 @@ typedef struct {
     uint16_t FireKey;        /* ICD: 0xA55A */
 } __attribute__((packed)) THRUST_CGPulse_Payload_t;
 
+/** THRUST_SCH_HK_ENABLE_CC — SCH-triggered HK enable switch */
+typedef struct {
+    uint8_t ScheduledHkEnabled;  /* 0: disable, 1: enable */
+} __attribute__((packed)) THRUST_ScheduledHkEnable_Payload_t;
+
 /* ==========================================================
  * Telemetry Payloads (OBC → Ground)
  * ========================================================== */

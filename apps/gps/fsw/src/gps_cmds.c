@@ -53,13 +53,15 @@ CFE_Status_t GPS_SendHkCmd(const GPS_SendHkCmd_t *Msg)
 
 CFE_Status_t GPS_NoopCmd(const GPS_NoopCmd_t* Msg)
 {
+    static const char NoopReport[] = "GPS NOOP CMD: YOSI IN SPACE";
+
     GPS_AppData.Counters.CmdCounter++;
 
     CFE_EVS_SendEvent(GPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "GPS: NOOP command %s",
                       GPS_VERSION);
 
     /* 명령별 status ack: 성공은 ReturnCode=CFE_SUCCESS 로 전달(파일 내 다른 핸들러 컨벤션과 동일) */
-    GPS_SendReport(Msg, NULL, 0, CFE_SUCCESS, GPS_MISSION_REPORT_RETTYPE_HW);
+    GPS_SendReport(Msg, NoopReport, sizeof(NoopReport), CFE_SUCCESS, GPS_MISSION_REPORT_RETTYPE_HW);
 
     return CFE_SUCCESS;
 }

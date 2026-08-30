@@ -11,6 +11,8 @@ static void MISSION_SendReport(const void *Msg, const void *Data, uint16 DataSiz
     CFE_MSG_FcnCode_t CmdCode;
     uint16 CopySize = DataSize > RPT_RET_VALUE_BUF_SIZE ? RPT_RET_VALUE_BUF_SIZE : DataSize;
 
+    memset(&MISSION_Data.Report, 0, sizeof(MISSION_Data.Report));
+
     CFE_MSG_GetMsgId(Msg, &CmdMid);
     CFE_MSG_GetFcnCode(Msg, &CmdCode);
 
@@ -30,13 +32,18 @@ static void MISSION_SendReport(const void *Msg, const void *Data, uint16 DataSiz
     CFE_SB_TransmitMsg(CFE_MSG_PTR(MISSION_Data.Report.TelemetryHeader), true);
 }
 
-static void MISSION_UpdateLeopTlmPayload(MISSION_HkTlm_Payload_t *Payload)
+static uint8 MISSION_ReturnTypeFromStatus(CFE_Status_t Status)
+{
+    return (Status == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : RPT_RETTYPE_APP;
+}
+
+static CFE_Status_t MISSION_UpdateLeopTlmPayload(MISSION_HkTlm_Payload_t *Payload)
 {
     Payload->CmdErrCounter = MISSION_Data.ErrCounter;
 
     if (MISSION_LEOP_Lock() != CFE_SUCCESS)
     {
-        return;
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
     Payload->LeopWaitComplete       = MISSION_Data.LEOPWaitComplete;
@@ -46,20 +53,54 @@ static void MISSION_UpdateLeopTlmPayload(MISSION_HkTlm_Payload_t *Payload)
     Payload->LeopState      = (uint8_t)MISSION_Data.LEOPState;
 
     MISSION_LEOP_Unlock();
-}
-
-CFE_Status_t MISSION_SendHKCmd(const MISSION_SendHkCmd_t *Msg) {
-    (void)Msg;
-
-    MISSION_UpdateLeopTlmPayload(&MISSION_Data.HkTlm.Payload);
-
-    MISSION_SendReport(Msg, &MISSION_Data.HkTlm.Payload, sizeof(MISSION_Data.HkTlm.Payload), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }
 
-CFE_Status_t MISSION_SetCompleteCmd(const MISSION_SetCompleteCmd_t *Msg) {
+CFE_Status_t MISSION_SendHKCmd(const MISSION_SendHkCmd_t *Msg) {
+    CFE_Status_t Status;
+
     (void)Msg;
 
-    return MISSION_LEOP_RequestComplete();
+    Status = MISSION_UpdateLeopTlmPayload(&MISSION_Data.HkTlm.Payload);
+    if (Status != CFE_SUCCESS)
+    {
+        MISSION_Data.ErrCounter++;
+    }
+
+    MISSION_SendReport(Msg, &MISSION_Data.HkTlm.Payload, sizeof(MISSION_Data.HkTlm.Payload), Status,
+                       MISSION_ReturnTypeFromStatus(Status));
+
+    return Status;
+}
+
+CFE_Status_t MISSION_SetCompleteCmd(const MISSION_SetCompleteCmd_t *Msg) {
+    CFE_Status_t Status;
+
+    Status = MISSION_LEOP_RequestComplete();
+    if (Status != CFE_SUCCESS)
+    {
+        MISSION_Data.ErrCounter++;
+    }
+
+    (void)MISSION_UpdateLeopTlmPayload(&MISSION_Data.HkTlm.Payload);
+    MISSION_SendReport(Msg, &MISSION_Data.HkTlm.Payload, sizeof(MISSION_Data.HkTlm.Payload), Status,
+                       MISSION_ReturnTypeFromStatus(Status));
+
+    return Status;
+}
+
+CFE_Status_t MISSION_ReadLeopFileCmd(const MISSION_ReadLeopFileCmd_t *Msg) {
+    uint8        FileData[RPT_RET_VALUE_BUF_SIZE] = {0};
+    uint16       BytesRead = 0;
+    CFE_Status_t Status;
+
+    Status = MISSION_LEOP_ReadStateFile(FileData, sizeof(FileData), &BytesRead);
+    if (Status != CFE_SUCCESS)
+    {
+        MISSION_Data.ErrCounter++;
+    }
+
+    MISSION_SendReport(Msg, FileData, BytesRead, Status, MISSION_ReturnTypeFromStatus(Status));
+    return Status;
 }

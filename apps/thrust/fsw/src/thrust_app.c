@@ -108,6 +108,7 @@ CFE_Status_t THRUST_AppInit(void)
     THRUST_AppData.RunStatus       = CFE_ES_RunStatus_APP_RUN;
     THRUST_AppData.PipeDepth       = THRUST_PIPE_DEPTH;
     THRUST_AppData.ProtocolVersion = THRUST_PKT_VERSION;
+    THRUST_AppData.ScheduledHkEnabled = THRUST_SCHEDULED_HK_ENABLED;
 
     strncpy(THRUST_AppData.PipeName, "THRUST_CMD_PIPE", sizeof(THRUST_AppData.PipeName));
     THRUST_AppData.PipeName[sizeof(THRUST_AppData.PipeName) - 1] = 0;

@@ -28,6 +28,7 @@ typedef struct {
 
     /* 메인 루프 */
     uint32 RunStatus;
+    uint8  ScheduledHkEnabled;
 
     /* SB 파이프 */
     CFE_SB_PipeId_t CommandPipe;

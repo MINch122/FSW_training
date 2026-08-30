@@ -75,6 +75,12 @@ typedef struct
     CFE_MSG_CommandHeader_t CommandHeader;
 } THRUST_ClearFaultCmd_t;
 
+typedef struct
+{
+    CFE_MSG_CommandHeader_t              CommandHeader;
+    THRUST_ScheduledHkEnable_Payload_t   Payload;
+} THRUST_ScheduledHkEnableCmd_t;
+
 /********************************************************
  *
  * iG4U command structures

@@ -85,7 +85,7 @@ CFE_Status_t UTRX_SendHkCmd(const CFE_SB_Buffer_t *SBBufPtr)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t UTRX_NoopCmd(const UTRX_NoopCmd_t *Msg)
 {
-    static const char NoopReport[] = "Yosi In Space";
+    static const char NoopReport[] = "UTRX NOOP CMD: YOSI IN SPACE";
 
     UTRX_AppData.CmdCounter++;
 

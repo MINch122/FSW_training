@@ -165,7 +165,7 @@ CFE_Status_t LTRX_NoopCmd(const LTRX_NoopCmd_t *Msg)
                       (unsigned)LTRX_AppData.AppErrCounter,
                       (unsigned)LTRX_AppData.DeviceErrCounter);
 
-    static const char NoopReport[] = "Yosi In Space";
+    static const char NoopReport[] = "LTRX NOOP CMD: YOSI IN SPACE";
     LTRX_HandleReport(CFE_SUCCESS, LTRX_NOOP_CC, NoopReport, sizeof(NoopReport));
 
     return CFE_SUCCESS;

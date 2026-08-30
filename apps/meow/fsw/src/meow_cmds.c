@@ -89,7 +89,7 @@ CFE_Status_t MEOW_NoopCmd(const MEOW_NoopCmd_t* msg)
     CFE_EVS_SendEvent(MEOW_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "MEOW: NOOP %s", MEOW_VERSION);
 
-    static const char NoopReport[] = "Yosi In Space";
+    static const char NoopReport[] = "MEOW NOOP CMD: YOSI IN SPACE";
     MEOW_SendReport(msg, NoopReport, sizeof(NoopReport), CFE_SUCCESS, 0);
     return CFE_SUCCESS;
 }

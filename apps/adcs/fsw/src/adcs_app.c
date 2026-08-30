@@ -63,8 +63,6 @@ void ADCS_AppMain(void)
         ADCS_AppData.RunStatus = CFE_ES_RunStatus_APP_ERROR;
     }
 
-    OS_TaskDelay(5000);
-
     /*
     ** Adcs App Runloop
     */
@@ -205,6 +203,8 @@ CFE_Status_t ADCS_AppInit(void)
         // CAN Endpoint init
         CUBE_EndpointInit();
     }
+
+    OS_TaskDelay(5000);
 
     if (status == CFE_SUCCESS)
     {

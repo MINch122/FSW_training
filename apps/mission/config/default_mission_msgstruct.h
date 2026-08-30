@@ -26,5 +26,8 @@ typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
 } MISSION_SetCompleteCmd_t;
 
+typedef struct {
+    CFE_MSG_CommandHeader_t CommandHeader;
+} MISSION_ReadLeopFileCmd_t;
 
 #endif

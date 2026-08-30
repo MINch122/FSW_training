@@ -545,6 +545,46 @@ CFE_Status_t MISSION_LEOP_SaveState(void)
     return CFE_SUCCESS;
 }
 
+CFE_Status_t MISSION_LEOP_ReadStateFile(void *Buffer, uint16 BufferSize, uint16 *BytesRead)
+{
+    CFE_Status_t Status;
+    osal_id_t    FileHandle = OS_OBJECT_ID_UNDEFINED;
+    int32        OsStatus;
+
+    if (Buffer == NULL || BytesRead == NULL || BufferSize == 0u)
+    {
+        return CFE_ES_BAD_ARGUMENT;
+    }
+
+    *BytesRead = 0;
+
+    Status = MISSION_LEOP_LockFile();
+    if (Status != CFE_SUCCESS)
+    {
+        return Status;
+    }
+
+    OsStatus = OS_OpenCreate(&FileHandle, MISSION_LEOP_DATA_PATH, OS_FILE_FLAG_NONE, OS_READ_ONLY);
+    if (OsStatus != OS_SUCCESS)
+    {
+        MISSION_LEOP_UnlockFile();
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    OsStatus = OS_read(FileHandle, Buffer, BufferSize);
+    (void)OS_close(FileHandle);
+    MISSION_LEOP_UnlockFile();
+
+    if (OsStatus < OS_SUCCESS)
+    {
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    *BytesRead = (OsStatus > (int32)BufferSize) ? BufferSize : (uint16)OsStatus;
+
+    return CFE_SUCCESS;
+}
+
 CFE_Status_t MISSION_LEOP_RequestComplete(void)
 {
     CFE_Status_t Status;

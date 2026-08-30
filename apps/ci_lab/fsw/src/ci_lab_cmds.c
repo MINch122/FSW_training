@@ -74,15 +74,11 @@ static void CI_LAB_SendCmdReport(const void *Cmd, int32 Status, const void *Data
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 CFE_Status_t CI_LAB_NoopCmd(const CI_LAB_NoopCmd_t *cmd)
 {
+    static const char NoopReport[] = "CI_LAB NOOP CMD: YOSI IN SPACE";
+
     /* Does everything the name implies */
     CI_LAB_Global.HkTlm.Payload.CommandCounter++;
-    {
-        uint16_t counters[2] = {
-            CI_LAB_Global.HkTlm.Payload.CommandCounter,
-            CI_LAB_Global.HkTlm.Payload.CommandErrorCounter
-        };
-        CI_LAB_SendCmdReport(cmd, CFE_SUCCESS, counters, sizeof(counters));
-    }
+    CI_LAB_SendCmdReport(cmd, CFE_SUCCESS, NoopReport, sizeof(NoopReport));
 
     CFE_EVS_SendEvent(CI_LAB_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "CI: NOOP command. Version %d.%d.%d.%d",
                       CI_LAB_MAJOR_VERSION, CI_LAB_MINOR_VERSION, CI_LAB_REVISION, CI_LAB_MISSION_REV);

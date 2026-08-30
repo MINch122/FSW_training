@@ -38,7 +38,10 @@ void THRUST_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr)
             break;
 
         case THRUST_SEND_HK_MID:
-            THRUST_SendScheduledHkCmd((const THRUST_SendHkCmd_t *)SBBufPtr);
+            if (THRUST_VerifyCmdLength(&SBBufPtr->Msg, sizeof(THRUST_SendHkCmd_t)))
+            {
+                THRUST_SendScheduledHkCmd((const THRUST_SendHkCmd_t *)SBBufPtr);
+            }
             break;
 
         default:
@@ -118,6 +121,13 @@ void THRUST_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr)
             if (THRUST_VerifyCmdLength(&SBBufPtr->Msg, sizeof(THRUST_SendHkCmd_t)))
             {
                 THRUST_SendHkCmd((const THRUST_SendHkCmd_t *)SBBufPtr);
+            }
+            break;
+
+        case THRUST_SCH_HK_ENABLE_CC:
+            if (THRUST_VerifyCmdLength(&SBBufPtr->Msg, sizeof(THRUST_ScheduledHkEnableCmd_t)))
+            {
+                THRUST_ScheduledHkEnableCmd((const THRUST_ScheduledHkEnableCmd_t *)SBBufPtr);
             }
             break;
 

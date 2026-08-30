@@ -99,6 +99,15 @@ CFE_Status_t MISSION_Init(void) {
         }
     }
 
+    if (Status == CFE_SUCCESS) {
+        Status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(MISSION_READ_LEOP_FILE_MID), MISSION_Data.CmdPipe);
+        if (Status != CFE_SUCCESS) {
+            CFE_EVS_SendEvent(MISSION_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "MISSION: Error Subscribing to read LEOP file command, RC = 0x%08lX",
+                              (unsigned long)Status);
+        }
+    }
+
     for (int i = 0; i < 10; i++) {
         OS_printf("MISSION LEOP start count %d/10\n", i + 1);
         OS_TaskDelay(1000);

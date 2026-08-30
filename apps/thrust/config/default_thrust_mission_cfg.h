@@ -17,4 +17,8 @@
 #define THRUST_DEBUG_OS_PRINT true
 #endif
 
+#ifndef THRUST_SCHEDULED_HK_ENABLED
+#define THRUST_SCHEDULED_HK_ENABLED 0
+#endif
+
 #endif /* THRUST_MISSION_CFG_H */

@@ -96,7 +96,7 @@ void TTC_NoopCmd(const TTC_NoopCmd_t* Msg)
     CFE_EVS_SendEvent(TTC_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "TTC: NOOP command %s",
                       TTC_VERSION);
 
-    static const char NoopReport[] = "Yosi In Space";
+    static const char NoopReport[] = "TTC NOOP CMD: YOSI IN SPACE";
     TTC_SendReport(Msg, NoopReport, sizeof(NoopReport), CFE_SUCCESS, 0);
 }
 

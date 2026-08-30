@@ -176,11 +176,12 @@ static paybee_kisscam_TransactionResult_t paybee_kisscam_DownloadTransaction(
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t paybee_kisscam_NoopCmd(const paybee_kisscam_NoopCmd_t *Msg) {
+    static const char NoopReport[] = "PAYBEE_KISSCAM NOOP CMD: YOSI IN SPACE";
+
     paybee_kisscam_Data.CmdCounter++;
-    uint8_t Cnts[2] = {paybee_kisscam_Data.CmdCounter, paybee_kisscam_Data.ErrCounter};
 
     paybee_kisscam_SendReport(paybee_kisscam_NOOP_CC, RPT_RETTYPE_SUCCESS,
-                              CFE_SUCCESS, Cnts, sizeof(Cnts));
+                              CFE_SUCCESS, NoopReport, sizeof(NoopReport));
 
     CFE_EVS_SendEvent(paybee_kisscam_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "paybee_kisscam Noop Command Received");
 

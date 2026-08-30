@@ -77,11 +77,11 @@ CFE_Status_t TO_LAB_DisableOutputCmd(const TO_LAB_DisableOutputCmd_t *Msg) {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 CFE_Status_t TO_LAB_NoopCmd(const TO_LAB_NoopCmd_t *data)
 {
+    static const char NoopReport[] = "TO_LAB NOOP CMD: YOSI IN SPACE";
+
     ++TO_LAB_Global.HkTlm.Payload.CommandCounter;
 
-    uint8_t Cnts[2] = {TO_LAB_Global.HkTlm.Payload.CommandCounter, TO_LAB_Global.HkTlm.Payload.CommandErrorCounter};
-
-    TO_HandleReport(CFE_SUCCESS, TO_LAB_NOOP_CC, Cnts, sizeof(Cnts));
+    TO_HandleReport(CFE_SUCCESS, TO_LAB_NOOP_CC, NoopReport, sizeof(NoopReport));
 
     return CFE_SUCCESS;
 }

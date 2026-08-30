@@ -85,33 +85,17 @@ static void THRUST_UpdateModeTracking(uint32_t currentMode, uint8_t lastMsgId,
     THRUST_AppData.LastResult  = lastResult;
 }
 
-static void THRUST_BuildHkTlm(THRUST_HkTlm_Payload_t *tlm,
-                              const THRUST_HKData_Payload_t *reply)
-{
-    tlm->Pressure_CH0 = reply->Pressure_CH0;
-    tlm->Pressure_CH1 = reply->Pressure_CH1;
-    tlm->Pressure_CH2 = reply->Pressure_CH2;
-    tlm->Pressure_CH3 = reply->Pressure_CH3;
-    tlm->Temp_CH0     = reply->Temp_CH0;
-    tlm->Temp_CH1     = reply->Temp_CH1;
-    tlm->Temp_CH2     = reply->Temp_CH2;
-    tlm->Temp_CH3     = reply->Temp_CH3;
-    tlm->Temp_CH4     = reply->Temp_CH4;
-    tlm->Temp_CH5     = reply->Temp_CH5;
-    tlm->Status       = reply->Status;
-    tlm->CmdCounter   = THRUST_AppData.CmdCounter;
-    tlm->ErrCounter   = THRUST_AppData.ErrCounter;
-}
-
 /* -------------------------------------------------- */
 /* NoopCmd: 아무것도 하지 않음 — 통신 확인용          */
 /* -------------------------------------------------- */
 CFE_Status_t THRUST_NoopCmd(const THRUST_NoopCmd_t *Msg) {
+    static const char NoopReport[] = "THRUST NOOP CMD: YOSI IN SPACE";
+
     (void)Msg;
     THRUST_AppData.CmdCounter++;
     CFE_EVS_SendEvent(THRUST_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "THRUST: NOOP command");
-    THRUST_HandleReport(CFE_SUCCESS, THRUST_NOOP_CC, NULL, 0);
+    THRUST_HandleReport(CFE_SUCCESS, THRUST_NOOP_CC, NoopReport, sizeof(NoopReport));
     return CFE_SUCCESS;
 }
 
@@ -219,7 +203,7 @@ CFE_Status_t THRUST_SendHkCmd(const THRUST_SendHkCmd_t *Msg) {
 }
 
 /* -------------------------------------------------- */
-/* SCH Send HK: 장치 HK 읽기 -> HK TLM 전송 (RPT 없음) */
+/* SCH Send HK: enable 상태일 때 장치 HK만 읽음 (RPT/TLM 없음) */
 /* -------------------------------------------------- */
 CFE_Status_t THRUST_SendScheduledHkCmd(const THRUST_SendHkCmd_t *Msg)
 {
@@ -228,6 +212,11 @@ CFE_Status_t THRUST_SendScheduledHkCmd(const THRUST_SendHkCmd_t *Msg)
 
     (void)Msg;
 
+    if (THRUST_AppData.ScheduledHkEnabled == 0U)
+    {
+        return CFE_SUCCESS;
+    }
+
     status = THRUST_GetHKData(&hkData);
     if (status != CFE_SUCCESS)
     {
@@ -235,16 +224,35 @@ CFE_Status_t THRUST_SendScheduledHkCmd(const THRUST_SendHkCmd_t *Msg)
         return THRUST_LogCmdResult("Scheduled HK", status);
     }
 
-    THRUST_BuildHkTlm(&THRUST_AppData.HkTlm.Payload, &hkData);
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(THRUST_AppData.HkTlm.TelemetryHeader));
+    return CFE_SUCCESS;
+}
 
-    status = CFE_SB_TransmitMsg(CFE_MSG_PTR(THRUST_AppData.HkTlm.TelemetryHeader), true);
-    if (status != CFE_SUCCESS)
+/* -------------------------------------------------- */
+/* ScheduledHkEnableCmd: SCH HK 수집/전송 on/off      */
+/* -------------------------------------------------- */
+CFE_Status_t THRUST_ScheduledHkEnableCmd(const THRUST_ScheduledHkEnableCmd_t *Msg)
+{
+    if (Msg->Payload.ScheduledHkEnabled > 1U)
     {
+        CFE_EVS_SendEvent(THRUST_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "THRUST: Scheduled HK enable rejected, arg must be 0 or 1");
         THRUST_AppData.ErrCounter++;
-        return THRUST_LogCmdResult("Scheduled HK telemetry", status);
+        THRUST_HandleReport(CFE_ES_BAD_ARGUMENT, THRUST_SCH_HK_ENABLE_CC,
+                            &Msg->Payload.ScheduledHkEnabled,
+                            sizeof(Msg->Payload.ScheduledHkEnabled));
+        return CFE_ES_BAD_ARGUMENT;
     }
 
+    THRUST_AppData.ScheduledHkEnabled = Msg->Payload.ScheduledHkEnabled;
+    THRUST_AppData.CmdCounter++;
+
+    CFE_EVS_SendEvent(THRUST_CMD_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "THRUST: Scheduled HK %s",
+                      (THRUST_AppData.ScheduledHkEnabled != 0U) ? "enabled" : "disabled");
+
+    THRUST_HandleReport(CFE_SUCCESS, THRUST_SCH_HK_ENABLE_CC,
+                        &THRUST_AppData.ScheduledHkEnabled,
+                        sizeof(THRUST_AppData.ScheduledHkEnabled));
     return CFE_SUCCESS;
 }
 

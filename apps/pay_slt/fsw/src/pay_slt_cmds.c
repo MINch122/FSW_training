@@ -430,10 +430,12 @@ CFE_Status_t PAY_SLT_SendBeaconCmd(const PAY_SLT_SendBcnCmd_t *Msg) {
 
 /* No-op command */
 CFE_Status_t PAY_SLT_NoopCmd(const PAY_SLT_NoopCmd_t *Msg) {
+    static const char NoopReport[] = "PAY_SLT NOOP CMD: YOSI IN SPACE";
+
     (void)Msg;
     CFE_EVS_SendEvent(PAY_SLT_APP_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "PAY_SLT: NOOP command %s",
                       PAY_SLT_VERSION);
-    return PAY_SLT_HandleReport(CFE_SUCCESS, PAY_SLT_NOOP_CC, false, NULL, 0);
+    return PAY_SLT_HandleReport(CFE_SUCCESS, PAY_SLT_NOOP_CC, false, NoopReport, sizeof(NoopReport));
 }
 
 /* RS422 Ping command */

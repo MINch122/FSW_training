@@ -167,9 +167,10 @@ void STX_SendHkCmd(void)
 
 CFE_Status_t STX_NoopCmd(const STX_NoopCmd_t *Msg)
 {
+    static const char NoopReport[] = "STX NOOP CMD: YOSI IN SPACE";
+
     CFE_EVS_SendEvent(STX_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "SAMPLE: NOOP command %s", STX_VERSION);
-    uint16_t txdata[2] = {STX_Data.CmdCounter, STX_Data.ErrCounter};
-    STX_rptsend(STX_NOOP_CC, RPT_RETTYPE_SUCCESS, DEVICE_SUCCESS, sizeof(txdata), &txdata);
+    STX_rptsend(STX_NOOP_CC, RPT_RETTYPE_SUCCESS, DEVICE_SUCCESS, sizeof(NoopReport), NoopReport);
 
     return CFE_SUCCESS;
 }

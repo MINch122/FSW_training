@@ -8245,6 +8245,13 @@
         "fc": 0,
         "description": "MISSION_SEND_HK_MID",
         "params": []
+      },
+      {
+        "name": "Read LEOP File",
+        "mid": "0x1899",
+        "fc": 0,
+        "description": "MISSION_READ_LEOP_FILE_MID",
+        "params": []
       }
     ]
   },
@@ -8429,6 +8436,24 @@
         "fc": 14,
         "description": "THRUST_REQ_HK_CC",
         "params": []
+      },
+      {
+        "name": "Scheduled HK Enable",
+        "mid": "0x1870",
+        "fc": 15,
+        "description": "THRUST_SCH_HK_ENABLE_CC",
+        "params": [
+          {
+            "name": "ScheduledHkEnabled",
+            "type": "enum",
+            "storage": "uint8",
+            "values": {
+              "DISABLED": 0,
+              "ENABLED": 1
+            },
+            "default": "DISABLED"
+          }
+        ]
       },
       {
         "name": "Scheduled HK Request",

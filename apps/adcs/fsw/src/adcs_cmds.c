@@ -192,7 +192,7 @@ CFE_Status_t ADCS_SendBcnCmd(const ADCS_SendBcnCmd_t *Msg)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t ADCS_NoopCmd(const ADCS_NoopCmd_t *Msg)
 {
-    static const char NoopReport[] = "Yosi In Space";
+    static const char NoopReport[] = "ADCS NOOP CMD: YOSI IN SPACE";
     ADCS_HandleReport(CFE_SUCCESS, ADCS_NOOP_CC, (void *)NoopReport, sizeof(NoopReport));
 
     CFE_EVS_SendEvent(ADCS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "ADCS: NOOP command received.");

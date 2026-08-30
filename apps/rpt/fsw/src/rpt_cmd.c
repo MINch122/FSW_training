@@ -29,8 +29,20 @@ CFE_Status_t RPT_SendBeaconCmd(void) {
 }
 
 CFE_Status_t RPT_NoopCmd(const RPT_NoopCmd_t *Msg) {
+    static const char NoopReport[] = "RPT NOOP CMD: YOSI IN SPACE";
+    RPT_Report_t Report = {0,};
 
     RPT_Data.CmdCounter ++;
+
+    Report.MsgID = RPT_CMD_MID;
+    Report.CommandCode = RPT_NOOP_CC;
+    Report.ReturnType = RPT_RETTYPE_SUCCESS;
+    Report.ReturnCode = CFE_SUCCESS;
+    Report.ReturnDataSize = (uint16)sizeof(NoopReport);
+    memcpy(Report.ReturnValue, NoopReport, sizeof(NoopReport));
+    if (RPT_Report(&Report, false) != CFE_SUCCESS) {
+        RPT_Data.ErrCounter ++;
+    }
 
     CFE_EVS_SendEvent(RPT_NOOP_CMD_INF_EID, CFE_EVS_EventType_INFORMATION, "RPT: Noop command Received.");
 

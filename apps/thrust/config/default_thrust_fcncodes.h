@@ -28,6 +28,7 @@
 #define THRUST_REQ_FAULT_LOG_CC   12  /* ICD MsgID=40 */
 #define THRUST_CLEAR_FAULT_CC     13  /* ICD MsgID=41 */
 #define THRUST_REQ_HK_CC          14  /* ICD MsgID=10 */
+#define THRUST_SCH_HK_ENABLE_CC   15  /* Enable/disable SCH-triggered HK */
 
 /* SCH 트리거 명령 (CC 없음 — HandleReport용 식별자) */
 #define THRUST_SEND_HK_CC         THRUST_REQ_HK_CC

@@ -201,12 +201,13 @@ CFE_Status_t EPS_ReportBcnCmd(const EPS_ReportBcnCmd_t *Msg)
 
 CFE_Status_t EPS_NoopCmd(const EPS_NoopCmd_t *Msg)
 {
+    static const char NoopReport[] = "EPS NOOP CMD: YOSI IN SPACE";
+
     EPS_AppData.Counters.CmdCounter++;
 
     CFE_EVS_SendEvent(EPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "EPS: NOOP command %s",
                       EPS_VERSION);
-    EPS_SendReport(Msg, &EPS_AppData.Counters, sizeof(EPS_AppData.Counters),
-                   CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
+    EPS_SendReport(Msg, NoopReport, sizeof(NoopReport), CFE_SUCCESS, RPT_RETTYPE_SUCCESS);
 
     return CFE_SUCCESS;
 }

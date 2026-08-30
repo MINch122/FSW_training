@@ -19,6 +19,10 @@ void MISSION_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr) {
             MISSION_SendHKCmd((const MISSION_SendHkCmd_t *)SBBufPtr);
             break;
 
+        case MISSION_READ_LEOP_FILE_MID:
+            MISSION_ReadLeopFileCmd((const MISSION_ReadLeopFileCmd_t *)SBBufPtr);
+            break;
+
         default:
             CFE_EVS_SendEvent(MISSION_MID_ERR_EID, CFE_EVS_EventType_ERROR,
                                 "MISSION: Invalid Message ID. MID = 0x%X", (uint32_t)CFE_SB_MsgIdToValue(MsgId));

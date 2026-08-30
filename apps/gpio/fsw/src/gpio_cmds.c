@@ -294,7 +294,7 @@ CFE_Status_t GPIO_SendBcnCmd(const GPIO_SendBcnCmd_t *Msg)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t GPIO_NoopCmd(const GPIO_NoopCmd_t *Msg)
 {
-    static const char NoopReport[] = "Yosi In Space";
+    static const char NoopReport[] = "GPIO NOOP CMD: YOSI IN SPACE";
 
     (void)Msg;
     GPIO_Data.CmdCounter++;

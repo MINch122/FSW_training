@@ -21,6 +21,7 @@ CFE_Status_t THRUST_ResetCountersCmd(const THRUST_ResetCountersCmd_t *Msg);
  * ------------------------------------------------------- */
 CFE_Status_t THRUST_SendHkCmd(const THRUST_SendHkCmd_t *Msg);
 CFE_Status_t THRUST_SendScheduledHkCmd(const THRUST_SendHkCmd_t *Msg);
+CFE_Status_t THRUST_ScheduledHkEnableCmd(const THRUST_ScheduledHkEnableCmd_t *Msg);
 CFE_Status_t THRUST_ReqStatusCmd(const THRUST_ReqStatusCmd_t *Msg);
 
 /* -------------------------------------------------------
