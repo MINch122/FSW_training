@@ -461,7 +461,7 @@ void TO_LAB_ForwardTelemetryRF(void) {
     const void      *NetBufPtr;
     size_t           NetBufSize;
     uint8            HkCombinedPkt1RfBuf[TO_LAB_RF_MAX_AVAILABLE_BYTES];
-    uint8_t         beacon_delay_pattern[] = {2,5,10,20};   // BEE  
+    uint8_t         beacon_delay_pattern[] = {0,2,5,10};   // BEE  
     CFE_SB_MsgId_t   MsgId = CFE_SB_INVALID_MSG_ID;
     uint8_t          Port = CFE_RF_DPORT_BCN;
 
