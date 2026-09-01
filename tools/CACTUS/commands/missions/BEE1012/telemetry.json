@@ -962,7 +962,17 @@
       "mid": "0x0894",
       "description": "GPS Housekeeping telemetry",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
+      "fields": [
+        { "name": "CmdCounter", "type": "uint8" },
+        { "name": "CmdErrorCounter", "type": "uint8" },
+        { "name": "LogCount", "type": "uint16" },
+        { "name": "ReadErrCount", "type": "uint16" },
+        { "name": "StrayLogCount", "type": "uint16" },
+        { "name": "LogErrCount", "type": "uint16" },
+        { "name": "CallbackErrCount", "type": "uint16" },
+        { "name": "HandlerCritCount", "type": "uint16" },
+        { "name": "ResponseCount", "type": "uint16" }
+      ]
     },
     {
       "app": "GPS",
@@ -970,7 +980,198 @@
       "mid": "0x0895",
       "description": "GPS Report telemetry",
       "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
-      "fields": []
+      "fields": [
+        { "name": "MsgID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "CommandCode", "type": "uint8" },
+        { "name": "ReturnType", "type": "uint8" },
+        { "name": "ReturnCode", "type": "int32" },
+        { "name": "ReturnDataSize", "type": "uint16" },
+        {
+          "name": "ReturnValue",
+          "type": "bytes",
+          "length": "RPT_RET_VALUE_BUF_SIZE",
+          "display_length_from": "ReturnDataSize"
+        }
+      ]
+    },
+    {
+      "app": "GPS",
+      "name": "OEM BESTXYZ",
+      "mid": "0x089A",
+      "description": "GPS OEM7 BESTXYZ stored-log telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "messageID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "timeStatus", "type": "uint8" },
+        { "name": "week", "type": "uint16" },
+        { "name": "ms", "type": "uint32" },
+        { "name": "receiverStatus", "type": "uint32", "format": "hex", "hex_digits": 8 },
+        { "name": "pSolStatus", "type": "uint8" },
+        { "name": "posType", "type": "uint8" },
+        { "name": "pX", "type": "double" },
+        { "name": "pY", "type": "double" },
+        { "name": "pZ", "type": "double" },
+        { "name": "pXstd", "type": "float" },
+        { "name": "pYstd", "type": "float" },
+        { "name": "pZstd", "type": "float" },
+        { "name": "vSolStatus", "type": "uint8" },
+        { "name": "velType", "type": "uint8" },
+        { "name": "vX", "type": "double" },
+        { "name": "vY", "type": "double" },
+        { "name": "vZ", "type": "double" },
+        { "name": "vXstd", "type": "float" },
+        { "name": "vYstd", "type": "float" },
+        { "name": "vZstd", "type": "float" },
+        { "name": "vLatancy", "type": "float" },
+        { "name": "diffAge", "type": "float" },
+        { "name": "numSats", "type": "uint8" },
+        { "name": "numSolnSats", "type": "uint8" }
+      ]
+    },
+    {
+      "app": "GPS",
+      "name": "OEM BESTPOS",
+      "mid": "0x089B",
+      "description": "GPS OEM7 BESTPOS stored-log telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "messageID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "timeStatus", "type": "uint8" },
+        { "name": "week", "type": "uint16" },
+        { "name": "ms", "type": "uint32" },
+        { "name": "receiverStatus", "type": "uint32", "format": "hex", "hex_digits": 8 },
+        { "name": "solStatus", "type": "uint8" },
+        { "name": "posType", "type": "uint8" },
+        { "name": "lat", "type": "double" },
+        { "name": "lon", "type": "double" },
+        { "name": "hgt", "type": "double" },
+        { "name": "undulation", "type": "float" },
+        { "name": "datumId", "type": "uint8" },
+        { "name": "latStd", "type": "float" },
+        { "name": "lonStd", "type": "float" },
+        { "name": "hgtStd", "type": "float" },
+        { "name": "stnId", "type": "string", "length": 4 },
+        { "name": "diffAge", "type": "float" },
+        { "name": "solAge", "type": "float" },
+        { "name": "numSats", "type": "uint8" },
+        { "name": "numSolnSats", "type": "uint8" },
+        { "name": "numSolnL1Sats", "type": "uint8" },
+        { "name": "numSolnMultiSats", "type": "uint8" },
+        { "name": "extSolStat", "type": "uint8" },
+        { "name": "galileoAndBeidouSigMask", "type": "uint8", "format": "hex", "hex_digits": 2 },
+        { "name": "gpsAndGlonassSigMask", "type": "uint8", "format": "hex", "hex_digits": 2 }
+      ]
+    },
+    {
+      "app": "GPS",
+      "name": "OEM RANGE",
+      "mid": "0x089C",
+      "description": "GPS OEM7 RANGE stored-log telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "messageID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "timeStatus", "type": "uint8" },
+        { "name": "week", "type": "uint16" },
+        { "name": "ms", "type": "uint32" },
+        { "name": "receiverStatus", "type": "uint32", "format": "hex", "hex_digits": 8 },
+        { "name": "numObs", "type": "uint8" }
+      ]
+    },
+    {
+      "app": "GPS",
+      "name": "OEM TIME",
+      "mid": "0x089D",
+      "description": "GPS OEM7 TIME stored-log telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "messageID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "timeStatus", "type": "uint8" },
+        { "name": "week", "type": "uint16" },
+        { "name": "ms", "type": "uint32" },
+        { "name": "receiverStatus", "type": "uint32", "format": "hex", "hex_digits": 8 },
+        { "name": "clockStatus", "type": "uint8" },
+        { "name": "Offset", "type": "double" },
+        { "name": "Offsetstd", "type": "double" },
+        { "name": "UtcOffset", "type": "double" },
+        { "name": "UtcYear", "type": "uint16" },
+        { "name": "UtcMonth", "type": "uint8" },
+        { "name": "UtcDay", "type": "uint8" },
+        { "name": "UtcHour", "type": "uint8" },
+        { "name": "UtcMin", "type": "uint8" },
+        { "name": "UtcMs", "type": "uint16" },
+        { "name": "UtcStatus", "type": "uint8" }
+      ]
+    },
+    {
+      "app": "GPS",
+      "name": "OEM CLOCKMODEL",
+      "mid": "0x089E",
+      "description": "GPS OEM7 CLOCKMODEL stored-log telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "messageID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "timeStatus", "type": "uint8" },
+        { "name": "week", "type": "uint16" },
+        { "name": "ms", "type": "uint32" },
+        { "name": "receiverStatus", "type": "uint32", "format": "hex", "hex_digits": 8 },
+        { "name": "clockStatus", "type": "uint8" },
+        { "name": "reject", "type": "uint32", "format": "hex", "hex_digits": 8 },
+        { "name": "noiseTime", "type": "int32" },
+        { "name": "updateTime", "type": "int32" },
+        { "name": "parameters", "type": "double", "count": 3 },
+        { "name": "covData", "type": "double", "count": 9 },
+        { "name": "rangeBias", "type": "double" },
+        { "name": "rangeBiasRate", "type": "double" }
+      ]
+    },
+    {
+      "app": "GPS",
+      "name": "OEM HWMONITOR",
+      "mid": "0x089F",
+      "description": "GPS OEM7 HWMONITOR stored-log telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "messageID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "timeStatus", "type": "uint8" },
+        { "name": "week", "type": "uint16" },
+        { "name": "ms", "type": "uint32" },
+        { "name": "receiverStatus", "type": "uint32", "format": "hex", "hex_digits": 8 },
+        { "name": "numMeasurements", "type": "uint8" }
+      ]
+    },
+    {
+      "app": "GPS",
+      "name": "OEM RXSTATUS",
+      "mid": "0x08A0",
+      "description": "GPS OEM7 RXSTATUS stored-log telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "messageID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "timeStatus", "type": "uint8" },
+        { "name": "week", "type": "uint16" },
+        { "name": "ms", "type": "uint32" },
+        { "name": "receiverStatus", "type": "uint32", "format": "hex", "hex_digits": 8 },
+        { "name": "error", "type": "uint32", "format": "hex", "hex_digits": 8 },
+        { "name": "numStats", "type": "uint8" }
+      ]
+    },
+    {
+      "app": "GPS",
+      "name": "OEM SATVIS2",
+      "mid": "0x08A1",
+      "description": "GPS OEM7 SATVIS2 stored-log telemetry",
+      "payload_offset": "CFE_MSG_TLM_HDR_SIZE",
+      "fields": [
+        { "name": "messageID", "type": "uint16", "format": "hex", "hex_digits": 4 },
+        { "name": "timeStatus", "type": "uint8" },
+        { "name": "week", "type": "uint16" },
+        { "name": "ms", "type": "uint32" },
+        { "name": "receiverStatus", "type": "uint32", "format": "hex", "hex_digits": 8 },
+        { "name": "satSystem", "type": "uint8" },
+        { "name": "satVis", "type": "uint8" },
+        { "name": "compAlm", "type": "uint8" },
+        { "name": "numSat", "type": "uint8" }
+      ]
     },
     {
       "app": "PAY_SLT",

@@ -4600,12 +4600,6 @@
             "default": "0"
           },
           {
-            "name": "padding",
-            "type": "uint8",
-            "default": "0",
-            "hidden": true
-          },
-          {
             "name": "port",
             "type": "uint32",
             "default": "0"
@@ -4647,13 +4641,6 @@
             "name": "msgId",
             "type": "uint16",
             "default": "0"
-          },
-          {
-            "name": "padding",
-            "type": "bytes",
-            "default": "",
-            "length": 2,
-            "hidden": true
           },
           {
             "name": "port",
@@ -4712,13 +4699,6 @@
             "default": "0"
           },
           {
-            "name": "padding",
-            "type": "bytes",
-            "default": "",
-            "length": 2,
-            "hidden": true
-          },
-          {
             "name": "port",
             "type": "uint32",
             "default": "0"
@@ -4740,13 +4720,6 @@
             "name": "msgId",
             "type": "uint16",
             "default": "0"
-          },
-          {
-            "name": "padding",
-            "type": "bytes",
-            "default": "",
-            "length": 2,
-            "hidden": true
           },
           {
             "name": "port",
@@ -4775,12 +4748,6 @@
             "name": "type",
             "type": "uint8",
             "default": "0"
-          },
-          {
-            "name": "padding",
-            "type": "uint8",
-            "default": "0",
-            "hidden": true
           },
           {
             "name": "port",
@@ -4941,7 +4908,7 @@
             "name": "body",
             "type": "bytes",
             "default": "",
-            "length": 256
+            "length": 180
           }
         ]
       },
@@ -4994,12 +4961,6 @@
             "name": "msgId",
             "type": "uint16",
             "default": "0"
-          },
-          {
-            "name": "padding",
-            "type": "uint16",
-            "default": "0",
-            "hidden": true
           },
           {
             "name": "offset",
@@ -5146,14 +5107,6 @@
             "name": "msgId",
             "type": "uint16",
             "default": "0"
-          },
-          {
-            "name": "_OptionsPadding",
-            "type": "bytes",
-            "length": 2,
-            "default": "",
-            "hidden": true,
-            "description": "Alignment before int32 options"
           },
           {
             "name": "options",
