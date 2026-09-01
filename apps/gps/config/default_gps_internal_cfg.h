@@ -1,48 +1,36 @@
-/************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
- *
- * Copyright (c) 2020 United States Government as represented by the
- * Administrator of the National Aeronautics and Space Administration.
- * All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ************************************************************************/
-
 /**
- * @file
- *   GPS Application Private Config Definitions
+ * @file  GPS application private config definitions
  *
- * This provides default values for configurable items that are internal
- * to this module and do NOT affect the interface(s) of this module.  Changes
- * to items in this file only affect the local module and will be transparent
- * to external entities that are using the public interface(s).
- *
- * @note This file may be overridden/superceded by mission-provided defintions
- * either by overriding this header or by generating definitions from a command/data
- * dictionary tool.
+ * Internal to this module; changing them is transparent to everything using
+ * the GPS command and telemetry interface.
  */
 #ifndef GPS_INTERNAL_CFG_H
 #define GPS_INTERNAL_CFG_H
 
-/***********************************************************************/
-#define GPS_PIPE_DEPTH 32 /* Depth of the Command Pipe for Application */
+#define GPS_PLATFORM_PIPE_DEPTH         32          /* Command pipe depth */
+#define GPS_PLATFORM_PIPE_NAME          "GPS_CMD_PIPE"
 
-#define GPS_PIPE_NAME  "GPS_PIPE"
+#define GPS_PLATFORM_IFACE_INDEX        0           /* oem_io interface slot */
+#define GPS_PLATFORM_SERIAL_DEV         "/dev/ttyS4"
+#define GPS_PLATFORM_SERIAL_BAUD        115200
+#define GPS_PLATFORM_RX_BUF_SIZE        0           /* 0 = driver default */
 
-#define GPS_NUMBER_OF_TABLES 1 /* Number of Example Table(s) */
+/** Read window. Bounds shutdown latency only; logs arrive on their own schedule. */
+#define GPS_PLATFORM_RX_TIMEOUT_MS      10000
 
-#define GPS_TABLE_OUT_OF_RANGE_ERR_CODE -1
+/** Yield after any receive fault, so a persistent one cannot spin. */
+#define GPS_PLATFORM_RX_BACKOFF_MS      100
 
-#define GPS_TBL_ELEMENT_1_MAX 10
+/** Shutdown join budget. Must exceed one read window, or the device is left
+ *  open rather than freed under a task still reading it. */
+#define GPS_PLATFORM_RX_JOIN_MS         12000
+#define GPS_PLATFORM_RX_JOIN_POLL_MS    100
 
+#define GPS_PLATFORM_RX_TASK_NAME       "GPS_RX"
+#define GPS_PLATFORM_RX_STACK_SIZE      16384
+#define GPS_PLATFORM_RX_PRIORITY        110
 
+/** Callback modules must live under this prefix. */
+#define GPS_PLATFORM_MODULE_DIR         "/cf/"
 
 #endif

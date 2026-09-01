@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -17,28 +17,15 @@
  ************************************************************************/
 
 /**
- * @file
- *   Specification for the GPS command and telemetry
- *   message data types.
- *
- * @note
- *   Constants and enumerated types related to these message structures
- *   are defined in cosmos_gps_msgdefs.h.
+ * @file  GPS command and telemetry message structures
  */
 #ifndef DEFAULT_GPS_MSGSTRUCT_H
 #define DEFAULT_GPS_MSGSTRUCT_H
 
-/************************************************************************
- * Includes
- ************************************************************************/
-
-#include "default_gps_mission_cfg.h"
-#include "default_gps_msgdefs.h"
+#include "gps_mission_cfg.h"
+#include "gps_msgdefs.h"
 #include "cfe_msg_hdr.h"
 #include "rpt_interface_cfg.h"
-
-/*************************************************************************/
-
 
 /**
  * Noarg cmd template.
@@ -52,6 +39,7 @@ typedef GPS_NoArgCmd_t  GPS_ResetCountersCmd_t;
 typedef GPS_NoArgCmd_t  GPS_GetCountersCmd_t;
 typedef GPS_NoArgCmd_t  GPS_GetAppDataCmd_t;
 typedef GPS_NoArgCmd_t  GPS_SendHkCmd_t;
+typedef GPS_NoArgCmd_t  GPS_DriverReportHkCmd_t;
 
 /*
 ** OEM receiver command types.
@@ -65,8 +53,6 @@ typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
     GPS_OEM_Cmd_LogOnce_Payload_t Payload;
 } GPS_OEM_Cmd_LogOnce_t;
-
-#define a sizeof(GPS_OEM_Cmd_Log_t)
 
 typedef struct {
     CFE_MSG_CommandHeader_t CommandHeader;
@@ -240,26 +226,14 @@ typedef struct {
     GPS_OEM_Log_UnlockHandlers_Payload_t Payload;
 } GPS_OEM_Log_UnlockHandlers_t;
 
-
-/*************************************************************************/
-/*
-** Type definition (GPS housekeeping)
-*/
-
-/* Report telemetry forwarded to the RPT app. The payload MUST be RPT_Report_t
- * so that sizeof(GPS_ReportTlm_t) == sizeof(RPT_ReportTlm_t); RPT drops any
- * subscribed message whose size differs (see RPT_VerifyReportLength). GPS still
- * caps the data it copies into ReturnValue at GPS_MISSION_REPORT_DATA_SIZE. */
-typedef struct {
-    CFE_MSG_TelemetryHeader_t TelemetryHeader;
-    RPT_Report_t Payload;
-} GPS_ReportTlm_t;
-
 typedef struct {
     CFE_MSG_TelemetryHeader_t TelemetryHeader;
     GPS_HkTlm_Payload_t Payload;
 } GPS_HkTlm_t;
 
+typedef struct {
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    RPT_Report_t Payload;
+} GPS_ReportTlm_t;
 
 #endif
-      

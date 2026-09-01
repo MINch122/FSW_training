@@ -1,24 +1,5 @@
-/************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
- *
- * Copyright (c) 2020 United States Government as represented by the
- * Administrator of the National Aeronautics and Space Administration.
- * All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ************************************************************************/
-
 /**
- * @file
- *   GPS Application Message IDs
+ * @file  GPS application message IDs
  */
 #ifndef DEFAULT_GPS_MSGIDS_H
 #define DEFAULT_GPS_MSGIDS_H
@@ -29,6 +10,18 @@
 #define GPS_CMD_MID        CFE_PLATFORM_CMD_TOPICID_TO_MIDV(CFE_MISSION_GPS_CMD_TOPICID)
 #define GPS_SEND_HK_MID    CFE_PLATFORM_CMD_TOPICID_TO_MIDV(CFE_MISSION_GPS_SEND_HK_TOPICID)
 #define GPS_HK_TLM_MID     CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_GPS_HK_TLM_TOPICID)
+
+/** Named as the RPT table entry names it; see apps/rpt/fsw/tables/rpt_tbl.c. */
 #define GPS_REPORT_TLM_MID CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_GPS_REPORT_TLM_TOPICID)
+
+/** OEM7 stored logs. */
+#define GPS_OEM_BESTXYZ_TLM_MID    CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_GPS_OEM_BESTXYZ_TLM_TOPICID)
+#define GPS_OEM_BESTPOS_TLM_MID    CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_GPS_OEM_BESTPOS_TLM_TOPICID)
+#define GPS_OEM_RANGE_TLM_MID      CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_GPS_OEM_RANGE_TLM_TOPICID)
+#define GPS_OEM_TIME_TLM_MID       CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_GPS_OEM_TIME_TLM_TOPICID)
+#define GPS_OEM_CLOCKMODEL_TLM_MID CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_GPS_OEM_CLOCKMODEL_TLM_TOPICID)
+#define GPS_OEM_HWMONITOR_TLM_MID  CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_GPS_OEM_HWMONITOR_TLM_TOPICID)
+#define GPS_OEM_RXSTATUS_TLM_MID   CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_GPS_OEM_RXSTATUS_TLM_TOPICID)
+#define GPS_OEM_SATVIS2_TLM_MID    CFE_PLATFORM_TLM_TOPICID_TO_MIDV(CFE_MISSION_GPS_OEM_SATVIS2_TLM_TOPICID)
 
 #endif

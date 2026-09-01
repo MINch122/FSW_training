@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -17,22 +17,17 @@
  ************************************************************************/
 
 /**
- * @file
- *
- * Main header file for the GPS application
+ * @file  GPS command dispatch prototypes
  */
-
 #ifndef GPS_DISPATCH_H
 #define GPS_DISPATCH_H
 
-/*
-** Required header files.
-*/
 #include "cfe.h"
 #include "gps_msg.h"
 
 void GPS_TaskPipe(const CFE_SB_Buffer_t *SBBufPtr);
 void GPS_ProcessGroundCommand(const CFE_SB_Buffer_t *SBBufPtr);
+void GPS_ProcessDeviceCommand(const CFE_SB_Buffer_t* SBBufPtr);
 bool GPS_VerifyCmdLength(const CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength);
 
-#endif
+#endif /* GPS_DISPATCH_H */

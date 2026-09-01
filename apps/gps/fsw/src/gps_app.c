@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -17,74 +17,36 @@
  ************************************************************************/
 
 /**
- * \file
- *   This file contains the source code for the GPS App.
+ * @file  GPS entry point, initialization, and main loop
  */
-
-/*
-** Include Files:
-*/
 #include "gps_app.h"
 #include "gps_cmds.h"
 #include "gps_eventids.h"
 #include "gps_dispatch.h"
 #include "gps_version.h"
+#include "gps_service.h"
 
-#include "gps_dev_oem.h"
-#include "rpt_interface_cfg.h"
-
-/*
-** global data
-*/
 GPS_AppData_t GPS_AppData;
 
-static uint8 GPS_NormalizeReportType(int32 retCode, uint8 retType)
-{
-    return (retCode == CFE_SUCCESS) ? RPT_RETTYPE_SUCCESS : retType;
-}
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * *  * * * * **/
-/*                                                                            */
-/* Application entry point and main process loop                              */
-/*                                                                            */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * *  * * * * **/
 void GPS_AppMain(void)
 {
     CFE_Status_t     status;
     CFE_SB_Buffer_t *SBBufPtr;
 
-    /*
-    ** Create the first Performance Log entry
-    */
     CFE_ES_PerfLogEntry(GPS_PERF_ID);
 
-    /*
-    ** Perform application-specific initialization
-    ** If the Initialization fails, set the RunStatus to
-    ** CFE_ES_RunStatus_APP_ERROR and the App will not enter the RunLoop
-    */
     status = GPS_AppInit();
     if (status != CFE_SUCCESS)
     {
         GPS_AppData.RunStatus = CFE_ES_RunStatus_APP_ERROR;
     }
 
-    /*
-    ** App Runloop
-    */
     while (CFE_ES_RunLoop(&GPS_AppData.RunStatus) == true)
     {
-        /*
-        ** Performance Log Exit Stamp
-        */
         CFE_ES_PerfLogExit(GPS_PERF_ID);
 
-        /* Pend on receipt of command packet */
         status = CFE_SB_ReceiveBuffer(&SBBufPtr, GPS_AppData.CommandPipe, CFE_SB_PEND_FOREVER);
 
-        /*
-        ** Performance Log Entry Stamp
-        */
         CFE_ES_PerfLogEntry(GPS_PERF_ID);
 
         if (status == CFE_SUCCESS)
@@ -94,38 +56,28 @@ void GPS_AppMain(void)
         else
         {
             CFE_EVS_SendEvent(GPS_PIPE_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "GPS APP: SB Pipe Read Error, App Will Exit");
+                              "GPS: SB Pipe Read Error, App Will Exit");
 
             GPS_AppData.RunStatus = CFE_ES_RunStatus_APP_ERROR;
         }
     }
 
-    /*
-    ** Performance Log Exit Stamp
-    */
     CFE_ES_PerfLogExit(GPS_PERF_ID);
+
+    GPS_ServiceShutdown();
 
     CFE_ES_ExitApp(GPS_AppData.RunStatus);
 }
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  */
-/*                                                                            */
-/* Initialization                                                             */
-/*                                                                            */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 CFE_Status_t GPS_AppInit(void)
 {
     CFE_Status_t status;
     char         VersionString[GPS_CFG_MAX_VERSION_STR_LEN];
 
-    /* Zero out the global data structure */
     memset(&GPS_AppData, 0, sizeof(GPS_AppData));
 
     GPS_AppData.RunStatus = CFE_ES_RunStatus_APP_RUN;
 
-    /*
-    ** Register the events
-    */
     status = CFE_EVS_Register(NULL, 0, CFE_EVS_EventFilter_BINARY);
     if (status != CFE_SUCCESS)
     {
@@ -133,16 +85,15 @@ CFE_Status_t GPS_AppInit(void)
     }
     else
     {
-        /*
-         ** Initialize housekeeping packet (clear user data area).
-         */
         CFE_MSG_Init(CFE_MSG_PTR(GPS_AppData.HkTlm.TelemetryHeader), CFE_SB_ValueToMsgId(GPS_HK_TLM_MID),
                      sizeof(GPS_AppData.HkTlm));
 
-        /*
-         ** Create Software Bus message pipe.
-         */
-        status = CFE_SB_CreatePipe(&GPS_AppData.CommandPipe, GPS_PIPE_DEPTH, GPS_PIPE_NAME);
+        CFE_MSG_Init(CFE_MSG_PTR(GPS_AppData.Report.TelemetryHeader), CFE_SB_ValueToMsgId(GPS_REPORT_TLM_MID),
+                     sizeof(GPS_AppData.Report));
+
+
+        status = CFE_SB_CreatePipe(&GPS_AppData.CommandPipe, GPS_PLATFORM_PIPE_DEPTH,
+                                   GPS_PLATFORM_PIPE_NAME);
         if (status != CFE_SUCCESS)
         {
             CFE_EVS_SendEvent(GPS_CR_PIPE_ERR_EID, CFE_EVS_EventType_ERROR,
@@ -152,9 +103,6 @@ CFE_Status_t GPS_AppInit(void)
 
     if (status == CFE_SUCCESS)
     {
-        /*
-        ** Subscribe to Housekeeping request commands
-        */
         status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(GPS_SEND_HK_MID), GPS_AppData.CommandPipe);
         if (status != CFE_SUCCESS)
         {
@@ -165,9 +113,6 @@ CFE_Status_t GPS_AppInit(void)
 
     if (status == CFE_SUCCESS)
     {
-        /*
-        ** Subscribe to ground command packets
-        */
         status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(GPS_CMD_MID), GPS_AppData.CommandPipe);
         if (status != CFE_SUCCESS)
         {
@@ -176,59 +121,21 @@ CFE_Status_t GPS_AppInit(void)
         }
     }
 
-    if (status == CFE_SUCCESS) {
-        CFE_Config_GetVersionString(VersionString, GPS_CFG_MAX_VERSION_STR_LEN, "GPS", GPS_VERSION,
-                                    GPS_BUILD_CODENAME, GPS_LAST_OFFICIAL);
+    /* A dead receiver must not stop the app: ground still needs the command
+     * path to diagnose and re-open it. */
+    if (status == CFE_SUCCESS)
+    {
+        GPS_ServiceInit();
+    }
+
+    if (status == CFE_SUCCESS)
+    {
+        CFE_Config_GetVersionString(VersionString, GPS_CFG_MAX_VERSION_STR_LEN, "GPS",
+                                    GPS_VERSION, GPS_BUILD_CODENAME, GPS_LAST_OFFICIAL);
 
         CFE_EVS_SendEvent(GPS_INIT_INF_EID, CFE_EVS_EventType_INFORMATION, "GPS Initialized.%s",
                           VersionString);
     }
 
-    if (status == CFE_SUCCESS) {
-        status = GPS_Device_Init();
-    }
-
-
     return status;
-}
-
-void GPS_SendReport(const void* cmd,
-                    const void* data,
-                    uint16 dataSize,
-                    int32 retCode,
-                    uint8 retType)
-{
-    CFE_SB_MsgId_t    cmdMid;
-    CFE_MSG_FcnCode_t cmdCode;
-    uint16            copySize = 0;
-
-    CFE_MSG_GetMsgId(cmd, &cmdMid);
-    CFE_MSG_GetFcnCode(cmd, &cmdCode);
-    if (data != NULL && dataSize > 0)
-    {
-        copySize = (dataSize > sizeof(GPS_AppData.Report.Payload.ReturnValue))
-                       ? sizeof(GPS_AppData.Report.Payload.ReturnValue)
-                       : dataSize;
-    }
-
-    /* Fixed size: RPT requires exactly sizeof(RPT_ReportTlm_t) (== sizeof of
-     * GPS_AppData.Report) or it drops the message. The actual data length is
-     * carried in Payload.ReturnDataSize, not in the message length. */
-    CFE_MSG_Init(CFE_MSG_PTR(GPS_AppData.Report.TelemetryHeader),
-                 CFE_SB_ValueToMsgId(GPS_REPORT_TLM_MID),
-                 sizeof(GPS_AppData.Report));
-    GPS_AppData.Report.Payload.MsgID = CFE_SB_MsgIdToValue(cmdMid);
-    GPS_AppData.Report.Payload.CommandCode = cmdCode;
-    GPS_AppData.Report.Payload.ReturnType = GPS_NormalizeReportType(retCode, retType);
-    GPS_AppData.Report.Payload.ReturnCode = retCode;
-    GPS_AppData.Report.Payload.ReturnDataSize = copySize;
-    memset(GPS_AppData.Report.Payload.ReturnValue, 0, sizeof(GPS_AppData.Report.Payload.ReturnValue));
-    if (copySize > 0)
-    {
-        memcpy(GPS_AppData.Report.Payload.ReturnValue,
-               data,
-               copySize);
-    }
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(GPS_AppData.Report.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(GPS_AppData.Report.TelemetryHeader), true);
 }

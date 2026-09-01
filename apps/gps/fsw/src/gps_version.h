@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -17,58 +17,30 @@
  ************************************************************************/
 
 /**
- * @file
- *
- *  The GPS header file containing version information
+ * @file  GPS version information
  */
-
 #ifndef GPS_VERSION_H
 #define GPS_VERSION_H
 
-/* Development Build Macro Definitions */
+#define GPS_BUILD_NUMBER    0
+#define GPS_BUILD_BASELINE  "v7.0.0"
+#define GPS_BUILD_DEV_CYCLE "v7.0.0"
+#define GPS_BUILD_CODENAME  "Draco"
 
-#define GPS_BUILD_NUMBER    50 /*!< Development Build: Number of commits since baseline */
-#define GPS_BUILD_BASELINE  "equuleus-rc1" /*!< Development Build: git tag that is the base for the current development */
-#define GPS_BUILD_DEV_CYCLE "equuleus-rc2" /**< @brief Development: Release name for current development cycle */
-#define GPS_BUILD_CODENAME  "Equuleus" /**< @brief: Development: Code name for the current build */
+#define GPS_MAJOR_VERSION 7
+#define GPS_MINOR_VERSION 0
+#define GPS_REVISION      0
 
-/*
- * Version Macros, see \ref cfsversions for definitions.
- */
-#define GPS_MAJOR_VERSION 1  /*!< @brief Major version number. */
-#define GPS_MINOR_VERSION 1  /*!< @brief Minor version number. */
-#define GPS_REVISION      0  /*!< @brief Revision version number. Value of 0 indicates a development version.*/
+#define GPS_LAST_OFFICIAL "v7.0.0"
 
-/**
- * @brief Last official release.
- */
-#define GPS_LAST_OFFICIAL "v1.1.0"
+/* Mission revision: 1-254 reserved for mission patches (0 / 0xFF reserved) */
+#define GPS_MISSION_REV 0x0
 
-/*!
- * @brief Mission revision.
- *
- * Reserved for mission use to denote patches/customizations as needed.
- * Values 1-254 are reserved for mission use to denote patches/customizations as needed. NOTE: Reserving 0 and 0xFF for
- * cFS open-source development use (pending resolution of nasa/cFS#440)
- */
-#define GPS_MISSION_REV 0xFF
+#define GPS_STR_HELPER(x) #x
+#define GPS_STR(x)        GPS_STR_HELPER(x)
 
-#define GPS_STR_HELPER(x) #x /*!< @brief Helper function to concatenate strings from integer macros */
-#define GPS_STR(x) \
-    GPS_STR_HELPER(x) /*!< @brief Helper function to concatenate strings from integer macros */
-
-/*! @brief Development Build Version Number.
- * @details Baseline git tag + Number of commits since baseline. @n
- * See @ref cfsversions for format differences between development and release versions.
- */
 #define GPS_VERSION GPS_BUILD_BASELINE "+dev" GPS_STR(GPS_BUILD_NUMBER)
 
-/**
- * @brief Max Version String length.
- * 
- * Maximum length that an OSAL version string can be.
- * 
- */
 #define GPS_CFG_MAX_VERSION_STR_LEN 256
 
 #endif /* GPS_VERSION_H */

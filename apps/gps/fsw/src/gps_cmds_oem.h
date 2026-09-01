@@ -27,7 +27,6 @@
 /*
 ** Required header files.
 */
-#include "cfe_error.h"
 #include "gps_msg.h"
 
 /*

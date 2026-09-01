@@ -11,6 +11,7 @@
 #include "logs/oem_msg_navicephemeris.h"
 #include "logs/oem_msg_range.h"
 #include "logs/oem_msg_rxstatus.h"
+#include "logs/oem_msg_satvis2.h"
 #include "logs/oem_msg_satxyz2.h"
 #include "logs/oem_msg_time.h"
 #include "logs/oem_msg_uptime.h"

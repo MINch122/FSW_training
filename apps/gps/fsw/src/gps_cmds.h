@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -17,16 +17,11 @@
  ************************************************************************/
 
 /**
- * @file
- *   Prototypes for the GPS Application Ground Command-handling functions
+ * @file  GPS ground command handler prototypes
  */
-
 #ifndef GPS_CMDS_H
 #define GPS_CMDS_H
 
-/*
-** Required header files.
-*/
 #include "cfe_error.h"
 #include "gps_msg.h"
 
@@ -34,4 +29,13 @@ CFE_Status_t GPS_SendHkCmd(const GPS_SendHkCmd_t *Msg);
 CFE_Status_t GPS_ResetCountersCmd(const GPS_ResetCountersCmd_t *Msg);
 CFE_Status_t GPS_NoopCmd(const GPS_NoopCmd_t *Msg);
 
-#endif
+/**
+ * Return the housekeeping payload once, in a command report.
+ *
+ * The HK packet itself is only sent when something asks for it on
+ * GPS_SEND_HK_MID. This command is the path that does not depend on that:
+ * ground asks, and the counters come back on the report route.
+ */
+CFE_Status_t GPS_DriverReportHkCmd(const GPS_DriverReportHkCmd_t *Msg);
+
+#endif /* GPS_CMDS_H */

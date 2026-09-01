@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -17,24 +17,31 @@
  ************************************************************************/
 
 /**
- * @file
- *   Specification for the GPS command and telemetry
- *   message constant definitions.
+ * @file  GPS message payload and constant definitions
  */
 #ifndef DEFAULT_GPS_MSGDEFS_H
 #define DEFAULT_GPS_MSGDEFS_H
 
 #include "common_types.h"
-#include "default_gps_fcncodes.h"
+#include "gps_fcncodes.h"
 
-#define NATURALLY_ALIGNED
-
-#define PACKED __attribute__((packed))
+/* The report packet and its return-type buckets come from the RPT app; see
+ * apps/rpt/README.md. RPT_RETTYPE_HW is the bucket for an OEM7 return code:
+ * the serial exchange itself completed. */
+/* Dispatcher faults use the CFE status codes, as the other BEE1012 apps do;
+ * only the app-specific faults keep their own codes. */
+typedef enum {
+    GPS_ERR_ARG     = -3,
+    GPS_ERR_PATH    = -4,
+    GPS_ERR_MODULE  = -5,
+    GPS_ERR_SYMBOL  = -6,
+    GPS_ERR_UNIMPL  = -7
+} GPS_RetVal_t;
 
 /**
  * Handler-MsgId-only payload template.
  */
-typedef struct NATURALLY_ALIGNED {
+typedef struct __attribute__((packed)) {
     uint16 msgId;
 } GPS_OEM_HandlerNoArgCmd_Payload_t;
 
@@ -42,12 +49,11 @@ typedef struct NATURALLY_ALIGNED {
 /*
 ** OEM receiver command types.
 */
-typedef struct PACKED {
-    int interfaceIndex;
+typedef struct __attribute__((packed)) {
+    int32  interfaceIndex;
 
     uint16 msgId;
     uint8  type;
-    uint8  padding;
     uint32 port;
     uint32 trigger;
     uint32 hold;
@@ -55,16 +61,15 @@ typedef struct PACKED {
     double offset;
 } GPS_OEM_Cmd_Log_Payload_t;
 
-typedef struct NATURALLY_ALIGNED {
-    int interfaceIndex;
+typedef struct __attribute__((packed)) {
+    int32  interfaceIndex;
 
     uint16 msgId;
-    uint8  padding[2];
     uint32 port;
 } GPS_OEM_Cmd_LogOnce_Payload_t;
 
-typedef struct PACKED {
-    int interfaceIndex;
+typedef struct __attribute__((packed)) {
+    int32  interfaceIndex;
 
     uint16 msgId;
     uint32 port;
@@ -72,47 +77,44 @@ typedef struct PACKED {
     double offset;
 } GPS_OEM_Cmd_LogOnTime_Payload_t;
 
-typedef struct NATURALLY_ALIGNED {
-    int interfaceIndex;
+typedef struct __attribute__((packed)) {
+    int32  interfaceIndex;
 
     uint16 msgId;
-    uint8  padding[2];
     uint32 port;
 } GPS_OEM_Cmd_LogOnChanged_Payload_t;
 
-typedef struct NATURALLY_ALIGNED {
-    int interfaceIndex;
+typedef struct __attribute__((packed)) {
+    int32  interfaceIndex;
 
     uint16 msgId;
-    uint8  padding[2];
     uint32 port;
 } GPS_OEM_Cmd_LogOnNew_Payload_t;
 
-typedef struct NATURALLY_ALIGNED {
-    int interfaceIndex;
+typedef struct __attribute__((packed)) {
+    int32  interfaceIndex;
 
     uint16 msgId;
     uint8  type;
-    uint8  padding;
     uint32 port;
 } GPS_OEM_Cmd_Unlog_Payload_t;
 
-typedef struct PACKED {
-    int interfaceIndex;
+typedef struct __attribute__((packed)) {
+    int32  interfaceIndex;
 
     uint32 port;
     bool held;
 } GPS_OEM_Cmd_UnlogAll_Payload_t;
 
-typedef struct NATURALLY_ALIGNED {
-    int interfaceIndex;
+typedef struct __attribute__((packed)) {
+    int32  interfaceIndex;
 
     uint32 constellation;
     float cutoff;
 } GPS_OEM_Cmd_ElevationCutoff_Payload_t;
 
-typedef struct NATURALLY_ALIGNED {
-    int interfaceIndex;
+typedef struct __attribute__((packed)) {
+    int32  interfaceIndex;
 
     uint32 port;
     uint32 rxType;
@@ -120,8 +122,8 @@ typedef struct NATURALLY_ALIGNED {
     uint32 responses;
 } GPS_OEM_Cmd_InterfaceMode_Payload_t;
 
-typedef struct NATURALLY_ALIGNED {
-    int interfaceIndex;
+typedef struct __attribute__((packed)) {
+    int32  interfaceIndex;
 
     uint32 port;
     uint32 baud;
@@ -132,19 +134,19 @@ typedef struct NATURALLY_ALIGNED {
     uint32 _break;
 } GPS_OEM_Cmd_SerialConfig_Payload_t;
 
-typedef struct NATURALLY_ALIGNED {
-    int interfaceIndex;
+typedef struct __attribute__((packed)) {
+    int32  interfaceIndex;
 
     uint16 msgId;
     uint16 bodylength;
-    uint8 body[256];
+    uint8 body[180];
 } GPS_OEM_Cmd_Publish_Payload_t;
 
 
 /*
 ** OEM log handler command types.
 */
-typedef struct NATURALLY_ALIGNED {
+typedef struct __attribute__((packed)) {
     char name[16];
     uint16 msgId;
     uint16 msgLength;
@@ -152,7 +154,7 @@ typedef struct NATURALLY_ALIGNED {
 
 typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_HandlerUnregister_Payload_t;
 
-typedef struct NATURALLY_ALIGNED {
+typedef struct __attribute__((packed)) {
     uint16 msgId;
     int32  options;
     char   libpath[64];
@@ -163,7 +165,7 @@ typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_ClearCallbacks_Payload_t;
 typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_GetHandlerHk_Payload_t;
 typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_GetStat_Payload_t;
 
-typedef struct NATURALLY_ALIGNED {
+typedef struct __attribute__((packed)) {
     uint16 msgId;
     uint8_t status;
     bool override;
@@ -187,9 +189,8 @@ typedef GPS_OEM_HandlerNoArgCmd_Payload_t GPS_OEM_Log_IgnoreMissingCrc_Payload_t
  * oem_log_get_recent_message() takes an offset, allowing a large message to be
  * retrieved in windows across multiple commands.
  */
-typedef struct NATURALLY_ALIGNED {
+typedef struct __attribute__((packed)) {
     uint16 msgId;
-    uint16 padding;
     uint32 offset;
 } GPS_OEM_Log_GetRecentMessage_Payload_t;
 
@@ -198,33 +199,35 @@ typedef struct NATURALLY_ALIGNED {
  * driver task - which may invoke undefined behavior if the sync is off.
  * To prevent an unintentional execution, a magic key is first validated.
  */
-typedef struct NATURALLY_ALIGNED {
+#define GPS_OEM_LOG_LOCK_MAGIC   0xC01DCAFEU
+#define GPS_OEM_LOG_UNLOCK_MAGIC 0xA7EDECAFU
+
+typedef struct __attribute__((packed)) {
     uint32  Magic; //  C01DCAFE
 } GPS_OEM_Log_LockHandlers_Payload_t;
 
-typedef struct NATURALLY_ALIGNED {
+typedef struct __attribute__((packed)) {
     uint32  Magic; //  A7EDECAF
 } GPS_OEM_Log_UnlockHandlers_Payload_t;
 
 
-/*************************************************************************/
-/*
-** Type definition (GPS housekeeping)
-*/
 
+/**
+ * Receive-path counters are bucketed by the layer that gave up, which
+ * oem_task_context_t reports in task_level.
+ */
+typedef struct __attribute__((packed)) {
+    uint8  CmdCounter;
+    uint8  CmdErrorCounter;
 
-
-typedef struct {
-    uint32 dummy;
-} GPS_HkTlm_Payload_t;
-
-
-
-
-
-
-
-
+    uint16 LogCount;         /**< logs carried through to the callbacks */
+    uint16 ReadErrCount;     /**< TASK_MAIN: read, sync or framing failure */
+    uint16 StrayLogCount;    /**< TASK_LOG: no handler registered for the MID */
+    uint16 LogErrCount;      /**< TASK_LOG: length, CRC or buffer fault */
+    uint16 CallbackErrCount; /**< TASK_CALLBACK: a callback returned non-OK */
+    uint16 HandlerCritCount; /**< handler marked broken; needs ground action */
+    uint16 ResponseCount;    /**< TASK_RESPONSE: command replies */
+} GPS_HkTlm_Payload_t; /* 18B */
 
 
 #endif

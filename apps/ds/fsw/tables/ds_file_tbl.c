@@ -93,108 +93,108 @@ DS_DestFileTable_t DS_DestFileTable = {
             /* .MaxFileAge    = */ (60 * 60 * 8), /* 8 hours */
             /* .SequenceCount = */ 1000,
         },
-        /* File Index 02 */
+        /* File Index 02 -- gps OEM BESTXYZ log */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Pathname      = */ "/cf/sdcard/oem/bxyz",
             /* .Basename      = */ DS_EMPTY_STRING,
-            /* .Extension     = */ DS_EMPTY_STRING,
+            /* .Extension     = */ ".log",
 
-            /* .FileNameType  = */ DS_UNUSED,
-            /* .EnableState   = */ DS_UNUSED,
-            /* .MaxFileSize   = */ DS_UNUSED,
-            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .FileNameType  = */ DS_BY_TIME,
+            /* .EnableState   = */ DS_ENABLED,
+            /* .MaxFileSize   = */ (1024 * 1024),
+            /* .MaxFileAge    = */ (60 * 60 * 6),
             /* .SequenceCount = */ DS_UNUSED,
         },
-        /* File Index 03 */
+        /* File Index 03 -- gps OEM RANGE log */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Pathname      = */ "/cf/sdcard/oem/range",
             /* .Basename      = */ DS_EMPTY_STRING,
-            /* .Extension     = */ DS_EMPTY_STRING,
+            /* .Extension     = */ ".log",
 
-            /* .FileNameType  = */ DS_UNUSED,
-            /* .EnableState   = */ DS_UNUSED,
-            /* .MaxFileSize   = */ DS_UNUSED,
-            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .FileNameType  = */ DS_BY_TIME,
+            /* .EnableState   = */ DS_ENABLED,
+            /* .MaxFileSize   = */ (1024 * 1024),
+            /* .MaxFileAge    = */ (60 * 60 * 6),
             /* .SequenceCount = */ DS_UNUSED,
         },
-        /* File Index 04 */
+        /* File Index 04 -- gps OEM TIME log */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Pathname      = */ "/cf/sdcard/oem/time",
             /* .Basename      = */ DS_EMPTY_STRING,
-            /* .Extension     = */ DS_EMPTY_STRING,
+            /* .Extension     = */ ".log",
 
-            /* .FileNameType  = */ DS_UNUSED,
-            /* .EnableState   = */ DS_UNUSED,
-            /* .MaxFileSize   = */ DS_UNUSED,
-            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .FileNameType  = */ DS_BY_TIME,
+            /* .EnableState   = */ DS_ENABLED,
+            /* .MaxFileSize   = */ (1024 * 1024),
+            /* .MaxFileAge    = */ (60 * 60 * 6),
             /* .SequenceCount = */ DS_UNUSED,
         },
-        /* File Index 05 */
+        /* File Index 05 -- gps OEM CLOCKMODEL log */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Pathname      = */ "/cf/sdcard/oem/clkm",
             /* .Basename      = */ DS_EMPTY_STRING,
-            /* .Extension     = */ DS_EMPTY_STRING,
+            /* .Extension     = */ ".log",
 
-            /* .FileNameType  = */ DS_UNUSED,
-            /* .EnableState   = */ DS_UNUSED,
-            /* .MaxFileSize   = */ DS_UNUSED,
-            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .FileNameType  = */ DS_BY_TIME,
+            /* .EnableState   = */ DS_ENABLED,
+            /* .MaxFileSize   = */ (1024 * 1024),
+            /* .MaxFileAge    = */ (60 * 60 * 6),
             /* .SequenceCount = */ DS_UNUSED,
         },
-        /* File Index 06 */
+        /* File Index 06 -- gps OEM HWMONITOR log */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Pathname      = */ "/cf/sdcard/oem/hwmon",
             /* .Basename      = */ DS_EMPTY_STRING,
-            /* .Extension     = */ DS_EMPTY_STRING,
+            /* .Extension     = */ ".log",
 
-            /* .FileNameType  = */ DS_UNUSED,
-            /* .EnableState   = */ DS_UNUSED,
-            /* .MaxFileSize   = */ DS_UNUSED,
-            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .FileNameType  = */ DS_BY_TIME,
+            /* .EnableState   = */ DS_ENABLED,
+            /* .MaxFileSize   = */ (1024 * 1024),
+            /* .MaxFileAge    = */ (60 * 60 * 6),
             /* .SequenceCount = */ DS_UNUSED,
         },
-        /* File Index 07 */
+        /* File Index 07 -- gps OEM RXSTATUS log */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Pathname      = */ "/cf/sdcard/oem/rxstat",
             /* .Basename      = */ DS_EMPTY_STRING,
-            /* .Extension     = */ DS_EMPTY_STRING,
+            /* .Extension     = */ ".log",
 
-            /* .FileNameType  = */ DS_UNUSED,
-            /* .EnableState   = */ DS_UNUSED,
-            /* .MaxFileSize   = */ DS_UNUSED,
-            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .FileNameType  = */ DS_BY_TIME,
+            /* .EnableState   = */ DS_ENABLED,
+            /* .MaxFileSize   = */ (1024 * 1024),
+            /* .MaxFileAge    = */ (60 * 60 * 6),
             /* .SequenceCount = */ DS_UNUSED,
         },
-        /* File Index 08 */
+        /* File Index 08 -- gps OEM SATVIS2 log */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Pathname      = */ "/cf/sdcard/oem/satvis",
             /* .Basename      = */ DS_EMPTY_STRING,
-            /* .Extension     = */ DS_EMPTY_STRING,
+            /* .Extension     = */ ".log",
 
-            /* .FileNameType  = */ DS_UNUSED,
-            /* .EnableState   = */ DS_UNUSED,
-            /* .MaxFileSize   = */ DS_UNUSED,
-            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .FileNameType  = */ DS_BY_TIME,
+            /* .EnableState   = */ DS_ENABLED,
+            /* .MaxFileSize   = */ (1024 * 1024),
+            /* .MaxFileAge    = */ (60 * 60 * 6),
             /* .SequenceCount = */ DS_UNUSED,
         },
-        /* File Index 09 */
+        /* File Index 09 -- gps OEM BESTPOS log */
         {
             /* .Movename      = */ DS_EMPTY_STRING,
-            /* .Pathname      = */ DS_EMPTY_STRING,
+            /* .Pathname      = */ "/cf/sdcard/oem/bpos",
             /* .Basename      = */ DS_EMPTY_STRING,
-            /* .Extension     = */ DS_EMPTY_STRING,
+            /* .Extension     = */ ".log",
 
-            /* .FileNameType  = */ DS_UNUSED,
-            /* .EnableState   = */ DS_UNUSED,
-            /* .MaxFileSize   = */ DS_UNUSED,
-            /* .MaxFileAge    = */ DS_UNUSED,
+            /* .FileNameType  = */ DS_BY_TIME,
+            /* .EnableState   = */ DS_ENABLED,
+            /* .MaxFileSize   = */ (1024 * 1024),
+            /* .MaxFileAge    = */ (60 * 60 * 6),
             /* .SequenceCount = */ DS_UNUSED,
         },
         /* File Index 10 */

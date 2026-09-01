@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -17,17 +17,11 @@
  ************************************************************************/
 
 /**
- * @file
- *
- * Main header file for the GPS application
+ * @file  GPS main header
  */
-
 #ifndef GPS_APP_H
 #define GPS_APP_H
 
-/*
-** Required header files.
-*/
 #include "cfe.h"
 #include "cfe_config.h"
 
@@ -38,56 +32,24 @@
 #include "gps_msgids.h"
 #include "gps_msg.h"
 
-/************************************************************************
-** Type Definitions
-*************************************************************************/
+typedef struct
+{
+    uint8 CmdCounter;
+    uint8 ErrCounter;
 
-typedef struct {
-    uint32 CmdCounter;
-    uint32 ErrCounter;
-    uint32 GetBcnErrCounter;
-} GPS_AppData_Counters_t;
-
-/*
-** Global Data
-*/
-typedef struct {
-    /*
-    ** Command interface counters...
-    */
-    GPS_AppData_Counters_t Counters;
-
-    /*
-    ** Housekeeping telemetry packet...
-    */
     GPS_HkTlm_t HkTlm;
-
-    /*
-    ** Run Status variable used in the main processing loop
-    */
-    uint32 RunStatus;
-
     GPS_ReportTlm_t Report;
 
-    /*
-    ** Operational data (not reported in housekeeping)...
-    */
+    uint32 RunStatus;
+
     CFE_SB_PipeId_t CommandPipe;
 
+    CFE_ES_TaskId_t RxTaskId;
 } GPS_AppData_t;
 
-/*
-** Global data structure
-*/
 extern GPS_AppData_t GPS_AppData;
 
 void         GPS_AppMain(void);
 CFE_Status_t GPS_AppInit(void);
 
-void GPS_SendReport(const void* cmd,
-                    const void* data,
-                    uint16 dataSize,
-                    int32 retCode,
-                    uint8 retType);
-
-#endif
+#endif /* GPS_APP_H */

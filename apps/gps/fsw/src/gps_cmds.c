@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -17,86 +17,72 @@
  ************************************************************************/
 
 /**
- * \file
- *   This file contains the source code for the GPS App Ground Command-handling functions
+ * @file  GPS ground command handlers
  */
-
-/*
-** Include Files:
-*/
 #include "gps_app.h"
 #include "gps_cmds.h"
 #include "gps_msgids.h"
 #include "gps_eventids.h"
 #include "gps_version.h"
 #include "gps_msg.h"
+#include "gps_report.h"
+#include "gps_service.h"
 
+/** Bring the housekeeping payload up to date in place. */
+static void GPS_RefreshHk(void)
+{
+    GPS_AppData.HkTlm.Payload.CmdErrorCounter = GPS_AppData.ErrCounter;
+    GPS_AppData.HkTlm.Payload.CmdCounter      = GPS_AppData.CmdCounter;
+
+    /* The receive task owns the rest of the payload. */
+    GPS_ServiceGetCounters(&GPS_AppData.HkTlm.Payload);
+}
 
 CFE_Status_t GPS_SendHkCmd(const GPS_SendHkCmd_t *Msg)
 {
-    /*
-    ** Get command execution counters...
-    */
-    // GPS_AppData.HkTlm.Payload.CommandErrorCounter = GPS_AppData.ErrCounter;
-    // GPS_AppData.HkTlm.Payload.CommandCounter      = GPS_AppData.CmdCounter;
+    GPS_RefreshHk();
 
-    /*
-    ** Send housekeeping telemetry packet...
-    */
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(GPS_AppData.HkTlm.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(GPS_AppData.HkTlm.TelemetryHeader), true);
 
-
     return CFE_SUCCESS;
 }
 
-
-CFE_Status_t GPS_NoopCmd(const GPS_NoopCmd_t* Msg)
+CFE_Status_t GPS_NoopCmd(const GPS_NoopCmd_t *Msg)
 {
-    static const char NoopReport[] = "GPS NOOP CMD: YOSI IN SPACE";
-
-    GPS_AppData.Counters.CmdCounter++;
+    GPS_AppData.CmdCounter++;
 
     CFE_EVS_SendEvent(GPS_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "GPS: NOOP command %s",
                       GPS_VERSION);
-
-    /* 명령별 status ack: 성공은 ReturnCode=CFE_SUCCESS 로 전달(파일 내 다른 핸들러 컨벤션과 동일) */
-    GPS_SendReport(Msg, NoopReport, sizeof(NoopReport), CFE_SUCCESS, GPS_MISSION_REPORT_RETTYPE_HW);
+    GPS_SendReport(Msg, NULL, 0, CFE_SUCCESS, GPS_MISSION_REPORT_RETTYPE_HW);
 
     return CFE_SUCCESS;
 }
 
-
-CFE_Status_t GPS_ResetCountersCmd(const GPS_ResetCountersCmd_t* Msg)
+CFE_Status_t GPS_ResetCountersCmd(const GPS_ResetCountersCmd_t *Msg)
 {
-    GPS_AppData.Counters.CmdCounter = 0;
-    GPS_AppData.Counters.ErrCounter = 0;
-    GPS_AppData.Counters.GetBcnErrCounter = 0;
+    GPS_AppData.CmdCounter = 0;
+    GPS_AppData.ErrCounter = 0;
+
+    GPS_ServiceResetCounters();
 
     CFE_EVS_SendEvent(GPS_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "GPS: RESET command");
+    GPS_SendReport(Msg, NULL, 0, CFE_SUCCESS, GPS_MISSION_REPORT_RETTYPE_HW);
 
     return CFE_SUCCESS;
 }
 
-
-CFE_Status_t GPS_GetCountersCmd(const GPS_GetCountersCmd_t* Msg)
+CFE_Status_t GPS_DriverReportHkCmd(const GPS_DriverReportHkCmd_t *Msg)
 {
-    GPS_AppData.Counters.CmdCounter = 0;
-    GPS_AppData.Counters.ErrCounter = 0;
-    GPS_AppData.Counters.GetBcnErrCounter = 0;
+    GPS_AppData.CmdCounter++;
 
-    CFE_EVS_SendEvent(GPS_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "GPS: RESET command");
+    GPS_RefreshHk();
 
-    return CFE_SUCCESS;
-}
+    CFE_EVS_SendEvent(GPS_HK_RPT_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "GPS: housekeeping reported on request");
 
-CFE_Status_t GPS_GetAppDataCmd(const GPS_GetAppDataCmd_t* Msg)
-{
-    GPS_AppData.Counters.CmdCounter = 0;
-    GPS_AppData.Counters.ErrCounter = 0;
-    GPS_AppData.Counters.GetBcnErrCounter = 0;
-
-    CFE_EVS_SendEvent(GPS_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "GPS: RESET command");
+    GPS_SendReport(Msg, &GPS_AppData.HkTlm.Payload, sizeof(GPS_AppData.HkTlm.Payload),
+                   CFE_SUCCESS, GPS_MISSION_REPORT_RETTYPE_APP);
 
     return CFE_SUCCESS;
 }

@@ -1,32 +1,26 @@
-/************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
- *
- * Copyright (c) 2020 United States Government as represented by the
- * Administrator of the National Aeronautics and Space Administration.
- * All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ************************************************************************/
-
 /**
- * @file
- *   GPS Application Topic IDs
+ * @file  GPS application topic IDs
  */
 #ifndef DEFAULT_GPS_TOPICIDS_H
 #define DEFAULT_GPS_TOPICIDS_H
 
-/* MID allocation per wiki (NURI 5th_MID): GPS HK_TLM 0x0894, REPORT 0x0895 */
 #define CFE_MISSION_GPS_CMD_TOPICID         0x94  /* MID 0x1894 */
 #define CFE_MISSION_GPS_SEND_HK_TOPICID     0x95  /* MID 0x1895 */
 #define CFE_MISSION_GPS_HK_TLM_TOPICID      0x94  /* MID 0x0894 */
 #define CFE_MISSION_GPS_REPORT_TLM_TOPICID  0x95  /* MID 0x0895 */
+
+/**
+ * OEM7 stored-log telemetry. One packet per log, published by the receive
+ * task's callbacks. Block 0x9A - 0xA1 was free in the mission's telemetry
+ * topic allocation; see apps/ *​/config/default_*_topicids.h.
+ */
+#define CFE_MISSION_GPS_OEM_BESTXYZ_TLM_TOPICID     0x9A  /* MID 0x089A */
+#define CFE_MISSION_GPS_OEM_BESTPOS_TLM_TOPICID     0x9B  /* MID 0x089B */
+#define CFE_MISSION_GPS_OEM_RANGE_TLM_TOPICID       0x9C  /* MID 0x089C */
+#define CFE_MISSION_GPS_OEM_TIME_TLM_TOPICID        0x9D  /* MID 0x089D */
+#define CFE_MISSION_GPS_OEM_CLOCKMODEL_TLM_TOPICID  0x9E  /* MID 0x089E */
+#define CFE_MISSION_GPS_OEM_HWMONITOR_TLM_TOPICID   0x9F  /* MID 0x089F */
+#define CFE_MISSION_GPS_OEM_RXSTATUS_TLM_TOPICID    0xA0  /* MID 0x08A0 */
+#define CFE_MISSION_GPS_OEM_SATVIS2_TLM_TOPICID     0xA1  /* MID 0x08A1 */
 
 #endif

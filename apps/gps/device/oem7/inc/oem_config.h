@@ -27,7 +27,7 @@
  *        driver is expected to receive; a message whose total length exceeds
  *        this size is rejected with OEM_ERR_TOO_LARGE.
  */
-#define OEM_TASK_STATE_MACHINE_BUF_SIZE     1024
+#define OEM_TASK_STATE_MACHINE_BUF_SIZE     2048
 
 /**
  * @brief Size, in bytes, of a log handler's most-recent-message buffer for
@@ -40,7 +40,7 @@
  *        A fixed-length message handler allocates a buffer of exactly that 
  *        length and this macro does not apply to it. 
  */
-#define OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE 1024
+#define OEM_LOG_HANDLER_RECENT_MSG_MAX_SIZE 2048
 
 /**
  * @brief Default size, in bytes, of an I/O interface's read buffer.
@@ -52,7 +52,7 @@
  *        selects this default. No strict size requirement, but one or more
  *        pages is recommended.
  */
-#define OEM_IO_DEFAULT_READBUF_SIZE         4096
+#define OEM_IO_DEFAULT_READBUF_SIZE         8192
 
 /**
  * @brief Maximum number of the handler objects.

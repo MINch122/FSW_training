@@ -44,6 +44,7 @@
 */
 #include "cfe_msgids.h"
 #include "ds_msgids.h"
+#include "gps_msgids.h"
 
 /* #include "ci_lab_msgids.h"  */
 /* #include "to_lab_msgids.h"  */
@@ -97,67 +98,67 @@ DS_FilterTable_t DS_FilterTable = {
 
 
 
-     /* Packet Index 002 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     /* Packet Index 002 -- gps OEM BESTXYZ log */
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(GPS_OEM_BESTXYZ_TLM_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {2, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
-     /* Packet Index 003 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     /* Packet Index 003 -- gps OEM RANGE log */
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(GPS_OEM_RANGE_TLM_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {3, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
-     /* Packet Index 004 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     /* Packet Index 004 -- gps OEM TIME log */
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(GPS_OEM_TIME_TLM_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {4, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
-     /* Packet Index 005 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     /* Packet Index 005 -- gps OEM CLOCKMODEL log */
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(GPS_OEM_CLOCKMODEL_TLM_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {5, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
-     /* Packet Index 006 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     /* Packet Index 006 -- gps OEM HWMONITOR log */
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(GPS_OEM_HWMONITOR_TLM_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {6, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
-     /* Packet Index 007 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     /* Packet Index 007 -- gps OEM RXSTATUS log */
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(GPS_OEM_RXSTATUS_TLM_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {7, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
-     /* Packet Index 008 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     /* Packet Index 008 -- gps OEM SATVIS2 log */
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(GPS_OEM_SATVIS2_TLM_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {8, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
-     /* Packet Index 009 */
-     {/* .MessageID = */ CFE_SB_MSGID_RESERVED,
+     /* Packet Index 009 -- gps OEM BESTPOS log */
+     {/* .MessageID = */ CFE_SB_MSGID_WRAP_VALUE(GPS_OEM_BESTPOS_TLM_MID),
       /* .Filter    = */
       {/* File table index, filter type, N, X, O */
-       {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
+       {9, DS_BY_COUNT, 1, 1, 0},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED},
        {DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED, DS_UNUSED}}},
